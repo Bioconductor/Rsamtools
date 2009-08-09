@@ -18,4 +18,19 @@ void _as_factor(SEXP vect, const char **lvls, const int n_lvls);
 void _reverse(char *buf);
 void _reverseComplement(char *buf);
 
+/* call-building macros */
+
+#define NEW_CALL(S, T, NAME, ENV, N)            \
+    PROTECT(S = T = allocList(N));              \
+    SET_TYPEOF(T, LANGSXP);                     \
+    SETCAR(T, findFun(install(NAME), ENV));     \
+    T = CDR(T)
+#define CSET_CDR(T, NAME, VALUE)                \
+    SETCAR(T, VALUE);                           \
+    SET_TAG(T, install(NAME));                  \
+    T = CDR(T)
+#define CEVAL_TO(S, ENV, GETS)                  \
+    GETS = eval(S, ENV);                        \
+    UNPROTECT(1)
+
 #endif /* _RSAMTOOLS_H_ */

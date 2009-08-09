@@ -1,27 +1,10 @@
 #include "samtools/sam.h"
 #include "Rsamtools.h"
 
-/* call-building macros */
-
-#define NEW_CALL(S, T, NAME, ENV, N)            \
-    PROTECT(S = T = allocList(N));              \
-    SET_TYPEOF(T, LANGSXP);                     \
-    SETCAR(T, findFun(install(NAME), ENV));     \
-    T = CDR(T)
-#define CSET_CDR(T, NAME, VALUE)                \
-    SETCAR(T, VALUE);                           \
-    SET_TAG(T, install(NAME));                  \
-    T = CDR(T)
-#define CEVAL_TO(S, ENV, GETS)                  \
-    GETS = eval(S, ENV);                        \
-    UNPROTECT(1)
-
 typedef enum {
 	OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR=1, 
 	CIGAR_BUFFER_OVERFLOW_ERROR = 2
 } _BAM_PARSE_STATUS;
-
-/* bam parsing */
 
 typedef struct {
 	int BLOCKSIZE;			  /* size to grow vectors */
@@ -425,25 +408,9 @@ _as_XStringSet(SEXP str, const char *type)
 	return res;
 }
 
-SEXP
-scan_bam(SEXP bfile, SEXP template_list, SEXP space, SEXP flag)
+_BAM_DATA *
+_scan_bam_init(SEXP bfile, SEXP result_list, SEXP flag)
 {
-	if (!IS_LIST(template_list) || LENGTH(template_list) != N_TMPL_ELTS)
-		Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
-	SEXP names = GET_ATTR(template_list, R_NamesSymbol);
-	if (!IS_CHARACTER(names) || LENGTH(names) != N_TMPL_ELTS)
-		Rf_error("'names(template)' must be character(%d)", 
-				 N_TMPL_ELTS);
-	SEXP result = PROTECT(scan_bam_template());
-	for (int i = 0; i < LENGTH(names); ++i) {
-		if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
-			Rf_error("'template' names do not match scan_bam_template\n'");
-		if (VECTOR_ELT(template_list, i) == R_NilValue)
-			SET_VECTOR_ELT(result, i, R_NilValue);
-	}
-	if (!IS_INTEGER(flag) || LENGTH(flag) != 2)
-		Rf_error("'flag' must be integer(2)");
-
 	samfile_t *sfile = (samfile_t *) R_ExternalPtrAddr(bfile);
 	_BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 1024, 128);
 	bdata->parse_status = 0;
@@ -451,28 +418,13 @@ scan_bam(SEXP bfile, SEXP template_list, SEXP space, SEXP flag)
 	bdata->nrec = bdata->idx = 0; 
 	bdata->keepFlag[0] = INTEGER(flag)[0];
 	bdata->keepFlag[1] = INTEGER(flag)[1];
-	bdata->result = result;
+	bdata->result = result_list;
+	return bdata;
+}
 
-	int status;
-	if (space == R_NilValue) {	/* everything */
-		status = _scan_bam_all(sfile, bdata);
-	} else {					/* fetch */
-		const char *fname = 
-			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
-		const char *spc = 
-			translateChar(STRING_ELT(VECTOR_ELT(space, 0), 0));
-		status = _scan_bam_fetch(sfile, bdata, fname, spc,
-								 INTEGER(VECTOR_ELT(space, 1))[0],
-								 INTEGER(VECTOR_ELT(space, 2))[0]);
-	}
-	if (status < 0) {
-		int idx = bdata->idx;
-		_Free_BAM_DATA(bdata);
-		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d",
-				 R_ExternalPtrProtected(bfile), idx);
-	}
-
-	/* tidy */
+void
+_scan_bam_finish(_BAM_DATA *bdata)
+{
 	_realloc_vectors(bdata->result, bdata->idx); /* trim */
 	SEXP s;
 	if ((s = VECTOR_ELT(bdata->result, STRAND_IDX)) != R_NilValue) {
@@ -498,6 +450,50 @@ scan_bam(SEXP bfile, SEXP template_list, SEXP space, SEXP flag)
 		s = _as_XStringSet(s, "BStringSet");
 		SET_VECTOR_ELT(bdata->result, QUAL_IDX, s);
 	}
+}
+
+SEXP
+scan_bam(SEXP bfile, SEXP template_list, SEXP space, SEXP flag)
+{
+	if (!IS_LIST(template_list) || LENGTH(template_list) != N_TMPL_ELTS)
+		Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
+	SEXP names = GET_ATTR(template_list, R_NamesSymbol);
+	if (!IS_CHARACTER(names) || LENGTH(names) != N_TMPL_ELTS)
+		Rf_error("'names(template)' must be character(%d)", 
+				 N_TMPL_ELTS);
+	SEXP result = PROTECT(scan_bam_template());
+	for (int i = 0; i < LENGTH(names); ++i) {
+		if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
+			Rf_error("'template' names do not match scan_bam_template\n'");
+		if (VECTOR_ELT(template_list, i) == R_NilValue)
+			SET_VECTOR_ELT(result, i, R_NilValue);
+	}
+	if (!IS_INTEGER(flag) || LENGTH(flag) != 2)
+		Rf_error("'flag' must be integer(2)");
+
+	_BAM_DATA *bdata = _scan_bam_init(bfile, result, flag);
+	samfile_t *sfile = (samfile_t *) R_ExternalPtrAddr(bfile);
+
+	int status;
+	if (space == R_NilValue) {	/* everything */
+		status = _scan_bam_all(sfile, bdata);
+	} else {					/* fetch */
+		const char *fname = 
+			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
+		const char *spc = 
+			translateChar(STRING_ELT(VECTOR_ELT(space, 0), 0));
+		status = _scan_bam_fetch(sfile, bdata, fname, spc,
+								 INTEGER(VECTOR_ELT(space, 1))[0],
+								 INTEGER(VECTOR_ELT(space, 2))[0]);
+	}
+	if (status < 0) {
+		int idx = bdata->idx;
+		_Free_BAM_DATA(bdata);
+		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d",
+				 R_ExternalPtrProtected(bfile), idx);
+	}
+
+	_scan_bam_finish(bdata);
 	_Free_BAM_DATA(bdata);
 	UNPROTECT(1);
 	return result;
