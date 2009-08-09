@@ -1,5 +1,5 @@
 PKG_OBJECTS = \
-  io_sam.o R_init_Rsamtools.o 
+  io_sam.o utilities.o R_init_Rsamtools.o 
 SAMTOOLS_OBJECTS = \
   bam.o bam_import.o bam_index.o kstring.o bam_aux.o \
   bgzf.o razf.o \
