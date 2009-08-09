@@ -1,9 +1,11 @@
 PKG_OBJECTS = \
-  io_sam.o R_init_ShortRead.o 
+  io_sam.o R_init_Rsamtools.o 
 SAMTOOLS_OBJECTS = \
   bam.o bam_import.o bam_index.o kstring.o bam_aux.o \
   bgzf.o razf.o \
   sam.o bam_pileup.o faidx.o
-# these flags are for SAMTOOLS
-PKG_CFLAGS += -D_IOLIB=2 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
+# these flags are for SAMTOOLS; -Dinline="" turns off inlining, which
+# is leads to undefined symbols for gcc -O0
+DFLAGS = -D_FILE_OFFSET_BITS=64 -Dinline=""
+PKG_CFLAGS += $(DFLAGS)
 
