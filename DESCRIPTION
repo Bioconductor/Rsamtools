@@ -1,7 +1,7 @@
 Package: Rsamtools
 Type: Package
 Title: Interface to the samtools aligned sequece utilities
-Version: 0.0.1
+Version: 0.0.2
 Date: 2009-08-07
 Author: Martin Morgan
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>

@@ -1,5 +1,5 @@
 .scanBamTemplate <- function()
-    .Call(ShortRead:::.scan_bam_template)
+    .Call(.scan_bam_template)
 
 setMethod(scanBam, "character",
           function(file, ..., param=ScanBamParam())
@@ -14,12 +14,12 @@ setMethod(scanBam, "character",
              paste(what[!what %in% names(tmpl)], collapse=", "))
     tmpl[!names(tmpl) %in% what] <- list(NULL)
     ## file
-    bam <- .Call(ShortRead:::.scan_bam_open, file, "rbu")
+    bam <- .Call(.scan_bam_open, file, "rbu")
     ## which
     if (!is.null(space(which))) {
         result <- mapply(function(bam, tmpl, space, start, end) {
             spc <- list(space, start, end)
-            .Call(ShortRead:::.scan_bam, bam, tmpl, spc, flag)
+            .Call(.scan_bam, bam, tmpl, spc, flag)
         }, space(which), start(which), end(which),
                          MoreArgs=list(bam=bam, tmpl=tmpl),
                          USE.NAMES=FALSE,
@@ -29,5 +29,5 @@ setMethod(scanBam, "character",
                   sep="")
         result
      } else 
-        .Call(ShortRead:::.scan_bam, bam, tmpl, NULL, flag)
+        .Call(.scan_bam, bam, tmpl, NULL, flag)
 })

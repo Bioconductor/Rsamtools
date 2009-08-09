@@ -59,6 +59,6 @@ scanBamFlag <-
 
 scanBamWhat <- function()
 {
-    names(.Call(ShortRead:::.scan_bam_template))
+    names(.Call(.scan_bam_template))
 }
 
