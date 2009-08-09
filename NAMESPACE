@@ -1,0 +1,5 @@
+useDynLib(Rsamtools, .registration=TRUE)
+
+importClassesFrom(Biostrings, DNAStringSet, BStringSet)
+
+exportPattern("^[^\\.]")
