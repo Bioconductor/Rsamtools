@@ -1,3 +1,4 @@
+library(Rsamtools)
 library(ShortRead)
 .file_names <- ShortRead:::.file_names
 
