@@ -5,7 +5,7 @@ static const R_CallMethodDef callMethods[] = {
 	{".read_bam_header", (DL_FUNC) &read_bam_header, 3},
 	{".scan_bam_open", (DL_FUNC) &scan_bam_open, 2},
 	{".scan_bam_template", (DL_FUNC) &scan_bam_template, 0},
-	{".scan_bam", (DL_FUNC) &scan_bam, 4},
+	{".scan_bam", (DL_FUNC) &scan_bam, 5},
     {NULL, NULL, 0}
 };
 

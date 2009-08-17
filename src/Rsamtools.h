@@ -8,7 +8,8 @@
 SEXP read_bam_header(SEXP fnaem, SEXP mode, SEXP verbose);
 SEXP scan_bam_open(SEXP fname, SEXP mode);
 SEXP scan_bam_template();
-SEXP scan_bam(SEXP bfile, SEXP template_list, SEXP space, SEXP flag);
+SEXP scan_bam(SEXP bfile, SEXP template_list, SEXP space, 
+			  SEXP keepFlags, SEXP isSimpleCigar);
 
 /* utilities.c */
 SEXP _get_namespace(const char *pkg);

@@ -5,6 +5,7 @@ setMethod(scanBam, "character",
           function(file, ..., param=ScanBamParam())
 {
     flag <- bamFlag(param)
+    simpleCigar <- bamSimpleCigar(param)
     what <- bamWhat(param)
     which <- bamWhich(param)
     ## template
@@ -19,7 +20,7 @@ setMethod(scanBam, "character",
     if (!is.null(space(which))) {
         result <- mapply(function(bam, tmpl, space, start, end) {
             spc <- list(space, start, end)
-            .Call(.scan_bam, bam, tmpl, spc, flag)
+            .Call(.scan_bam, bam, tmpl, spc, flag, simpleCigar)
         }, space(which), start(which), end(which),
                          MoreArgs=list(bam=bam, tmpl=tmpl),
                          USE.NAMES=FALSE,
@@ -29,5 +30,5 @@ setMethod(scanBam, "character",
                   sep="")
         result
      } else 
-        .Call(.scan_bam, bam, tmpl, NULL, flag)
+        .Call(.scan_bam, bam, tmpl, NULL, flag, simpleCigar)
 })

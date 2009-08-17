@@ -2,15 +2,40 @@ library(Rsamtools)
 library(ShortRead)
 .file_names <- ShortRead:::.file_names
 
+.readAligned_bamWhat <- function()
+{
+    c("qname", "flag", "rname", "strand", "pos", "mapq", "seq",
+      "qual")
+}
+
 .readAligned_bam <-
-    function(dirPath, pattern=character(0), ..., param=ScanBamParam())
+    function(dirPath, pattern=character(0), ..., 
+             param=ScanBamParam(
+               simpleCigar=TRUE,
+               what=.readAligned_bamWhat()))
 {
     files <- .file_names(dirPath, pattern)
-    param <-
-        initialize(param,
-                   what=c("qname", "flag", "rname", "strand", "pos",
-                          "mapq", "cigar", "seq", "qual"))
-
+    ## FIXME: currently we only deal with cigars without indels
+    if (!missing(param)) {
+        if (bamSimpleCigar(param) != TRUE) {
+            msg <- paste("using 'TRUE' for 'bamSimpleCigar(param)'",
+                         "(skipping reads with I, D, H, S, or P in 'cigar')")
+            msg <- paste(strwrap(msg, exdent=2),
+                         collapse="\n")
+            warning(msg)
+        }
+        if (!setequal(bamWhat(param), .readAligned_bamWhat()))
+        {
+            msg <- sprintf("using '%s' for 'bamWhat(param)'",
+                           paste(.readAligned_bamWhat(),
+                                 collapse="', '"))
+            msg <- paste(strwrap(msg, exdent=2),
+                         collapse="\n")
+            warning(msg)
+        }
+        param <- initialize(param, simpleCigar=TRUE,
+                            what=.readAligned_bamWhat())
+    }
     ## handle multiple files
     result <- lapply(files, scanBam, param=param, ...)
     if (length(bamWhich(param)) != 0)
@@ -21,30 +46,24 @@ library(ShortRead)
     uxscat <- function(X, ...)
         do.call(xscat, ulist(X, ...))
 
-    ## FIXME: currently we don't represent these features:
-    cigar <- ulist(result, "cigar")
-    keep <- !grepl("[IDHSP]", cigar)
-    if (!all(keep))
-        warning("ignoring reads with any of I, D, H, S, P in 'cigar'")
-
-    AlignedRead(sread=uxscat(result, "seq")[keep],
-                id=BStringSet(ulist(result, "qname"))[keep],
-                quality=FastqQuality(uxscat(result, "qual"))[keep],
-                chromosome=factor(ulist(result, "rname"))[keep],
-                strand=ulist(result, "strand")[keep],
-                position=ulist(result, "pos")[keep],
-                alignQuality=NumericQuality(ulist(result, "mapq"))[keep],
+    AlignedRead(sread=uxscat(result, "seq"),
+                id=BStringSet(ulist(result, "qname")),
+                quality=FastqQuality(uxscat(result, "qual")),
+                chromosome=factor(ulist(result, "rname")),
+                strand=ulist(result, "strand"),
+                position=ulist(result, "pos"),
+                alignQuality=NumericQuality(ulist(result, "mapq")),
                 alignData=AlignedDataFrame(
                   data=data.frame(
-                    flag=ulist(result, "flag")[keep],
-                    cigar=ulist(result, "cigar")[keep]),
+                    flag=ulist(result, "flag")),
                   metadata=data.frame(
                     labelDescription=c(
-                      "Type of read; see ?scanBam",
-                      "Alignement description, see ?scanBam"))))
+                      "Type of read; see ?scanBam"))))
 }
 
 ##
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-res <- .readAligned_bam(fl)
+res <- .readAligned_bam(fl, param=ScanBamParam())
+res <- .readAligned_bam(fl, param=ScanBamParam(simpleCigar=TRUE))
+(res <- .readAligned_bam(fl))

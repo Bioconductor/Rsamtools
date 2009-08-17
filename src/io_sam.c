@@ -14,7 +14,7 @@ typedef struct {
 	
 	bam_header_t *header;
 	int nrec, idx;
-	uint32_t keepFlag[2];
+	uint32_t keep_flag[2], cigar_flag;
 	SEXP result;
 } _BAM_DATA;
 
@@ -94,12 +94,12 @@ _bamqual(const bam1_t *bam, char *BUF)
 }
 
 int
-_bamcigar(const bam1_t *bam, char *buf, int buf_sz)
+_bamcigar(const uint32_t *cigar, const uint32_t n_cigar, 
+		  char *buf, int buf_sz)
 {
 	const char lookup[] = { 'M', 'I', 'D', 'N', 'S', 'H', 'P' };
-	uint32_t *cigar = bam1_cigar(bam);
 	buf[0] = '\0';
-	for (uint32_t i = 0; i < bam->core.n_cigar; ++i) {
+	for (uint32_t i = 0; i < n_cigar; ++i) {
 		int n = snprintf(buf, buf_sz, "%u%c", cigar[i] >> 4, 
 						 lookup[cigar[i] & BAM_CIGAR_MASK]);
 		if (n >= buf_sz)
@@ -218,12 +218,16 @@ static const char *TMPL_ELT_NMS[] = {
 	"mrnm", "mpos", "isize", "seq", "qual"
 	/* "tag", "vtype", "value" */
 };
+
 static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
+
 enum {
 	QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, WIDTH_IDX,
 	MAPQ_IDX, CIGAR_IDX, MRNM_IDX, MPOS_IDX, ISIZE_IDX, SEQ_IDX,
 	QUAL_IDX
 };
+
+enum { CIGAR_SIMPLE = 1 };
 
 SEXP
 scan_bam_template()
@@ -277,10 +281,19 @@ _scan_bam1(const bam1_t *bam, void *data)
 
 	*/
 
-	uint32_t test = (bd->keepFlag[0] & ~bam->core.flag) | 
-	  (bd->keepFlag[1] & bam->core.flag);
+	uint32_t test = (bd->keep_flag[0] & ~bam->core.flag) | 
+	  (bd->keep_flag[1] & bam->core.flag);
 	if (~test & 2047u)
 		return 0;
+
+	uint32_t *cigar = bam1_cigar(bam);
+	uint32_t n_cigar = bam->core.n_cigar;
+	if (bd->cigar_flag == CIGAR_SIMPLE)
+	{
+		if (!(n_cigar == 0 || 
+			  (n_cigar == 1  && ((cigar[0] & BAM_CIGAR_MASK) == 0))))
+			return 0;
+	}
 	if (bd->idx == bd->nrec) {
 		/* reallocate */
 		bd->nrec += bd->BLOCKSIZE;
@@ -324,7 +337,8 @@ _scan_bam1(const bam1_t *bam, void *data)
 			INTEGER(s)[idx] = bam->core.qual;
 			break;
 		case CIGAR_IDX:
-			if (_bamcigar(bam, bd->CIGAR_BUF, bd->CIGAR_BUF_SZ) < 0)
+			if (_bamcigar(cigar, n_cigar, 
+						  bd->CIGAR_BUF, bd->CIGAR_BUF_SZ) < 0)
 			{
 				bd->parse_status |= CIGAR_BUFFER_OVERFLOW_ERROR;
 				return -bd->idx;
@@ -409,15 +423,17 @@ _as_XStringSet(SEXP str, const char *type)
 }
 
 _BAM_DATA *
-_scan_bam_init(SEXP bfile, SEXP result_list, SEXP flag)
+_scan_bam_init(SEXP bfile, SEXP result_list, 
+			   SEXP flag, SEXP isSimpleCigar)
 {
 	samfile_t *sfile = (samfile_t *) R_ExternalPtrAddr(bfile);
 	_BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 1024, 128);
 	bdata->parse_status = 0;
 	bdata->header= sfile->header;
 	bdata->nrec = bdata->idx = 0; 
-	bdata->keepFlag[0] = INTEGER(flag)[0];
-	bdata->keepFlag[1] = INTEGER(flag)[1];
+	bdata->keep_flag[0] = INTEGER(flag)[0];
+	bdata->keep_flag[1] = INTEGER(flag)[1];
+	bdata->cigar_flag = LOGICAL(isSimpleCigar)[0];
 	bdata->result = result_list;
 	return bdata;
 }
@@ -453,7 +469,8 @@ _scan_bam_finish(_BAM_DATA *bdata)
 }
 
 SEXP
-scan_bam(SEXP bfile, SEXP template_list, SEXP space, SEXP flag)
+scan_bam(SEXP bfile, SEXP template_list, SEXP space, 
+		 SEXP keepFlags, SEXP isSimpleCigar)
 {
 	if (!IS_LIST(template_list) || LENGTH(template_list) != N_TMPL_ELTS)
 		Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
@@ -468,10 +485,13 @@ scan_bam(SEXP bfile, SEXP template_list, SEXP space, SEXP flag)
 		if (VECTOR_ELT(template_list, i) == R_NilValue)
 			SET_VECTOR_ELT(result, i, R_NilValue);
 	}
-	if (!IS_INTEGER(flag) || LENGTH(flag) != 2)
-		Rf_error("'flag' must be integer(2)");
+	if (!IS_INTEGER(keepFlags) || LENGTH(keepFlags) != 2)
+		Rf_error("'keepFlags' must be integer(2)");
+	if (!IS_LOGICAL(isSimpleCigar)  || LENGTH(isSimpleCigar) != 1)
+		Rf_error("'isSimpleCigar' must be logical(1)");
 
-	_BAM_DATA *bdata = _scan_bam_init(bfile, result, flag);
+	_BAM_DATA *bdata = 
+		_scan_bam_init(bfile, result, keepFlags, isSimpleCigar);
 	samfile_t *sfile = (samfile_t *) R_ExternalPtrAddr(bfile);
 
 	int status;

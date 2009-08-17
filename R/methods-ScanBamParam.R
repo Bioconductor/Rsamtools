@@ -1,13 +1,15 @@
 ScanBamParam <-
-    function(flag=scanBamFlag(), what=scanBamWhat(),
-             which=RangesList())
+    function(flag=scanBamFlag(), simpleCigar=FALSE,
+             what=scanBamWhat(), which=RangesList())
 {
-    new("ScanBamParam", flag=flag, what=what, which=which)
+    new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
+        what=what, which=which)
 }
 
 setValidity("ScanBamParam", function(object) {
     msg <- NULL
     flag <- bamFlag(object)
+    simpleCigar <- bamSimpleCigar(object)
     which <- bamWhich(object)
     what <- bamWhat(object)
     if (length(flag) != 2 || typeof(flag) != "integer")
@@ -18,6 +20,8 @@ setValidity("ScanBamParam", function(object) {
         else if (any(flag < 0 | flag >= 2^16))
             msg <- c(msg, "'flag' values must be >=0, <2048")
     }
+    if (length(simpleCigar) != 1 && !is.na(simpleCigar))
+        msg <- c(msg, "'simpleCigar' must be logical(1), not NA")
     if (length(which) != 0 &&
         (any(!nzchar(names(which))) || any(is.na(names(which)))))
         msg <- c(msg, "'which' elements must be named (not NA)")
@@ -27,6 +31,7 @@ setValidity("ScanBamParam", function(object) {
 })
 
 bamFlag <- function(object) slot(object, "flag")
+bamSimpleCigar <- function(object) slot(object, "simpleCigar")
 bamWhich <- function(object) slot(object, "which")
 bamWhat <- function(object) slot(object, "what")
 
@@ -39,8 +44,9 @@ scanBamFlag <-
              isPrimaryRead=NA, isValidVendorRead=NA, isDuplicate=NA)
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
 {
-    flag <- c(isPaired=1L, isProperPair=2L, isUnmappedQuery=4L, hasUnmappedMate=8L,
-              isMinusStrand=16L, isMateStrand=32L, isFirstMateRead=64L, isSecondMateRead=128L,
+    flag <- c(isPaired=1L, isProperPair=2L, isUnmappedQuery=4L,
+              hasUnmappedMate=8L, isMinusStrand=16L, isMateStrand=32L,
+              isFirstMateRead=64L, isSecondMateRead=128L,
               isPrimaryRead=256L, isValidVendorRead=512L, isDuplicate=1024L)
     args <- as.list(match.call())[-1]
     if (any(sapply(args, length) > 1L))
