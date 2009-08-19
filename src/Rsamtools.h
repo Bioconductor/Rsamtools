@@ -5,7 +5,7 @@
 #include <R_ext/Rdynload.h>
 
 /* io_sam.c */
-SEXP read_bam_header(SEXP fnaem, SEXP mode, SEXP verbose);
+SEXP read_bam_header(SEXP fname, SEXP mode, SEXP verbose);
 SEXP scan_bam_open(SEXP fname, SEXP mode);
 SEXP scan_bam_template();
 SEXP scan_bam(SEXP bfile, SEXP template_list, SEXP space, 

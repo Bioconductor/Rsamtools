@@ -1,5 +1,7 @@
 #include "samtools/sam.h"
 #include "Rsamtools.h"
+#include "snap.h"
+#include "IRanges_interface.h"
 
 typedef enum {
 	OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR=1, 
@@ -15,8 +17,26 @@ typedef struct {
 	bam_header_t *header;
 	int nrec, idx;
 	uint32_t keep_flag[2], cigar_flag;
+	_SNAP_PTR seq, qual, id;
 	SEXP result;
 } _BAM_DATA;
+
+
+static const char *TMPL_ELT_NMS[] = {
+	"qname", "flag", "rname", "strand", "pos", "width", "mapq", "cigar",
+	"mrnm", "mpos", "isize", "seq", "qual"
+	/* "tag", "vtype", "value" */
+};
+
+static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
+
+enum {
+	QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, WIDTH_IDX,
+	MAPQ_IDX, CIGAR_IDX, MRNM_IDX, MPOS_IDX, ISIZE_IDX, SEQ_IDX,
+	QUAL_IDX
+};
+
+enum { CIGAR_SIMPLE = 1 };
 
 _BAM_DATA *
 _Calloc_BAM_DATA(int blocksize, int buf_sz, int cigar_buf_sz)
@@ -27,6 +47,10 @@ _Calloc_BAM_DATA(int blocksize, int buf_sz, int cigar_buf_sz)
 	bd->BUF = Calloc(bd->BUF_SZ, char);
 	bd->CIGAR_BUF_SZ = cigar_buf_sz;
 	bd->CIGAR_BUF = Calloc(bd->CIGAR_BUF_SZ, char);
+	
+	bd->seq = _snap_new();
+	bd->qual = _snap_new();
+
 	return bd;
 }
 
@@ -144,6 +168,8 @@ _realloc_vectors(SEXP vec, int nrec)
 {
 	SEXP to, from;
 	for (int i = 0; i < LENGTH(vec); ++i) {
+		if (i == SEQ_IDX || i == QUAL_IDX)
+			continue;
 		from = VECTOR_ELT(vec, i);
 		switch(TYPEOF(from)) {
 		case STRSXP:
@@ -212,22 +238,6 @@ read_bam_header(SEXP fnames, SEXP mode, SEXP verbose)
 }
 
 /* parse BAM records */
-
-static const char *TMPL_ELT_NMS[] = {
-	"qname", "flag", "rname", "strand", "pos", "width", "mapq", "cigar",
-	"mrnm", "mpos", "isize", "seq", "qual"
-	/* "tag", "vtype", "value" */
-};
-
-static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
-
-enum {
-	QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, WIDTH_IDX,
-	MAPQ_IDX, CIGAR_IDX, MRNM_IDX, MPOS_IDX, ISIZE_IDX, SEQ_IDX,
-	QUAL_IDX
-};
-
-enum { CIGAR_SIMPLE = 1 };
 
 SEXP
 scan_bam_template()
@@ -358,10 +368,10 @@ _scan_bam1(const bam1_t *bam, void *data)
 				bam->core.isize > 0 ? bam->core.isize : NA_INTEGER;
 			break;
 		case SEQ_IDX:
-			SET_STRING_ELT(s, idx, mkChar(_bamseq(bam, bd->BUF)));
+			_snap_append(bd->seq, _bamseq(bam, bd->BUF));
 			break;
 		case QUAL_IDX:
-			SET_STRING_ELT(s, idx, mkChar(_bamqual(bam, bd->BUF)));
+			_snap_append(bd->qual, _bamqual(bam, bd->BUF));
 			break;
 		default:
 			break;
@@ -458,12 +468,12 @@ _scan_bam_finish(_BAM_DATA *bdata)
 	}
 	if ((s = VECTOR_ELT(bdata->result, SEQ_IDX)) != R_NilValue)
 	{
-		s = _as_XStringSet(s, "DNAStringSet");
+		s = _snap_as_XStringSet(bdata->seq, "DNAString");
 		SET_VECTOR_ELT(bdata->result, SEQ_IDX, s);
 	}
 	if ((s = VECTOR_ELT(bdata->result, QUAL_IDX)) != R_NilValue)
 	{
-		s = _as_XStringSet(s, "BStringSet");
+		s = _snap_as_XStringSet(bdata->qual, "BString");
 		SET_VECTOR_ELT(bdata->result, QUAL_IDX, s);
 	}
 }
