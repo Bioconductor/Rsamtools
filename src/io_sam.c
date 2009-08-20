@@ -17,7 +17,7 @@ typedef struct {
 	bam_header_t *header;
 	int nrec, idx;
 	uint32_t keep_flag[2], cigar_flag;
-	_SNAP_PTR seq, qual, id;
+	_SNAP_T *seq, *qual, *id;
 	SEXP result;
 } _BAM_DATA;
 

@@ -2,15 +2,25 @@
 #include "encode.h"
 #include "IRanges_interface.h"
 
-/* _SNAP_ELT_T: a block of memory to be filled */
+/* 
+   An attempt at better memory management. For strings (e.g.,
+   sequences or base qualities), allocate relatively large blocks of
+   memory in a linked list. As the data grows, memory gets consumed
+   without copying. The final stage transforms the stored data into R
+   structures, requiring one complete copy of the string buffers and
+   of the corresponding widths.
+*/
+
+/* _SNAP_ELT_T: a block of memory */
 
 const int _SNAP_ELT_SZ = 1048576;
 
-typedef struct _snap_elt_t *_SNAP_ELT_PTR;
-typedef struct _snap_elt_t {
+typedef struct _snap_elt_t _SNAP_ELT_T;
+
+struct _snap_elt_t {
 	void *start, *curr, *end;
-	_SNAP_ELT_PTR next;
-} _SNAP_ELT_T;
+	_SNAP_ELT_T *next;
+};
 
 #define SE_ADDR_BASE(snapelt_p) ((snapelt_p)->start)
 #define SE_BYTES_AVAIL(snapelt_p) \
@@ -20,84 +30,78 @@ typedef struct _snap_elt_t {
 
 /* _SNAP_LIST_T: a dynamic linked list of memory blocks */
 
-typedef struct _snap_list_t *_SNAP_LIST_PTR;
-typedef struct _snap_list_t {
-	SEXPTYPE stype;
-	_SNAP_ELT_PTR root, curr;
-} _SNAP_LIST_T;
+typedef struct _snap_list_t _SNAP_LIST_T;
 
-size_t _snap_list_elt_size(SEXPTYPE);
-size_t	_snap_list_byte_length(_SNAP_LIST_PTR);
+struct _snap_list_t {
+	SEXPTYPE type;
+	size_t sizeof_type;
+	_SNAP_ELT_T *root, *curr;
+};
 
-#define SL_TYPE(snaplist_p) ((snaplist_p)->stype)
+size_t	_snap_list_byte_length(_SNAP_LIST_T *);
+
+#define SL_TYPE(snaplist_p) ((snaplist_p)->type)
+#define SL_SIZEOF_TYPE(snaplist_p) ((snaplist_p)->sizeof_type)
 #define SL_ADDR(snaplist_p) ((snaplist_p)->curr->curr)
-#define SL_BYTE_LENGTH(snaplist_p) \
-	(_snap_list_byte_length(snaplist_p))
 #define SL_LENGTH(snaplist_p)  \
-	(SL_BYTE_LENGTH(snaplist_p) / SL_ELT_SIZE(snaplist_p))
-#define SL_ELT_SIZE(snaplist_p) \
-	(_snap_list_elt_size(SL_TYPE(snaplist_p)))
+	(_snap_list_byte_length(snaplist_p) / SL_SIZEOF_TYPE(snaplist_p))
 #define SL_BYTES_AVAIL(snaplist_p) \
 	(SE_BYTES_AVAIL((snaplist_p)->curr))
 
 /* _SNAP_T: a collection of memory blocks, one for character data, one
  * for integer */
-typedef struct _snap_t {
-	_SNAP_LIST_T *str, *width;
-} _SNAP_T;
 
-_SNAP_ELT_PTR
-_snap_elt_new(SEXPTYPE type, size_t sizeof_elt)
+struct _snap_t {
+	_SNAP_LIST_T *str, *width;
+};
+
+_SNAP_ELT_T *
+_snap_elt_new(SEXPTYPE type, size_t sizeof_elt, size_t sizeof_type)
 {
-	int sizeof_i = _snap_list_elt_size(type);
-	_SNAP_ELT_PTR selt = 
-		(_SNAP_ELT_PTR) R_alloc(1, sizeof(_SNAP_ELT_T));
-	selt->start = selt->curr = (void *) R_alloc(sizeof_elt, sizeof_i);
-	selt->end = selt->start + sizeof_elt * sizeof_i;
+	_SNAP_ELT_T *selt = 
+		(_SNAP_ELT_T *) R_alloc(1, sizeof(_SNAP_ELT_T));
+	selt->start = selt->curr = 
+		(void *) R_alloc(sizeof_elt, sizeof_type);
+	selt->end = selt->start + sizeof_elt * sizeof_type;
 	selt->next = NULL;
 	return selt;
 }
 
-_SNAP_LIST_PTR
+_SNAP_LIST_T *
 _snap_list_new(SEXPTYPE type, size_t sizeof_elt)
 {
-	_SNAP_LIST_PTR slptr = 
-		(_SNAP_LIST_PTR) R_alloc(1, sizeof(_SNAP_LIST_T));
-	slptr->stype = type;
-	slptr->root = slptr->curr = _snap_elt_new(type, sizeof_elt);
+	_SNAP_LIST_T *slptr = 
+		(_SNAP_LIST_T *) R_alloc(1, sizeof(_SNAP_LIST_T));
+	slptr->type = type;
+	switch(type) {
+	case INTSXP:
+		slptr->sizeof_type = sizeof(int);
+		break;
+	case RAWSXP:
+		slptr->sizeof_type = sizeof(char);
+		break;
+	default:
+		Rf_error("Rsamtools invalid _snap_list_new type '%d'",
+				 type);
+	}
+	slptr->root = slptr->curr = 
+		_snap_elt_new(type, sizeof_elt, SL_SIZEOF_TYPE(slptr));
 	return slptr;
 }
 
-size_t
-_snap_list_elt_size(SEXPTYPE type)
-{
-	size_t sz = 0;
-	switch(type) {
-	case INTSXP:
-		sz = sizeof(int);
-		break;
-	case RAWSXP:
-		sz = sizeof(char);
-		break;
-	default:
-		Rf_error("Rsamtools invalid _snap_list_elt_size type '%d'",
-				 type);
-	}
-	return sz;
-}
-
 void
-_snap_list_add_elt(_SNAP_LIST_PTR ptr, size_t len)
+_snap_list_add_elt(_SNAP_LIST_T *ptr, size_t len)
 {
-	_SNAP_ELT_PTR elt = _snap_elt_new(SL_TYPE(ptr), len);
+	_SNAP_ELT_T *elt = 
+		_snap_elt_new(SL_TYPE(ptr), len, SL_SIZEOF_TYPE(ptr));
 	ptr->curr->next = elt;
 	ptr->curr = elt;
 }
 
 size_t
-_snap_list_byte_length(_SNAP_LIST_PTR lst)
+_snap_list_byte_length(_SNAP_LIST_T *lst)
 {
-	_SNAP_ELT_PTR ptr = lst->root;
+	_SNAP_ELT_T *ptr = lst->root;
 	size_t len = 0;
 	while (ptr != NULL) {
 		len += SE_BYTES_USED(ptr);
@@ -107,10 +111,10 @@ _snap_list_byte_length(_SNAP_LIST_PTR lst)
 }
 
 void
-_snap_list_append_v(_SNAP_LIST_PTR lst, const void *data, R_len_t n_data_elts)
+_snap_list_append_v(_SNAP_LIST_T *lst, const void *data, R_len_t n_data_elts)
 {
 	/* following use bytes, not elements */
-	size_t len = SL_ELT_SIZE(lst) * n_data_elts;
+	size_t len = SL_SIZEOF_TYPE(lst) * n_data_elts;
 	if (SL_BYTES_AVAIL(lst) < len) {
 		size_t buflen = len > _SNAP_ELT_SZ ? len : _SNAP_ELT_SZ;
 		_snap_list_add_elt(lst, buflen);
@@ -120,27 +124,27 @@ _snap_list_append_v(_SNAP_LIST_PTR lst, const void *data, R_len_t n_data_elts)
 }
 
 void
-_snap_list_append_int(_SNAP_LIST_PTR lst, int x)
+_snap_list_append_int(_SNAP_LIST_T *lst, int x)
 {
-	if (SL_BYTES_AVAIL(lst) < SL_ELT_SIZE(lst))
+	if (SL_BYTES_AVAIL(lst) < SL_SIZEOF_TYPE(lst))
 		_snap_list_add_elt(lst, _SNAP_ELT_SZ);
 	*((int *) SL_ADDR(lst)) = x;
-	SL_ADDR(lst) += SL_ELT_SIZE(lst);
+	SL_ADDR(lst) += SL_SIZEOF_TYPE(lst);
 }
 
 /* snap: higher level interface */
 
-_SNAP_PTR
+_SNAP_T *
 _snap_new()
 {
-	_SNAP_PTR sptr = (_SNAP_PTR) R_alloc(1, sizeof(_SNAP_T));
+	_SNAP_T *sptr = (_SNAP_T *) R_alloc(1, sizeof(_SNAP_T));
 	sptr->str = _snap_list_new(RAWSXP, _SNAP_ELT_SZ);
 	sptr->width = _snap_list_new(INTSXP, _SNAP_ELT_SZ);
 	return sptr;
 }
 
 void
-_snap_append(_SNAP_PTR sptr, const char *string)
+_snap_append(_SNAP_T *sptr, const char *string)
 {
 	int len = strlen(string);
 	_snap_list_append_v(sptr->str, string, len);
@@ -148,7 +152,7 @@ _snap_append(_SNAP_PTR sptr, const char *string)
 }
 
 size_t
-_snap_elts_length(_SNAP_ELT_PTR sptr)
+_snap_elts_length(_SNAP_ELT_T *sptr)
 {
 	size_t len = 0;
 	while (sptr != NULL) {
@@ -161,7 +165,7 @@ _snap_elts_length(_SNAP_ELT_PTR sptr)
 /* collapse into R objects */
 
 SEXP
-_snap_list_to(_SNAP_LIST_PTR lst)
+_snap_list_to(_SNAP_LIST_T *lst)
 {
 	SEXPTYPE type = SL_TYPE(lst);
 	size_t n_elt = SL_LENGTH(lst);
@@ -179,7 +183,7 @@ _snap_list_to(_SNAP_LIST_PTR lst)
 				 type);
 	}
 
-	_SNAP_ELT_PTR ptr = lst->root;
+	_SNAP_ELT_T *ptr = lst->root;
 	while (ptr != NULL) {
 		size_t len = SE_BYTES_USED(ptr);
 		memcpy(to, SE_ADDR_BASE(ptr), len);
@@ -224,7 +228,7 @@ _snap_to_XStringSet(SEXP seq, SEXP width, const char *baseclass)
 }
 
 SEXP
-_snap_as_XStringSet(_SNAP_PTR sptr, const char *baseclass)
+_snap_as_XStringSet(_SNAP_T *sptr, const char *baseclass)
 {
 	SEXP r_str = PROTECT(_snap_list_to(sptr->str)),
 		r_width = PROTECT(_snap_list_to(sptr->width));
