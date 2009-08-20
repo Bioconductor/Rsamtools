@@ -202,7 +202,7 @@ _snap_to_XStringSet(SEXP seq, SEXP width, const char *baseclass)
 	for (int i = 0; i < LENGTH(seq); ++i)		
 		str[i] = encode(str[i]);
 	SEXP ptr = PROTECT(new_SequencePtr("RawPtr", seq));
-	SEXP xstring = PROTECT(new_XSequence(baseclass, ptr, 0, LENGTH(ptr)));
+	SEXP xstring = PROTECT(new_XSequence(baseclass, ptr, 0, LENGTH(seq)));
 
 	SEXP start = PROTECT(NEW_INTEGER(LENGTH(width)));
 	int s = 1;
@@ -220,10 +220,11 @@ _snap_to_XStringSet(SEXP seq, SEXP width, const char *baseclass)
 	snprintf(xsetclass, XSETCLASS_BUF, "%sSet", baseclass);
 	SEXP xclassdef = PROTECT(MAKE_CLASS(xsetclass));
 	SEXP xstringset = PROTECT(NEW_OBJECT(xclassdef));
-	SET_SLOT(xstringset, PROTECT(mkChar("super")), xstring);
-	SET_SLOT(xstringset, PROTECT(mkChar("ranges")), irange);
+        
+	SET_SLOT(xstringset, install("super"), xstring);
+	SET_SLOT(xstringset, install("ranges"), irange);
 
-	UNPROTECT(8);
+	UNPROTECT(6);
 	return xstringset;
 }
 
