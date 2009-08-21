@@ -1,4 +1,5 @@
-#include "Rsamtools.h"
+#include <Rdefines.h>
+#include "utilities.h"
 
 SEXP
 _get_namespace(const char* pkg)

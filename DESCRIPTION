@@ -1,7 +1,7 @@
 Package: Rsamtools
 Type: Package
-Title: Interface to the samtools aligned sequence utilities
-Version: 0.0.7
+Title: An interface to the samtools aligned sequence utilities
+Version: 0.0.9
 Date: 2009-08-07
 Author: Martin Morgan
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
@@ -11,6 +11,6 @@ Description: This package provides an interface to the 'samtools'
 License: Artistic-2.0
 LazyLoad: yes
 Depends: methods, Biostrings
-Imports: Biostrings
+Imports: Biostrings, IRanges
 LinkingTo: Biostrings, IRanges
 biocViews: DataImport, Sequencing, HighThroughputSequencing

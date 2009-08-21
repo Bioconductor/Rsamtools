@@ -6,6 +6,7 @@ static const R_CallMethodDef callMethods[] = {
 	{".scan_bam_open", (DL_FUNC) &scan_bam_open, 2},
 	{".scan_bam_template", (DL_FUNC) &scan_bam_template, 0},
 	{".scan_bam", (DL_FUNC) &scan_bam, 5},
+	{".scan_bam_cleanup", (DL_FUNC) &scan_bam_cleanup, 0},
     {NULL, NULL, 0}
 };
 

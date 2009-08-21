@@ -1,6 +1,7 @@
 #include "samtools/sam.h"
 #include "Rsamtools.h"
 #include "snap.h"
+#include "utilities.h"
 #include "IRanges_interface.h"
 
 typedef enum {
@@ -59,6 +60,8 @@ _Free_BAM_DATA(_BAM_DATA *bd)
 {
 	Free(bd->BUF);
 	Free(bd->CIGAR_BUF);
+	_snap_delete(bd->seq);
+	_snap_delete(bd->qual);
 	Free(bd);
 }
 
@@ -473,7 +476,7 @@ _scan_bam_finish(_BAM_DATA *bdata)
 	}
 	if ((s = VECTOR_ELT(bdata->result, QUAL_IDX)) != R_NilValue)
 	{
-		s = _snap_as_XStringSet(bdata->qual, "BString");
+		s = _snap_as_PhredQuality(bdata->qual);
 		SET_VECTOR_ELT(bdata->result, QUAL_IDX, s);
 	}
 }
@@ -527,4 +530,11 @@ scan_bam(SEXP bfile, SEXP template_list, SEXP space,
 	_Free_BAM_DATA(bdata);
 	UNPROTECT(1);
 	return result;
+}
+
+/* error handling, not called directly */
+void
+scan_bam_cleanup()
+{
+	_snap_cleanup_all();
 }

@@ -1,5 +1,6 @@
 #include "snap.h"
 #include "encode.h"
+#include "utilities.h"
 #include "IRanges_interface.h"
 
 /* 
@@ -39,6 +40,7 @@ struct _snap_list_t {
 };
 
 size_t	_snap_list_byte_length(_SNAP_LIST_T *);
+void _snap_list_delete(_SNAP_LIST_T *);
 
 #define SL_TYPE(snaplist_p) ((snaplist_p)->type)
 #define SL_SIZEOF_TYPE(snaplist_p) ((snaplist_p)->sizeof_type)
@@ -55,14 +57,88 @@ struct _snap_t {
 	_SNAP_LIST_T *str, *width;
 };
 
-_SNAP_ELT_T *
-_snap_elt_new(SEXPTYPE type, size_t sizeof_elt, size_t sizeof_type)
+/* register snaps here, so they can be recovered in case of error */
+
+struct _snap_alloc_t {
+	_SNAP_T *snap;
+	struct _snap_alloc_t *next;
+};
+
+static struct _snap_alloc_t *_snap_alloc_g = NULL;
+
+void
+_snap_alloc_register(_SNAP_T *snap)
 {
-	_SNAP_ELT_T *selt = 
-		(_SNAP_ELT_T *) R_alloc(1, sizeof(_SNAP_ELT_T));
-	selt->start = selt->curr = 
-		(void *) R_alloc(sizeof_elt, sizeof_type);
-	selt->end = selt->start + sizeof_elt * sizeof_type;
+	struct _snap_alloc_t *node = Calloc(1, struct _snap_alloc_t);
+	node->snap = snap;
+	node->next = _snap_alloc_g;
+	_snap_alloc_g = node;
+}
+
+void
+__snap_free(_SNAP_T *snap)
+{
+	_snap_list_delete(snap->str);
+	_snap_list_delete(snap->width);
+	Free(snap);
+}
+
+void
+_snap_delete(_SNAP_T *snap)
+{
+	struct _snap_alloc_t *prev = NULL, *node = _snap_alloc_g;
+	while (node != NULL) {
+		if (node->snap == snap) {
+			if (prev == NULL)
+				_snap_alloc_g = node->next;
+			else
+				prev->next = node->next;
+			__snap_free(node->snap);
+			Free(node);
+			break;
+		}
+		prev = node;
+		node = node->next;
+	}
+}
+
+/* only called during error handling */
+void
+_snap_cleanup_all()
+{
+	struct _snap_alloc_t *node = _snap_alloc_g;
+	while (node != NULL) {
+		__snap_free(node->snap);
+		struct _snap_alloc_t *this = node;
+		node = node->next;
+		Free(this);
+	}		
+	_snap_alloc_g = NULL;
+}
+
+/* implementation */
+
+_SNAP_ELT_T *
+_snap_elt_new(SEXPTYPE type, size_t elt_len)
+{
+	_SNAP_ELT_T *selt = Calloc(1, _SNAP_ELT_T);
+	void *buf = 0;
+	size_t sizeof_type = 0;
+	switch(type) {
+	case INTSXP:
+		buf = (void *) Calloc(elt_len, int);
+		sizeof_type = sizeof(int);
+		break;
+	case RAWSXP:
+		buf = (void *) Calloc(elt_len, char);
+		sizeof_type = sizeof(char);
+		break;
+	default:
+		Rf_error("Rsamtools invalid _snap_list_new type '%d'",
+				 type);
+	}
+	selt->start = selt->curr = buf;
+	selt->end = selt->start + elt_len * sizeof_type;
 	selt->next = NULL;
 	return selt;
 }
@@ -70,8 +146,7 @@ _snap_elt_new(SEXPTYPE type, size_t sizeof_elt, size_t sizeof_type)
 _SNAP_LIST_T *
 _snap_list_new(SEXPTYPE type, size_t sizeof_elt)
 {
-	_SNAP_LIST_T *slptr = 
-		(_SNAP_LIST_T *) R_alloc(1, sizeof(_SNAP_LIST_T));
+	_SNAP_LIST_T *slptr = Calloc(1, _SNAP_LIST_T);
 	slptr->type = type;
 	switch(type) {
 	case INTSXP:
@@ -85,15 +160,27 @@ _snap_list_new(SEXPTYPE type, size_t sizeof_elt)
 				 type);
 	}
 	slptr->root = slptr->curr = 
-		_snap_elt_new(type, sizeof_elt, SL_SIZEOF_TYPE(slptr));
+		_snap_elt_new(type, sizeof_elt);
 	return slptr;
+}
+
+void
+_snap_list_delete(_SNAP_LIST_T *lst)
+{
+	_SNAP_ELT_T *elt = lst->root;
+	while (elt != NULL) {
+		_SNAP_ELT_T *tmp = elt->next;
+		Free(elt);
+		elt = tmp;
+	}
+	Free(lst);
 }
 
 void
 _snap_list_add_elt(_SNAP_LIST_T *ptr, size_t len)
 {
 	_SNAP_ELT_T *elt = 
-		_snap_elt_new(SL_TYPE(ptr), len, SL_SIZEOF_TYPE(ptr));
+		_snap_elt_new(SL_TYPE(ptr), len);
 	ptr->curr->next = elt;
 	ptr->curr = elt;
 }
@@ -126,10 +213,11 @@ _snap_list_append_v(_SNAP_LIST_T *lst, const void *data, R_len_t n_data_elts)
 void
 _snap_list_append_int(_SNAP_LIST_T *lst, int x)
 {
-	if (SL_BYTES_AVAIL(lst) < SL_SIZEOF_TYPE(lst))
+	size_t len = SL_SIZEOF_TYPE(lst);
+	if (SL_BYTES_AVAIL(lst) < len)
 		_snap_list_add_elt(lst, _SNAP_ELT_SZ);
 	*((int *) SL_ADDR(lst)) = x;
-	SL_ADDR(lst) += SL_SIZEOF_TYPE(lst);
+	SL_ADDR(lst) += len;
 }
 
 /* snap: higher level interface */
@@ -137,9 +225,10 @@ _snap_list_append_int(_SNAP_LIST_T *lst, int x)
 _SNAP_T *
 _snap_new()
 {
-	_SNAP_T *sptr = (_SNAP_T *) R_alloc(1, sizeof(_SNAP_T));
+	_SNAP_T *sptr = Calloc(1, _SNAP_T);
 	sptr->str = _snap_list_new(RAWSXP, _SNAP_ELT_SZ);
 	sptr->width = _snap_list_new(INTSXP, _SNAP_ELT_SZ);
+	_snap_alloc_register(sptr);
 	return sptr;
 }
 
@@ -226,6 +315,20 @@ _snap_to_XStringSet(SEXP seq, SEXP width, const char *baseclass)
 
 	UNPROTECT(6);
 	return xstringset;
+}
+
+SEXP
+_snap_as_PhredQuality(_SNAP_T *snap)
+{
+	SEXP xstringset = PROTECT(_snap_as_XStringSet(snap, "BString"));
+	SEXP s, t, nmspc, result;
+	nmspc = PROTECT(_get_namespace("Biostrings"));
+	NEW_CALL(s, t, "PhredQuality", nmspc, 2);
+	CSET_CDR(t, "x", xstringset);
+	nmspc = PROTECT(_get_namespace("Rsamtools"));
+	CEVAL_TO(s, nmspc, result);
+	UNPROTECT(3);
+	return result;
 }
 
 SEXP

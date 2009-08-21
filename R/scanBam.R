@@ -20,6 +20,7 @@ setMethod(scanBam, "character",
     if (!is.null(space(which))) {
         result <- mapply(function(bam, tmpl, space, start, end) {
             spc <- list(space, start, end)
+            on.exit(.Call(.scan_bam_cleanup))
             .Call(.scan_bam, bam, tmpl, spc, flag, simpleCigar)
         }, space(which), start(which), end(which),
                          MoreArgs=list(bam=bam, tmpl=tmpl),
@@ -29,6 +30,8 @@ setMethod(scanBam, "character",
             paste(space(which), ":", start(which), "-", end(which),
                   sep="")
         result
-     } else 
-        .Call(.scan_bam, bam, tmpl, NULL, flag, simpleCigar)
+     } else {
+         on.exit(.Call(.scan_bam_cleanup))
+         list(.Call(.scan_bam, bam, tmpl, NULL, flag, simpleCigar))
+     }
 })

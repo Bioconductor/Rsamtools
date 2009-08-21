@@ -37,18 +37,28 @@ library(ShortRead)
                             what=.readAligned_bamWhat())
     }
     ## handle multiple files
-    result <- lapply(files, scanBam, param=param, ...)
-    if (length(bamWhich(param)) != 0)
-        result <- unlist(result, recursive=FALSE, use.names=FALSE)
+    if (length(files) != 1)
+        stop("dirPath, pattern must match exactly 1 file, but matched ",
+             length(files))
+##     result <- lapply(files, scanBam, param=param, ...)
+    result <- scanBam(files, ..., param=param)
+##     if (length(bamWhich(param)) != 0)
+##         result <- unlist(result, recursive=FALSE, use.names=FALSE)
 
     ulist <- function(X, ...)
         unlist(lapply(X, "[[", ...), use.names=FALSE)
-    uxscat <- function(X, ...)
-        do.call(xscat, ulist(X, ...))
+    uxsappend <- function(X, ...) {
+        elts <- ulist(X, ...)
+        res <- elts[[1]]
+        for (i in seq_along(elts[-1]))
+             res <- append(res, elts[[i+1]])
+        res
+    }
 
-    AlignedRead(sread=uxscat(result, "seq"),
+    AlignedRead(sread=uxsappend(result, "seq"),
                 id=BStringSet(ulist(result, "qname")),
-                quality=FastqQuality(uxscat(result, "qual")),
+                quality=FastqQuality(as(uxsappend(result, "qual"),
+                  "BStringSet")),
                 chromosome=factor(ulist(result, "rname")),
                 strand=ulist(result, "strand"),
                 position=ulist(result, "pos"),
@@ -61,10 +71,3 @@ library(ShortRead)
                       "Type of read; see ?scanBam"))))
 }
 
-##
-
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-res <- .readAligned_bam(fl, param=ScanBamParam())
-res <- .readAligned_bam(fl, param=ScanBamParam(simpleCigar=TRUE))
-(res <- .readAligned_bam(fl))
-sread(res)
