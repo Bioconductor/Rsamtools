@@ -4,12 +4,17 @@
 \alias{Rsamtools}
 \docType{package}
 \title{
-Interface to the samtools aligned sequece utilities
+  'samtools' aligned sequence utilities interface
 }
 \description{
+  This package provides facilities for parsing samtools BAM (binary)
+  files representing aligned sequences.
 }
 \details{
-See \code{packageDescription('Rsamtools')} for details
+
+  See \code{packageDescription('Rsamtools')} for package details. A
+  useful starting point is the \code{\link{scanBam}} manual page.
+
 }
 \author{
 Author: Martin Morgan
