@@ -1,4 +1,4 @@
-\name{ScanBamParam-class}
+\name{ScanBamParam}
 \Rdversion{1.1}
 \docType{class}
 \alias{ScanBamParam-class}
@@ -143,6 +143,8 @@ bamSimpleCigar(object)
 
 \section{Methods}{
 
+  (See 'usage' for details on invocation.)
+
   Constructor:
   \describe{
 
@@ -190,8 +192,8 @@ p3 <- ScanBamParam(what=c("rname", "strand", "pos", "width"))
                 
 # use
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-res <- scanBam(fl, p2)
-lapply(res[[1]], head)
+res <- scanBam(fl, p2)[[1]]
+lapply(res, head)
 
 }
 \keyword{classes}

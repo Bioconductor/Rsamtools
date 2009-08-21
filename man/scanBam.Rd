@@ -28,9 +28,9 @@ scanBam(file, ...)
 }
 \details{
 
-  This method parse binary BAM files; text SAM files can be parsed using
-  R's \code{\link{scan}} function, especially with arguments \code{what}
-  to control which fields are parsed.
+  This method parses binary BAM files; text SAM files can be parsed
+  using R's \code{\link{scan}} function, especially with arguments
+  \code{what} to control which fields are parsed.
   
   Details of the \code{ScanBamParam} class are provide on its help page;
   several salient points are reiterated here. \code{ScanBamParam} can
