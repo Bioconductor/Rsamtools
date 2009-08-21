@@ -28,7 +28,7 @@ uint8_t *bam_aux_get_core(bam1_t *b, const char tag[2])
 #define __skip_tag(s) do { \
 		int type = toupper(*(s));										\
 		++(s);															\
-		if (type == 'C') ++(s);											\
+		if (type == 'C' || type == 'A') ++(s);							\
 		else if (type == 'S') (s) += 2;									\
 		else if (type == 'I' || type == 'F') (s) += 4;					\
 		else if (type == 'D') (s) += 8;									\
