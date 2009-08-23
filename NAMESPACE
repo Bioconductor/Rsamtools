@@ -2,8 +2,10 @@ useDynLib(Rsamtools, .registration=TRUE)
 
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
-importClassesFrom(IRanges, RangesList)
+importClassesFrom(IRanges, RangesList, Sequence, Annotated)
 
 exportPattern("^[^\\.]")
 
-exportClasses(ScanBamParam)
+exportClasses(ScanBamParam, Cigar)
+
+exportMethods(length, names, "[", "[[", show)

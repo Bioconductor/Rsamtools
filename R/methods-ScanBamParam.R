@@ -68,3 +68,14 @@ scanBamWhat <- function()
     names(.Call(.scan_bam_template))
 }
 
+setMethod(show, "ScanBamParam",
+          function(object)
+{
+    .show_classname(object)
+    cat("bamFlag: keep '0' bits: ", bamFlag(object)[1],
+        "; keep '1' bits: ", bamFlag(object)[2], "\n", sep="")
+    cat("bamSimpleCigar: ", bamSimpleCigar(object), "\n", sep="")
+    cat("bamWhich:", length(bamWhich(object)), "elements\n")
+    what <- paste("bamWhat: ", paste(bamWhat(object), collapse=", "))
+    cat(strwrap(what, exdent=2), sep="\n")
+})

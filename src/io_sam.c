@@ -1,5 +1,5 @@
 #include "samtools/sam.h"
-#include "Rsamtools.h"
+#include "io_sam.h"
 #include "snap.h"
 #include "utilities.h"
 #include "IRanges_interface.h"
@@ -469,15 +469,27 @@ _scan_bam_finish(_BAM_DATA *bdata)
 		_as_factor(s, (const char **) bdata->header->target_name,
 				   bdata->header->n_targets);
 	}
+	if ((s = VECTOR_ELT(bdata->result, CIGAR_IDX)) != R_NilValue) {
+		SEXP ss, tt, nmspc;
+		nmspc = PROTECT(_get_namespace("Rsamtools"));
+		NEW_CALL(ss, tt, "Cigar", nmspc, 2);
+		CSET_CDR(tt, "cigars", s);
+		CEVAL_TO(ss, nmspc, s);
+		PROTECT(s);
+		SET_VECTOR_ELT(bdata->result, CIGAR_IDX, s);
+		UNPROTECT(2);
+	}
 	if ((s = VECTOR_ELT(bdata->result, SEQ_IDX)) != R_NilValue)
 	{
-		s = _snap_as_XStringSet(bdata->seq, "DNAString");
+		s = PROTECT(_snap_as_XStringSet(bdata->seq, "DNAString"));
 		SET_VECTOR_ELT(bdata->result, SEQ_IDX, s);
+		UNPROTECT(1);
 	}
 	if ((s = VECTOR_ELT(bdata->result, QUAL_IDX)) != R_NilValue)
 	{
-		s = _snap_as_PhredQuality(bdata->qual);
+		PROTECT(s = _snap_as_PhredQuality(bdata->qual));
 		SET_VECTOR_ELT(bdata->result, QUAL_IDX, s);
+		UNPROTECT(1);
 	}
 }
 

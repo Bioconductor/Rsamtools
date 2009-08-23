@@ -1,7 +1,11 @@
 #ifndef _RSNAP_H_
 #define _RSNAP_H_
 
-#include <Rdefines.h>
+#include <Rinternals.h>
+
+typedef enum {
+	INTTYPE = 0, RAWTYPE
+} SNAPTYPE;
 
 typedef struct _snap_t _SNAP_T;
 

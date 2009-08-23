@@ -17,11 +17,11 @@ scanBam(file, ...)
 
 \arguments{
 
-  \item{file}{ The file name of the `BAM' file to be parsed.  }
+  \item{file}{The file name of the `BAM' file to be parsed.}
 
-  \item{\dots}{ Additional arguments, passed to methods }
+  \item{\dots}{Additional arguments, passed to methods.}
 
-  \item{param}{ For the \code{scanBam,character-method}, an instance of
+  \item{param}{For the \code{scanBam,character-method}, an instance of
 	\code{\linkS4class{ScanBamParam}}. This influences which fields and
 	what records are input.}
 
@@ -30,7 +30,7 @@ scanBam(file, ...)
 
   This method parses binary BAM files; text SAM files can be parsed
   using R's \code{\link{scan}} function, especially with arguments
-  \code{what} to control which fields are parsed.
+  \code{what} to control the fields are parsed.
   
   Details of the \code{ScanBamParam} class are provide on its help page;
   several salient points are reiterated here. \code{ScanBamParam} can

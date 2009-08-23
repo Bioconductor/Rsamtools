@@ -34,7 +34,7 @@ struct _snap_elt_t {
 typedef struct _snap_list_t _SNAP_LIST_T;
 
 struct _snap_list_t {
-	SEXPTYPE type;
+	SNAPTYPE type;
 	size_t sizeof_type;
 	_SNAP_ELT_T *root, *curr;
 };
@@ -119,17 +119,17 @@ _snap_cleanup_all()
 /* implementation */
 
 _SNAP_ELT_T *
-_snap_elt_new(SEXPTYPE type, size_t elt_len)
+_snap_elt_new(SNAPTYPE type, size_t elt_len)
 {
 	_SNAP_ELT_T *selt = Calloc(1, _SNAP_ELT_T);
 	void *buf = 0;
 	size_t sizeof_type = 0;
 	switch(type) {
-	case INTSXP:
+	case INTTYPE:
 		buf = (void *) Calloc(elt_len, int);
 		sizeof_type = sizeof(int);
 		break;
-	case RAWSXP:
+	case RAWTYPE:
 		buf = (void *) Calloc(elt_len, char);
 		sizeof_type = sizeof(char);
 		break;
@@ -144,15 +144,15 @@ _snap_elt_new(SEXPTYPE type, size_t elt_len)
 }
 
 _SNAP_LIST_T *
-_snap_list_new(SEXPTYPE type, size_t sizeof_elt)
+_snap_list_new(SNAPTYPE type, size_t sizeof_elt)
 {
 	_SNAP_LIST_T *slptr = Calloc(1, _SNAP_LIST_T);
 	slptr->type = type;
 	switch(type) {
-	case INTSXP:
+	case INTTYPE:
 		slptr->sizeof_type = sizeof(int);
 		break;
-	case RAWSXP:
+	case RAWTYPE:
 		slptr->sizeof_type = sizeof(char);
 		break;
 	default:
@@ -226,8 +226,8 @@ _SNAP_T *
 _snap_new()
 {
 	_SNAP_T *sptr = Calloc(1, _SNAP_T);
-	sptr->str = _snap_list_new(RAWSXP, _SNAP_ELT_SZ);
-	sptr->width = _snap_list_new(INTSXP, _SNAP_ELT_SZ);
+	sptr->str = _snap_list_new(RAWTYPE, _SNAP_ELT_SZ);
+	sptr->width = _snap_list_new(INTTYPE, _SNAP_ELT_SZ);
 	_snap_alloc_register(sptr);
 	return sptr;
 }
@@ -240,31 +240,22 @@ _snap_append(_SNAP_T *sptr, const char *string)
 	_snap_list_append_int(sptr->width, len);
 }
 
-size_t
-_snap_elts_length(_SNAP_ELT_T *sptr)
-{
-	size_t len = 0;
-	while (sptr != NULL) {
-		len += sptr->curr - sptr->start;
-		sptr = sptr->next;
-	}
-	return len;
-}
-
 /* collapse into R objects */
 
 SEXP
 _snap_list_to(_SNAP_LIST_T *lst)
 {
-	SEXPTYPE type = SL_TYPE(lst);
+	SNAPTYPE type = SL_TYPE(lst);
 	size_t n_elt = SL_LENGTH(lst);
-	SEXP sexp = PROTECT(allocVector(type, n_elt));
+	SEXP sexp = 0;
 	void *to = 0;
 	switch(type) {
-	case RAWSXP:
+	case RAWTYPE:
+		sexp = PROTECT(NEW_RAW(n_elt));
 		to = RAW(sexp);
 		break;
-	case INTSXP:
+	case INTTYPE:
+		sexp = PROTECT(NEW_INTEGER(n_elt));
 		to = INTEGER(sexp);
 		break;
 	default:
@@ -322,12 +313,11 @@ _snap_as_PhredQuality(_SNAP_T *snap)
 {
 	SEXP xstringset = PROTECT(_snap_as_XStringSet(snap, "BString"));
 	SEXP s, t, nmspc, result;
-	nmspc = PROTECT(_get_namespace("Biostrings"));
+	nmspc = PROTECT(_get_namespace("Rsamtools"));
 	NEW_CALL(s, t, "PhredQuality", nmspc, 2);
 	CSET_CDR(t, "x", xstringset);
-	nmspc = PROTECT(_get_namespace("Rsamtools"));
 	CEVAL_TO(s, nmspc, result);
-	UNPROTECT(3);
+	UNPROTECT(2);
 	return result;
 }
 

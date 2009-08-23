@@ -11,6 +11,8 @@
 \alias{bamWhich}
 \alias{bamFlag}
 \alias{bamSimpleCigar}
+% methods
+\alias{show,ScanBamParam-method}
 
 \title{Parameters for scanning BAM files}
 \description{
@@ -40,6 +42,8 @@ bamWhat(object)
 bamWhich(object)
 bamFlag(object)
 bamSimpleCigar(object)
+
+\S4method{show}{ScanBamParam}(object)
 
 }
 
@@ -124,26 +128,26 @@ bamSimpleCigar(object)
 \section{Slots}{
   \describe{
 
-    \item{\code{flag}:}{Object of class \code{integer} encoding flags
+    \item{\code{flag}}{Object of class \code{integer} encoding flags
       to be kept when they have their '0' (\code{keep0}) or '1'
       (\code{keep1}) bit set.}
 
-    \item{\code{simpleCigar}:}{Object of class \code{logical}
+    \item{\code{simpleCigar}}{Object of class \code{logical}
      indicating, when TRUE, that only 'simple' cigars (empty or 'M') are
      returned.}
 
-    \item{\code{which}:}{Object of class \code{RangesList} indicating
+    \item{\code{which}}{Object of class \code{RangesList} indicating
       which reference sequence and coordinate reads must overlap.}
 
-    \item{\code{what}:}{Object of class \code{character} indicating
+    \item{\code{what}}{Object of class \code{character} indicating
     which fields are to be returned.}
 
   }
 }
 
-\section{Methods}{
+\section{Functions and methods}{
 
-  (See 'usage' for details on invocation.)
+  See 'Usage' for details on invocation.
 
   Constructor:
   \describe{
@@ -155,17 +159,24 @@ bamSimpleCigar(object)
   Accessors:
   \describe{
 
-	\item{bamWhat:}{Returns a \code{character} vector of fields to be
+	\item{bamWhat}{Returns a \code{character} vector of fields to be
 	extracted.}
 
-	\item{bamWhich:}{Returns a \code{RangesList} of bounds on reads to
+	\item{bamWhich}{Returns a \code{RangesList} of bounds on reads to
 	  be extracted. A length 0 \code{RangesList} represents all reads.}
 
-	\item{bamFlag:}{Returns an \code{integer(2)} representation of reads
+	\item{bamFlag}{Returns an \code{integer(2)} representation of reads
 	  flagged to be kept or excluded.}
 
-	\item{bamSimpleCigar:}{Returns a \code{logical(1)} vector indicating
+	\item{bamSimpleCigar}{Returns a \code{logical(1)} vector indicating
 	  whether reads without indels or clipping be kept.}
+
+  }
+
+  Methods:
+  \describe{
+
+	\item{show}{Compactly display the object.}
 
   }
 
