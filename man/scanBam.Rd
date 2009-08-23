@@ -110,7 +110,7 @@ res <- scanBam(fl)[[1]] # always list-of-lists
 names(res)
 length(res[["qname"]])
 lapply(res, head, 3)
-table(res[["cigar"]])
+table(cigars(res[["cigar"]]))
 table(width(res[["seq"]]))
 table(res[["strand"]])
 table(res[["flag"]])

@@ -5,7 +5,7 @@ fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 res <- scanBam(fl)[[1]]
 names(res)
 lapply(res, head, 3)
-table(res[["cigar"]])
+table(cigars(res[["cigar"]]))
 table(width(res[["seq"]]))
 table(res[["strand"]])
 table(res[["flag"]])
