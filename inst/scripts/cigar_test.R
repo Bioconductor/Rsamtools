@@ -23,3 +23,6 @@ test_cigar_table <- function() {
     lens <- .Call(Rsamtools:::.cigar_run_count, ucig)
     checkEquals(sum(lens) + sum(lens==0), nrow(df))
 }
+
+test_cigar_run_count()
+test_cigar_table()

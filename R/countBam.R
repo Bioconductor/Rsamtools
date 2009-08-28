@@ -5,20 +5,19 @@ setMethod(countBam, "character",
     simpleCigar <- bamSimpleCigar(param)
     what <- bamWhat(param)
     which <- bamWhich(param)
-    bam <- .Call(.scan_bam_open, file, "rbu")
     ## FIXME: error handling
     if (!is.null(space(which))) {
-        result <- mapply(function(bam, space, start, end) {
-            spc <- list(space, start, end)
-            .Call(.count_bam, bam, spc, flag, simpleCigar)
-        }, space(which), start(which), end(which),
-                         MoreArgs=list(bam=bam),
-                         USE.NAMES=FALSE)
-        names(result) <-
-            paste(space(which), ":", start(which), "-", end(which),
-                  sep="")
-        result
+        x <- .Call(.count_bam, file, "rbu",
+                   list(space(which), start(which), end(which)),
+                   flag, simpleCigar)
+        data.frame(space=space(which), start=start(which),
+                   end=end(which), width=width(which),
+                   file=basename(file), records=x[["records"]],
+                   nucleotides=x[["nucleotides"]])
      } else {
-         .Call(.count_bam, bam, NULL, flag, simpleCigar)
+         x <- .Call(.count_bam, file, "rbu", NULL, flag, simpleCigar)
+         data.frame(space=NA, start=NA, end=NA, width=NA,
+                   file=basename(file), records=x[["records"]],
+                   nucleotides=x[["nucleotides"]])
      }
 })

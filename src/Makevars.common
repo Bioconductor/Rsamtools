@@ -1,6 +1,6 @@
 PKG_OBJECTS = \
   io_sam.o cigar.o \
-  snap.o utilities.o encode.o \
+  utilities.o encode.o \
   Biostrings_stubs.o IRanges_stubs.o \
   R_init_Rsamtools.o 
 SAMTOOLS_OBJECTS = \

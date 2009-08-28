@@ -44,9 +44,8 @@ _as_factor(SEXP vec, const char **lvls, const int n_lvls)
 }
 
 void
-_reverse(char *buf)
+_reverse(char *buf, int len)
 {
-    size_t len = strlen(buf);
     int i;
     char tmp;
     for (i = 0; i < floor(len / 2); ++i) {
@@ -57,7 +56,7 @@ _reverse(char *buf)
 }
 
 void
-_reverseComplement(char *buf)
+_reverseComplement(char *buf, int len)
 {
     static const int MAX_MAP = 256;
     static char map[256];
@@ -69,7 +68,7 @@ _reverseComplement(char *buf)
         map['A'] = 'T'; map['C'] = 'G'; map['G'] = 'C'; map['T'] = 'A';
         map['a'] = 't'; map['c'] = 'g'; map['g'] = 'c'; map['t'] = 'a';
     }
-    _reverse(buf);
-    for (int i = 0; i < strlen(buf); ++i)
+    _reverse(buf, len);
+    for (int i = 0; i < len; ++i)
         buf[i] = map[(int) buf[i]];
 }
