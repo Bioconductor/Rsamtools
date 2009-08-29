@@ -1,6 +1,3 @@
-library(Rsamtools)
-library(RUnit)
-
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
 .check0 <- function(res)
@@ -117,10 +114,5 @@ test_scanBam_flag <- function()
 
     checkIdentical(1641L, unique(sapply(res1, length)))
 }
-
-test_scanBam()
-test_scanBam_which()
-test_scanBam_what()
-test_scanBam_flag()
 
 

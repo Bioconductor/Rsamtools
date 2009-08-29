@@ -1,6 +1,3 @@
-library(Rsamtools)
-library(RUnit)
-
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
 test_countBam <- function()
@@ -26,11 +23,3 @@ test_countBam <- function()
     rownames(exp) <- NULL
     checkIdentical(exp, countBam(fl, param=p2))
 }
-
-test_countBam()
-
-
-
-
-
-
