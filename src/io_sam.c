@@ -88,7 +88,7 @@ _bam_tryindexload(const char *fname)
 }
 
 uint32_t
-_bamseq(const bam1_t *bam, char *BUF)
+_bamseq(const bam1_t *bam, unsigned char *BUF)
 {
 	static const char key[] = {
 		'\0', 'A', 'C',  '\0',  'G', '\0', '\0', '\0', 
@@ -105,7 +105,7 @@ _bamseq(const bam1_t *bam, char *BUF)
 }
 
 uint32_t
-_bamqual(const bam1_t *bam, char *BUF)
+_bamqual(const bam1_t *bam, unsigned char *BUF)
 {
 	uint32_t len = bam->core.l_qseq;
 	unsigned char *bamq = bam1_qual(bam);
@@ -334,15 +334,12 @@ int
 _do_scan_bam(_BAM_DATA *bdata, SEXP bfile, SEXP space, _PARSE1_FUNC parse1)
 {
 	int status;
-	samfile_t *sfile = (samfile_t *) R_ExternalPtrAddr(bfile);
 
 	if (space == R_NilValue) {	/* everything */
 		status = _scan_bam_all(bdata, parse1);
 	} else {					/* fetch */
 		const char *fname = 
 			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
-		const char *spc = 
-			translateChar(STRING_ELT(VECTOR_ELT(space, 0), 0));
 		status = _scan_bam_fetch(bdata, fname, 
 								 VECTOR_ELT(space, 0),
 								 INTEGER(VECTOR_ELT(space, 1)),
@@ -577,7 +574,7 @@ scan_bam(SEXP fname, SEXP mode, SEXP template_list, SEXP space,
 		if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
 			Rf_error("'template' names do not match scan_bam_template\n'");
 
-	int irange, nrange = LENGTH(VECTOR_ELT(count, 0));
+	int nrange = LENGTH(VECTOR_ELT(count, 0));
 	SEXP result = PROTECT(NEW_LIST(nrange));
 	/* result: 
 	     range1: tmpl1, tmpl2...
