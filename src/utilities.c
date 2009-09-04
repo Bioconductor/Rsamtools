@@ -16,7 +16,7 @@ _get_namespace(const char* pkg)
 SEXP
 _get_strand_levels()
 {
-    SEXP nmspc = PROTECT(_get_namespace("ShortRead"));
+    SEXP nmspc = PROTECT(_get_namespace("Rsamtools"));
     SEXP ans = eval(findVar(install(".STRAND_LEVELS"), nmspc), nmspc);
     UNPROTECT(1);
     return ans;

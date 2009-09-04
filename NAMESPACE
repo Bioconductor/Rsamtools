@@ -4,6 +4,8 @@ importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
 importFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
+importFrom(BSgenome, strand)
+
 importClassesFrom(IRanges, RangesList, RangedData, Sequence, Annotated)
 
 exportPattern("^[^\\.]")
