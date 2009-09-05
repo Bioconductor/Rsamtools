@@ -616,9 +616,11 @@ scan_bam(SEXP fname, SEXP mode, SEXP template_list, SEXP space,
 	int status = _do_scan_bam(bdata, bfile, space, _scan_bam_parse1);
 	if (status < 0) {
 		int idx = bdata->idx;
+		const char *fname0 = 
+			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
 		_Free_BAM_DATA(bdata);
 		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d",
-				 R_ExternalPtrProtected(bfile), idx);
+				 fname0, idx);
 	}
 
 	_scan_bam_finish(bdata);
@@ -668,16 +670,16 @@ count_bam(SEXP fname, SEXP mode, SEXP space, SEXP keepFlags,
 	UNPROTECT(1);
 
 	_BAM_DATA *bdata = _init_BAM_DATA(bfile, keepFlags, isSimpleCigar);
-
 	bdata->extra = result;
 
 	int status = _do_scan_bam(bdata, bfile, space, _count_bam1);
-
 	if (status < 0) {
 		int idx = bdata->idx;
+		const char *fname0 = 
+			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
 		_Free_BAM_DATA(bdata);
 		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d",
-				 R_ExternalPtrProtected(bfile), idx);
+				 fname0, idx);
 	}
 
 	_Free_BAM_DATA(bdata);
