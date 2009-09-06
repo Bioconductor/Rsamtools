@@ -115,4 +115,26 @@ test_scanBam_flag <- function()
     checkIdentical(1641L, unique(sapply(res1, length)))
 }
 
+test_scanBam_badSpace <- function()
+{
+    which <- RangesList(badspc=IRanges(100000, 2000000))
+    p1 <- ScanBamParam(which=which)
 
+    oopts <- options(warn=-1)
+    on.exit(options(oopts))
+    flag <- list()
+    tryCatch({
+        withCallingHandlers(scanBam(fl, param=p1), warning=function(w) {
+            checkTrue(grepl("space: badsp", conditionMessage(w)))
+            flag[["warn"]] <<- TRUE
+        })
+    }, error=function(e) {
+        checkTrue(grepl(paste("file:", fl), conditionMessage(e)))
+        flag[["err"]] <<- TRUE
+    }, finally=local({
+        checkEquals(2L, length(flag))
+        checkTrue(all(flag))
+        flag[["flag"]] <<- TRUE
+    }))
+    checkTrue(flag[["flag"]])
+}

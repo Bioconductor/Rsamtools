@@ -43,6 +43,9 @@ enum {
 
 enum { CIGAR_SIMPLE = 1 };
 
+SEXP _count_bam(SEXP bfile, SEXP mode, SEXP space, SEXP keepFlags,
+				SEXP isSimpleCigar);
+
 _BAM_DATA *
 _Calloc_BAM_DATA(int blocksize, int buf_sz, int cigar_buf_sz)
 {
@@ -455,6 +458,47 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 }
 
 SEXP
+_scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
+{
+ 	int nrange = LENGTH(VECTOR_ELT(count, 0));
+	SEXP result = PROTECT(NEW_LIST(nrange));
+	/* result: 
+	   range1: tmpl1, tmpl2...
+	   range2: tmpl1, tmpl2...
+	   ...
+	*/
+	for (int irange = 0; irange < nrange; ++irange) 
+	{
+		int n_read = INTEGER(VECTOR_ELT(count, 0))[irange],
+			n_nucs = INTEGER(VECTOR_ELT(count, 1))[irange];
+
+		SEXP tmpl = PROTECT(scan_bam_template());
+		for (int i = 0; i < LENGTH(names); ++i) {
+			if (VECTOR_ELT(template_list, i) == R_NilValue)
+				SET_VECTOR_ELT(tmpl, i, R_NilValue);
+			else {
+				if (SEQ_IDX == i || QUAL_IDX == i) {
+					SEXP lst = PROTECT(NEW_LIST(2));
+					SET_TRUELENGTH(lst, 0); /* nucleotide count */
+					SET_VECTOR_ELT(lst, 0, NEW_RAW(n_nucs));
+					SET_VECTOR_ELT(lst, 1, NEW_INTEGER(n_read));
+					SET_VECTOR_ELT(tmpl, i, lst);
+					UNPROTECT(1);
+				} else {
+					SEXP elt = allocVector(TYPEOF(VECTOR_ELT(tmpl, i)),
+										   n_read);
+					SET_VECTOR_ELT(tmpl, i, elt);
+				}
+			}
+		}
+		SET_VECTOR_ELT(result, irange, tmpl);
+		UNPROTECT(1);
+	}
+	UNPROTECT(1);
+	return result;
+}
+
+SEXP
 _as_XStringSet(SEXP lst, const char *baseclass)
 {
 	SEXP seq = VECTOR_ELT(lst, 0);
@@ -558,11 +602,6 @@ SEXP
 scan_bam(SEXP fname, SEXP mode, SEXP template_list, SEXP space,
 		 SEXP keepFlags, SEXP isSimpleCigar)
 {
-	SEXP count = 
-		PROTECT(count_bam(fname, mode, space, keepFlags, isSimpleCigar));
-
-	SEXP bfile = PROTECT(scan_bam_open(fname, mode));
-
 	if (!IS_LIST(template_list) || 
 		LENGTH(template_list) != N_TMPL_ELTS)
 		Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
@@ -573,43 +612,26 @@ scan_bam(SEXP fname, SEXP mode, SEXP template_list, SEXP space,
 	for (int i = 0; i < LENGTH(names); ++i)
 		if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
 			Rf_error("'template' names do not match scan_bam_template\n'");
+	_scan_check_params(space, keepFlags, isSimpleCigar);
 
-	int nrange = LENGTH(VECTOR_ELT(count, 0));
-	SEXP result = PROTECT(NEW_LIST(nrange));
-	/* result: 
-	     range1: tmpl1, tmpl2...
-		 range2: tmpl1, tmpl2...
-		 ...
-	 */
-
-	for (int irange = 0; irange < nrange; ++irange) 
-	{
-		int n_read = INTEGER(VECTOR_ELT(count, 0))[irange],
-			n_nucs = INTEGER(VECTOR_ELT(count, 1))[irange];
-
-		SEXP tmpl = PROTECT(scan_bam_template());
-		for (int i = 0; i < LENGTH(names); ++i) {
-			if (VECTOR_ELT(template_list, i) == R_NilValue)
-				SET_VECTOR_ELT(tmpl, i, R_NilValue);
-			else {
-				if (SEQ_IDX == i || QUAL_IDX == i) {
-					SEXP lst = PROTECT(NEW_LIST(2));
-					SET_TRUELENGTH(lst, 0); /* nucleotide count */
-					SET_VECTOR_ELT(lst, 0, NEW_RAW(n_nucs));
-					SET_VECTOR_ELT(lst, 1, NEW_INTEGER(n_read));
-					SET_VECTOR_ELT(tmpl, i, lst);
-					UNPROTECT(1);
-				} else {
-					SEXP elt = allocVector(TYPEOF(VECTOR_ELT(tmpl, i)),
-										   n_read);
-					SET_VECTOR_ELT(tmpl, i, elt);
-				}
-			}
-		}
-		SET_VECTOR_ELT(result, irange, tmpl);
-		UNPROTECT(1);
+	SEXP bfile = PROTECT(scan_bam_open(fname, mode));
+	SEXP count = PROTECT(_count_bam(bfile, mode, space, keepFlags,
+									isSimpleCigar));
+	if (R_NilValue == count) {
+		scan_bam_close(bfile);
+		UNPROTECT(2);
+		Rf_error("Failed to scan BAM\n  file: %s", 
+				 translateChar(STRING_ELT(fname, 0)));
+	}
+	if (R_NilValue == space) {
+		/* bam file invalid if fully scanned */
+		scan_bam_close(bfile);
+		UNPROTECT(2); PROTECT(count);
+		bfile = PROTECT(scan_bam_open(fname, mode));
 	}
 
+	SEXP result = 
+		PROTECT(_scan_bam_result_init(count, template_list, names));
 	_BAM_DATA *bdata = _init_BAM_DATA(bfile, keepFlags, isSimpleCigar);
 	bdata->extra = (void *) result;
 
@@ -618,6 +640,7 @@ scan_bam(SEXP fname, SEXP mode, SEXP template_list, SEXP space,
 		int idx = bdata->idx;
 		const char *fname0 = 
 			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
+		scan_bam_close(bfile);
 		_Free_BAM_DATA(bdata);
 		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d",
 				 fname0, idx);
@@ -647,12 +670,9 @@ _count_bam1(const bam1_t *bam, void *data)
 }
 
 SEXP
-count_bam(SEXP fname, SEXP mode, SEXP space, SEXP keepFlags, 
-		  SEXP isSimpleCigar)
-{	
-	SEXP bfile = PROTECT(scan_bam_open(fname, mode));
-	_scan_check_params(space, keepFlags, isSimpleCigar);
-
+_count_bam(SEXP bfile, SEXP mode, SEXP space, SEXP keepFlags, 
+		   SEXP isSimpleCigar)
+{
 	SEXP result = PROTECT(NEW_LIST(2));
 	int spc_length = 
 		(R_NilValue == space) ? 1 : LENGTH(VECTOR_ELT(space, 0));
@@ -673,20 +693,28 @@ count_bam(SEXP fname, SEXP mode, SEXP space, SEXP keepFlags,
 	bdata->extra = result;
 
 	int status = _do_scan_bam(bdata, bfile, space, _count_bam1);
-	if (status < 0) {
-		int idx = bdata->idx;
-		const char *fname0 = 
-			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
-		_Free_BAM_DATA(bdata);
-		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d",
-				 fname0, idx);
-	}
+	if (status < 0) 
+		result = R_NilValue;
 
 	_Free_BAM_DATA(bdata);
+	UNPROTECT(1);
+	return result;
+}
+
+SEXP
+count_bam(SEXP fname, SEXP mode, SEXP space, SEXP keepFlags, 
+		  SEXP isSimpleCigar)
+{	
+	_scan_check_params(space, keepFlags, isSimpleCigar);
+	SEXP bfile = PROTECT(scan_bam_open(fname, mode));
+	SEXP count = PROTECT(_count_bam(bfile, mode, space, keepFlags,
+									isSimpleCigar));
 	scan_bam_close(bfile);
 	UNPROTECT(2);
 
-	return result;
+	if (R_NilValue == count)
+		Rf_error("failed to count BAM\n  file: %s", fname);
+	return count;
 }
 
 void
