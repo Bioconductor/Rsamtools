@@ -1,0 +1,11 @@
+library(Rsamtools)
+fl = "ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/data/NA19240/alignment/NA19240.chrom6.SLX.maq.SRP000032.2009_07.bam"
+which <- 
+p1 <- ScanBamParam(which=RangesList("6"=IRanges(10000, 11000)))
+res <- scanBam(fl, param=p1)[[1]]
+res[["seq"]]
+
+fl = "ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/data/NA19240/alignment/NA19240.chrom6.454.ssaha.SRP000032.2009_07.bam"
+p1 <- ScanBamParam(which=RangesList("6"=IRanges(100000, 110000)))
+res <- scanBam(fl, param=p1)[[1]]
+res[["seq"]]
