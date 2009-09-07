@@ -1,6 +1,7 @@
 library(Rsamtools)
 library(ShortRead)
 .file_names <- ShortRead:::.file_names
+.throw <- ShortRead:::.throw
 
 .readAligned_bamWhat <- function()
 {
@@ -14,7 +15,18 @@ library(ShortRead)
                simpleCigar=TRUE,
                what=.readAligned_bamWhat()))
 {
-    files <- .file_names(dirPath, pattern)
+    files <- 
+        if (!grepl("^(ftp|http)://", dirPath))
+            .file_names(dirPath, pattern)
+        else {
+            if (length(dirPath) != 1 || length(pattern) != 0) {
+                msg <- paste("ftp:// and http:// support requires",
+                             "'dirPath' as character(1),",
+                             "'pattern' as character(0)", collapse="")
+                .throw(SRError("UserArgumentMismatch", msg))
+            }
+            dirPath
+        }
     ## FIXME: currently we only deal with cigars without indels
     if (!missing(param)) {
         if (bamSimpleCigar(param) != TRUE) {
