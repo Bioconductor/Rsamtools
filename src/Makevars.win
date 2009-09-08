@@ -1,4 +1,4 @@
-PKG_LIBS+=$(ZLIB_LIBS)
+PKG_LIBS+=$(ZLIB_LIBS) -lws2_32
 include Makevars.common
 OBJECTS = $(PKG_OBJECTS) $(SAMTOOLS_OBJECTS:%=samtools/%)
 
