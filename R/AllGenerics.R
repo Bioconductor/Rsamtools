@@ -1,5 +1,5 @@
 setGeneric("scanBam",
-           function(file, ...) standardGeneric("scanBam"))
+           function(file, index=file, ...) standardGeneric("scanBam"))
 
 setGeneric("countBam",
-           function(file, ...) standardGeneric("countBam"))
+           function(file, index=file, ...) standardGeneric("countBam"))

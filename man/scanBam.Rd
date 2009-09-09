@@ -11,13 +11,16 @@
   selecting which fields and what records are to be imported.
 }
 \usage{
-scanBam(file, ...)
-\S4method{scanBam}{character}(file, ..., param=ScanBamParam())
+scanBam(file, index=file, ...)
+\S4method{scanBam}{character}(file, index=file, ..., param=ScanBamParam())
 }
 
 \arguments{
 
   \item{file}{The file name of the `BAM' file to be parsed.}
+
+  \item{index}{The name of the index file of the 'BAM' file being
+	parsed; this is given \emph{without} the '.bai' extension.}
 
   \item{\dots}{Additional arguments, passed to methods.}
 

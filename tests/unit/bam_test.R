@@ -138,3 +138,26 @@ test_scanBam_badSpace <- function()
     }))
     checkTrue(flag[["flag"]])
 }
+
+test_scanBam_index <- function()
+{
+    which <- RangesList(seq1=IRanges(1000, 2000),
+                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+    p1 <- ScanBamParam(which=which)
+    fl <- file.path("cases", "ex1_noindex.bam")
+    idx <- system.file("extdata", "ex1.bam", package="Rsamtools")
+
+    res <- scanBam(fl, idx, param=p1)
+    checkIdentical("list", class(res))
+    exp <- c("seq1:1000-2000", "seq2:100-1000", "seq2:1000-2000")
+    checkIdentical(exp, names(res))
+    for (i in seq_along(res)) .check1(res[[i]])
+
+    exp <- structure(c(612L, 1168L, 642L),
+                     .Names = c("seq1:1000-2000", "seq2:100-1000",
+                     "seq2:1000-2000"))
+    checkIdentical(exp,
+                   sapply(res, function(x) unique(sapply(x, length))))
+
+    checkException(scanBam(fl, tempfile(), param=p1), silent=TRUE)
+}

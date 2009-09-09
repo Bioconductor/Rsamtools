@@ -23,7 +23,6 @@ typedef struct {
 	void *extra;
 } _BAM_DATA;
 
-
 typedef int (*_PARSE1_FUNC)(const bam1_t *, void *);
 
 
@@ -43,8 +42,8 @@ enum {
 
 enum { CIGAR_SIMPLE = 1 };
 
-SEXP _count_bam(SEXP bfile, SEXP mode, SEXP space, SEXP keepFlags,
-				SEXP isSimpleCigar);
+SEXP _count_bam(SEXP bfile, SEXP index, SEXP mode, 
+				SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 
 _BAM_DATA *
 _Calloc_BAM_DATA(int blocksize, int buf_sz, int cigar_buf_sz)
@@ -146,7 +145,7 @@ _bamfile_finalizer(SEXP externalptr)
 }
 
 SEXP
-scan_bam_open(SEXP fname, SEXP mode)
+_scan_bam_open(SEXP fname, SEXP mode)
 {
 	if (!IS_CHARACTER(fname) || LENGTH(fname) != 1)
 		Rf_error("'fname' must be character(1)");
@@ -231,7 +230,7 @@ _scan_check_params(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 }
 
 _BAM_DATA *
-_init_BAM_DATA(SEXP bfile, SEXP flag, SEXP isSimpleCigar)
+_init_BAM_DATA(SEXP bfile, SEXP index, SEXP flag, SEXP isSimpleCigar)
 {
 	_BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 1024, 128);
 	bdata->parse_status = 0;
@@ -297,7 +296,7 @@ _scan_bam_all(_BAM_DATA *bd, _PARSE1_FUNC parse1)
 }
 
 int
-_scan_bam_fetch(_BAM_DATA *bd, const char *fname,
+_scan_bam_fetch(_BAM_DATA *bd, const char *fname, const char *indexfname,
 				SEXP space, int* start, int* end,
 				_PARSE1_FUNC parse1)
 {
@@ -317,7 +316,7 @@ _scan_bam_fetch(_BAM_DATA *bd, const char *fname,
 			return -1;
 		}
 
-		bam_index_t *bindex = _bam_tryindexload(fname);
+		bam_index_t *bindex = _bam_tryindexload(indexfname);
 		if (bindex == 0) {
 			Rf_warning("failed to read BAM index\n  base file: %s", 
 					   fname);
@@ -334,7 +333,8 @@ _scan_bam_fetch(_BAM_DATA *bd, const char *fname,
 }
 
 int
-_do_scan_bam(_BAM_DATA *bdata, SEXP bfile, SEXP space, _PARSE1_FUNC parse1)
+_do_scan_bam(_BAM_DATA *bdata, SEXP bfile, SEXP index,
+			 SEXP space, _PARSE1_FUNC parse1)
 {
 	int status;
 
@@ -343,7 +343,9 @@ _do_scan_bam(_BAM_DATA *bdata, SEXP bfile, SEXP space, _PARSE1_FUNC parse1)
 	} else {					/* fetch */
 		const char *fname = 
 			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
-		status = _scan_bam_fetch(bdata, fname, 
+		const char *indexfname =
+			translateChar(STRING_ELT(index, 0));
+		status = _scan_bam_fetch(bdata, fname, indexfname,
 								 VECTOR_ELT(space, 0),
 								 INTEGER(VECTOR_ELT(space, 1)),
 								 INTEGER(VECTOR_ELT(space, 2)),
@@ -599,8 +601,8 @@ _scan_bam_finish(_BAM_DATA *bdata)
 }
 
 SEXP
-scan_bam(SEXP fname, SEXP mode, SEXP template_list, SEXP space,
-		 SEXP keepFlags, SEXP isSimpleCigar)
+scan_bam(SEXP fname, SEXP index, SEXP mode, SEXP template_list, 
+		 SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
 	if (!IS_LIST(template_list) || 
 		LENGTH(template_list) != N_TMPL_ELTS)
@@ -614,9 +616,9 @@ scan_bam(SEXP fname, SEXP mode, SEXP template_list, SEXP space,
 			Rf_error("'template' names do not match scan_bam_template\n'");
 	_scan_check_params(space, keepFlags, isSimpleCigar);
 
-	SEXP bfile = PROTECT(scan_bam_open(fname, mode));
-	SEXP count = PROTECT(_count_bam(bfile, mode, space, keepFlags,
-									isSimpleCigar));
+	SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
+	SEXP count = PROTECT(_count_bam(bfile, index, mode, 
+									space, keepFlags, isSimpleCigar));
 	if (R_NilValue == count) {
 		scan_bam_close(bfile);
 		UNPROTECT(2);
@@ -627,15 +629,16 @@ scan_bam(SEXP fname, SEXP mode, SEXP template_list, SEXP space,
 		/* bam file invalid if fully scanned */
 		scan_bam_close(bfile);
 		UNPROTECT(2); PROTECT(count);
-		bfile = PROTECT(scan_bam_open(fname, mode));
+		bfile = PROTECT(_scan_bam_open(fname, mode));
 	}
 
 	SEXP result = 
 		PROTECT(_scan_bam_result_init(count, template_list, names));
-	_BAM_DATA *bdata = _init_BAM_DATA(bfile, keepFlags, isSimpleCigar);
+	_BAM_DATA *bdata = _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar);
 	bdata->extra = (void *) result;
 
-	int status = _do_scan_bam(bdata, bfile, space, _scan_bam_parse1);
+	int status = 
+		_do_scan_bam(bdata, bfile, index, space, _scan_bam_parse1);
 	if (status < 0) {
 		int idx = bdata->idx;
 		const char *fname0 = 
@@ -670,8 +673,8 @@ _count_bam1(const bam1_t *bam, void *data)
 }
 
 SEXP
-_count_bam(SEXP bfile, SEXP mode, SEXP space, SEXP keepFlags, 
-		   SEXP isSimpleCigar)
+_count_bam(SEXP bfile, SEXP index, SEXP mode, 
+		   SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
 	SEXP result = PROTECT(NEW_LIST(2));
 	int spc_length = 
@@ -689,10 +692,11 @@ _count_bam(SEXP bfile, SEXP mode, SEXP space, SEXP keepFlags,
 	setAttrib(result, R_NamesSymbol, nms);
 	UNPROTECT(1);
 
-	_BAM_DATA *bdata = _init_BAM_DATA(bfile, keepFlags, isSimpleCigar);
+	_BAM_DATA *bdata = _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar);
 	bdata->extra = result;
 
-	int status = _do_scan_bam(bdata, bfile, space, _count_bam1);
+	int status = 
+		_do_scan_bam(bdata, bfile, index, space, _count_bam1);
 	if (status < 0) 
 		result = R_NilValue;
 
@@ -702,13 +706,13 @@ _count_bam(SEXP bfile, SEXP mode, SEXP space, SEXP keepFlags,
 }
 
 SEXP
-count_bam(SEXP fname, SEXP mode, SEXP space, SEXP keepFlags, 
-		  SEXP isSimpleCigar)
+count_bam(SEXP fname, SEXP index, SEXP mode, 
+		  SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {	
 	_scan_check_params(space, keepFlags, isSimpleCigar);
-	SEXP bfile = PROTECT(scan_bam_open(fname, mode));
-	SEXP count = PROTECT(_count_bam(bfile, mode, space, keepFlags,
-									isSimpleCigar));
+	SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
+	SEXP count = PROTECT(_count_bam(bfile, index, mode, space, 
+									keepFlags, isSimpleCigar));
 	scan_bam_close(bfile);
 	UNPROTECT(2);
 

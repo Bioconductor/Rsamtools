@@ -23,3 +23,20 @@ test_countBam <- function()
     rownames(exp) <- NULL
     checkIdentical(exp, countBam(fl, param=p2))
 }
+
+test_countBam_index <- function()
+{
+    which <- RangesList(seq1=IRanges(1000, 2000),
+                        seq2=IRanges(c(100, 1000), c(1000, 2000)))
+    p1 <- ScanBamParam(which=which)
+    exp <- cbind(as.data.frame(which),
+                 file="ex1_noindex.bam",
+                 records=c(612L, 1168L, 642L),
+                 nucleotides=c(21549L, 41200L, 22640L))
+
+    fl <- file.path("cases", "ex1_noindex.bam")
+    idx <- system.file("extdata", "ex1.bam", package="Rsamtools")
+    checkIdentical(exp, countBam(fl, idx, param=p1))
+
+    checkException(countBam(fl, tempfile(), param=p1), silent=TRUE)
+}

@@ -1,13 +1,14 @@
 setMethod(countBam, "character",
-          function(file, ..., param=ScanBamParam())
+          function(file, index=file, ..., param=ScanBamParam())
 {
+    index <- normalizePath(path.expand(index))
     flag <- bamFlag(param)
     simpleCigar <- bamSimpleCigar(param)
     what <- bamWhat(param)
     which <- bamWhich(param)
-    ## FIXME: error handling
+    on.exit(.Call(.scan_bam_cleanup))
     if (!is.null(space(which))) {
-        x <- .Call(.count_bam, file, "rbu",
+        x <- .Call(.count_bam, file, index, "rbu",
                    list(space(which), start(which), end(which)),
                    flag, simpleCigar)
         data.frame(space=space(which), start=start(which),
@@ -15,7 +16,8 @@ setMethod(countBam, "character",
                    file=basename(file), records=x[["records"]],
                    nucleotides=x[["nucleotides"]])
      } else {
-         x <- .Call(.count_bam, file, "rbu", NULL, flag, simpleCigar)
+         x <- .Call(.count_bam, file, index, "rbu", NULL, flag,
+                    simpleCigar)
          data.frame(space=NA, start=NA, end=NA, width=NA,
                    file=basename(file), records=x[["records"]],
                    nucleotides=x[["nucleotides"]])
