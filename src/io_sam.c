@@ -601,8 +601,9 @@ _scan_bam_finish(_BAM_DATA *bdata)
 }
 
 SEXP
-scan_bam(SEXP fname, SEXP index, SEXP mode, SEXP template_list, 
-		 SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
+scan_bam(SEXP fname, SEXP index, SEXP mode,
+		 SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+		 SEXP template_list)
 {
 	if (!IS_LIST(template_list) || 
 		LENGTH(template_list) != N_TMPL_ELTS)

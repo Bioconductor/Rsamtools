@@ -4,28 +4,13 @@
 setMethod(scanBam, "character",
           function(file, index=file, ..., param=ScanBamParam())
 {
-    index <- normalizePath(path.expand(index))
-    flag <- bamFlag(param)
-    simpleCigar <- bamSimpleCigar(param)
-    what <- bamWhat(param)
-    which <- bamWhich(param)
-    ## template
     tmpl <- .scanBamTemplate()
-    if (!all(what %in% names(tmpl)))
-        warn("'what' argument contains invalid names:\n  ",
-             paste(what[!what %in% names(tmpl)], collapse=", "))
-    tmpl[!names(tmpl) %in% what] <- list(NULL)
-    ## which
-    on.exit(.Call(.scan_bam_cleanup))
-    if (!is.null(space(which))) {
-        result <- .Call(.scan_bam, file, index, "rbu", tmpl,
-                        list(space(which), start(which), end(which)),
-                        flag, simpleCigar)
-        names(result) <-
+    tmpl[!names(tmpl) %in% bamWhat(param)] <- list(NULL)
+    x <- .io_bam(.scan_bam, file, index, tmpl, param=param)
+    which <- bamWhich(param)
+    if (!is.null(space(which)))
+        names(x) <-
             paste(space(which), ":", start(which), "-", end(which),
                   sep="")
-        result
-     } else {
-         .Call(.scan_bam, file, NULL, "rbu", tmpl, NULL, flag, simpleCigar)
-     }
+    x
 })
