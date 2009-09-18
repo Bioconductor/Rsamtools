@@ -18,8 +18,9 @@ readPileup(file, ...)
 
 \arguments{
 
-  \item{file}{The file name, or \code{\link[base]{connection}} of the
-	pileup output file to be parsed.}
+  \item{file}{The file name, or
+	\code{\link[base:connections]{connection}}, of the pileup output file
+	to be parsed.}
 
   \item{\dots}{Additional arguments, passed to methods. For instance,
 	specify \code{variant} for the readPileup,character-method.}
