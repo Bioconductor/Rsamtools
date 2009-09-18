@@ -10,7 +10,7 @@ setMethod(scanBam, "character",
     which <- bamWhich(param)
     if (!is.null(space(which)))
         names(x) <-
-            paste(space(which), ":", start(which), "-", end(which),
-                  sep="")
+            paste(space(which), ":", .uunlist(start(which)), "-",
+                  .uunlist(end(which)), sep="")
     x
 })

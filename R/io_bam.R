@@ -14,7 +14,8 @@
     on.exit(.Call(.scan_bam_cleanup))
     if (!is.null(space(which)))
         .Call(func, file, index, "rb",
-              list(space(which), start(which), end(which)),
+              list(space(which), .uunlist(start(which)),
+                   .uunlist(end(which))),
               flag, simpleCigar, ...)
     else 
         .Call(func, file, index, "rb", NULL, flag,

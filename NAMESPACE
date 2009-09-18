@@ -2,6 +2,8 @@ useDynLib(Rsamtools, .registration=TRUE)
 
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
+importFrom(IRanges, unlist)
+
 importFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
 importFrom(BSgenome, strand)

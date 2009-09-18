@@ -65,7 +65,7 @@ test_scanBam <- function()
     checkIdentical(exp, rowSums(consensusMatrix(res[["qual"]])))
 }
 
-test_scanBam_which<- function()
+test_scanBam_which <- function()
 {
     ## 'which'
     which <- RangesList(seq1=IRanges(1000, 2000),
