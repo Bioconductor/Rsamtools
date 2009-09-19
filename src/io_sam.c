@@ -523,17 +523,12 @@ _as_XStringSet(SEXP lst, const char *baseclass)
 		PROTECT(new_IRanges("IRanges", start, width, R_NilValue));
 
 	const int XSETCLASS_BUF = 40;
-	if (strlen(baseclass) > XSETCLASS_BUF - 4)
-		error("Rsamtools internal error: *Set buffer too small");
 	char xsetclass[XSETCLASS_BUF];
-	snprintf(xsetclass, XSETCLASS_BUF, "%sSet", baseclass);
-	SEXP xclassdef = PROTECT(MAKE_CLASS(xsetclass));
-	SEXP xstringset = PROTECT(NEW_OBJECT(xclassdef));
-        
-	SET_SLOT(xstringset, install("super"), xstring);
-	SET_SLOT(xstringset, install("ranges"), irange);
-
-	UNPROTECT(6);
+	if (snprintf(xsetclass, XSETCLASS_BUF, "%sSet", baseclass)
+	    >= XSETCLASS_BUF)
+		error("Rsamtools internal error: *Set buffer too small");
+	SEXP xstringset = PROTECT(new_XStringSet(xsetclass, xstring, irange));
+	UNPROTECT(5);
 	return xstringset;
 }
 
