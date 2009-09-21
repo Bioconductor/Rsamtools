@@ -3,6 +3,7 @@
 #include "encode.h"
 #include "utilities.h"
 #include "IRanges_interface.h"
+#include "Biostrings_interface.h"
 
 typedef enum {
 	OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR=1, 
@@ -66,10 +67,9 @@ _Free_BAM_DATA(_BAM_DATA *bd)
 }
 
 samfile_t *
-_bam_tryopen(const char *fname, const char *mode)
+_bam_tryopen(const char *fname, const char *mode, void *aux)
 {
-	char *fn_list = 0;
-	samfile_t *sfile = samopen(fname, mode, fn_list);
+	samfile_t *sfile = samopen(fname, mode, aux);
 	if (sfile == 0)
 		Rf_error("failed to open SAM/BAM file\n  file: '%s'", fname);
 	if (sfile->header == 0 || sfile->header->n_targets == 0) {
@@ -154,7 +154,7 @@ _scan_bam_open(SEXP fname, SEXP mode)
 
 	const char *file = translateChar(STRING_ELT(fname, 0));
 	samfile_t *sfile = 
-		_bam_tryopen(file, CHAR(STRING_ELT(mode, 0)));
+		_bam_tryopen(file, CHAR(STRING_ELT(mode, 0)), 0);
 	if ((sfile->type & 1) != 1) {
 		samclose(sfile);
 		Rf_error("'fname' is not a BAM file\n  file: %s", file);
@@ -174,46 +174,44 @@ scan_bam_close(SEXP bfile)
 /* parse header */
 
 SEXP
-read_bam_header(SEXP fnames, SEXP mode, SEXP verbose)
+read_bam_header(SEXP fname, SEXP mode)
 {
-	if (!IS_CHARACTER(fnames))
-		error("'fnames' must be character()");
-	if (!IS_CHARACTER(mode) || LENGTH(mode) != 1)
+	if (!IS_CHARACTER(fname) || 1 != LENGTH(fname))
+		error("'fname' must be character(1)");
+	if (!IS_CHARACTER(mode) || 1 != LENGTH(mode))
 		error("'mode' must be character(1)");
-	if (!IS_LOGICAL(verbose) || LENGTH(verbose) != 1)
-		error("'verbose' must be logical(1)");
 
-	SEXP ans = PROTECT(NEW_LIST(LENGTH(fnames)));
-	SEXP ans_names = PROTECT(NEW_CHARACTER(LENGTH(fnames)));
-	for (int i = 0; i < LENGTH(fnames); ++i) {
-		samfile_t *sfile = 
-			_bam_tryopen(translateChar(STRING_ELT(fnames, i)), 
-						 CHAR(STRING_ELT(mode, 0)));
-		bam_header_t *header = sfile->header;
-		int n_elts = 
-			header->n_targets + (LOGICAL(verbose)[0] ? 1 : 0);
-		SEXP len = NEW_INTEGER(n_elts);
-		SET_VECTOR_ELT(ans, i, len); /* protect */
-		SEXP nm = PROTECT(NEW_CHARACTER(n_elts));
-		for (int j = 0; j < header->n_targets; ++j) {
-			SET_STRING_ELT(nm, j, mkChar(header->target_name[j]));
-			INTEGER(len)[j] = header->target_len[j];
-		}
-		char *txt = 
-			(char *) R_alloc(header->l_text + 1, sizeof(char));
-		strncpy(txt, header->text, header->l_text);
-		txt[header->l_text] = '\0';
-		if (LOGICAL(verbose)[0]) {
-			SET_VECTOR_ELT(ans, header->n_targets, mkChar(txt));
-			SET_STRING_ELT(nm, header->n_targets, mkChar("header"));
-		}
-		setAttrib(len, R_NamesSymbol, nm);
-		SET_STRING_ELT(ans_names, i, STRING_ELT(fnames, i));
-		UNPROTECT(1);
-		samclose(sfile);
+	samfile_t *sfile = 
+		_bam_tryopen(translateChar(STRING_ELT(fname, 0)), 
+					 CHAR(STRING_ELT(mode, 0)), 0);
+	bam_header_t *header = sfile->header;
+	int n_elts = header->n_targets;
+
+	SEXP ans = PROTECT(NEW_LIST(2));
+
+	/* target length / name */
+	SET_VECTOR_ELT(ans, 0, NEW_INTEGER(n_elts));
+	SEXP tlen = VECTOR_ELT(ans, 0); /* target length */
+	SEXP tnm = PROTECT(NEW_CHARACTER(n_elts)); /* target name */
+	setAttrib(tlen, R_NamesSymbol, tnm);
+	UNPROTECT(1);
+	for (int j = 0; j < n_elts; ++j) {
+		INTEGER(tlen)[j] = header->target_len[j];
+		SET_STRING_ELT(tnm, j, mkChar(header->target_name[j]));
 	}
-  
-	setAttrib(ans, R_NamesSymbol, ans_names);
+
+	/* 'aux' character string */
+	char *txt = (char *) R_alloc(header->l_text + 1, sizeof(char));
+	strncpy(txt, header->text, header->l_text);
+	txt[header->l_text] = '\0';
+	SET_VECTOR_ELT(ans, 1, mkString(txt));
+
+	samclose(sfile);
+
+	SEXP nms = PROTECT(NEW_CHARACTER(2));
+	SET_STRING_ELT(nms, 0, mkChar("targets"));
+	SET_STRING_ELT(nms, 1, mkChar("text"));
+	setAttrib(ans, R_NamesSymbol, nms);
 	UNPROTECT(2);
 	return ans;
 }
@@ -325,6 +323,7 @@ _scan_bam_fetch(_BAM_DATA *bd, const char *fname, const char *indexfname,
 
 		bam_fetch(sfile->x.bam, bindex, tid, 
 				  start[irange], end[irange], bd, parse1);
+		bam_index_destroy(bindex);
 		n_tot += bd->idx;
 		bd->irange += 1;
 		bd->idx = 0;
@@ -715,4 +714,84 @@ void
 scan_bam_cleanup()
 {
 	/* placeholder */
+}
+
+/* filterBam */
+
+int
+_filter_bam1(const bam1_t *bam, void *data)
+{
+	_BAM_DATA *bd = (_BAM_DATA *) data;
+	bd->idx += 1;
+	if (FALSE == _bam_filter(bam, bd))
+		return 0;
+	samwrite((samfile_t*) bd->extra, bam);
+	return 1;
+}
+
+SEXP
+_filter_bam(SEXP bfile, SEXP index,
+			SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+			SEXP fout_name, SEXP fout_mode)
+{
+	/* open destination */
+	_BAM_DATA *bdata = _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar);
+	/* FIXME: this just copies the header... */
+	samfile_t *f_out = 
+		_bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),
+					 CHAR(STRING_ELT(fout_mode, 0)),
+					 ((samfile_t *) R_ExternalPtrAddr(bfile))->header);
+	bdata->extra = f_out;
+
+	int status = 
+		_do_scan_bam(bdata, bfile, index, space, _filter_bam1);
+
+	/* sort and index destintation ? */
+	/* cleanup */
+	samclose(f_out);
+	_Free_BAM_DATA(bdata);
+
+	return status < 0 ? R_NilValue : fout_name;
+}
+
+
+SEXP
+filter_bam(SEXP fname, SEXP index, SEXP mode,
+		   SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+		   SEXP fout_name, SEXP fout_mode)
+{
+	_scan_check_params(space, keepFlags, isSimpleCigar);
+	if (!IS_CHARACTER(fout_name) || 1 != LENGTH(fout_name))
+		Rf_error("'fout_name' must be character(1)");
+	if (!IS_CHARACTER(fout_mode) || 1 != LENGTH(fout_mode))
+		Rf_error("'fout_mode' must be character(1)");
+	
+	SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
+	SEXP result = 
+		PROTECT(_filter_bam(bfile, index, space, keepFlags, 
+							isSimpleCigar, fout_name, fout_mode));
+
+	scan_bam_close(bfile);
+	UNPROTECT(2);
+
+	if (R_NilValue == result)
+		Rf_error("failed to filter BAM\n  file: %s\n  to:", 
+				 fname, fout_name);
+	return result;
+}
+
+/* index_bam */
+
+SEXP
+index_bam(SEXP fname)
+{
+	if (!IS_CHARACTER(fname) || 1 != LENGTH(fname))
+		Rf_error("'fname' must be character(1)");
+	const char *fbam = translateChar(STRING_ELT(fname, 0));
+	int status = bam_index_build(fbam);
+	if (0 != status)
+		Rf_error("failed to build index\n  file: %s", fbam);
+	char *fidx = (char *) R_alloc(strlen(fbam) + 5, sizeof(char));
+	sprintf(fidx, "%s.bai", fidx);
+	return mkString(fidx);
 }

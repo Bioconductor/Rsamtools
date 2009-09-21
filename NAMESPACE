@@ -4,6 +4,8 @@ importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
 importFrom(IRanges, unlist)
 
+importMethodsFrom(IRanges, coerce)
+
 importFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
 importFrom(BSgenome, strand)

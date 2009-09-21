@@ -1,8 +1,8 @@
 .io_bam <-
     function(func, file, index, ..., param)
 {
-    file <- normalizePath(path.expand(file))
-    index <- normalizePath(path.expand(index))
+    file <- .normalizePath(file)
+    index <- .normalizePath(index)
     flag <- bamFlag(param)
     simpleCigar <- bamSimpleCigar(param)
     what <- bamWhat(param)
@@ -21,4 +21,3 @@
         .Call(func, file, index, "rb", NULL, flag,
               simpleCigar, ...)
 }
-    

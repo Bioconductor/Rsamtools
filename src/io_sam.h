@@ -4,13 +4,17 @@
 #include <Rinternals.h>
 
 /* io_sam.c */
-SEXP read_bam_header(SEXP fname, SEXP mode, SEXP verbose);
+SEXP read_bam_header(SEXP fname, SEXP mode);
 SEXP scan_bam_template();
 SEXP scan_bam(SEXP fname, SEXP index, SEXP mode,
 			  SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
 			  SEXP template_list);
+SEXP filter_bam(SEXP fname, SEXP index, SEXP mode,
+				SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+				SEXP fout_name, SEXP fout_mode);
 SEXP count_bam(SEXP fname, SEXP index, SEXP mode, 
 			   SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
+SEXP index_bam(SEXP fname);
 void scan_bam_cleanup();		/* error handling only */
 
 #endif /* _IO_SAM_H_ */
