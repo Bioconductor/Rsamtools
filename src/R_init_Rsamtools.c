@@ -2,6 +2,10 @@
 #include "io_sam.h"
 #include "cigar.h"
 
+#ifdef _WIN32
+#include "samtools/knetfile.h"
+#endif
+
 static const R_CallMethodDef callMethods[] = {
 	/* io_sam.c */
 	{".read_bam_header", (DL_FUNC) &read_bam_header, 2},
@@ -20,6 +24,19 @@ static const R_CallMethodDef callMethods[] = {
 void
 R_init_Rsamtools(DllInfo *info)
 {
+#ifdef _WIN32
+	int status = knet_win32_init();
+	if (status != 0)
+	  Rf_error("internal: failed to initialize Winsock; error %d",
+			   status);
+#endif
     R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 }
 
+void
+R_unload_Rsamtools(DllInfo *info)
+{
+#ifdef _WIN32
+	knet_win32_destroy();
+#endif
+}

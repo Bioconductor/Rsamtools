@@ -17,7 +17,7 @@ _bEncode(char c)
 ENCODE_FUNC
 _encoder(const char *base)
 {
-    ENCODE_FUNC encode;
+    ENCODE_FUNC encode = NULL;
     if (strcmp(base, "DNAString")==0) {
         encode = _dnaEncode;
     } else if (strcmp(base, "RNAString")==0) {
