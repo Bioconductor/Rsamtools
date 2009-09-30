@@ -129,7 +129,8 @@ test_scanBam_badSpace <- function()
             flag[["warn"]] <<- TRUE
         })
     }, error=function(e) {
-        checkTrue(grepl(paste("file:", fl), conditionMessage(e)))
+        fl0 <- Rsamtools:::.normalizePath(fl)
+        checkTrue(grepl(paste("file:", fl0), conditionMessage(e), fixed=TRUE))
         flag[["err"]] <<- TRUE
     }, finally=local({
         checkEquals(2L, length(flag))
