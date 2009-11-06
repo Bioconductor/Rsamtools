@@ -3,7 +3,7 @@ cigarToIRangesList <- function(rname, strand, pos, cigar)
 {
     if (!is.factor(rname) || !is.character(levels(rname))) {
         if (!is.character(rname))
-            stop("'rname' must be a character vector (or a factor)")
+            stop("'rname' must be a character vector/factor")
         rname <- as.factor(rname)
     }
     if (!is.numeric(pos))
@@ -13,7 +13,7 @@ cigarToIRangesList <- function(rname, strand, pos, cigar)
     if (is.factor(cigar))
         cigar <- as.vector(cigar)
     if (!is.character(cigar))
-        stop("'cigar' must be a character vector (or a factor)")
+        stop("'cigar' must be a character vector/factor")
     C_ans <- .Call(".cigar_to_list_of_IRanges",
                    rname, strand, pos, cigar,
                    PACKAGE="Rsamtools")

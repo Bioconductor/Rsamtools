@@ -15,20 +15,20 @@ cigarToIRangesList(rname, strand, pos, cigar)
 
 \arguments{
   \item{rname}{
-    A character vector containing the name of the reference sequence
-    associated with each read (i.e. the name of the sequence the read
-    has been aligned to).
+    A character vector/factor containing the name of the
+    reference sequence associated with each read (i.e. the
+    name of the sequence the read has been aligned to).
   }
   \item{strand}{
     Ignored for now.
   }
   \item{pos}{
-    An integer vector containing the 1-based leftmost position/coordinate
-    of the clipped read sequence.
+    An integer vector containing the 1-based leftmost
+    position/coordinate of the clipped read sequence.
   }
   \item{cigar}{
-    A character vector containing the extended CIGAR string for each
-    read.
+    A character vector/factor containing the extended CIGAR
+    string for each read.
   }
 }
 
