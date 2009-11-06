@@ -45,10 +45,47 @@ cigarToIRangesList(rname, strand, pos, cigar)
 }
 
 \examples{
+## ---------------------------------------------------------------------
+## A. SMALL EXAMPLES
+## ---------------------------------------------------------------------
 rname <- c("chr6", "chr6", "chr2", "chr6")
 pos <- c(1, 300, 21,  320)
 cigar <- c("9M100D15M", "99M", "999M4M88I5M3D15M", "5M")
 cigarToIRangesList(rname, NULL, pos, cigar)
+
+## ---------------------------------------------------------------------
+## B. PERFORMANCE
+## ---------------------------------------------------------------------
+if (interactive()) {
+  ## We simulate 20 millions aligned reads, all 40-mers. 95% of them
+  ## align with no indels. 5% align with a big deletion (from the
+  ## reference to the read). In the context of an RNAseq experiment,
+  ## those 5% would be suspected to be "junction reads".
+  nreads <- 20000000L
+  njunctionreads <- nreads * 5L / 100L
+  some_fake_rnames <- paste("chr", c(1:6, "X"), sep="")
+  rname <- sample(some_fake_rnames, nreads, replace=TRUE)
+  pos <- sample(80000000L, nreads, replace=TRUE)
+  cigar <- character(nreads)
+  cigar[] <- "40M"
+  junctioncigars <- paste(
+      paste(10:30, "M", sep=""),
+      paste(sample(80:8000, njunctionreads, replace=TRUE), "N", sep=""),
+      paste(30:10, "M", sep=""), sep="")
+  cigar[sample(nreads, njunctionreads)] <- junctioncigars
+
+  ## The following takes between 13 and 15 sec. to complete:
+  system.time(irl <- cigarToIRangesList(rname, NULL, pos, cigar))
+
+  ## Internally, cigarToIRangesList() turns 'rname' into a factor
+  ## before starting the calculation. Hence it will run sligthly
+  ## faster if 'rname' is already a factor.
+  rname2 <- as.factor(rname)
+  system.time(irl2 <- cigarToIRangesList(rname2, NULL, pos, cigar))
+
+  ## The size of the resulting IRangesList object is about 160M:
+  object.size(irl)
+}
 }
 
-\keyword{ manip }
+\keyword{manip}
