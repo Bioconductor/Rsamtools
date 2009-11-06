@@ -85,38 +85,89 @@ cigar_table(SEXP cigar)
  * cigar_to_list_of_IRanges()
  */
 
+static char errmsg_buf[200];
+
+/* Return the number of chars that was read, or 0 if there is no more char
+   to read (i.e. cig0[offset] is '\0'), or -1 in case of a parse error. */
+/*
+static int get_next_cigar_OP(const char *cig0, int offset,
+		int *OPL, char *OP)
+{
+	char c;
+	int ret, n;
+
+	if (!(c = cig0[offset]))
+		return 0;
+	if (!isdigit(c)) {
+		snprintf(errmsg_buf, sizeof(errmsg_buf),
+			 "unsigned decimal integer expected at char %d",
+			 offset + 1);
+		return -1;
+	}
+	ret = sscanf(cig0 + offset, "%d%c%n", OPL, OP, &n);
+	if (ret < 2) {
+		snprintf(errmsg_buf, sizeof(errmsg_buf),
+			 "CIGAR parse error at or after char %d",
+			 offset + 1);
+		return -1;
+	}
+	if (*OPL <= 0) {
+		snprintf(errmsg_buf, sizeof(errmsg_buf),
+			 "invalid CIGAR operation length at char %d",
+			 offset + 1);
+		return -1;
+	}
+	return n;
+}
+*/
+
+static int get_next_cigar_OP(const char *cig0, int offset,
+		int *OPL, char *OP)
+{
+	char c;
+	int offset0, opl;
+
+	if (!(c = cig0[offset]))
+		return 0;
+	offset0 = offset;
+	opl = 0;
+	while (isdigit(c = cig0[offset])) {
+		offset++;
+		opl *= 10;
+		opl += c - '0';
+	}
+	if (opl == 0) {
+		snprintf(errmsg_buf, sizeof(errmsg_buf),
+			 "invalid CIGAR operation length at char %d",
+			 offset + 1);
+		return -1;
+	}
+	*OPL = opl;
+	if (!(*OP = cig0[offset])) {
+		snprintf(errmsg_buf, sizeof(errmsg_buf),
+			 "unexpected CIGAR end at char %d",
+			 offset + 1);
+		return -1;
+	}
+	offset++;
+	return offset - offset0;
+}
+
 static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
 {
-	const char *str;
-	int offset, OPL /* Operation Length */, n, ret, start, width;
-	char c, OP /* Operation */;
-	static char errmsg_buf[200];
+	const char *cig0;
+	int offset, OPL /* Operation Length */, n, start, width;
+	char OP /* Operation */;
 
-	str = CHAR(cigar_elt);
+	cig0 = CHAR(cigar_elt);
 	offset = 0;
 	start = pos_elt;
-	while (c = str[offset]) {
-		if (!isdigit(c)) {
-			snprintf(errmsg_buf, sizeof(errmsg_buf),
-				 "unsigned decimal integer expected at char %d",
-				 offset + 1);
+	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
+		if (n == -1)
 			return errmsg_buf;
-		}
-		ret = sscanf(str + offset, "%d%c%n", &OPL, &OP, &n);
-		if (ret < 2) {
-			snprintf(errmsg_buf, sizeof(errmsg_buf),
-				 "parse error at or after char %d", offset + 1);
-			return errmsg_buf;
-		}
-		if (OPL <= 0) {
-			snprintf(errmsg_buf, sizeof(errmsg_buf),
-				 "invalid CIGAR operation length at char %d",
-				 offset + 1);
-			return errmsg_buf;
-		}
 		width = 0;
 		switch (OP) {
-		/* Alignment match (can be a sequence match or mismatch */
+		/* Alignment match (can be a sequence match or mismatch) */
 		    case 'M': width = OPL; break;
 		/* Insertion to the reference */
 		    case 'I': break;
@@ -139,7 +190,8 @@ static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
 			return errmsg_buf;
 		}
 		if (width != 0) {
-			RangeAE_insert_at(range_ae, range_ae->start.nelt, start, width);
+			RangeAE_insert_at(range_ae, range_ae->start.nelt,
+					  start, width);
 			start += width;
 		}
 		offset += n;
@@ -167,8 +219,8 @@ static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
  * is that the CIGAR (and the read sequence) stored in the SAM file are
  * represented on the + strand of the reference sequence. This means that,
  * for a read that aligns to the - strand, the bases have been reverse
- * complemented from the unmapped read sequence and the CIGAR has been
- * correspondingly reversed.
+ * complemented from the unmapped read sequence, and that the corresponding
+ * CIGAR has been reversed.
  * So it seems that, for now, we don't need to deal with the strand
  * information at all (as long as we are only interested in returning a list
  * of IRanges objects that is suitable for coverage extraction).

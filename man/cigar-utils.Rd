@@ -62,6 +62,7 @@ if (interactive()) {
   ## align with no indels. 5% align with a big deletion (from the
   ## reference to the read). In the context of an RNAseq experiment,
   ## those 5% would be suspected to be "junction reads".
+  set.seed(123)
   nreads <- 20000000L
   njunctionreads <- nreads * 5L / 100L
   some_fake_rnames <- paste("chr", c(1:6, "X"), sep="")
@@ -75,7 +76,7 @@ if (interactive()) {
       paste(30:10, "M", sep=""), sep="")
   cigar[sample(nreads, njunctionreads)] <- junctioncigars
 
-  ## The following takes between 13 and 15 sec. to complete:
+  ## The following takes < 10 sec. to complete:
   system.time(irl <- cigarToIRangesList(rname, NULL, pos, cigar))
 
   ## Internally, cigarToIRangesList() turns 'rname' into a factor
