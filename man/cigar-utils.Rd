@@ -30,7 +30,8 @@ cigarToIRangesList(cigar, rname, strand, pos)
   }
   \item{pos}{
     An integer vector containing the 1-based leftmost
-    position/coordinate of the clipped read sequence.
+    position/coordinate for each (eventually clipped) read
+    sequence.
   }
 }
 
@@ -68,9 +69,9 @@ cigarToIRangesList(cigar, rname, NULL, pos)
 
 if (interactive()) {
   ## We simulate 20 millions aligned reads, all 40-mers. 95% of them
-  ## align with no indels. 5% align with a big deletion (from the
-  ## reference to the read). In the context of an RNAseq experiment,
-  ## those 5% would be suspected to be "junction reads".
+  ## align with no indels. 5% align with a big deletion in the
+  ## reference. In the context of an RNAseq experiment, those 5% would
+  ## be suspected to be "junction reads".
   set.seed(123)
   nreads <- 20000000L
   njunctionreads <- nreads * 5L / 100L
