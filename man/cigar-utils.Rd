@@ -1,6 +1,7 @@
 \name{cigar-utils}
 \Rdversion{1.1}
 \alias{cigar-utils}
+\alias{cigarToIRanges}
 \alias{cigarToIRangesList}
 
 \title{
@@ -10,10 +11,15 @@
   Utility functions for low-level CIGAR manipulation.
 }
 \usage{
+cigarToIRanges(cigar)
 cigarToIRangesList(rname, strand, pos, cigar)
 }
 
 \arguments{
+  \item{cigar}{
+    A character vector/factor containing the extended CIGAR
+    string for each read.
+  }
   \item{rname}{
     A character vector/factor containing the name of the
     reference sequence associated with each read (i.e. the
@@ -26,15 +32,14 @@ cigarToIRangesList(rname, strand, pos, cigar)
     An integer vector containing the 1-based leftmost
     position/coordinate of the clipped read sequence.
   }
-  \item{cigar}{
-    A character vector/factor containing the extended CIGAR
-    string for each read.
-  }
 }
 
 \value{
+  An \link[IRanges]{IRanges} object for \code{cigarToIRanges}.
+
   A named \link[IRanges]{IRangesList} object with one element
-  (\link[IRanges]{IRanges}) per unique reference sequence.
+  (\link[IRanges]{IRanges}) per unique reference sequence
+  for \code{cigarToIRangesList}.
 }
 
 \references{
@@ -47,8 +52,11 @@ cigarToIRangesList(rname, strand, pos, cigar)
 
 \examples{
 ## ---------------------------------------------------------------------
-## A. A SIMPLE EXAMPLE
+## A. SIMPLE EXAMPLES
 ## ---------------------------------------------------------------------
+
+cigarToIRanges("15M2I6M2D5M6S")
+
 rname <- c("chr6", "chr6", "chr2", "chr6")
 pos <- c(1, 1001, 1,  351)
 cigar <- c("40M", "15M2I6M2D5M6S", "10M2000N15M", "3H25M5H")
@@ -57,6 +65,7 @@ cigarToIRangesList(rname, NULL, pos, cigar)
 ## ---------------------------------------------------------------------
 ## B. PERFORMANCE
 ## ---------------------------------------------------------------------
+
 if (interactive()) {
   ## We simulate 20 millions aligned reads, all 40-mers. 95% of them
   ## align with no indels. 5% align with a big deletion (from the

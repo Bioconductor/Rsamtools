@@ -82,7 +82,7 @@ cigar_table(SEXP cigar)
 
 
 /****************************************************************************
- * cigar_to_list_of_IRanges()
+ * cigar_to_IRanges() & cigar_to_list_of_IRanges()
  */
 
 static char errmsg_buf[200];
@@ -201,6 +201,27 @@ static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
 
 /* --- .Call ENTRY POINT ---
  * Args:
+ *   cigar: character string containing the extended CIGAR.
+ * Return an IRanges object describing the alignment.
+ */
+SEXP cigar_to_IRanges(SEXP cigar)
+{
+	RangeAE range_ae;
+	SEXP cigar_elt;
+	const char *errmsg;
+
+	range_ae = new_RangeAE(0, 0);
+	cigar_elt = STRING_ELT(cigar, 0);
+	if (cigar_elt == NA_STRING)
+		error("'cigar' is NA");
+	errmsg = expand_cigar(&range_ae, 1, cigar_elt);
+	if (errmsg != NULL)
+		error("%s", errmsg);
+	return RangeAE_asIRanges(&range_ae);
+}
+
+/* --- .Call ENTRY POINT ---
+ * Args:
  *   rname: character factor containing the name of the reference sequence
  *          associated with each read (i.e. the name of the sequence the
  *          read has been aligned to);
@@ -208,7 +229,7 @@ static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
  *   pos: integer vector containing the 1-based leftmost position/coordinate
  *          of the clipped read sequence;
  *   cigar: character vector containing the extended CIGAR string for each
- *          read;
+ *          read.
  * 'rname', 'pos' and 'cigar' are assumed to have the same length (which is
  * the number of aligned reads).
  *

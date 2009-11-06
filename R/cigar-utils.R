@@ -1,3 +1,13 @@
+### 
+cigarToIRanges <- function(cigar)
+{
+    if (is.factor(cigar) && is.character(levels(cigar)))
+        cigar <- as.vector(cigar)
+    if (!isSingleString(cigar))
+        stop("'cigar' must be a single string")
+    .Call(".cigar_to_IRanges", cigar, PACKAGE="Rsamtools")
+}
+
 ### NOTE: 'strand' is ignored for now.
 cigarToIRangesList <- function(rname, strand, pos, cigar)
 {
