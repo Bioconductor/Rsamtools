@@ -214,16 +214,20 @@ static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
  *
  * Return a list of IRanges objects named with the factor levels in 'rname'.
  *
- * TODO: Decide what we want to do with the 'strand' arg. Our current
- * understanding of the SAM Format Specification (0.1.2-draft 20090820)
- * is that the CIGAR (and the read sequence) stored in the SAM file are
- * represented on the + strand of the reference sequence. This means that,
- * for a read that aligns to the - strand, the bases have been reverse
- * complemented from the unmapped read sequence, and that the corresponding
- * CIGAR has been reversed.
- * So it seems that, for now, we don't need to deal with the strand
- * information at all (as long as we are only interested in returning a list
- * of IRanges objects that is suitable for coverage extraction).
+ * TODO:
+ * - Decide what we want to do with the 'strand' arg. Our current
+ *   understanding of the SAM Format Specification (0.1.2-draft 20090820)
+ *   is that the CIGAR (and the read sequence) stored in the SAM file are
+ *   represented on the + strand of the reference sequence. This means that,
+ *   for a read that aligns to the - strand, the bases have been reverse
+ *   complemented from the unmapped read sequence, and that the corresponding
+ *   CIGAR has been reversed.
+ *   So it seems that, for now, we don't need to deal with the strand
+ *   information at all (as long as we are only interested in returning a list
+ *   of IRanges objects that is suitable for coverage extraction).
+ * - Support 'rname' of length 1.
+ * - Support character factor 'cigar' in addition to current character vector
+ *   format.
  */
 SEXP cigar_to_list_of_IRanges(SEXP rname, SEXP strand, SEXP pos, SEXP cigar)
 {
