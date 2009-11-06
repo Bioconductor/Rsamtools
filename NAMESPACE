@@ -2,7 +2,7 @@ useDynLib(Rsamtools, .registration=TRUE)
 
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
-importFrom(IRanges, unlist, IRangesList)
+importFrom(IRanges, unlist, IRanges, IRangesList)
 
 importMethodsFrom(IRanges, coerce)
 

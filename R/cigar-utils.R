@@ -14,6 +14,8 @@ cigarToIRangesList <- function(rname, strand, pos, cigar)
         cigar <- as.vector(cigar)
     if (!is.character(cigar))
         stop("'cigar' must be a character vector/factor")
+    if (length(rname) != length(pos) || length(pos) != length(cigar))
+        stop("'rname', 'pos' and 'cigar' must have the same length")
     C_ans <- .Call(".cigar_to_list_of_IRanges",
                    rname, strand, pos, cigar,
                    PACKAGE="Rsamtools")
