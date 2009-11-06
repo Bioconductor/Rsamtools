@@ -33,7 +33,8 @@ cigarToIRangesList(rname, strand, pos, cigar)
 }
 
 \value{
-  An \link[IRanges]{IRangesList} object.
+  A named \link[IRanges]{IRangesList} object with one element
+  (\link[IRanges]{IRanges}) per unique reference sequence.
 }
 
 \references{
@@ -46,11 +47,11 @@ cigarToIRangesList(rname, strand, pos, cigar)
 
 \examples{
 ## ---------------------------------------------------------------------
-## A. SMALL EXAMPLES
+## A. A SIMPLE EXAMPLE
 ## ---------------------------------------------------------------------
 rname <- c("chr6", "chr6", "chr2", "chr6")
-pos <- c(1, 300, 21,  320)
-cigar <- c("9M100D15M", "99M", "999M4M88I5M3D15M", "5M")
+pos <- c(1, 1001, 1,  351)
+cigar <- c("40M", "15M2I6M2D5M6S", "10M2000N15M", "3H25M5H")
 cigarToIRangesList(rname, NULL, pos, cigar)
 
 ## ---------------------------------------------------------------------

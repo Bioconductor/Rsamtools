@@ -116,21 +116,16 @@ static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
 		}
 		width = 0;
 		switch (OP) {
+		/* Alignment match (can be a sequence match or mismatch */
 		    case 'M': width = OPL; break;
+		/* Insertion to the reference */
 		    case 'I': break;
+		/* Deletion (or skipped region) from the reference */
 		    case 'D': case 'N': start += OPL; break;
-		    case 'S':
-			snprintf(errmsg_buf, sizeof(errmsg_buf),
-				 "CIGAR operation '%c' (at char %d) is not "
-				 "supported yet, sorry!", OP, offset + 1);
-			return errmsg_buf;
-		    break;
-		    case 'H':
-			snprintf(errmsg_buf, sizeof(errmsg_buf),
-				 "CIGAR operation '%c' (at char %d) is not "
-				 "supported yet, sorry!", OP, offset + 1);
-			return errmsg_buf;
-		    break;
+		/* Soft/hard clip on the read */
+		    case 'S': case 'H': break;
+		/* Padding (silent deletion from the padded reference
+		   sequence) */
 		    case 'P':
 			snprintf(errmsg_buf, sizeof(errmsg_buf),
 				 "CIGAR operation '%c' (at char %d) is not "
@@ -164,6 +159,7 @@ static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
  *          read;
  * 'rname', 'pos' and 'cigar' are assumed to have the same length (which is
  * the number of aligned reads).
+ *
  * Return a list of IRanges objects named with the factor levels in 'rname'.
  *
  * TODO: Decide what we want to do with the 'strand' arg. Our current
@@ -198,7 +194,8 @@ SEXP cigar_to_list_of_IRanges(SEXP rname, SEXP strand, SEXP pos, SEXP cigar)
 		cigar_elt = STRING_ELT(cigar, i);
 		if (cigar_elt == NA_STRING)
 			error("'cigar' contains NAs");
-		errmsg = expand_cigar(range_aeae.elts + level - 1, pos_elt, cigar_elt);
+		errmsg = expand_cigar(range_aeae.elts + level - 1,
+				      pos_elt, cigar_elt);
 		if (errmsg != NULL)
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
 	}
