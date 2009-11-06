@@ -153,7 +153,7 @@ static int get_next_cigar_OP(const char *cig0, int offset,
 	return offset - offset0;
 }
 
-static const char *expand_cigar(RangeAE *range_ae, int pos_elt, SEXP cigar_elt)
+static const char *expand_cigar(RangeAE *range_ae, SEXP cigar_elt, int pos_elt)
 {
 	const char *cig0;
 	int offset, OPL /* Operation Length */, n, start, width;
@@ -214,7 +214,7 @@ SEXP cigar_to_IRanges(SEXP cigar)
 	cigar_elt = STRING_ELT(cigar, 0);
 	if (cigar_elt == NA_STRING)
 		error("'cigar' is NA");
-	errmsg = expand_cigar(&range_ae, 1, cigar_elt);
+	errmsg = expand_cigar(&range_ae, cigar_elt, 1);
 	if (errmsg != NULL)
 		error("%s", errmsg);
 	return RangeAE_asIRanges(&range_ae);
@@ -222,14 +222,14 @@ SEXP cigar_to_IRanges(SEXP cigar)
 
 /* --- .Call ENTRY POINT ---
  * Args:
+ *   cigar: character vector containing the extended CIGAR string for each
+ *          read;
  *   rname: character factor containing the name of the reference sequence
  *          associated with each read (i.e. the name of the sequence the
  *          read has been aligned to);
  *   strand: ignored for now;
  *   pos: integer vector containing the 1-based leftmost position/coordinate
- *          of the clipped read sequence;
- *   cigar: character vector containing the extended CIGAR string for each
- *          read.
+ *          of the clipped read sequence.
  * 'rname', 'pos' and 'cigar' are assumed to have the same length (which is
  * the number of aligned reads).
  *
@@ -250,7 +250,7 @@ SEXP cigar_to_IRanges(SEXP cigar)
  * - Support character factor 'cigar' in addition to current character vector
  *   format.
  */
-SEXP cigar_to_list_of_IRanges(SEXP rname, SEXP strand, SEXP pos, SEXP cigar)
+SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP strand, SEXP pos)
 {
 	SEXP rname_levels, cigar_elt, ans, ans_names;
 	int ans_length, nreads, i, level, pos_elt;
@@ -262,17 +262,17 @@ SEXP cigar_to_list_of_IRanges(SEXP rname, SEXP strand, SEXP pos, SEXP cigar)
 	range_aeae = new_RangeAEAE(ans_length, ans_length);
 	nreads = LENGTH(pos);
 	for (i = 0; i < nreads; i++) {
+		cigar_elt = STRING_ELT(cigar, i);
+		if (cigar_elt == NA_STRING)
+			error("'cigar' contains NAs");
 		level = INTEGER(rname)[i];
 		if (level == NA_INTEGER)
 			error("'rname' contains NAs");
 		pos_elt = INTEGER(pos)[i];
 		if (pos_elt == NA_INTEGER)
 			error("'pos' contains NAs");
-		cigar_elt = STRING_ELT(cigar, i);
-		if (cigar_elt == NA_STRING)
-			error("'cigar' contains NAs");
 		errmsg = expand_cigar(range_aeae.elts + level - 1,
-				      pos_elt, cigar_elt);
+				      cigar_elt, pos_elt);
 		if (errmsg != NULL)
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
 	}

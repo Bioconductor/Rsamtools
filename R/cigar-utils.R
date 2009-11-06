@@ -9,8 +9,12 @@ cigarToIRanges <- function(cigar)
 }
 
 ### NOTE: 'strand' is ignored for now.
-cigarToIRangesList <- function(rname, strand, pos, cigar)
+cigarToIRangesList <- function(cigar, rname, strand, pos)
 {
+    if (is.factor(cigar))
+        cigar <- as.vector(cigar)
+    if (!is.character(cigar))
+        stop("'cigar' must be a character vector/factor")
     if (!is.factor(rname) || !is.character(levels(rname))) {
         if (!is.character(rname))
             stop("'rname' must be a character vector/factor")
@@ -20,14 +24,10 @@ cigarToIRangesList <- function(rname, strand, pos, cigar)
         stop("'pos' must be a vector of integers")
     if (!is.integer(pos))
         pos <- as.integer(pos)
-    if (is.factor(cigar))
-        cigar <- as.vector(cigar)
-    if (!is.character(cigar))
-        stop("'cigar' must be a character vector/factor")
-    if (length(rname) != length(pos) || length(pos) != length(cigar))
-        stop("'rname', 'pos' and 'cigar' must have the same length")
+    if (length(cigar) != length(rname) || length(rname) != length(pos))
+        stop("'cigar', 'rname' and 'pos' must have the same length")
     C_ans <- .Call(".cigar_to_list_of_IRanges",
-                   rname, strand, pos, cigar,
+                   cigar, rname, strand, pos,
                    PACKAGE="Rsamtools")
     if (length(C_ans) < 100L)
         IRangesList(C_ans, compress=FALSE)
