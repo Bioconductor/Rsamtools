@@ -109,25 +109,25 @@ scanBam(file, index=file, ...)
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
-res <- scanBam(fl)[[1]] # always list-of-lists
-names(res)
-length(res[["qname"]])
-lapply(res, head, 3)
-table(cigars(res[["cigar"]]))
-table(width(res[["seq"]]))
-table(res[["strand"]])
-table(res[["flag"]])
+res0 <- scanBam(fl)[[1]] # always list-of-lists
+names(res0)
+length(res0[["qname"]])
+lapply(res0, head, 3)
+table(width(res0[["seq"]])) # read widths
+table(res0[["width"]], useNA="always") # aligned width
+table(cigars(res0[["cigar"]]), useNA="always")
+table(res0[["strand"]], useNA="always")
+table(res0[["flag"]], useNA="always")
 
 which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
 p1 <- ScanBamParam(which=which)
-res <- scanBam(fl, param=p1)
-names(res)
-names(res[[1]])
+res1 <- scanBam(fl, param=p1)
+names(res1)
+names(res1[[2]])
 
 p2 <- ScanBamParam(what=c("rname", "strand", "pos", "width"))
-res <- scanBam(fl, param=p2)
-names(res[!sapply(res, is.null)])
+res2 <- scanBam(fl, param=p2)
                 
 p3 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))
 length(scanBam(fl, param=p3)[[1]])
