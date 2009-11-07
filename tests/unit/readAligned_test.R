@@ -22,12 +22,13 @@ test_readAligned_bam <- function()
                      class = "table")
     checkIdentical(exp, table(chromosome(aln)))
 
-    exp <- structure(c(1628L, 1650L, 0L), .Dim = 3L, .Dimnames =
-                     structure(list( c("-", "+", "*")), .Names = ""),
-                     class = "table")
-    checkIdentical(exp, table(strand(aln)))
+    exp <- structure(c(1611L, 1631L, 0L, 36L), .Dim = 4L, .Dimnames =
+                     structure(list( c("-", "+", "*", NA)), .Names =
+                     ""), class = "table")
+    checkIdentical(exp, table(strand(aln), useNA="always"))
 
-    checkEquals(791.4286, mean(position(aln)), tolerance=10e-4)
+    checkEquals(793.298, mean(position(aln), na.rm=TRUE),
+                tolerance=10e-4)
 
     exp <- structure(c(3278L, 1L),
                      .Names = c("readName", "alignColumn"))

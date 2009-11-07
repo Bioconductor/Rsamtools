@@ -21,7 +21,8 @@ cigars <- function(x) slot(x, ".cigar")
 
 setMethod(.validity, "Cigar", function(object) {
     msg <- NULL
-    if (!setequal(unique(cigars(object)), .ucigars(object)))
+    ucigar <- unique(cigars(object))
+    if (!setequal(ucigar[!is.na(ucigar)], .ucigars(object)))
         msg <- c(msg,
                  "'.cigar' levels differ from elements")
     if (is.null(msg)) TRUE else msg

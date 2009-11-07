@@ -24,17 +24,16 @@ test_scanBam <- function()
     checkIdentical(3307L, unique(sapply(res, length)))
     .check1(res)
 
-    exp <- structure(c(11L, 2L, 2L, 2L, 1L, 1L, 1L, 1L, 1L, 1L), .Dim
-                     = 10L, .Dimnames = structure(list( c("1", "2",
-                     "3", "4", "6", "36", "37", "112", "283", "2804"
+    exp <- structure(c(11L, 2L, 2L, 2L, 1L, 1L, 1L, 1L, 1L), .Dim
+                     = 9L, .Dimnames = structure(list( c("1", "2",
+                     "3", "4", "6", "37", "112", "283", "2804"
                      )), .Names = ""), class = "table")
-                     checkIdentical(exp,
-                     table(table(cigars(res[["cigar"]]))))
+    checkIdentical(exp, table(table(cigars(res[["cigar"]]))))
 
-    exp <- structure(c(1641L, 1666L, 0L), .Dim = 3L, .Dimnames =
-                     structure(list( c("-", "+", "*")), .Names = ""),
-                     class = "table")
-    checkIdentical(exp, table(res[["strand"]]))
+    exp <- structure(c(1624L, 1647L, 0L, 36L), .Dim = 4L, .Dimnames =
+                     structure(list( c("-", "+", "*", NA)), .Names =
+                     ""), class = "table")
+    checkIdentical(exp, table(res[["strand"]], useNA="always"))
 
     exp <- structure(c(8L, 40L, 858L, 17L, 714L, 5L, 12L, 11L, 35L,
                        714L, 18L, 858L, 12L, 5L), .Dim = 14L,

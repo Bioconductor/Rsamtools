@@ -11,10 +11,15 @@ cigar_run_count(SEXP cigar)
 	SEXP count = NEW_INTEGER(LENGTH(cigar));
 	for (int i = 0; i < LENGTH(cigar); ++i) {
 		int n = 0;
-		const char *c = CHAR(STRING_ELT(cigar, i));
-		while (*c != '\0') {
-			if (57 < *c) n += 1;
-			c += 1;
+		SEXP str = STRING_ELT(cigar, i);
+		if (NA_STRING == str) {
+			n = 0;
+		} else {
+			const char *c = CHAR(str);
+			while (*c != '\0') {
+				if (57 < *c) n += 1;
+				c += 1;
+			}
 		}
 		INTEGER(count)[i] = n;
 	}
@@ -38,15 +43,15 @@ cigar_table(SEXP cigar)
 
 	for (i = j = 0; i < LENGTH(cigar); ++i) {
 		SEXP str = STRING_ELT(cigar, i);
-		const char *c = CHAR(str);
-		int n = 0, elt = 1;
-		if (*c == '\0') {		/* zero-length cigar */
+		if (NA_STRING == str) {
 			SET_STRING_ELT(cidx, j, str);
 			INTEGER(element)[j] = NA_INTEGER;
 			INTEGER(length)[j] = NA_INTEGER;
 			SET_STRING_ELT(value, j, NA_STRING);
 			j += 1;
 		} else {
+			const char *c = CHAR(str);
+			int n = 0, elt = 1;
 			while (*c != '\0') {
 				if (57 >= *c) {
 					n = n * 10 + (int) (*c - 48);

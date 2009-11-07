@@ -402,41 +402,50 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 			INTEGER(s)[idx] = bam->core.flag;
 			break;
 		case RNAME_IDX:
-			INTEGER(s)[idx] = bam->core.tid + 1;
+			INTEGER(s)[idx] = 
+				bam->core.tid < 0 ? NA_INTEGER : bam->core.tid + 1;
 			break;
 		case STRAND_IDX:
-			INTEGER(s)[idx] = ((bam1_strand(bam) + 1) % 2) + 1;
+			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
+				NA_INTEGER : ((bam1_strand(bam) + 1) % 2) + 1;
 			break;
 		case POS_IDX:
-			INTEGER(s)[idx] = bam->core.pos + 1;
+			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
+				NA_INTEGER : bam->core.pos + 1;
 			break;
 		case WIDTH_IDX:
-			INTEGER(s)[idx] = 
-				bam_cigar2qlen(&bam->core, bam1_cigar(bam));
+			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
+				NA_INTEGER : bam_cigar2qlen(&bam->core, bam1_cigar(bam));
 			break;
 		case MAPQ_IDX:
-			INTEGER(s)[idx] = bam->core.qual;
+			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
+				NA_INTEGER : bam->core.qual;
 			break;
 		case CIGAR_IDX:
-			if (_bamcigar(bam1_cigar(bam), bam->core.n_cigar,
-						  bd->CIGAR_BUF, bd->CIGAR_BUF_SZ) < 0)
-			{
-				bd->parse_status |= CIGAR_BUFFER_OVERFLOW_ERROR;
-				return -bd->idx;
+			if (bam->core.flag & BAM_FUNMAP)
+				SET_STRING_ELT(s, idx, NA_STRING);
+			else {
+				if (_bamcigar(bam1_cigar(bam), bam->core.n_cigar,
+							  bd->CIGAR_BUF, bd->CIGAR_BUF_SZ) < 0)
+				{
+					bd->parse_status |= CIGAR_BUFFER_OVERFLOW_ERROR;
+					return -bd->idx;
+				}
+				SET_STRING_ELT(s, idx, mkChar(bd->CIGAR_BUF));
 			}
-			SET_STRING_ELT(s, idx, mkChar(bd->CIGAR_BUF));
 			break;
 		case MRNM_IDX:
-			INTEGER(s)[idx] = 
-				bam->core.mtid >= 0 ? bam->core.mtid + 1 : NA_INTEGER;
+			INTEGER(s)[idx] = bam->core.mtid < 0 ? 
+				NA_INTEGER : bam->core.mtid + 1;
 			break;
 		case MPOS_IDX:
-			INTEGER(s)[idx] = 
-				bam->core.mpos > 0 ? bam->core.mpos : NA_INTEGER;
+			INTEGER(s)[idx] = bam->core.flag & BAM_FMUNMAP ?
+				NA_INTEGER : bam->core.mpos + 1;
 			break;
 		case ISIZE_IDX:
 			INTEGER(s)[idx] = 
-				bam->core.isize > 0 ? bam->core.isize : NA_INTEGER;
+				bam->core.flag & (BAM_FUNMAP | BAM_FMUNMAP) ?
+				NA_INTEGER : bam->core.isize;
 			break;
 		case SEQ_IDX:
 			start = TRUELENGTH(s);
