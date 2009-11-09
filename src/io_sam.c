@@ -230,7 +230,7 @@ _scan_check_params(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 _BAM_DATA *
 _init_BAM_DATA(SEXP bfile, SEXP index, SEXP flag, SEXP isSimpleCigar)
 {
-	_BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 1024, 128);
+	_BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 2048, 32768);
 	bdata->parse_status = 0;
 	bdata->sfile = (samfile_t *) R_ExternalPtrAddr(bfile);
 	bdata->header= bdata->sfile->header;
@@ -639,12 +639,13 @@ scan_bam(SEXP fname, SEXP index, SEXP mode,
 		_do_scan_bam(bdata, bfile, index, space, _scan_bam_parse1);
 	if (status < 0) {
 		int idx = bdata->idx;
+		_BAM_PARSE_STATUS parse_status = bdata->parse_status;
 		const char *fname0 = 
 			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
 		scan_bam_close(bfile);
 		_Free_BAM_DATA(bdata);
-		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d",
-				 fname0, idx);
+		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d\n  error status: %d",
+				 fname0, idx, parse_status);
 	}
 
 	_scan_bam_finish(bdata);
