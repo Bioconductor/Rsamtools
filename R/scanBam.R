@@ -12,5 +12,5 @@ setMethod(scanBam, "character",
         names(x) <-
             paste(space(which), ":", .uunlist(start(which)), "-",
                   .uunlist(end(which)), sep="")
-    x[!sapply(x, is.null)]
+    lapply(x, Filter, f=Negate(is.null))
 })
