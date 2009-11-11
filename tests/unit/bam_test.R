@@ -3,7 +3,7 @@ fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 .check0 <- function(res)
 {
     checkIdentical("list", class(res))
-    checkIdentical(scanBamWhat(), names(res))
+    checkTrue(all(names(res) %in% scanBamWhat()))
     checkTrue(all(sapply(res, validObject)))
 }
 
@@ -94,12 +94,12 @@ test_scanBam_what <- function()
     res1 <- res[[1]]
     .check0(res1)
 
-    checkIdentical(9L, sum(sapply(res1, is.null)))
+    checkIdentical(4L, length(res1))
 
     exp <- structure(c("factor", "factor", "integer", "integer"),
                      .Names = c("rname", "strand", "pos", "width"))
-    checkIdentical(exp, sapply(res1[3:6], class))
-    checkIdentical(3307L, unique(sapply(res1[3:6], length)))
+    checkIdentical(exp, sapply(res1, class))
+    checkIdentical(3307L, unique(sapply(res1, length)))
 }
 
 test_scanBam_flag <- function()
