@@ -67,6 +67,10 @@ summarizeCigarTable <- function(x) {
       as(table(tabledIndelHits[,"D"], tabledIndelHits[,"I"]), "matrix")
     rownames(tabledIndelHits) <- paste("D", rownames(tabledIndelHits), sep = "")
     colnames(tabledIndelHits) <- paste("I", colnames(tabledIndelHits), sep = "")
+    if ("AllAligned" %in% names(tabledAlignedCharacters) &&
+        "D0" %in% rownames(tabledIndelHits) &&
+        "I0" %in% colnames(tabledIndelHits))
+        tabledIndelHits["D0", "I0"] <- tabledAlignedCharacters["AllAligned"]
 
     list("AlignedCharacters" = tabledAlignedCharacters,
          "Indels" = tabledIndelHits)
