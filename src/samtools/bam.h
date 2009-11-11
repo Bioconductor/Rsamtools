@@ -73,6 +73,7 @@ typedef gzFile bamFile;
   @field n_targets   number of reference sequences
   @field target_name names of the reference sequences
   @field target_len  lengths of the referene sequences
+  @field dict        header dictionary
   @field hash        hash table for fast name lookup
   @field rg2lib      hash table for @RG-ID -> LB lookup
   @field l_text      length of the plain text in the header
@@ -85,7 +86,7 @@ typedef struct {
 	int32_t n_targets;
 	char **target_name;
 	uint32_t *target_len;
-	void *hash, *rg2lib;
+	void *dict, *hash, *rg2lib;
 	int l_text;
 	char *text;
 } bam_header_t;
@@ -423,8 +424,8 @@ extern "C" {
 	  @abstract  Free the memory allocated for an alignment.
 	  @param  b  pointer to an alignment
 	 */
-#define bam_destroy1(b) do {		\
-		free((b)->data); free(b);	\
+#define bam_destroy1(b) do {					\
+		if (b) { free((b)->data); free(b); }	\
 	} while (0)
 
 	/*!
@@ -436,6 +437,8 @@ extern "C" {
 	char *bam_format1(const bam_header_t *header, const bam1_t *b);
 
 	char *bam_format1_core(const bam_header_t *header, const bam1_t *b, int of);
+
+	const char *bam_get_library(bam_header_t *header, const bam1_t *b);
 
 	/*! @typedef
 	  @abstract Structure for one alignment covering the pileup position.
@@ -631,14 +634,6 @@ extern "C" {
 	  @return        length of the query sequence
 	*/
 	int32_t bam_cigar2qlen(const bam1_core_t *c, const uint32_t *cigar);
-
-	typedef struct {
-		int32_t qbeg, qend;
-		int32_t tbeg, tend;
-		int32_t cbeg, cend;
-	} bam_segreg_t;
-
-	int bam_segreg(int32_t pos, const bam1_core_t *c, const uint32_t *cigar, bam_segreg_t *reg);
 
 #ifdef __cplusplus
 }

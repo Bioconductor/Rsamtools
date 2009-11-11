@@ -5,6 +5,7 @@ PKG_OBJECTS = \
   R_init_Rsamtools.o 
 SAMTOOLS_OBJECTS = \
   bam.o bam_import.o bam_index.o kstring.o bam_aux.o \
+  sam_header.o \
   bgzf.o razf.o \
   knetfile.o \
   sam.o bam_pileup.o faidx.o
