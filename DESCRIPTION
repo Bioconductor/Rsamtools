@@ -11,6 +11,6 @@ Description: This package provides an interface to the 'samtools'
 License: Artistic-2.0
 LazyLoad: yes
 Depends: methods, Biostrings (>= 2.13.41), IRanges (>= 1.4.4), BSgenome
-Imports: Biostrings, IRanges, BSgenome
+Imports: methods, utils, Biostrings, IRanges, BSgenome
 LinkingTo: Biostrings, IRanges
 biocViews: DataImport, Sequencing, HighThroughputSequencing

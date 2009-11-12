@@ -1,19 +1,23 @@
 useDynLib(Rsamtools, .registration=TRUE)
 
+import(methods)
+
+importFrom(utils, normalizePath, read.table)
+
+importClassesFrom(IRanges, Sequence, DataTableORNULL, Annotated,
+                  Ranges, IRanges, RangesList, IRangesList, RangedData)
+importFrom(IRanges, isSingleString, unlist,
+           IRanges, RangesList, IRangesList, RangedData)
+importMethodsFrom(IRanges, coerce, end, endoapply, space, start, unlist, width)
+
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
-
-importFrom(IRanges, unlist, IRanges, IRangesList)
-
-importMethodsFrom(IRanges, coerce)
-
-importFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
+importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet, PhredQuality)
 
 importFrom(BSgenome, strand)
 
-importClassesFrom(IRanges, Sequence, Annotated, Ranges, IRanges, RangesList, IRangesList, RangedData)
-
-exportPattern("^[^\\.]")
 
 exportClasses(ScanBamParam, Cigar)
+
+exportPattern("^[^\\.]")
 
 exportMethods(length, names, "[", "[[", show)
