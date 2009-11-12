@@ -1,6 +1,7 @@
 \name{cigar-utils}
 \Rdversion{1.1}
 \alias{cigar-utils}
+\alias{cigarToReadWidth}
 \alias{cigarToIRanges}
 \alias{cigarToIRangesList}
 
@@ -11,6 +12,7 @@
   Utility functions for low-level CIGAR manipulation.
 }
 \usage{
+cigarToReadWidth(cigar)
 cigarToIRanges(cigar)
 cigarToIRangesList(cigar, rname, strand, pos)
 }
@@ -36,11 +38,19 @@ cigarToIRangesList(cigar, rname, strand, pos)
 }
 
 \value{
-  An \link[IRanges]{IRanges} object for \code{cigarToIRanges}.
+  For \code{cigarToReadWidth}: An integer vector of the same length
+  as \code{cigar} where each element is the width of the read as
+  inferred from the corresponding element in \code{cigar}.
 
-  A named \link[IRanges]{IRangesList} object with one element
-  (\link[IRanges]{IRanges}) per unique reference sequence
-  for \code{cigarToIRangesList}.
+  For \code{cigarToIRanges}: An \link[IRanges]{IRanges} object
+  describing where the bases in the read align with respect to
+  an imaginary reference sequence assuming that the leftmost
+  aligned base is at position 1 in the reference (i.e. at the
+  first position).
+
+  For \code{cigarToIRangesList}: A named \link[IRanges]{IRangesList}
+  object with one element (\link[IRanges]{IRanges}) per unique reference
+  sequence.
 }
 
 \references{
@@ -55,6 +65,8 @@ cigarToIRangesList(cigar, rname, strand, pos)
 ## ---------------------------------------------------------------------
 ## A. SIMPLE EXAMPLES
 ## ---------------------------------------------------------------------
+
+cigarToReadWidth("15M2I6M2D5M6S")
 
 cigarToIRanges("15M2I6M2D5M6S")
 

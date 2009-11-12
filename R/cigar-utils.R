@@ -1,4 +1,14 @@
-### 
+###
+cigarToReadWidth <- function(cigar)
+{
+    if (!is.character(cigar)) {
+        if (!is.factor(cigar) || !is.character(levels(cigar)))
+            stop("'cigar' must be a character vector/factor")
+        cigar <- as.vector(cigar)
+    }
+    .Call(".cigar_to_read_width", cigar, PACKAGE="Rsamtools")
+}
+
 cigarToIRanges <- function(cigar)
 {
     if (is.factor(cigar) && is.character(levels(cigar)))
@@ -11,10 +21,11 @@ cigarToIRanges <- function(cigar)
 ### NOTE: 'strand' is ignored for now.
 cigarToIRangesList <- function(cigar, rname, strand, pos)
 {
-    if (is.factor(cigar))
+    if (!is.character(cigar)) {
+        if (!is.factor(cigar) || !is.character(levels(cigar)))
+            stop("'cigar' must be a character vector/factor")
         cigar <- as.vector(cigar)
-    if (!is.character(cigar))
-        stop("'cigar' must be a character vector/factor")
+    }
     if (!is.factor(rname) || !is.character(levels(rname))) {
         if (!is.character(rname))
             stop("'rname' must be a character vector/factor")
