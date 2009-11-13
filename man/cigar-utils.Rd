@@ -13,8 +13,11 @@
 }
 \usage{
 cigarToReadWidth(cigar, after.hard.clipping=FALSE)
-cigarToIRanges(cigar, drop.D.ranges=FALSE)
-cigarToIRangesList(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
+
+cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
+
+cigarToIRangesList(cigar, rname, pos, flag=NA,
+                   drop.D.ranges=FALSE, merge.ranges=TRUE)
 }
 
 \arguments{
@@ -39,6 +42,11 @@ cigarToIRangesList(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
     from SAMtools.
     Note that, when \code{drop.D.ranges} is \code{TRUE}, then Ds
     and Ns in the CIGAR are equivalent.
+  }
+  \item{merge.ranges}{
+    Should adjacent ranges coming from the same cigar be merged or not?
+    Using \code{TRUE} (the default) can significantly reduce the
+    size of the returned object.
   }
   \item{rname}{
     A character vector/factor containing the name of the
@@ -89,13 +97,14 @@ cigarToIRangesList(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
 ## A. SIMPLE EXAMPLES
 ## ---------------------------------------------------------------------
 
-cigarToReadWidth("3H15M2I6M2D5M6S")
-cigarToReadWidth("3H15M2I6M2D5M6S", after.hard.clipping=TRUE)
+cigarToReadWidth("3H15M55N4M2I6M2D5M6S")
+cigarToReadWidth("3H15M55N4M2I6M2D5M6S", after.hard.clipping=TRUE)
 
-cigarToIRanges("3H15M2I6M2D5M6S")
-cigarToIRanges("3H15M2I6M2D5M6S", drop.D.ranges=TRUE)
+cigarToIRanges("3H15M55N4M2I6M2D5M6S")
+cigarToIRanges("3H15M55N4M2I6M2D5M6S", merge.ranges=FALSE)
+cigarToIRanges("3H15M55N4M2I6M2D5M6S", drop.D.ranges=TRUE)
 
-cigar <- c("40M", "3H15M2I6M2D5M6S", "2S10M2000N15M", "3H25M5H")
+cigar <- c("40M", "3H15M55N4M2I6M2D5M6S", "2S10M2000N15M", "3H25M5H")
 rname <- c("chr6", "chr6", "chr2", "chr6")
 pos <- c(1, 1001, 1,  351)
 cigarToIRangesList(cigar, rname, pos)

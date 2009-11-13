@@ -200,6 +200,11 @@ static const char *one_cigar_to_read_width(SEXP cigar_elt, int clip_reads,
 	return NULL;
 }
 
+static void append_range(RangeAE *range_ae, int start, int width)
+{
+	RangeAE_insert_at(range_ae, range_ae->start.nelt, start, width);
+}
+
 static const char *expand_cigar(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
 		RangeAE *range_ae)
 {
@@ -244,13 +249,73 @@ static const char *expand_cigar(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
 				 OP, offset + 1);
 			return errmsg_buf;
 		}
-		if (width != 0) {
-			RangeAE_insert_at(range_ae, range_ae->start.nelt,
-					  start, width);
+		if (width) {
+			append_range(range_ae, start, width);
 			start += width;
 		}
 		offset += n;
 	}
+	return NULL;
+}
+
+/* Unlike expand_cigar(), expand_cigar2() merges adjacent ranges. */
+static const char *expand_cigar2(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
+		RangeAE *range_ae)
+{
+	const char *cig0;
+	int offset, OPL /* Operation Length */, n, start, width;
+	char OP /* Operation */;
+
+	cig0 = CHAR(cigar_elt);
+	offset = 0;
+	start = pos_elt;
+	width = 0;
+	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
+		if (n == -1)
+			return errmsg_buf;
+		switch (OP) {
+		/* Alignment match (can be a sequence match or mismatch) */
+		    case 'M': width += OPL; break;
+		/* Insertion to the reference */
+		    case 'I': break;
+		/* Deletion from the reference */
+		    case 'D':
+			if (Ds_as_Ns) {
+				if (width)
+					append_range(range_ae, start, width);
+				start += width + OPL;
+				width = 0;
+			} else {
+				width += OPL;
+			}
+		    break;
+		/* Skipped region from the reference */
+		    case 'N':
+			if (width)
+				append_range(range_ae, start, width);
+			start += width + OPL;
+			width = 0;
+		    break;
+		/* Soft/hard clip on the read */
+		    case 'S': case 'H': break;
+		/* Padding (silent deletion from the padded reference
+		   sequence) */
+		    case 'P':
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "CIGAR operation '%c' (at char %d) is not "
+				 "supported yet, sorry!", OP, offset + 1);
+			return errmsg_buf;
+		    break;
+		    default:
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "unknown CIGAR operation '%c' at char %d",
+				 OP, offset + 1);
+			return errmsg_buf;
+		}
+		offset += n;
+	}
+	if (width)
+		append_range(range_ae, start, width);
 	return NULL;
 }
 
@@ -295,22 +360,27 @@ SEXP cigar_to_read_width(SEXP cigar, SEXP after_hard_clipping)
  * Args:
  *   cigar: character string containing the extended CIGAR;
  *   drop_D_ranges: TRUE or FALSE indicating whether Ds should be treated
- *          like Ns or not.
+ *          like Ns or not;
+ *   merge_ranges: TRUE or FALSE indicating whether adjacent ranges coming
+ *          from the same cigar should be merged or not.
  * Return an IRanges object describing the alignment.
  */
-SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
+SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges, SEXP merge_ranges)
 {
 	RangeAE range_ae;
 	SEXP cigar_elt;
-	int Ds_as_Ns;
+	int Ds_as_Ns, merge_ranges0;
 	const char *errmsg;
 
 	cigar_elt = STRING_ELT(cigar, 0);
 	if (cigar_elt == NA_STRING)
 		error("'cigar' is NA");
 	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
+	merge_ranges0 = LOGICAL(merge_ranges)[0];
 	range_ae = new_RangeAE(0, 0);
-	errmsg = expand_cigar(cigar_elt, 1, Ds_as_Ns, &range_ae);
+	errmsg = merge_ranges0 ?
+			expand_cigar2(cigar_elt, 1, Ds_as_Ns, &range_ae) :
+			expand_cigar(cigar_elt, 1, Ds_as_Ns, &range_ae);
 	if (errmsg != NULL)
 		error("%s", errmsg);
 	return RangeAE_asIRanges(&range_ae);
@@ -328,7 +398,9 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
  *   flag:  NULL or an integer vector containing the SAM flag for each
  *          read;
  *   drop_D_ranges: TRUE or FALSE indicating whether Ds should be treated
- *          like Ns or not.
+ *          like Ns or not;
+ *   merge_ranges: TRUE or FALSE indicating whether adjacent ranges coming
+ *          from the same cigar should be merged or not.
  * 'cigar', 'rname', 'pos' and 'flag' (when not NULL) are assumed to have
  * the same length (which is the number of aligned reads).
  *
@@ -350,10 +422,11 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
  *   format.
  */
 SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
-		SEXP flag, SEXP drop_D_ranges)
+		SEXP flag, SEXP drop_D_ranges, SEXP merge_ranges)
 {
 	SEXP rname_levels, cigar_elt, ans, ans_names;
-	int ans_length, nreads, Ds_as_Ns, i, level, pos_elt, flag_elt;
+	int ans_length, nreads, Ds_as_Ns, merge_ranges0,
+	    i, level, pos_elt, flag_elt;
 	RangeAEAE range_aeae;
 	const char *errmsg;
 
@@ -362,6 +435,7 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 	range_aeae = new_RangeAEAE(ans_length, ans_length);
 	nreads = LENGTH(pos);
 	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
+	merge_ranges0 = LOGICAL(merge_ranges)[0];
 	for (i = 0; i < nreads; i++) {
 		cigar_elt = STRING_ELT(cigar, i);
 		if (cigar_elt == NA_STRING)
@@ -377,7 +451,10 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 			if (flag_elt != NA_INTEGER && (flag_elt & 0x400))
 				continue;
 		}
-		errmsg = expand_cigar(cigar_elt, pos_elt, Ds_as_Ns,
+		errmsg = merge_ranges0 ?
+			expand_cigar2(cigar_elt, pos_elt, Ds_as_Ns,
+				      range_aeae.elts + level - 1) :
+			expand_cigar(cigar_elt, pos_elt, Ds_as_Ns,
 				      range_aeae.elts + level - 1);
 		if (errmsg != NULL)
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
