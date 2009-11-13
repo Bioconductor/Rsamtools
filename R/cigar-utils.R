@@ -20,9 +20,7 @@ cigarToIRanges <- function(cigar, drop.D.ranges=FALSE)
     .Call(".cigar_to_IRanges", cigar, drop.D.ranges, PACKAGE="Rsamtools")
 }
 
-### NOTE: 'strand' is ignored for now.
-cigarToIRangesList <- function(cigar, rname, strand, pos,
-                               flag=NA, drop.D.ranges=FALSE)
+cigarToIRangesList <- function(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
 {
     if (!is.character(cigar)) {
         if (!is.factor(cigar) || !is.character(levels(cigar)))
@@ -54,7 +52,7 @@ cigarToIRangesList <- function(cigar, rname, strand, pos,
     if (!isTRUEorFALSE(drop.D.ranges))
         stop("'drop.D.ranges' must be TRUE or FALSE")
     C_ans <- .Call(".cigar_to_list_of_IRanges",
-                   cigar, rname, strand, pos, flag, drop.D.ranges,
+                   cigar, rname, pos, flag, drop.D.ranges,
                    PACKAGE="Rsamtools")
     if (length(C_ans) < 200L)
         IRangesList(C_ans, compress=FALSE)

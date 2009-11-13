@@ -315,7 +315,6 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
  *   rname: character factor containing the name of the reference sequence
  *          associated with each read (i.e. the name of the sequence the
  *          read has been aligned to);
- *   strand: ignored for now;
  *   pos:   integer vector containing the 1-based leftmost position/coordinate
  *          of the clipped read sequence;
  *   flag:  NULL or an integer vector containing the SAM flag for each
@@ -327,22 +326,22 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
  *
  * Return a list of IRanges objects named with the factor levels in 'rname'.
  *
+ * NOTE: According to the SAM Format Specification (0.1.2-draft 20090820),
+ *   the CIGAR (and the read sequence) stored in the SAM file are represented
+ *   on the + strand of the reference sequence. This means that, for a read
+ *   that aligns to the - strand, the bases have been reverse complemented
+ *   from the unmapped read sequence, and that the corresponding CIGAR has
+ *   been reversed. So it seems that, for now, we don't need to deal with the
+ *   strand information at all (as long as we are only interested in
+ *   returning a list of IRanges objects that is suitable for coverage
+ *   extraction).
+ *
  * TODO:
- * - Decide what we want to do with the 'strand' arg. Our current
- *   understanding of the SAM Format Specification (0.1.2-draft 20090820)
- *   is that the CIGAR (and the read sequence) stored in the SAM file are
- *   represented on the + strand of the reference sequence. This means that,
- *   for a read that aligns to the - strand, the bases have been reverse
- *   complemented from the unmapped read sequence, and that the corresponding
- *   CIGAR has been reversed.
- *   So it seems that, for now, we don't need to deal with the strand
- *   information at all (as long as we are only interested in returning a list
- *   of IRanges objects that is suitable for coverage extraction).
  * - Support 'rname' of length 1.
  * - Support character factor 'cigar' in addition to current character vector
  *   format.
  */
-SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP strand, SEXP pos,
+SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 		SEXP flag, SEXP drop_D_ranges)
 {
 	SEXP rname_levels, cigar_elt, ans, ans_names;

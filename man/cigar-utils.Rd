@@ -14,7 +14,7 @@
 \usage{
 cigarToReadWidth(cigar)
 cigarToIRanges(cigar, drop.D.ranges=FALSE)
-cigarToIRangesList(cigar, rname, strand, pos, flag=NA, drop.D.ranges=FALSE)
+cigarToIRangesList(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
 }
 
 \arguments{
@@ -34,9 +34,6 @@ cigarToIRangesList(cigar, rname, strand, pos, flag=NA, drop.D.ranges=FALSE)
     A character vector/factor containing the name of the
     reference sequence associated with each read (i.e. the
     name of the sequence the read has been aligned to).
-  }
-  \item{strand}{
-    Ignored for now.
   }
   \item{pos}{
     An integer vector containing the 1-based leftmost
@@ -90,7 +87,7 @@ cigarToIRanges("15M2I6M2D5M6S", drop.D.ranges=TRUE)
 cigar <- c("40M", "15M2I6M2D5M6S", "10M2000N15M", "3H25M5H")
 rname <- c("chr6", "chr6", "chr2", "chr6")
 pos <- c(1, 1001, 1,  351)
-cigarToIRangesList(cigar, rname, NULL, pos)
+cigarToIRangesList(cigar, rname, pos)
 
 ## ---------------------------------------------------------------------
 ## B. PERFORMANCE
@@ -116,13 +113,13 @@ if (interactive()) {
   pos <- sample(80000000L, nreads, replace=TRUE)
 
   ## The following takes < 10 sec. to complete:
-  system.time(irl <- cigarToIRangesList(cigar, rname, NULL, pos))
+  system.time(irl <- cigarToIRangesList(cigar, rname, pos))
 
   ## Internally, cigarToIRangesList() turns 'rname' into a factor
   ## before starting the calculation. Hence it will run sligthly
   ## faster if 'rname' is already a factor.
   rname2 <- as.factor(rname)
-  system.time(irl2 <- cigarToIRangesList(cigar, rname2, NULL, pos))
+  system.time(irl2 <- cigarToIRangesList(cigar, rname2, pos))
 
   ## The size of the resulting IRangesList object is about 160M:
   object.size(irl)
