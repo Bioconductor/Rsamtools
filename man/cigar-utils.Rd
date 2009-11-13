@@ -13,14 +13,22 @@
 }
 \usage{
 cigarToReadWidth(cigar)
-cigarToIRanges(cigar)
-cigarToIRangesList(cigar, rname, strand, pos)
+cigarToIRanges(cigar, drop.D.ranges=FALSE)
+cigarToIRangesList(cigar, rname, strand, pos, drop.D.ranges=FALSE)
 }
 
 \arguments{
   \item{cigar}{
     A character vector/factor containing the extended CIGAR
     string for each read.
+  }
+  \item{drop.D.ranges}{
+    Should the ranges corresponding to a deletion from the reference
+    (encoded as a D operation in the CIGAR) be dropped?
+    By default we keep them to be consistent with the pileup tool
+    from SAMtools.
+    Note that, when \code{drop.D.ranges} is \code{TRUE}, then Ds
+    and Ns in the CIGAR are equivalent.
   }
   \item{rname}{
     A character vector/factor containing the name of the
@@ -69,6 +77,7 @@ cigarToIRangesList(cigar, rname, strand, pos)
 cigarToReadWidth("15M2I6M2D5M6S")
 
 cigarToIRanges("15M2I6M2D5M6S")
+cigarToIRanges("15M2I6M2D5M6S", drop.D.ranges=TRUE)
 
 cigar <- c("40M", "15M2I6M2D5M6S", "10M2000N15M", "3H25M5H")
 rname <- c("chr6", "chr6", "chr2", "chr6")

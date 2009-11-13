@@ -197,7 +197,8 @@ static const char *one_cigar_to_read_width(SEXP cigar_elt, int *width)
 	return NULL;
 }
 
-static const char *expand_cigar(SEXP cigar_elt, int pos_elt, RangeAE *range_ae)
+static const char *expand_cigar(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
+		RangeAE *range_ae)
 {
 	const char *cig0;
 	int offset, OPL /* Operation Length */, n, start, width;
@@ -215,8 +216,15 @@ static const char *expand_cigar(SEXP cigar_elt, int pos_elt, RangeAE *range_ae)
 		    case 'M': width = OPL; break;
 		/* Insertion to the reference */
 		    case 'I': break;
-		/* Deletion (or skipped region) from the reference */
-		    case 'D': case 'N': start += OPL; break;
+		/* Deletion from the reference */
+		    case 'D':
+			if (Ds_as_Ns)
+				start += OPL;
+			else
+				width = OPL;
+		    break;
+		/* Skipped region from the reference */
+		    case 'N': start += OPL; break;
 		/* Soft/hard clip on the read */
 		    case 'S': case 'H': break;
 		/* Padding (silent deletion from the padded reference
@@ -277,20 +285,24 @@ SEXP cigar_to_read_width(SEXP cigar)
 
 /* --- .Call ENTRY POINT ---
  * Args:
- *   cigar: character string containing the extended CIGAR.
+ *   cigar: character string containing the extended CIGAR;
+ *   drop_D_ranges: TRUE or FALSE indicating whether Ds should be treated
+ *          like Ns or not.
  * Return an IRanges object describing the alignment.
  */
-SEXP cigar_to_IRanges(SEXP cigar)
+SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
 {
 	RangeAE range_ae;
 	SEXP cigar_elt;
+	int Ds_as_Ns;
 	const char *errmsg;
 
-	range_ae = new_RangeAE(0, 0);
 	cigar_elt = STRING_ELT(cigar, 0);
 	if (cigar_elt == NA_STRING)
 		error("'cigar' is NA");
-	errmsg = expand_cigar(cigar_elt, 1, &range_ae);
+	Ds_as_Ns = INTEGER(drop_D_ranges)[0];
+	range_ae = new_RangeAE(0, 0);
+	errmsg = expand_cigar(cigar_elt, 1, Ds_as_Ns, &range_ae);
 	if (errmsg != NULL)
 		error("%s", errmsg);
 	return RangeAE_asIRanges(&range_ae);
@@ -305,7 +317,9 @@ SEXP cigar_to_IRanges(SEXP cigar)
  *          read has been aligned to);
  *   strand: ignored for now;
  *   pos: integer vector containing the 1-based leftmost position/coordinate
- *          of the clipped read sequence.
+ *          of the clipped read sequence;
+ *   drop_D_ranges: TRUE or FALSE indicating whether Ds should be treated
+ *          like Ns or not.
  * 'rname', 'pos' and 'cigar' are assumed to have the same length (which is
  * the number of aligned reads).
  *
@@ -326,10 +340,11 @@ SEXP cigar_to_IRanges(SEXP cigar)
  * - Support character factor 'cigar' in addition to current character vector
  *   format.
  */
-SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP strand, SEXP pos)
+SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP strand, SEXP pos,
+		SEXP drop_D_ranges)
 {
 	SEXP rname_levels, cigar_elt, ans, ans_names;
-	int ans_length, nreads, i, level, pos_elt;
+	int ans_length, nreads, Ds_as_Ns, i, level, pos_elt;
 	RangeAEAE range_aeae;
 	const char *errmsg;
 
@@ -337,6 +352,7 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP strand, SEXP pos)
 	ans_length = LENGTH(rname_levels);
 	range_aeae = new_RangeAEAE(ans_length, ans_length);
 	nreads = LENGTH(pos);
+	Ds_as_Ns = INTEGER(drop_D_ranges)[0];
 	for (i = 0; i < nreads; i++) {
 		cigar_elt = STRING_ELT(cigar, i);
 		if (cigar_elt == NA_STRING)
@@ -347,7 +363,7 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP strand, SEXP pos)
 		pos_elt = INTEGER(pos)[i];
 		if (pos_elt == NA_INTEGER)
 			error("'pos' contains NAs");
-		errmsg = expand_cigar(cigar_elt, pos_elt,
+		errmsg = expand_cigar(cigar_elt, pos_elt, Ds_as_Ns,
 				      range_aeae.elts + level - 1);
 		if (errmsg != NULL)
 			error("in 'cigar' element %d: %s", i + 1, errmsg);

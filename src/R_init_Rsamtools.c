@@ -19,8 +19,8 @@ static const R_CallMethodDef callMethods[] = {
 	{".cigar_run_count", (DL_FUNC) &cigar_run_count, 1},
 	{".cigar_table", (DL_FUNC) &cigar_table, 1},
 	{".cigar_to_read_width", (DL_FUNC) &cigar_to_read_width, 1},
-	{".cigar_to_IRanges", (DL_FUNC) &cigar_to_IRanges, 1},
-	{".cigar_to_list_of_IRanges", (DL_FUNC) &cigar_to_list_of_IRanges, 4},
+	{".cigar_to_IRanges", (DL_FUNC) &cigar_to_IRanges, 2},
+	{".cigar_to_list_of_IRanges", (DL_FUNC) &cigar_to_list_of_IRanges, 5},
     {NULL, NULL, 0}
 };
 
