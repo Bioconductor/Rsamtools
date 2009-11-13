@@ -21,7 +21,8 @@ cigarToIRanges <- function(cigar, drop.D.ranges=FALSE)
 }
 
 ### NOTE: 'strand' is ignored for now.
-cigarToIRangesList <- function(cigar, rname, strand, pos, drop.D.ranges=FALSE)
+cigarToIRangesList <- function(cigar, rname, strand, pos,
+                               flag=NA, drop.D.ranges=FALSE)
 {
     if (!is.character(cigar)) {
         if (!is.factor(cigar) || !is.character(levels(cigar)))
@@ -37,14 +38,25 @@ cigarToIRangesList <- function(cigar, rname, strand, pos, drop.D.ranges=FALSE)
         stop("'pos' must be a vector of integers")
     if (!is.integer(pos))
         pos <- as.integer(pos)
-    if (length(cigar) != length(rname) || length(rname) != length(pos))
+    if (length(cigar) != length(rname) || length(cigar) != length(pos))
         stop("'cigar', 'rname' and 'pos' must have the same length")
+    if (is.vector(flag) && length(flag) == 1 && is.na(flag)) {
+        ## 'flag' is a single NA of any type
+        flag <- NULL
+    } else {
+        if (!is.numeric(flag))
+            stop("'flag' must be NA or a vector of integers")
+        if (!is.integer(flag))
+            flag <- as.integer(flag)
+        if (length(cigar) != length(flag))
+            stop("'cigar' and 'flag' must have the same length")
+    }
     if (!isTRUEorFALSE(drop.D.ranges))
         stop("'drop.D.ranges' must be TRUE or FALSE")
     C_ans <- .Call(".cigar_to_list_of_IRanges",
-                   cigar, rname, strand, pos, drop.D.ranges,
+                   cigar, rname, strand, pos, flag, drop.D.ranges,
                    PACKAGE="Rsamtools")
-    if (length(C_ans) < 100L)
+    if (length(C_ans) < 200L)
         IRangesList(C_ans, compress=FALSE)
     else
         IRangesList(C_ans, compress=TRUE)

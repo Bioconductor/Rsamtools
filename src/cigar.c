@@ -316,12 +316,14 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
  *          associated with each read (i.e. the name of the sequence the
  *          read has been aligned to);
  *   strand: ignored for now;
- *   pos: integer vector containing the 1-based leftmost position/coordinate
+ *   pos:   integer vector containing the 1-based leftmost position/coordinate
  *          of the clipped read sequence;
+ *   flag:  NULL or an integer vector containing the SAM flag for each
+ *          read;
  *   drop_D_ranges: TRUE or FALSE indicating whether Ds should be treated
  *          like Ns or not.
- * 'rname', 'pos' and 'cigar' are assumed to have the same length (which is
- * the number of aligned reads).
+ * 'cigar', 'rname', 'pos' and 'flag' (when not NULL) are assumed to have
+ * the same length (which is the number of aligned reads).
  *
  * Return a list of IRanges objects named with the factor levels in 'rname'.
  *
@@ -341,10 +343,10 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
  *   format.
  */
 SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP strand, SEXP pos,
-		SEXP drop_D_ranges)
+		SEXP flag, SEXP drop_D_ranges)
 {
 	SEXP rname_levels, cigar_elt, ans, ans_names;
-	int ans_length, nreads, Ds_as_Ns, i, level, pos_elt;
+	int ans_length, nreads, Ds_as_Ns, i, level, pos_elt, flag_elt;
 	RangeAEAE range_aeae;
 	const char *errmsg;
 
@@ -363,6 +365,11 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP strand, SEXP pos,
 		pos_elt = INTEGER(pos)[i];
 		if (pos_elt == NA_INTEGER)
 			error("'pos' contains NAs");
+		if (flag != R_NilValue) {
+			flag_elt = INTEGER(flag)[i];
+			if (flag_elt != NA_INTEGER && flag_elt >= 1024)
+				continue;
+		}
 		errmsg = expand_cigar(cigar_elt, pos_elt, Ds_as_Ns,
 				      range_aeae.elts + level - 1);
 		if (errmsg != NULL)

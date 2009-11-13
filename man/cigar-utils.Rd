@@ -14,7 +14,7 @@
 \usage{
 cigarToReadWidth(cigar)
 cigarToIRanges(cigar, drop.D.ranges=FALSE)
-cigarToIRangesList(cigar, rname, strand, pos, drop.D.ranges=FALSE)
+cigarToIRangesList(cigar, rname, strand, pos, flag=NA, drop.D.ranges=FALSE)
 }
 
 \arguments{
@@ -42,6 +42,14 @@ cigarToIRangesList(cigar, rname, strand, pos, drop.D.ranges=FALSE)
     An integer vector containing the 1-based leftmost
     position/coordinate for each (eventually clipped) read
     sequence.
+  }
+  \item{flag}{
+    \code{NA} or an integer vector containing the SAM flag for
+    each read.
+    According to the SAM specs, when bit 0x0400 in the flag
+    is ON then "the read is either a PCR duplicate or an optical
+    duplicate". Therefore when \code{flag} is provided, reads
+    with a flag >= 1024 are ignored.
   }
 }
 
