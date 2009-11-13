@@ -106,7 +106,7 @@ summarizeCigarTable(x)
 }
 
 \author{
-  H. Pages
+  H. Pages and P. Aboyoun
 }
 
 \seealso{
