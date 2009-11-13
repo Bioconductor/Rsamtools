@@ -12,7 +12,7 @@
   Utility functions for low-level CIGAR manipulation.
 }
 \usage{
-cigarToReadWidth(cigar)
+cigarToReadWidth(cigar, after.hard.clipping=FALSE)
 cigarToIRanges(cigar, drop.D.ranges=FALSE)
 cigarToIRangesList(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
 }
@@ -22,9 +22,19 @@ cigarToIRangesList(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
     A character vector/factor containing the extended CIGAR
     string for each read.
   }
+  \item{after.hard.clipping}{
+    Should the returned widths be those of the reads before
+    or after "hard clipping"? Hard clipping of a read is
+    encoded with an H in the CIGAR.
+    If NO (\code{after.hard.clipping=FALSE}, the default),
+    then the returned widths are those of the original reads.
+    If YES (\code{after.hard.clipping=TRUE}), then the
+    returned widths are the lengths of the query sequences
+    stored in the SAM/BAM file.
+  }
   \item{drop.D.ranges}{
-    Should the ranges corresponding to a deletion from the reference
-    (encoded as a D operation in the CIGAR) be dropped?
+    Should the ranges corresponding to a deletion from the
+    reference (encoded with a D in the CIGAR) be dropped?
     By default we keep them to be consistent with the pileup tool
     from SAMtools.
     Note that, when \code{drop.D.ranges} is \code{TRUE}, then Ds
@@ -79,12 +89,13 @@ cigarToIRangesList(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
 ## A. SIMPLE EXAMPLES
 ## ---------------------------------------------------------------------
 
-cigarToReadWidth("15M2I6M2D5M6S")
+cigarToReadWidth("3H15M2I6M2D5M6S")
+cigarToReadWidth("3H15M2I6M2D5M6S", after.hard.clipping=TRUE)
 
-cigarToIRanges("15M2I6M2D5M6S")
-cigarToIRanges("15M2I6M2D5M6S", drop.D.ranges=TRUE)
+cigarToIRanges("3H15M2I6M2D5M6S")
+cigarToIRanges("3H15M2I6M2D5M6S", drop.D.ranges=TRUE)
 
-cigar <- c("40M", "15M2I6M2D5M6S", "10M2000N15M", "3H25M5H")
+cigar <- c("40M", "3H15M2I6M2D5M6S", "2S10M2000N15M", "3H25M5H")
 rname <- c("chr6", "chr6", "chr2", "chr6")
 pos <- c(1, 1001, 1,  351)
 cigarToIRangesList(cigar, rname, pos)

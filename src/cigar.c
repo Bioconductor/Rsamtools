@@ -158,7 +158,8 @@ static int get_next_cigar_OP(const char *cig0, int offset,
 	return offset - offset0;
 }
 
-static const char *one_cigar_to_read_width(SEXP cigar_elt, int *width)
+static const char *one_cigar_to_read_width(SEXP cigar_elt, int clip_reads,
+		int *width)
 {
 	const char *cig0;
 	int offset, OPL /* Operation Length */, n;
@@ -176,8 +177,10 @@ static const char *one_cigar_to_read_width(SEXP cigar_elt, int *width)
 		    case 'I': *width += OPL; break;
 		/* Deletion (or skipped region) from the reference */
 		    case 'D': case 'N': break;
-		/* Soft/hard clip on the read */
-		    case 'S': case 'H': *width += OPL; break;
+		/* Soft clip on the read */
+		    case 'S': *width += OPL; break;
+		/* Hard clip on the read */
+		    case 'H': if (!clip_reads) *width += OPL; break;
 		/* Padding (silent deletion from the padded reference
 		   sequence) */
 		    case 'P':
@@ -255,15 +258,19 @@ static const char *expand_cigar(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
  * Args:
  *   cigar: character vector containing the extended CIGAR string for each
  *          read;
+ *   after_hard_clipping: TRUE or FALSE indicating whether the returned
+ *          widths should be those of the reads before or after "hard
+ *          clipping".
  * Return an integer vector of the same length as 'cigar' containing the
  * widths of the reads as inferred from the cigar information.
  */
-SEXP cigar_to_read_width(SEXP cigar)
+SEXP cigar_to_read_width(SEXP cigar, SEXP after_hard_clipping)
 {
 	SEXP ans, cigar_elt;
-	int ans_length, i, width;
+	int clip_reads, ans_length, i, width;
 	const char *errmsg;
 
+	clip_reads = LOGICAL(after_hard_clipping)[0];
 	ans_length = LENGTH(cigar);
 	PROTECT(ans = NEW_INTEGER(ans_length));
 	for (i = 0; i < ans_length; i++) {
@@ -272,7 +279,8 @@ SEXP cigar_to_read_width(SEXP cigar)
 			UNPROTECT(1);
 			error("'cigar' contains NAs");
 		}
-		errmsg = one_cigar_to_read_width(cigar_elt, &width);
+		errmsg = one_cigar_to_read_width(cigar_elt, clip_reads,
+				&width);
 		if (errmsg != NULL) {
 			UNPROTECT(1);
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
@@ -300,7 +308,7 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges)
 	cigar_elt = STRING_ELT(cigar, 0);
 	if (cigar_elt == NA_STRING)
 		error("'cigar' is NA");
-	Ds_as_Ns = INTEGER(drop_D_ranges)[0];
+	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
 	range_ae = new_RangeAE(0, 0);
 	errmsg = expand_cigar(cigar_elt, 1, Ds_as_Ns, &range_ae);
 	if (errmsg != NULL)
@@ -353,7 +361,7 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 	ans_length = LENGTH(rname_levels);
 	range_aeae = new_RangeAEAE(ans_length, ans_length);
 	nreads = LENGTH(pos);
-	Ds_as_Ns = INTEGER(drop_D_ranges)[0];
+	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
 	for (i = 0; i < nreads; i++) {
 		cigar_elt = STRING_ELT(cigar, i);
 		if (cigar_elt == NA_STRING)

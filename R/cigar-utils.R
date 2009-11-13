@@ -1,12 +1,16 @@
 ###
-cigarToReadWidth <- function(cigar)
+cigarToReadWidth <- function(cigar, after.hard.clipping=FALSE)
 {
     if (!is.character(cigar)) {
         if (!is.factor(cigar) || !is.character(levels(cigar)))
             stop("'cigar' must be a character vector/factor")
         cigar <- as.vector(cigar)
     }
-    .Call(".cigar_to_read_width", cigar, PACKAGE="Rsamtools")
+    if (!isTRUEorFALSE(after.hard.clipping))
+        stop("'after.hard.clipping' must be TRUE or FALSE")
+    .Call(".cigar_to_read_width",
+          cigar, after.hard.clipping,
+          PACKAGE="Rsamtools")
 }
 
 cigarToIRanges <- function(cigar, drop.D.ranges=FALSE)
