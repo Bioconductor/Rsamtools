@@ -4,6 +4,8 @@
 \alias{cigarToReadWidth}
 \alias{cigarToIRanges}
 \alias{cigarToIRangesList}
+\alias{cigarToCigarTable}
+\alias{summarizeCigarTable}
 
 \title{
   CIGAR utility functions
@@ -18,6 +20,10 @@ cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
 
 cigarToIRangesList(cigar, rname, pos, flag=NA,
                    drop.D.ranges=FALSE, merge.ranges=TRUE)
+
+cigarToCigarTable(cigar)
+
+summarizeCigarTable(x)
 }
 
 \arguments{
@@ -66,6 +72,9 @@ cigarToIRangesList(cigar, rname, pos, flag=NA,
     duplicate". Therefore when \code{flag} is provided, reads
     corresponding to a flag where this bit is ON are ignored.
   }
+  \item{x}{
+    A \link[IRanges]{DataFrame} produced by \code{cigarToCigarTable}.
+  }
 }
 
 \value{
@@ -82,6 +91,14 @@ cigarToIRangesList(cigar, rname, pos, flag=NA,
   For \code{cigarToIRangesList}: A named \link[IRanges]{IRangesList}
   object with one element (\link[IRanges]{IRanges}) per unique reference
   sequence.
+
+  For \code{cigarToCigarTable}: A frequency table of the CIGARs
+  in the form of a \link[IRanges]{DataFrame} with two columns:
+  \code{cigar} (a \link[IRanges]{CompressedRleList}) and \code{count}
+  (an integer).
+
+  For \code{summarizeCigarTable}: A list with two elements:
+  \code{AlignedCharacters} (integer) and \code{Indels} (matrix)
 }
 
 \references{
@@ -108,6 +125,12 @@ cigar <- c("40M", "3H15M55N4M2I6M2D5M6S", "2S10M2000N15M", "3H25M5H")
 rname <- c("chr6", "chr6", "chr2", "chr6")
 pos <- c(1, 1001, 1,  351)
 cigarToIRangesList(cigar, rname, pos)
+
+cigarToCigarTable(cigar)
+cigarToCigarTable(cigar)[,"cigar"]
+cigarToCigarTable(cigar)[,"count"]
+
+summarizeCigarTable(cigarToCigarTable(cigar))
 
 ## ---------------------------------------------------------------------
 ## B. PERFORMANCE

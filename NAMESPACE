@@ -1,14 +1,9 @@
 useDynLib(Rsamtools, .registration=TRUE)
 
 import(methods)
+import(IRanges)
 
 importFrom(utils, normalizePath, read.table)
-
-importClassesFrom(IRanges, Sequence, DataTableORNULL, Annotated,
-                  Ranges, IRanges, RangesList, IRangesList, RangedData)
-importFrom(IRanges, isSingleString, isTRUEorFALSE,
-           IRanges, RangesList, IRangesList, RangedData)
-importMethodsFrom(IRanges, coerce, end, endoapply, space, start, unlist, width)
 
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet, PhredQuality)
