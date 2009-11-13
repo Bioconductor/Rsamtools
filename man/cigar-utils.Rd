@@ -18,7 +18,7 @@ cigarToReadWidth(cigar, after.hard.clipping=FALSE)
 
 cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
 
-cigarToIRangesList(cigar, rname, pos, flag=NA,
+cigarToIRangesList(cigar, rname, pos, flag=NULL,
                    drop.D.ranges=FALSE, merge.ranges=TRUE)
 
 cigarToCigarTable(cigar)
@@ -65,12 +65,14 @@ summarizeCigarTable(x)
     sequence.
   }
   \item{flag}{
-    \code{NA} or an integer vector containing the SAM flag for
+    \code{NULL} or an integer vector containing the SAM flag for
     each read.
-    According to the SAM specs, when bit 0x400 in the flag
-    is ON then "the read is either a PCR duplicate or an optical
-    duplicate". Therefore when \code{flag} is provided, reads
-    corresponding to a flag where this bit is ON are ignored.
+    According to the SAM specs, flag bits 0x004 and 0x400 have
+    the following meaning: when bit 0x004 is ON then "the query
+    sequence itself is unmapped" and when bit 0x400 is ON then
+    "the read is either a PCR duplicate or an optical duplicate".
+    When \code{flag} is provided, \code{cigarToIRangesList}
+    ignores these reads.
   }
   \item{x}{
     A \link[IRanges]{DataFrame} produced by \code{cigarToCigarTable}.
@@ -182,9 +184,9 @@ if (interactive()) {
 ## "coverage" of the mapped reads i.e. the number of reads that hit any
 ## given position in the reference genome.
 ## The following function takes the path to a BAM file and returns an
-## object representing the coverage of the mapped reads stored in the
-## file. The returned object is an RleList object named with the names
-## of the reference sequences that actually receive some coverage.
+## object representing the coverage of the mapped reads that are stored
+## in the file. The returned object is an RleList object named with the
+## names of the reference sequences that actually receive some coverage.
 
 extractCoverageFromBAM <- function(file)
 {
@@ -194,6 +196,8 @@ extractCoverageFromBAM <- function(file)
                                          isDuplicate=FALSE),
                         what=c("rname", "pos", "cigar"))
   bam <- scanBam(file, param=param)[[1]]
+  ## Note that unmapped reads and reads that are PCR/optical duplicates
+  ## have already been filtered out by using the ScanBamParam object above.
   irl <- cigarToIRangesList(as.vector(bam$cigar@.cigar), bam$rname, bam$pos)
   irl <- irl[elementLengths(irl) != 0]  # drop empty elements
   coverage(irl)

@@ -27,7 +27,7 @@ cigarToIRanges <- function(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
           PACKAGE="Rsamtools")
 }
 
-cigarToIRangesList <- function(cigar, rname, pos, flag=NA,
+cigarToIRangesList <- function(cigar, rname, pos, flag=NULL,
                                drop.D.ranges=FALSE, merge.ranges=TRUE)
 {
     if (!is.character(cigar)) {
@@ -46,12 +46,9 @@ cigarToIRangesList <- function(cigar, rname, pos, flag=NA,
         pos <- as.integer(pos)
     if (length(cigar) != length(rname) || length(cigar) != length(pos))
         stop("'cigar', 'rname' and 'pos' must have the same length")
-    if (is.vector(flag) && length(flag) == 1 && is.na(flag)) {
-        ## 'flag' is a single NA of any type
-        flag <- NULL
-    } else {
+    if (!is.null(flag)) {
         if (!is.numeric(flag))
-            stop("'flag' must be NA or a vector of integers")
+            stop("'flag' must be NULL or a vector of integers")
         if (!is.integer(flag))
             flag <- as.integer(flag)
         if (length(cigar) != length(flag))

@@ -437,20 +437,25 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
 	merge_ranges0 = LOGICAL(merge_ranges)[0];
 	for (i = 0; i < nreads; i++) {
-		cigar_elt = STRING_ELT(cigar, i);
-		if (cigar_elt == NA_STRING)
-			error("'cigar' contains NAs");
-		level = INTEGER(rname)[i];
-		if (level == NA_INTEGER)
-			error("'rname' contains NAs");
-		pos_elt = INTEGER(pos)[i];
-		if (pos_elt == NA_INTEGER)
-			error("'pos' contains NAs");
 		if (flag != R_NilValue) {
 			flag_elt = INTEGER(flag)[i];
-			if (flag_elt != NA_INTEGER && (flag_elt & 0x400))
+			if (flag_elt == NA_INTEGER)
+				error("'flag' contains NAs");
+			if (flag_elt & 0x404)
 				continue;
 		}
+		cigar_elt = STRING_ELT(cigar, i);
+		if (cigar_elt == NA_STRING)
+			error("'cigar' contains %sNAs",
+			      flag != R_NilValue ? "unexpected" : "");
+		level = INTEGER(rname)[i];
+		if (level == NA_INTEGER)
+			error("'rname' contains %sNAs",
+			      flag != R_NilValue ? "unexpected" : "");
+		pos_elt = INTEGER(pos)[i];
+		if (pos_elt == NA_INTEGER)
+			error("'pos' contains %sNAs",
+			      flag != R_NilValue ? "unexpected" : "");
 		errmsg = merge_ranges0 ?
 			expand_cigar2(cigar_elt, pos_elt, Ds_as_Ns,
 				      range_aeae.elts + level - 1) :
