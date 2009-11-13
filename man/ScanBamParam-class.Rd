@@ -51,7 +51,7 @@ bamSimpleCigar(object)
 
   \item{flag}{An integer(2) vector used to filter reads based on their
 	'flag' entry. This is most easily created with the
-	\code{scamBamFlag()} helper function.}
+	\code{scanBamFlag()} helper function.}
 
   \item{simpleCigar}{A logical(1) vector which, when TRUE, returns only
 	those reads for which the cigar (run-length encoded representation
