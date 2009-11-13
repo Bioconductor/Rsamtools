@@ -109,6 +109,13 @@ summarizeCigarTable(x)
   H. Pages
 }
 
+\seealso{
+  \link[IRanges]{IRanges-class},
+  \link[IRanges]{IRangesList-class},
+  \code{\link[IRanges]{coverage}},
+  \link[IRanges]{RleList-class}
+}
+
 \examples{
 ## ---------------------------------------------------------------------
 ## A. SIMPLE EXAMPLES
@@ -167,6 +174,34 @@ if (interactive()) {
   ## The size of the resulting IRangesList object is about 160M:
   object.size(irl)
 }
+
+## ---------------------------------------------------------------------
+## C. COMPUTE THE COVERAGE OF THE READS STORED IN A BAM FILE
+## ---------------------------------------------------------------------
+## The information stored in a BAM file can be used to compute the
+## "coverage" of the mapped reads i.e. the number of reads that hit any
+## given position in the reference genome.
+## The following function takes the path to a BAM file and returns an
+## object representing the coverage of the mapped reads stored in the
+## file. The returned object is an RleList object named with the names
+## of the reference sequences that actually receive some coverage.
+
+extractCoverageFromBAM <- function(file)
+{
+  ## This ScanBamParam object allows us to load only the necessary
+  ## information from the file.
+  param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE,
+                                         isDuplicate=FALSE),
+                        what=c("rname", "pos", "cigar"))
+  bam <- scanBam(file, param=param)[[1]]
+  irl <- cigarToIRangesList(as.vector(bam$cigar@.cigar), bam$rname, bam$pos)
+  irl <- irl[elementLengths(irl) != 0]  # drop empty elements
+  coverage(irl)
+}
+
+
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+extractCoverageFromBAM(fl)
 }
 
 \keyword{manip}
