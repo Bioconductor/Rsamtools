@@ -53,10 +53,10 @@ cigarToIRangesList(cigar, rname, pos, flag=NA, drop.D.ranges=FALSE)
   \item{flag}{
     \code{NA} or an integer vector containing the SAM flag for
     each read.
-    According to the SAM specs, when bit 0x0400 in the flag
+    According to the SAM specs, when bit 0x400 in the flag
     is ON then "the read is either a PCR duplicate or an optical
     duplicate". Therefore when \code{flag} is provided, reads
-    with a flag >= 1024 are ignored.
+    corresponding to a flag where this bit is ON are ignored.
   }
 }
 

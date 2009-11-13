@@ -374,7 +374,7 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 			error("'pos' contains NAs");
 		if (flag != R_NilValue) {
 			flag_elt = INTEGER(flag)[i];
-			if (flag_elt != NA_INTEGER && flag_elt >= 1024)
+			if (flag_elt != NA_INTEGER && (flag_elt & 0x400))
 				continue;
 		}
 		errmsg = expand_cigar(cigar_elt, pos_elt, Ds_as_Ns,
