@@ -87,7 +87,10 @@ cigar_table(SEXP cigar)
 
 
 /****************************************************************************
- * cigar_to_IRanges() & cigar_to_list_of_IRanges()
+ * split_cigar()
+ * cigar_to_read_width()
+ * cigar_to_IRanges()
+ * cigar_to_list_of_IRanges()
  */
 
 static char errmsg_buf[200];
@@ -317,6 +320,22 @@ static const char *expand_cigar2(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
 	if (width)
 		append_range(range_ae, start, width);
 	return NULL;
+}
+
+
+/* --- .Call ENTRY POINT ---
+ * Args:
+ *   cigar: character vector containing the extended CIGAR string for each
+ *          read.
+ * Return a list of the same length as 'cigar' where each element is itself
+ * a list with 2 elements of the same lengths, the 1st one being a character
+ * vector containing the CIGAR operations and the 2nd one being an integer
+ * vector containing the lengths of the CIGAR operations.
+ */
+SEXP split_cigar(SEXP cigar)
+{
+	error("NOT IMPLEMENTED YET, SORRY!");
+	return R_NilValue;
 }
 
 /* --- .Call ENTRY POINT ---

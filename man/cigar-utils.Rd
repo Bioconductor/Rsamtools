@@ -4,6 +4,7 @@
 \alias{cigarToReadWidth}
 \alias{cigarToIRanges}
 \alias{cigarToIRangesList}
+\alias{splitCigar}
 \alias{cigarToCigarTable}
 \alias{summarizeCigarTable}
 
@@ -20,6 +21,8 @@ cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
 
 cigarToIRangesList(cigar, rname, pos, flag=NULL,
                    drop.D.ranges=FALSE, merge.ranges=TRUE)
+
+splitCigar(cigar)
 
 cigarToCigarTable(cigar)
 
@@ -94,6 +97,12 @@ summarizeCigarTable(x)
   object with one element (\link[IRanges]{IRanges}) per unique reference
   sequence.
 
+  For \code{splitCigar}: A list of the same length as \code{cigar}
+  where each element is itself a list with 2 elements of the same
+  lengths, the 1st one being a character vector containing the CIGAR
+  operations and the 2nd one being an integer vector containing the
+  lengths of the CIGAR operations.
+
   For \code{cigarToCigarTable}: A frequency table of the CIGARs
   in the form of a \link[IRanges]{DataFrame} with two columns:
   \code{cigar} (a \link[IRanges]{CompressedRleList}) and \code{count}
@@ -134,6 +143,8 @@ cigar <- c("40M", "3H15M55N4M2I6M2D5M6S", "2S10M2000N15M", "3H25M5H")
 rname <- c("chr6", "chr6", "chr2", "chr6")
 pos <- c(1, 1001, 1,  351)
 cigarToIRangesList(cigar, rname, pos)
+
+splitCigar(cigar)
 
 cigarToCigarTable(cigar)
 cigarToCigarTable(cigar)[,"cigar"]

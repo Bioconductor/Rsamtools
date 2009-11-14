@@ -67,6 +67,16 @@ cigarToIRangesList <- function(cigar, rname, pos, flag=NULL,
         IRangesList(C_ans, compress=TRUE)
 }
 
+splitCigar <- function(cigar)
+{
+    if (!is.character(cigar)) {
+        if (!is.factor(cigar) || !is.character(levels(cigar)))
+            stop("'cigar' must be a character vector/factor")
+        cigar <- as.vector(cigar)
+    }
+    .Call(".split_cigar", cigar, PACKAGE="Rsamtools")
+}
+
 cigarToCigarTable <- function(cigar) {
     if (is.character(cigar))
         cigar <- factor(cigar)
