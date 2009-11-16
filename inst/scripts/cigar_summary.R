@@ -28,9 +28,9 @@ file1 <- file.path(dataDir, "NA19239.SLX.maq.SRP000033.2009_09.subset.bam")
 file2 <- file.path(dataDir, "NA19240.chrom6.SLX.maq.SRP000032.2009_07.subset.bam")
 file3 <- file.path(dataDir, "NA19240.chrom1.454.ssaha2.SRP000032.2009_10.bam")
 
-cigarTable1 <- readCigarTable(file1) ## Takes approx  1 minute
-cigarTable2 <- readCigarTable(file2) ## Takes approx  1 minute
-cigarTable3 <- readCigarTable(file3) ## Takes approx 30 minutes
+cigarTable1 <- readCigarTable(file1) ## Takes approx 1 minute
+cigarTable2 <- readCigarTable(file2) ## Takes approx 1 minute
+cigarTable3 <- readCigarTable(file3) ## Takes approx 6.5 minutes
 
 summarizeCigarTable(cigarTable1)
 summarizeCigarTable(cigarTable2)
