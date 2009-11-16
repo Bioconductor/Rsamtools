@@ -5,6 +5,7 @@
 \alias{cigarToIRanges}
 \alias{cigarToIRangesList}
 \alias{splitCigar}
+\alias{cigarToRleList}
 \alias{cigarToCigarTable}
 \alias{summarizeCigarTable}
 
