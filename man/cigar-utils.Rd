@@ -24,6 +24,8 @@ cigarToIRangesList(cigar, rname, pos, flag=NULL,
 
 splitCigar(cigar)
 
+cigarToRleList(cigar)
+
 cigarToCigarTable(cigar)
 
 summarizeCigarTable(x)
@@ -99,9 +101,11 @@ summarizeCigarTable(x)
 
   For \code{splitCigar}: A list of the same length as \code{cigar}
   where each element is itself a list with 2 elements of the same
-  lengths, the 1st one being a character vector containing the CIGAR
-  operations and the 2nd one being an integer vector containing the
-  lengths of the CIGAR operations.
+  lengths, the 1st one being a raw vector containing the CIGAR
+  operations and the 2nd one being an integer vector containing
+  the lengths of the CIGAR operations.
+
+  For \code{cigarToRleList}: A \link[IRanges]{CompressedRleList} object.
 
   For \code{cigarToCigarTable}: A frequency table of the CIGARs
   in the form of a \link[IRanges]{DataFrame} with two columns:
@@ -145,6 +149,7 @@ pos <- c(1, 1001, 1,  351)
 cigarToIRangesList(cigar, rname, pos)
 
 splitCigar(cigar)
+cigarToRleList(cigar)
 
 cigarToCigarTable(cigar)
 cigarToCigarTable(cigar)[,"cigar"]

@@ -77,6 +77,17 @@ splitCigar <- function(cigar)
     .Call(".split_cigar", cigar, PACKAGE="Rsamtools")
 }
 
+cigarToRleList <- function(cigar)
+{
+    split_cigar <- splitCigar(cigar)
+    cigar_OPs <- unlist(lapply(split_cigar, function(x) x[[1]]))
+    cigar_OPs_as_chars <- strsplit(rawToChar(cigar_OPs), NULL, fixed=TRUE)[[1]]
+    tmp <- lapply(split_cigar, function(x) x[[2]])
+    cigar_OPLs <- unlist(tmp)
+    ans_unlistData <- Rle(cigar_OPs_as_chars, cigar_OPLs)
+    IRanges:::newCompressedList("CompressedRleList", ans_unlistData, cumsum(sapply(tmp, sum)))
+}
+
 cigarToCigarTable <- function(cigar) {
     if (is.character(cigar))
         cigar <- factor(cigar)
@@ -86,15 +97,7 @@ cigarToCigarTable <- function(cigar) {
     tableOrder <- order(basicTable, decreasing=TRUE)
     cigar <- factor(cigar, levels = levels(cigar)[tableOrder])
     basicTable <- basicTable[tableOrder]
-    cigarValues <-
-      CharacterList(lapply(strsplit(levels(cigar), "[0-9]+"), "[", -1))
-    cigarLengths <- IntegerList(strsplit(levels(cigar), "[A-Za-z]+"))
-    DataFrame(cigar =
-              IRanges:::newCompressedList("CompressedRleList",
-                                   Rle(unlist(cigarValues, use.names=FALSE),
-                                       unlist(cigarLengths, use.names=FALSE)),
-                                   cumsum(unlist(lapply(cigarLengths, sum)))),
-              count = as.integer(basicTable))
+    DataFrame(cigar = cigarToRleList(levels(cigar)), count = as.integer(basicTable))
 }
 
 summarizeCigarTable <- function(x) {

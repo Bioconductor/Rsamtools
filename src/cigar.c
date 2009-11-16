@@ -161,6 +161,24 @@ static int get_next_cigar_OP(const char *cig0, int offset,
 	return offset - offset0;
 }
 
+static const char *split_one_cigar(SEXP cigar_elt, CharAE *OPbuf, IntAE *OPLbuf)
+{
+	const char *cig0;
+	int offset, OPL /* Operation Length */, n;
+	char OP /* Operation */;
+
+	cig0 = CHAR(cigar_elt);
+	offset = 0;
+	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
+		if (n == -1)
+			return errmsg_buf;
+		CharAE_insert_at(OPbuf, OPbuf->nelt, OP);
+		IntAE_insert_at(OPLbuf, OPLbuf->nelt, OPL);
+		offset += n;
+	}
+	return NULL;
+}
+
 static const char *one_cigar_to_read_width(SEXP cigar_elt, int clip_reads,
 		int *width)
 {
@@ -328,14 +346,44 @@ static const char *expand_cigar2(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
  *   cigar: character vector containing the extended CIGAR string for each
  *          read.
  * Return a list of the same length as 'cigar' where each element is itself
- * a list with 2 elements of the same lengths, the 1st one being a character
+ * a list with 2 elements of the same lengths, the 1st one being a raw
  * vector containing the CIGAR operations and the 2nd one being an integer
  * vector containing the lengths of the CIGAR operations.
  */
 SEXP split_cigar(SEXP cigar)
 {
-	error("NOT IMPLEMENTED YET, SORRY!");
-	return R_NilValue;
+	SEXP ans, cigar_elt, ans_elt, ans_elt_elt0, ans_elt_elt1;
+	int ans_length, i;
+	CharAE OPbuf;
+	IntAE OPLbuf;
+	const char *errmsg;
+
+	ans_length = LENGTH(cigar);
+	PROTECT(ans = NEW_LIST(ans_length));
+	OPbuf = new_CharAE(0);
+	OPLbuf = new_IntAE(0, 0, 0);
+	for (i = 0; i < ans_length; i++) {
+		cigar_elt = STRING_ELT(cigar, i);
+		if (cigar_elt == NA_STRING) {
+			UNPROTECT(1);
+			error("'cigar' contains NAs");
+		}
+		OPbuf.nelt = OPLbuf.nelt = 0;
+		errmsg = split_one_cigar(cigar_elt, &OPbuf, &OPLbuf);
+		if (errmsg != NULL) {
+			UNPROTECT(1);
+			error("in 'cigar' element %d: %s", i + 1, errmsg);
+		}
+		PROTECT(ans_elt = NEW_LIST(2));
+		PROTECT(ans_elt_elt0 = CharAE_asRAW(&OPbuf));
+		PROTECT(ans_elt_elt1 = IntAE_asINTEGER(&OPLbuf));
+		SET_VECTOR_ELT(ans_elt, 0, ans_elt_elt0);
+		SET_VECTOR_ELT(ans_elt, 1, ans_elt_elt1);
+		SET_VECTOR_ELT(ans, i, ans_elt);
+		UNPROTECT(3);
+	}
+	UNPROTECT(1);
+	return ans;
 }
 
 /* --- .Call ENTRY POINT ---
