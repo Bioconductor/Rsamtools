@@ -67,6 +67,16 @@ cigarToIRangesList <- function(cigar, rname, pos, flag=NULL,
         IRangesList(C_ans, compress=TRUE)
 }
 
+queryLoc2refLoc <- function(qloc, cigar, pos=1)
+{
+    stop("NOT IMPLEMENTED YET, SORRY!")
+}
+
+queryLocs2refLocs <- function(qlocs, cigar, pos, flag=NULL)
+{
+    stop("NOT IMPLEMENTED YET, SORRY!")
+}
+
 splitCigar <- function(cigar)
 {
     if (!is.character(cigar)) {

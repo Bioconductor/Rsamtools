@@ -1,9 +1,15 @@
 \name{cigar-utils}
 \Rdversion{1.1}
 \alias{cigar-utils}
+
 \alias{cigarToReadWidth}
+
 \alias{cigarToIRanges}
 \alias{cigarToIRangesList}
+
+\alias{queryLoc2refLoc}
+\alias{queryLocs2refLocs}
+
 \alias{splitCigar}
 \alias{cigarToRleList}
 \alias{cigarToCigarTable}
@@ -19,16 +25,15 @@
 cigarToReadWidth(cigar, after.hard.clipping=FALSE)
 
 cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
-
 cigarToIRangesList(cigar, rname, pos, flag=NULL,
                    drop.D.ranges=FALSE, merge.ranges=TRUE)
 
+queryLoc2refLoc(qloc, cigar, pos=1)
+queryLocs2refLocs(qlocs, cigar, pos, flag=NULL)
+
 splitCigar(cigar)
-
 cigarToRleList(cigar)
-
 cigarToCigarTable(cigar)
-
 summarizeCigarTable(x)
 }
 
@@ -36,6 +41,9 @@ summarizeCigarTable(x)
   \item{cigar}{
     A character vector/factor containing the extended CIGAR
     string for each read.
+    For \code{cigarToIRanges} and \code{queryLoc2refLoc},
+    this must be a single string (i.e. a character vector/factor
+    of length 1).
   }
   \item{after.hard.clipping}{
     Should the returned widths be those of the reads before
@@ -80,6 +88,17 @@ summarizeCigarTable(x)
     When \code{flag} is provided, \code{cigarToIRangesList}
     ignores these reads.
   }
+  \item{qloc}{
+    An integer vector containing "query-based locations" i.e.
+    1-based locations relative to the query sequence
+    stored in the SAM/BAM file.
+  }
+  \item{qlocs}{
+    A list of the same length as \code{cigar} where each
+    element is an integer vector containing "query-based
+    locations" i.e. 1-based locations relative to the corresponding
+    query sequence stored in the SAM/BAM file.
+  }
   \item{x}{
     A \link[IRanges]{DataFrame} produced by \code{cigarToCigarTable}.
   }
@@ -99,6 +118,16 @@ summarizeCigarTable(x)
   For \code{cigarToIRangesList}: A named \link[IRanges]{IRangesList}
   object with one element (\link[IRanges]{IRanges}) per unique reference
   sequence.
+
+  For \code{queryLoc2refLoc}: An integer vector of the same length as
+  \code{qloc} containing the "reference-based locations" (i.e. the
+  1-based locations relative to the reference sequence) corresponding
+  to the "query-based locations" passed in \code{qloc}.
+
+  For \code{queryLocs2refLocs}: A list of the same length as
+  \code{qlocs} where each element is an integer vector containing
+  the "reference-based locations" corresponding to the "query-based
+  locations" passed in the corresponding element in \code{qlocs}.
 
   For \code{splitCigar}: A list of the same length as \code{cigar}
   where each element is itself a list with 2 elements of the same
