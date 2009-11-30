@@ -39,7 +39,7 @@ setMethod("[", c(x="Cigar", i="ANY", j="missing"),
 })
 
 setMethod("[[", c(x="Cigar", i="ANY", j="missing"),
-          function(x, i, j, ...) as.character(cigars(x)[[i]]))
+          function(x, i, j, ..., exact=NA) as.character(cigars(x)[[i]]))
 
 setMethod(show, "Cigar", function(object) {
     .show_classname(object)
