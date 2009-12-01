@@ -18,7 +18,7 @@
 \description{
   
   Use \code{ScanBamParam()} to create a parameter object influencing
-  which reads and what fields are imported from a (binary) BAM file. Use
+  what fields and which reads are imported from a (binary) BAM file. Use
   of \code{which} requires that an BAM index file
   (\code{<filename>.bai}) exists.
 

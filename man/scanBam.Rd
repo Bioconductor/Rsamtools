@@ -8,7 +8,7 @@
 }
 \description{
   Import binary `BAM' files into a list structure, with facilities for
-  selecting which fields and what records are to be imported.
+  selecting what fields and which reads are imported.
 }
 \usage{
 scanBam(file, index=file, ...)
