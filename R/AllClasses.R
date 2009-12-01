@@ -14,8 +14,8 @@ setClass("ScanBamParam",
          representation=representation(
            flag="integer",
            simpleCigar="logical",
-           which="RangesList",
-           what="character"))
+           what="character",
+           which="RangesList"))
 
 setClass("Cigar",
          representation=representation("Sequence",

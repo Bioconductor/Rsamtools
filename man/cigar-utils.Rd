@@ -2,7 +2,7 @@
 \Rdversion{1.1}
 \alias{cigar-utils}
 
-\alias{cigarToReadWidth}
+\alias{cigarToQWidth}
 
 \alias{cigarToIRanges}
 \alias{cigarToIRangesList}
@@ -22,7 +22,7 @@
   Utility functions for low-level CIGAR manipulation.
 }
 \usage{
-cigarToReadWidth(cigar, after.hard.clipping=FALSE)
+cigarToQWidth(cigar, before.hard.clipping=FALSE)
 
 cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
 cigarToIRangesList(cigar, rname, pos, flag=NULL,
@@ -45,15 +45,15 @@ summarizeCigarTable(x)
     this must be a single string (i.e. a character vector/factor
     of length 1).
   }
-  \item{after.hard.clipping}{
-    Should the returned widths be those of the reads before
+  \item{before.hard.clipping}{
+    Should the returned widths be the lengths of the reads before
     or after "hard clipping"? Hard clipping of a read is
     encoded with an H in the CIGAR.
-    If NO (\code{after.hard.clipping=FALSE}, the default),
-    then the returned widths are those of the original reads.
-    If YES (\code{after.hard.clipping=TRUE}), then the
-    returned widths are the lengths of the query sequences
-    stored in the SAM/BAM file.
+    If NO (\code{before.hard.clipping=FALSE}, the default),
+    then the returned widths are the lengths of the query
+    sequences stored in the SAM/BAM file.
+    If YES (\code{before.hard.clipping=TRUE}), then the returned
+    widths are the lengths of the original reads.
   }
   \item{drop.D.ranges}{
     Should the ranges corresponding to a deletion from the
@@ -105,9 +105,10 @@ summarizeCigarTable(x)
 }
 
 \value{
-  For \code{cigarToReadWidth}: An integer vector of the same length
-  as \code{cigar} where each element is the width of the read as
-  inferred from the corresponding element in \code{cigar}.
+  For \code{cigarToQWidth}: An integer vector of the same length
+  as \code{cigar} where each element is the width of the query as
+  inferred from the corresponding element in \code{cigar}
+  (NAs in \code{cigar} will produce NAs in the returned vector).
 
   For \code{cigarToIRanges}: An \link[IRanges]{IRanges} object
   describing where the bases in the read align with respect to
@@ -166,8 +167,8 @@ summarizeCigarTable(x)
 ## A. SIMPLE EXAMPLES
 ## ---------------------------------------------------------------------
 
-cigarToReadWidth("3H15M55N4M2I6M2D5M6S")
-cigarToReadWidth("3H15M55N4M2I6M2D5M6S", after.hard.clipping=TRUE)
+cigarToQWidth("3H15M55N4M2I6M2D5M6S")
+cigarToQWidth("3H15M55N4M2I6M2D5M6S", before.hard.clipping=TRUE)
 
 cigarToIRanges("3H15M55N4M2I6M2D5M6S")
 cigarToIRanges("3H15M55N4M2I6M2D5M6S", merge.ranges=FALSE)

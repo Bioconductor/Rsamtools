@@ -8,7 +8,7 @@
 }
 \description{
   Import binary `BAM' files into a list structure, with facilities for
-  selecting what fields and which reads are imported.
+  selecting what fields and which records are imported.
 }
 \usage{
 scanBam(file, index=file, ...)
@@ -25,8 +25,8 @@ scanBam(file, index=file, ...)
   \item{\dots}{Additional arguments, passed to methods.}
 
   \item{param}{For the \code{scanBam,character-method}, an instance of
-	\code{\linkS4class{ScanBamParam}}. This influences which fields and
-	what records are input.}
+	\code{\linkS4class{ScanBamParam}}. This influences what fields
+	and which records are imported.}
 
 }
 \details{
@@ -74,9 +74,9 @@ scanBam(file, index=file, ...)
 	clipped nucleotides, even though soft-clipped nucleotides are
 	included in \code{seq}.}
 
-  \item{width}{The width of the read, as calculated from the
-	\code{cigar} encoding; normally equal to the width of the aligned
-	read returned in \code{seq}.}
+  \item{qwidth}{The width of the query, as calculated from the
+	\code{cigar} encoding; normally equal to the width of the query
+	returned in \code{seq}.}
 
   \item{mrnm}{The reference to which the mate (of a paired end
 	read) aligns.}
@@ -85,8 +85,9 @@ scanBam(file, index=file, ...)
 
   \item{isize}{Inferred insert size for paired end alignments.}
 
-  \item{seq}{The read sequence, in its original (unaligned, 5' to 3')
-	orientation.}
+  \item{seq}{The query sequence, in the 5' to 3' orientation. If aligned
+	to the minus strand, it is the reverse complement of the original
+	sequence.}
 
   \item{qual}{Phred-encoded, phred-scaled base quality score, oriented
 	as \code{seq}.}
@@ -113,8 +114,8 @@ res0 <- scanBam(fl)[[1]] # always list-of-lists
 names(res0)
 length(res0[["qname"]])
 lapply(res0, head, 3)
-table(width(res0[["seq"]])) # read widths
-table(res0[["width"]], useNA="always") # aligned width
+table(width(res0[["seq"]])) # query widths
+table(res0[["qwidth"]], useNA="always") # query widths derived from cigar
 table(cigars(res0[["cigar"]]), useNA="always")
 table(res0[["strand"]], useNA="always")
 table(res0[["flag"]], useNA="always")
@@ -126,7 +127,7 @@ res1 <- scanBam(fl, param=p1)
 names(res1)
 names(res1[[2]])
 
-p2 <- ScanBamParam(what=c("rname", "strand", "pos", "width"))
+p2 <- ScanBamParam(what=c("rname", "strand", "pos", "qwidth"))
 res2 <- scanBam(fl, param=p2)
                 
 p3 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))

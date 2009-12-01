@@ -5,7 +5,7 @@
 
 SEXP cigar_run_count(SEXP cigar);
 SEXP cigar_table(SEXP cigar);
-SEXP cigar_to_read_width(SEXP cigar, SEXP after_hard_clipping);
+SEXP cigar_to_qwidth(SEXP cigar, SEXP before_hard_clipping);
 
 SEXP split_cigar(SEXP cigar);
 SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges, SEXP merge_ranges);

@@ -16,12 +16,10 @@
 
 \title{Parameters for scanning BAM files}
 \description{
-  
   Use \code{ScanBamParam()} to create a parameter object influencing
-  what fields and which reads are imported from a (binary) BAM file. Use
-  of \code{which} requires that an BAM index file
+  what fields and which records are imported from a (binary) BAM file.
+  Use of \code{which} requires that an BAM index file
   (\code{<filename>.bai}) exists.
-
 }
 
 \usage{
@@ -66,8 +64,8 @@ bamSimpleCigar(object)
   \item{which}{A \code{\linkS4class{RangesList}} object, consisting of
 	named \code{Ranges} elements. Names correspond to reference
 	sequences, and ranges to the regions on that reference sequence for
-	which matches are desired. Only reads overlapping the specified
-	ranges are returned.}
+	which matches are desired. Only records with a read overlapping
+	the specified ranges are returned.}
 
   \item{isPaired}{A logical(1) indicating whether unpaired (FALSE),
 	paired (TRUE), or any (NA) read should be returned.}
@@ -136,11 +134,11 @@ bamSimpleCigar(object)
      indicating, when TRUE, that only 'simple' cigars (empty or 'M') are
      returned.}
 
-    \item{\code{which}}{Object of class \code{RangesList} indicating
-      which reference sequence and coordinate reads must overlap.}
-
     \item{\code{what}}{Object of class \code{character} indicating
-    which fields are to be returned.}
+     what fields are to be returned.}
+
+    \item{\code{which}}{Object of class \code{RangesList} indicating
+     which reference sequence and coordinate reads must overlap.}
 
   }
 }
@@ -199,7 +197,7 @@ p1 <- ScanBamParam(which=which)
 p2 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))
 
 # subset of fields
-p3 <- ScanBamParam(what=c("rname", "strand", "pos", "width"))
+p3 <- ScanBamParam(what=c("rname", "strand", "pos", "qwidth"))
                 
 # use
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")

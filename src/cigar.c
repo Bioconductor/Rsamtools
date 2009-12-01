@@ -88,7 +88,7 @@ cigar_table(SEXP cigar)
 
 /****************************************************************************
  * split_cigar()
- * cigar_to_read_width()
+ * cigar_to_qwidth()
  * cigar_to_IRanges()
  * cigar_to_list_of_IRanges()
  */
@@ -179,29 +179,29 @@ static const char *split_one_cigar(SEXP cigar_elt, CharAE *OPbuf, IntAE *OPLbuf)
 	return NULL;
 }
 
-static const char *one_cigar_to_read_width(SEXP cigar_elt, int clip_reads,
-		int *width)
+static const char *one_cigar_to_qwidth(SEXP cigar_elt, int clip_reads,
+		int *qwidth)
 {
 	const char *cig0;
 	int offset, OPL /* Operation Length */, n;
 	char OP /* Operation */;
 
 	cig0 = CHAR(cigar_elt);
-	*width = offset = 0;
+	*qwidth = offset = 0;
 	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
 		if (n == -1)
 			return errmsg_buf;
 		switch (OP) {
 		/* Alignment match (can be a sequence match or mismatch) */
-		    case 'M': *width += OPL; break;
+		    case 'M': *qwidth += OPL; break;
 		/* Insertion to the reference */
-		    case 'I': *width += OPL; break;
+		    case 'I': *qwidth += OPL; break;
 		/* Deletion (or skipped region) from the reference */
 		    case 'D': case 'N': break;
 		/* Soft clip on the read */
-		    case 'S': *width += OPL; break;
+		    case 'S': *qwidth += OPL; break;
 		/* Hard clip on the read */
-		    case 'H': if (!clip_reads) *width += OPL; break;
+		    case 'H': if (!clip_reads) *qwidth += OPL; break;
 		/* Padding (silent deletion from the padded reference
 		   sequence) */
 		    case 'P':
@@ -390,34 +390,34 @@ SEXP split_cigar(SEXP cigar)
  * Args:
  *   cigar: character vector containing the extended CIGAR string for each
  *          read;
- *   after_hard_clipping: TRUE or FALSE indicating whether the returned
+ *   before_hard_clipping: TRUE or FALSE indicating whether the returned
  *          widths should be those of the reads before or after "hard
  *          clipping".
  * Return an integer vector of the same length as 'cigar' containing the
  * widths of the reads as inferred from the cigar information.
  */
-SEXP cigar_to_read_width(SEXP cigar, SEXP after_hard_clipping)
+SEXP cigar_to_qwidth(SEXP cigar, SEXP before_hard_clipping)
 {
 	SEXP ans, cigar_elt;
-	int clip_reads, ans_length, i, width;
+	int clip_reads, ans_length, i, qwidth;
 	const char *errmsg;
 
-	clip_reads = LOGICAL(after_hard_clipping)[0];
+	clip_reads = !LOGICAL(before_hard_clipping)[0];
 	ans_length = LENGTH(cigar);
 	PROTECT(ans = NEW_INTEGER(ans_length));
 	for (i = 0; i < ans_length; i++) {
 		cigar_elt = STRING_ELT(cigar, i);
 		if (cigar_elt == NA_STRING) {
-			UNPROTECT(1);
-			error("'cigar' contains NAs");
+			INTEGER(ans)[i] = NA_INTEGER;
+			continue;
 		}
-		errmsg = one_cigar_to_read_width(cigar_elt, clip_reads,
-				&width);
+		errmsg = one_cigar_to_qwidth(cigar_elt, clip_reads,
+				&qwidth);
 		if (errmsg != NULL) {
 			UNPROTECT(1);
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
 		}
-		INTEGER(ans)[i] = width;
+		INTEGER(ans)[i] = qwidth;
 	}
 	UNPROTECT(1);
 	return ans;

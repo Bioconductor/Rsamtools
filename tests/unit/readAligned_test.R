@@ -77,7 +77,7 @@ test_readAligned_bam_which <- function()
 {
     which <- RangesList(seq1=IRanges(1000, 2000),
                         seq2=IRanges(c(100, 1000), c(1000, 2000)))
-    p1 <- ScanBamParam(which=which, what=.what, simpleCigar=TRUE)
+    p1 <- ScanBamParam(simpleCigar=TRUE, what=.what, which=which)
     aln <- .readAligned_bam(fl, param=p1)
     checkEquals(structure("AlignedRead", package = "ShortRead"),
                 class(aln))

@@ -87,7 +87,7 @@ test_scanBam_which <- function()
 
 test_scanBam_what <- function()
 {
-    p2 <- ScanBamParam(what=c("rname", "strand", "pos", "width"))
+    p2 <- ScanBamParam(what=c("rname", "strand", "pos", "qwidth"))
     res <- scanBam(fl, param=p2)
     checkIdentical("list", class(res))
     checkIdentical(1L, length(res))
@@ -97,7 +97,7 @@ test_scanBam_what <- function()
     checkIdentical(4L, length(res1))
 
     exp <- structure(c("factor", "factor", "integer", "integer"),
-                     .Names = c("rname", "strand", "pos", "width"))
+                     .Names = c("rname", "strand", "pos", "qwidth"))
     checkIdentical(exp, sapply(res1, class))
     checkIdentical(3307L, unique(sapply(res1, length)))
 }

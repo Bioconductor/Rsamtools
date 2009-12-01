@@ -1,15 +1,15 @@
 ###
-cigarToReadWidth <- function(cigar, after.hard.clipping=FALSE)
+cigarToQWidth <- function(cigar, before.hard.clipping=FALSE)
 {
     if (!is.character(cigar)) {
         if (!is.factor(cigar) || !is.character(levels(cigar)))
             stop("'cigar' must be a character vector/factor")
         cigar <- as.vector(cigar)
     }
-    if (!isTRUEorFALSE(after.hard.clipping))
-        stop("'after.hard.clipping' must be TRUE or FALSE")
-    .Call(".cigar_to_read_width",
-          cigar, after.hard.clipping,
+    if (!isTRUEorFALSE(before.hard.clipping))
+        stop("'before.hard.clipping' must be TRUE or FALSE")
+    .Call(".cigar_to_qwidth",
+          cigar, before.hard.clipping,
           PACKAGE="Rsamtools")
 }
 

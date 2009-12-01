@@ -28,7 +28,7 @@ typedef int (*_PARSE1_FUNC)(const bam1_t *, void *);
 
 
 static const char *TMPL_ELT_NMS[] = {
-	"qname", "flag", "rname", "strand", "pos", "width", "mapq", "cigar",
+	"qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
 	"mrnm", "mpos", "isize", "seq", "qual"
 	/* "tag", "vtype", "value" */
 };
@@ -36,7 +36,7 @@ static const char *TMPL_ELT_NMS[] = {
 static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
 
 enum {
-	QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, WIDTH_IDX,
+	QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, QWIDTH_IDX,
 	MAPQ_IDX, CIGAR_IDX, MRNM_IDX, MPOS_IDX, ISIZE_IDX, SEQ_IDX,
 	QUAL_IDX
 };
@@ -364,7 +364,7 @@ scan_bam_template()
 	SET_VECTOR_ELT(tmpl, RNAME_IDX, NEW_INTEGER(0));
 	SET_VECTOR_ELT(tmpl, STRAND_IDX, NEW_INTEGER(0));
 	SET_VECTOR_ELT(tmpl, POS_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, WIDTH_IDX, NEW_INTEGER(0));
+	SET_VECTOR_ELT(tmpl, QWIDTH_IDX, NEW_INTEGER(0));
 	SET_VECTOR_ELT(tmpl, MAPQ_IDX, NEW_INTEGER(0));
 	SET_VECTOR_ELT(tmpl, CIGAR_IDX, NEW_CHARACTER(0)); /* FIXME: cigar */
 	SET_VECTOR_ELT(tmpl, MRNM_IDX, NEW_INTEGER(0));
@@ -413,7 +413,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
 				NA_INTEGER : bam->core.pos + 1;
 			break;
-		case WIDTH_IDX:
+		case QWIDTH_IDX:
 			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
 				NA_INTEGER : bam_cigar2qlen(&bam->core, bam1_cigar(bam));
 			break;
