@@ -5,6 +5,7 @@
 \alias{cigarToQWidth}
 
 \alias{cigarToIRanges}
+\alias{cigarToGappedRanges}
 \alias{cigarToIRangesList}
 
 \alias{queryLoc2refLoc}
@@ -25,6 +26,7 @@
 cigarToQWidth(cigar, before.hard.clipping=FALSE)
 
 cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
+cigarToGappedRanges(cigar, pos, flag=NULL, drop.D.ranges=FALSE)
 cigarToIRangesList(cigar, rname, pos, flag=NULL,
                    drop.D.ranges=FALSE, merge.ranges=TRUE)
 
@@ -68,11 +70,6 @@ summarizeCigarTable(x)
     Using \code{TRUE} (the default) can significantly reduce the
     size of the returned object.
   }
-  \item{rname}{
-    A character vector/factor containing the name of the
-    reference sequence associated with each read (i.e. the
-    name of the sequence the read has been aligned to).
-  }
   \item{pos}{
     An integer vector containing the 1-based leftmost
     position/coordinate for each (eventually clipped) read
@@ -85,8 +82,13 @@ summarizeCigarTable(x)
     the following meaning: when bit 0x004 is ON then "the query
     sequence itself is unmapped" and when bit 0x400 is ON then
     "the read is either a PCR duplicate or an optical duplicate".
-    When \code{flag} is provided, \code{cigarToIRangesList}
-    ignores these reads.
+    When \code{flag} is provided, \code{cigarToGappedRanges} and
+    \code{cigarToIRangesList} ignore these reads.
+  }
+  \item{rname}{
+    A character vector/factor containing the name of the
+    reference sequence associated with each read (i.e. the
+    name of the sequence the read has been aligned to).
   }
   \item{qloc}{
     An integer vector containing "query-based locations" i.e.
@@ -115,6 +117,9 @@ summarizeCigarTable(x)
   an imaginary reference sequence assuming that the leftmost
   aligned base is at position 1 in the reference (i.e. at the
   first position).
+
+  For \code{cigarToGappedRanges}: A \link[IRanges]{GappedRanges} object
+  of the same length as \code{cigar}.
 
   For \code{cigarToIRangesList}: A named \link[IRanges]{IRangesList}
   object with one element (\link[IRanges]{IRanges}) per unique reference
@@ -175,8 +180,9 @@ cigarToIRanges("3H15M55N4M2I6M2D5M6S", merge.ranges=FALSE)
 cigarToIRanges("3H15M55N4M2I6M2D5M6S", drop.D.ranges=TRUE)
 
 cigar <- c("40M", "3H15M55N4M2I6M2D5M6S", "2S10M2000N15M", "3H25M5H")
-rname <- c("chr6", "chr6", "chr2", "chr6")
 pos <- c(1, 1001, 1,  351)
+cigarToGappedRanges(cigar, pos)
+rname <- c("chr6", "chr6", "chr2", "chr6")
 cigarToIRangesList(cigar, rname, pos)
 
 splitCigar(cigar)
@@ -211,6 +217,9 @@ if (interactive()) {
   rname <- sample(some_fake_rnames, nreads, replace=TRUE)
   pos <- sample(80000000L, nreads, replace=TRUE)
 
+  ## The following takes < 5 sec. to complete:
+  system.time(gpranges <- cigarToGappedRanges(cigar, pos))
+
   ## The following takes < 10 sec. to complete:
   system.time(irl <- cigarToIRangesList(cigar, rname, pos))
 
@@ -220,7 +229,9 @@ if (interactive()) {
   rname2 <- as.factor(rname)
   system.time(irl2 <- cigarToIRangesList(cigar, rname2, pos))
 
-  ## The size of the resulting IRangesList object is about 160M:
+  ## The sizes of the resulting objects are about 240M and 160M,
+  ## respectively:
+  object.size(gpranges)
   object.size(irl)
 }
 
@@ -250,9 +261,8 @@ extractCoverageFromBAM <- function(file)
   coverage(irl)
 }
 
-
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-extractCoverageFromBAM(fl)
+f1 <- system.file("extdata", "ex1.bam", package="Rsamtools")
+extractCoverageFromBAM(f1)
 }
 
 \keyword{manip}

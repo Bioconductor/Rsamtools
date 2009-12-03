@@ -27,6 +27,33 @@ cigarToIRanges <- function(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
           PACKAGE="Rsamtools")
 }
 
+cigarToGappedRanges <- function(cigar, pos, flag=NULL, drop.D.ranges=FALSE)
+{
+    if (!is.character(cigar)) {
+        if (!is.factor(cigar) || !is.character(levels(cigar)))
+            stop("'cigar' must be a character vector/factor")
+        cigar <- as.vector(cigar)
+    }
+    if (!is.numeric(pos))
+        stop("'pos' must be a vector of integers")
+    if (!is.integer(pos))
+        pos <- as.integer(pos)
+    if (length(cigar) != length(pos))
+        stop("'cigar' and 'pos' must have the same length")
+    if (!is.null(flag)) {
+        if (!is.numeric(flag))
+            stop("'flag' must be NULL or a vector of integers")
+        if (!is.integer(flag))
+            flag <- as.integer(flag)
+        if (length(cigar) != length(flag))
+            stop("'cigar' and 'flag' must have the same length")
+    }
+    if (!isTRUEorFALSE(drop.D.ranges))
+        stop("'drop.D.ranges' must be TRUE or FALSE")
+    .Call(".cigar_to_GappedRanges",
+          cigar, pos, flag, drop.D.ranges, PACKAGE="Rsamtools")
+}
+
 cigarToIRangesList <- function(cigar, rname, pos, flag=NULL,
                                drop.D.ranges=FALSE, merge.ranges=TRUE)
 {

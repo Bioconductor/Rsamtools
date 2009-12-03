@@ -90,6 +90,7 @@ cigar_table(SEXP cigar)
  * split_cigar()
  * cigar_to_qwidth()
  * cigar_to_IRanges()
+ * cigar_to_GappedRanges()
  * cigar_to_list_of_IRanges()
  */
 
@@ -457,6 +458,80 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges, SEXP merge_ranges)
  * Args:
  *   cigar: character vector containing the extended CIGAR string for each
  *          read;
+ *   pos:   integer vector containing the 1-based leftmost position/coordinate
+ *          of the clipped read sequence;
+ *   flag:  NULL or an integer vector containing the SAM flag for each
+ *          read;
+ *   drop_D_ranges: TRUE or FALSE indicating whether Ds should be treated
+ *          like Ns or not;
+ * 'cigar', 'pos' and 'flag' (when not NULL) are assumed to have the same
+ * length (which is the number of aligned reads).
+ *
+ * Returns a GappedRanges object of the same length as the input.
+ * NOTE: See note for cigar_to_list_of_IRanges() below about the strand.
+ * TODO: Support character factor 'cigar' in addition to current character
+ *       vector format.
+ */
+SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
+{
+	SEXP cigar_elt, ans, ans_cirl, ans_cirl_unlistData,
+	     ans_cirl_partitioning, ans_cirl_partitioning_end;
+	int ans_length, Ds_as_Ns, i, pos_elt, flag_elt;
+	RangeAE range_ae;
+	const char *errmsg;
+
+	ans_length = LENGTH(pos);
+	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
+	/* we will generate at least 'ans_length' ranges, and possibly more */
+	range_ae = new_RangeAE(ans_length, 0);
+	PROTECT(ans_cirl_partitioning_end = NEW_INTEGER(ans_length));
+	for (i = 0; i < ans_length; i++) {
+		if (flag != R_NilValue) {
+			flag_elt = INTEGER(flag)[i];
+			if (flag_elt == NA_INTEGER) {
+				UNPROTECT(1);
+				error("'flag' contains NAs");
+			}
+			if (flag_elt & 0x404)
+				continue;
+		}
+		cigar_elt = STRING_ELT(cigar, i);
+		if (cigar_elt == NA_STRING) {
+			UNPROTECT(1);
+			error("'cigar' contains %sNAs",
+			      flag != R_NilValue ? "unexpected " : "");
+		}
+		pos_elt = INTEGER(pos)[i];
+		if (pos_elt == NA_INTEGER) {
+			UNPROTECT(1);
+			error("'pos' contains %sNAs",
+			      flag != R_NilValue ? "unexpected " : "");
+		}
+		errmsg = expand_cigar2(cigar_elt, pos_elt, Ds_as_Ns, &range_ae);
+		if (errmsg != NULL) {
+			UNPROTECT(1);
+			error("in 'cigar' element %d: %s", i + 1, errmsg);
+		}
+		INTEGER(ans_cirl_partitioning_end)[i] = range_ae.start.nelt;
+	}
+	// TODO: Add C-level constructors in IRanges for PartitioningByEnd,
+	// CompressedIRangesList and GappedRanges objects and use them here.
+	PROTECT(ans_cirl_unlistData = RangeAE_asIRanges(&range_ae));
+	PROTECT(ans_cirl_partitioning = NEW_OBJECT(MAKE_CLASS("PartitioningByEnd")));
+	SET_SLOT(ans_cirl_partitioning, install("end"), ans_cirl_partitioning_end);
+	PROTECT(ans_cirl = NEW_OBJECT(MAKE_CLASS("CompressedIRangesList")));
+	SET_SLOT(ans_cirl, install("unlistData"), ans_cirl_unlistData);
+	SET_SLOT(ans_cirl, install("partitioning"), ans_cirl_partitioning);
+	PROTECT(ans = NEW_OBJECT(MAKE_CLASS("GappedRanges")));
+	SET_SLOT(ans, install("cirl"), ans_cirl);
+	UNPROTECT(5);
+	return ans;
+}
+
+/* --- .Call ENTRY POINT ---
+ * Args:
+ *   cigar: character vector containing the extended CIGAR string for each
+ *          read;
  *   rname: character factor containing the name of the reference sequence
  *          associated with each read (i.e. the name of the sequence the
  *          read has been aligned to);
@@ -514,15 +589,15 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 		cigar_elt = STRING_ELT(cigar, i);
 		if (cigar_elt == NA_STRING)
 			error("'cigar' contains %sNAs",
-			      flag != R_NilValue ? "unexpected" : "");
+			      flag != R_NilValue ? "unexpected " : "");
 		level = INTEGER(rname)[i];
 		if (level == NA_INTEGER)
 			error("'rname' contains %sNAs",
-			      flag != R_NilValue ? "unexpected" : "");
+			      flag != R_NilValue ? "unexpected " : "");
 		pos_elt = INTEGER(pos)[i];
 		if (pos_elt == NA_INTEGER)
 			error("'pos' contains %sNAs",
-			      flag != R_NilValue ? "unexpected" : "");
+			      flag != R_NilValue ? "unexpected " : "");
 		errmsg = merge_ranges0 ?
 			expand_cigar2(cigar_elt, pos_elt, Ds_as_Ns,
 				      range_aeae.elts + level - 1) :

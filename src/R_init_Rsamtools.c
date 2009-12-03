@@ -1,6 +1,7 @@
 #include <R_ext/Rdynload.h>
 #include "io_sam.h"
 #include "cigar.h"
+#include "Alignments_class.h"
 
 #ifdef _WIN32
 #include "samtools/knetfile.h"
@@ -21,7 +22,10 @@ static const R_CallMethodDef callMethods[] = {
 	{".split_cigar", (DL_FUNC) &split_cigar, 1},
 	{".cigar_to_qwidth", (DL_FUNC) &cigar_to_qwidth, 2},
 	{".cigar_to_IRanges", (DL_FUNC) &cigar_to_IRanges, 3},
+	{".cigar_to_GappedRanges", (DL_FUNC) &cigar_to_GappedRanges, 4},
 	{".cigar_to_list_of_IRanges", (DL_FUNC) &cigar_to_list_of_IRanges, 6},
+	/* Alignments_class.c */
+	{".logical_as_compact_raw_vector", (DL_FUNC) &logical_as_compact_raw_vector, 1},
     {NULL, NULL, 0}
 };
 
