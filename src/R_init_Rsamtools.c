@@ -26,6 +26,7 @@ static const R_CallMethodDef callMethods[] = {
 	{".cigar_to_list_of_IRanges", (DL_FUNC) &cigar_to_list_of_IRanges, 6},
 	/* Alignments_class.c */
 	{".logical_as_compact_raw_vector", (DL_FUNC) &logical_as_compact_raw_vector, 1},
+	{".compact_raw_vector_as_logical", (DL_FUNC) &compact_raw_vector_as_logical, 2},
     {NULL, NULL, 0}
 };
 

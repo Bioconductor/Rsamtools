@@ -10,7 +10,7 @@
 setClass("Alignments0",
   contains="Ranges",
   representation(
-      rname="factor",     # character factor
+      rname="factor", # character factor
       strand="raw",
       cigar="character",
       gapped_ranges="GappedRanges"
@@ -19,11 +19,26 @@ setClass("Alignments0",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Some helper function for @strand slot manipulation.
+### Some low-level helper functions for manipulating the @strand slot.
 ###
 
 logicalAsCompactRawVector <- function(x)
+{
+    if (!is.logical(x))
+        stop("'x' must be a logical vector")
     .Call(".logical_as_compact_raw_vector", x, PACKAGE="Rsamtools")
+}
+
+compactRawVectorAsLogical <- function(x, length.out)
+{
+    if (!is.raw(x))
+        stop("'x' must be a raw vector")
+    if (!isSingleNumber(length.out))
+        stop("'length.out' must be a single number")
+    if (!is.integer(length.out))
+        length.out <- as.integer(length.out)
+    .Call(".compact_raw_vector_as_logical", x, length.out, PACKAGE="Rsamtools")
+}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -35,8 +50,16 @@ setMethod("length", "Alignments0", function(x) length(x@cigar))
 setGeneric("rname", function(x) standardGeneric("rname"))
 setMethod("rname", "Alignments0", function(x) x@rname)
 
-### FIXME: Return a character factor with levels + - *
-setMethod("strand", "Alignments0", function(x) x@strand)
+setMethod("strand", "Alignments0",
+    function(x)
+    {
+        is_minus <- compactRawVectorAsLogical(x@strand, length(x))
+        ans <- factor(levels=c("+", "-", "*"))
+        ans[!is_minus] <- "+"
+        ans[is_minus] <- "-"
+        return(ans)
+    }
+)
 
 setGeneric("cigar", function(x) standardGeneric("cigar"))
 setMethod("cigar", "Alignments0", function(x) x@cigar)
