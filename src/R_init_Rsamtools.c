@@ -27,6 +27,7 @@ static const R_CallMethodDef callMethods[] = {
 	/* Alignments_class.c */
 	{".logical_as_compact_raw_vector", (DL_FUNC) &logical_as_compact_raw_vector, 1},
 	{".compact_raw_vector_as_logical", (DL_FUNC) &compact_raw_vector_as_logical, 2},
+	{".subset_compact_raw_vector", (DL_FUNC) &subset_compact_raw_vector, 2},
     {NULL, NULL, 0}
 };
 

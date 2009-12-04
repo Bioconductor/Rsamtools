@@ -40,6 +40,15 @@ compactRawVectorAsLogical <- function(x, length.out)
     .Call(".compact_raw_vector_as_logical", x, length.out, PACKAGE="Rsamtools")
 }
 
+subsetCompactRawVector <- function(x, i)
+{
+    if (!is.raw(x))
+        stop("'x' must be a raw vector")
+    if (!is.integer(i))
+        stop("'i' must be an integer vector")
+    .Call(".subset_compact_raw_vector", x, i, PACKAGE="Rsamtools")
+}
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Accessor-like methods.
@@ -70,6 +79,9 @@ setMethod("gappedRanges", "Alignments0", function(x) x@gapped_ranges)
 setMethod("start", "Alignments0", function(x, ...) start(gappedRanges(x)))
 
 setMethod("end", "Alignments0", function(x, ...) end(gappedRanges(x)))
+
+setGeneric("qwidth", function(x) standardGeneric("qwidth"))
+setMethod("qwidth", "Alignments0", function(x) cigarToQWidth(cigar(x)))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -130,6 +142,37 @@ setAs("Alignments0", "RangesList",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Subsetting.
 ###
+
+### Supported 'i' types: numeric vector, logical vector, NULL and missing.
+setMethod("[", "Alignments0",
+    function(x, i, j, ... , drop=TRUE)
+    {
+        if (!missing(j) || length(list(...)) > 0L)
+            stop("invalid subsetting")
+        if (missing(i))
+            return(x)
+        if (!is.atomic(i))
+            stop("invalid subscript type")
+        lx <- length(x)
+        if (is.numeric(i)) {
+            if (min(i) < 0L)
+                i <- seq_len(lx)[i]
+            else if (!is.integer(i))
+                i <- as.integer(i)
+        } else if (is.logical(i)) {
+            if (length(i) > lx)
+                stop("subscript out of bounds")
+            i <- seq_len(lx)[i]
+        } else if (!is.null(i)) {
+            stop("invalid subscript type")
+        }
+        x@strand <- subsetCompactRawVector(x@strand, i)
+        x@rname <- x@rname[i]
+        x@cigar <- x@cigar[i]
+        x@gapped_ranges <- x@gapped_ranges[i]
+        x
+    }
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

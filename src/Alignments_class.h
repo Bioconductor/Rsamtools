@@ -5,5 +5,6 @@
 
 SEXP logical_as_compact_raw_vector(SEXP x);
 SEXP compact_raw_vector_as_logical(SEXP x, SEXP length_out);
+SEXP subset_compact_raw_vector(SEXP x, SEXP subscript);
 
 #endif /* _ALIGNMENTS_CLASS_H_ */
