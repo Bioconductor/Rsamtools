@@ -76,15 +76,15 @@ setMethod("strand", "Alignments0",
 setGeneric("cigar", function(x) standardGeneric("cigar"))
 setMethod("cigar", "Alignments0", function(x) x@cigar)
 
+setGeneric("qwidth", function(x) standardGeneric("qwidth"))
+setMethod("qwidth", "Alignments0", function(x) cigarToQWidth(cigar(x)))
+
 setGeneric("gappedRanges", function(x) standardGeneric("gappedRanges"))
 setMethod("gappedRanges", "Alignments0", function(x) x@gapped_ranges)
 
 setMethod("start", "Alignments0", function(x, ...) start(gappedRanges(x)))
 
 setMethod("end", "Alignments0", function(x, ...) end(gappedRanges(x)))
-
-setGeneric("qwidth", function(x) standardGeneric("qwidth"))
-setMethod("qwidth", "Alignments0", function(x) cigarToQWidth(cigar(x)))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -200,16 +200,6 @@ setAs("Alignments0", "RangesList",
 ### Subsetting.
 ###
 
-setMethod("[[", "Alignments0",
-    function(x, i, j, ..., exact=TRUE) gappedRanges(x)[[i]]
-)
-
-### Without this definition, we inherit the method for Sequence objects
-### which returns the same thing but is thousands of times slower!
-setMethod("elementLengths", "Alignments0",
-    function(x) elementLengths(gappedRanges(x))
-)
-
 ### Supported 'i' types: numeric vector, logical vector, NULL and missing.
 setMethod("[", "Alignments0",
     function(x, i, j, ... , drop=TRUE)
@@ -239,6 +229,16 @@ setMethod("[", "Alignments0",
         x@gapped_ranges <- x@gapped_ranges[i]
         x
     }
+)
+
+setMethod("[[", "Alignments0",
+    function(x, i, j, ..., exact=TRUE) gappedRanges(x)[[i]]
+)
+
+### Without this definition, we inherit the method for Sequence objects
+### which returns the same thing but is thousands of times slower!
+setMethod("elementLengths", "Alignments0",
+    function(x) elementLengths(gappedRanges(x))
 )
 
 

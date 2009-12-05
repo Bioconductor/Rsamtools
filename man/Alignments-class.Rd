@@ -5,6 +5,30 @@
 \alias{Alignments0-class}
 \alias{Alignments0}
 
+\alias{length,Alignments0-method}
+\alias{rname}
+\alias{rname,Alignments0-method}
+\alias{strand,Alignments0-method}
+\alias{cigar}
+\alias{cigar,Alignments0-method}
+\alias{qwidth}
+\alias{qwidth,Alignments0-method}
+\alias{gappedRanges}
+\alias{gappedRanges,Alignments0-method}
+\alias{start,Alignments0-method}
+\alias{end,Alignments0-method}
+\alias{as.data.frame,Alignments0-method}
+\alias{show,Alignments0-method}
+\alias{readBAMasAligments}
+\alias{coerce,Alignments0,GappedRanges-method}
+\alias{coerce,Alignments0,CompressedIRangesList-method}
+\alias{coerce,Alignments0,IRangesList-method}
+\alias{coerce,Alignments0,RangesList-method}
+\alias{[,Alignments0,ANY,ANY-method}
+\alias{[[,Alignments0,ANY,ANY-method}
+\alias{elementLengths,Alignments0-method}
+\alias{coverage,Alignments0-method}
+
 
 \title{Alignments0 objects}
 
@@ -84,7 +108,7 @@
     \item{}{
       \code{readBAMasAligments(file, index=file, which=RangesList())}:
       Loads a BAM file into an Alignments0 object.
-      See \code{?\link{scabBam}} for a description of the arguments.
+      See \code{?\link{scanBam}} for a description of the arguments.
       Unlike SAM/BAM records, we don't support unaligned queries so
       we discard those records.
     }
@@ -93,30 +117,99 @@
 
 \section{Accessor methods}{
   In the code snippets below, \code{x} is an Alignments0 object.
+
   \describe{
     \item{}{
       \code{length(x)}:
+      Returns the number of alignments in \code{x}.
     }
     \item{}{
       \code{rname(x)}:
+      Returns a character factor of length \code{length(x)}
+      containing the name of the reference sequence for each alignment.
     }
     \item{}{
       \code{strand(x)}:
+      Returns a character factor of length \code{length(x)}
+      (with levels +, - and *) containing the strand in the reference
+      sequence to which the query is aligned.
     }
     \item{}{
       \code{cigar(x)}:
+      Returns a character vector of length \code{length(x)}
+      containing the CIGAR string for each alignment.
     }
     \item{}{
       \code{qwidth(x)}:
+      Returns an integer vector of length \code{length(x)}
+      containing the length of the query *after* hard clipping
+      (i.e. the length of the query sequence that is stored in
+      the corresponding SAM/BAM record).
     }
     \item{}{
-      \code{start(x)}:
-    }
-    \item{}{
-      \code{end(x)}:
+      \code{start(x)}, \code{end(x)}:
+      Returns an integer vector of length \code{length(x)}
+      containing the "start" and "end" (respectively) of the query
+      for each alignment. See Details section above for the exact
+      definitions of the "start" and "end" of a query.
     }
     \item{}{
       \code{width(x)}:
+      Defined as \code{end(x) - start(x) + 1L}.
+      Note that this is generally different from \code{qwidth(x)}
+      except for alignments with a trivial CIGAR string (i.e. a
+      string of the form \code{"<n>M"} where <n> is a number).
+    }
+    \item{}{
+      \code{gappedRanges(x)}:
+      Returns a \link[IRanges]{GappedRanges} object of length
+      \code{length(x)} where each element is a
+      \link[IRanges]{NormalIRanges} object representing a "gapped range".
+      More on this below.
+    }
+  }
+}
+
+\section{Subsetting and related operations}{
+  In the code snippets below, \code{x} is an Alignments0 object.
+
+  \describe{
+    \item{}{
+      \code{x[i]}:
+      Returns a new Alignments0 object made of the selected alignments.
+      \code{i} can be a numeric or logical vector.
+    }
+    \item{}{
+      \code{x[[i]]}:
+      This is a convenience for \code{gappedRanges(x)[[i]]}.
+      Both return the \link[IRanges]{NormalIRanges} object
+      containing the regions in the reference (1 range per region)
+      to which the i-th query is aligned.
+      \code{i} must be a single integer.
+    }
+    \item{}{
+      \code{elementLengths(x)}:
+      This is a convenience for \code{elementLengths(gappedRanges(x))}.
+      Returns an integer vector of length \code{length(x)}
+      containing the number of ranges in x[[i]].
+      Semantically equivalent to
+      \preformatted{sapply(seq_len(length(x)), function(i) length(x[[i]]))}
+      but much faster.
+    }
+  }
+}
+
+\section{Other methods}{
+  In the code snippets below, \code{x} is an Alignments0 object.
+
+  \describe{
+    \item{}{
+      \code{coverage(x)}:
+      Returns a named \link[IRanges]{RleList} object with one element
+      (integer-Rle) per unique reference sequence. Each element represents
+      \code{x}'s coverage of the corresponding reference sequence, that is,
+      how many times each nucleotide position in the sequence is covered
+      by the alignments in \code{x}.
     }
   }
 }
@@ -130,13 +223,15 @@
 }
 
 \seealso{
-  \link[IRanges]{IRanges-class},
+  \code{\link{scabBam}},
+  \link[IRanges]{NormalIRanges-class},
   \link[IRanges]{GappedRanges-class},
   \code{\link[IRanges]{coverage}},
   \link[IRanges]{RleList-class}
 }
 
 \examples{
+  ## [TODO]
 }
 
 \keyword{methods}
