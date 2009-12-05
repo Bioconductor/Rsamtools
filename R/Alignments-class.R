@@ -8,13 +8,16 @@
 ### See http://wiki.fhcrc.org/bioc/Multiple_alignment_rep_v1 for the details
 ### of the class proposal.
 setClass("Alignments0",
-  contains="Ranges",
-  representation(
-      rname="factor", # character factor
-      strand="raw",
-      cigar="character",
-      gapped_ranges="GappedRanges"
-  )
+    contains="Ranges",
+    representation(
+        rname="factor",  # character factor
+        strand="raw",
+        cigar="character",
+        gapped_ranges="GappedRanges"
+    ),
+    prototype(
+        elementType="NormalIRanges"
+    )
 )
 
 
@@ -196,6 +199,16 @@ setAs("Alignments0", "RangesList",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Subsetting.
 ###
+
+setMethod("[[", "Alignments0",
+    function(x, i, j, ..., exact=TRUE) gappedRanges(x)[[i]]
+)
+
+### Without this definition, we inherit the method for Sequence objects
+### which returns the same thing but is thousands of times slower!
+setMethod("elementLengths", "Alignments0",
+    function(x) elementLengths(gappedRanges(x))
+)
 
 ### Supported 'i' types: numeric vector, logical vector, NULL and missing.
 setMethod("[", "Alignments0",
