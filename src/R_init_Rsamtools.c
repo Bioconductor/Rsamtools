@@ -19,6 +19,7 @@ static const R_CallMethodDef callMethods[] = {
 	/* cigar.c */
 	{".cigar_run_count", (DL_FUNC) &cigar_run_count, 1},
 	{".cigar_table", (DL_FUNC) &cigar_table, 1},
+	{".valid_cigar", (DL_FUNC) &valid_cigar, 2},
 	{".split_cigar", (DL_FUNC) &split_cigar, 1},
 	{".cigar_to_qwidth", (DL_FUNC) &cigar_to_qwidth, 2},
 	{".cigar_to_IRanges", (DL_FUNC) &cigar_to_IRanges, 3},

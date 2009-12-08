@@ -87,6 +87,7 @@ cigar_table(SEXP cigar)
 
 
 /****************************************************************************
+ * valid_cigar()
  * split_cigar()
  * cigar_to_qwidth()
  * cigar_to_IRanges()
@@ -162,32 +163,18 @@ static int get_next_cigar_OP(const char *cig0, int offset,
 	return offset - offset0;
 }
 
-static const char *split_one_cigar(SEXP cigar_elt, CharAE *OPbuf, IntAE *OPLbuf)
-{
-	const char *cig0;
-	int offset, OPL /* Operation Length */, n;
-	char OP /* Operation */;
-
-	cig0 = CHAR(cigar_elt);
-	offset = 0;
-	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
-		if (n == -1)
-			return errmsg_buf;
-		CharAE_insert_at(OPbuf, OPbuf->nelt, OP);
-		IntAE_insert_at(OPLbuf, OPLbuf->nelt, OPL);
-		offset += n;
-	}
-	return NULL;
-}
-
-static const char *one_cigar_to_qwidth(SEXP cigar_elt, int clip_reads,
+static const char *cigar_string_to_qwidth(SEXP cigar_string, int clip_reads,
 		int *qwidth)
 {
 	const char *cig0;
-	int offset, OPL /* Operation Length */, n;
+	int offset, n, OPL /* Operation Length */;
 	char OP /* Operation */;
 
-	cig0 = CHAR(cigar_elt);
+	if (cigar_string == NA_STRING)
+		return "CIGAR string is NA";
+	if (LENGTH(cigar_string) == 0)
+		return "CIGAR string is empty";
+	cig0 = CHAR(cigar_string);
 	*qwidth = offset = 0;
 	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
 		if (n == -1)
@@ -222,19 +209,38 @@ static const char *one_cigar_to_qwidth(SEXP cigar_elt, int clip_reads,
 	return NULL;
 }
 
+static const char *split_cigar_string(SEXP cigar_string,
+		CharAE *OPbuf, IntAE *OPLbuf)
+{
+	const char *cig0;
+	int offset, n, OPL /* Operation Length */;
+	char OP /* Operation */;
+
+	cig0 = CHAR(cigar_string);
+	offset = 0;
+	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
+		if (n == -1)
+			return errmsg_buf;
+		CharAE_insert_at(OPbuf, OPbuf->nelt, OP);
+		IntAE_insert_at(OPLbuf, OPLbuf->nelt, OPL);
+		offset += n;
+	}
+	return NULL;
+}
+
 static void append_range(RangeAE *range_ae, int start, int width)
 {
 	RangeAE_insert_at(range_ae, range_ae->start.nelt, start, width);
 }
 
-static const char *expand_cigar(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
-		RangeAE *range_ae)
+static const char *cigar_string_to_ranges(SEXP cigar_string, int pos_elt,
+		int Ds_as_Ns, RangeAE *range_ae)
 {
 	const char *cig0;
-	int offset, OPL /* Operation Length */, n, start, width;
+	int offset, n, OPL /* Operation Length */, start, width;
 	char OP /* Operation */;
 
-	cig0 = CHAR(cigar_elt);
+	cig0 = CHAR(cigar_string);
 	offset = 0;
 	start = pos_elt;
 	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
@@ -280,15 +286,16 @@ static const char *expand_cigar(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
 	return NULL;
 }
 
-/* Unlike expand_cigar(), expand_cigar2() merges adjacent ranges. */
-static const char *expand_cigar2(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
-		RangeAE *range_ae)
+/* Unlike cigar_string_to_ranges(), cigar_string_to_ranges2() merges adjacent
+   ranges. */
+static const char *cigar_string_to_ranges2(SEXP cigar_string, int pos_elt,
+		int Ds_as_Ns, RangeAE *range_ae)
 {
 	const char *cig0;
-	int offset, OPL /* Operation Length */, n, start, width;
+	int offset, n, OPL /* Operation Length */, start, width;
 	char OP /* Operation */;
 
-	cig0 = CHAR(cigar_elt);
+	cig0 = CHAR(cigar_string);
 	offset = 0;
 	start = pos_elt;
 	width = 0;
@@ -341,6 +348,47 @@ static const char *expand_cigar2(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
 	return NULL;
 }
 
+/* --- .Call ENTRY POINT ---
+ * Args:
+ *   cigar: character vector containing the extended CIGAR string for each
+ *          read;
+ *   ans_type: a single integer specifying the type of answer to return:
+ *     0: 'ans' is a string describing the first validity failure or NULL;
+ *     1: 'ans' is logical vector with TRUE values for valid elements
+ *        in 'cigar'.
+ */
+SEXP valid_cigar(SEXP cigar, SEXP ans_type)
+{
+	SEXP ans, cigar_string;
+	int cigar_length, ans_type0, i, qwidth;
+	const char *errmsg;
+	char string_buf[200];
+
+	cigar_length = LENGTH(cigar);
+	ans_type0 = INTEGER(ans_type)[0];
+	if (ans_type0 == 1)
+		PROTECT(ans = NEW_LOGICAL(cigar_length));
+	else
+		ans = R_NilValue;
+	for (i = 0; i < cigar_length; i++) {
+		cigar_string = STRING_ELT(cigar, i);
+		/* we use cigar_string_to_qwidth() here just for its ability
+                   to parse and detect ill-formed CIGAR strings */
+		errmsg = cigar_string_to_qwidth(cigar_string, 1, &qwidth);
+		if (ans_type0 == 1) {
+			LOGICAL(ans)[i] = errmsg == NULL;
+			continue;
+		}
+		if (errmsg != NULL) {
+			snprintf(string_buf, sizeof(string_buf),
+				 "element %d is invalid (%s)", i + 1, errmsg);
+			return mkString(string_buf);
+		}
+	}
+	if (ans_type0 == 1)
+		UNPROTECT(1);
+	return ans;
+}
 
 /* --- .Call ENTRY POINT ---
  * Args:
@@ -353,24 +401,24 @@ static const char *expand_cigar2(SEXP cigar_elt, int pos_elt, int Ds_as_Ns,
  */
 SEXP split_cigar(SEXP cigar)
 {
-	SEXP ans, cigar_elt, ans_elt, ans_elt_elt0, ans_elt_elt1;
-	int ans_length, i;
+	SEXP ans, cigar_string, ans_elt, ans_elt_elt0, ans_elt_elt1;
+	int cigar_length, i;
 	CharAE OPbuf;
 	IntAE OPLbuf;
 	const char *errmsg;
 
-	ans_length = LENGTH(cigar);
-	PROTECT(ans = NEW_LIST(ans_length));
+	cigar_length = LENGTH(cigar);
+	PROTECT(ans = NEW_LIST(cigar_length));
 	OPbuf = new_CharAE(0);
 	OPLbuf = new_IntAE(0, 0, 0);
-	for (i = 0; i < ans_length; i++) {
-		cigar_elt = STRING_ELT(cigar, i);
-		if (cigar_elt == NA_STRING) {
+	for (i = 0; i < cigar_length; i++) {
+		cigar_string = STRING_ELT(cigar, i);
+		if (cigar_string == NA_STRING) {
 			UNPROTECT(1);
 			error("'cigar' contains NAs");
 		}
 		OPbuf.nelt = OPLbuf.nelt = 0;
-		errmsg = split_one_cigar(cigar_elt, &OPbuf, &OPLbuf);
+		errmsg = split_cigar_string(cigar_string, &OPbuf, &OPLbuf);
 		if (errmsg != NULL) {
 			UNPROTECT(1);
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
@@ -399,20 +447,20 @@ SEXP split_cigar(SEXP cigar)
  */
 SEXP cigar_to_qwidth(SEXP cigar, SEXP before_hard_clipping)
 {
-	SEXP ans, cigar_elt;
-	int clip_reads, ans_length, i, qwidth;
+	SEXP ans, cigar_string;
+	int clip_reads, cigar_length, i, qwidth;
 	const char *errmsg;
 
 	clip_reads = !LOGICAL(before_hard_clipping)[0];
-	ans_length = LENGTH(cigar);
-	PROTECT(ans = NEW_INTEGER(ans_length));
-	for (i = 0; i < ans_length; i++) {
-		cigar_elt = STRING_ELT(cigar, i);
-		if (cigar_elt == NA_STRING) {
+	cigar_length = LENGTH(cigar);
+	PROTECT(ans = NEW_INTEGER(cigar_length));
+	for (i = 0; i < cigar_length; i++) {
+		cigar_string = STRING_ELT(cigar, i);
+		if (cigar_string == NA_STRING) {
 			INTEGER(ans)[i] = NA_INTEGER;
 			continue;
 		}
-		errmsg = one_cigar_to_qwidth(cigar_elt, clip_reads,
+		errmsg = cigar_string_to_qwidth(cigar_string, clip_reads,
 				&qwidth);
 		if (errmsg != NULL) {
 			UNPROTECT(1);
@@ -436,19 +484,21 @@ SEXP cigar_to_qwidth(SEXP cigar, SEXP before_hard_clipping)
 SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges, SEXP merge_ranges)
 {
 	RangeAE range_ae;
-	SEXP cigar_elt;
+	SEXP cigar_string;
 	int Ds_as_Ns, merge_ranges0;
 	const char *errmsg;
 
-	cigar_elt = STRING_ELT(cigar, 0);
-	if (cigar_elt == NA_STRING)
+	cigar_string = STRING_ELT(cigar, 0);
+	if (cigar_string == NA_STRING)
 		error("'cigar' is NA");
 	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
 	merge_ranges0 = LOGICAL(merge_ranges)[0];
 	range_ae = new_RangeAE(0, 0);
 	errmsg = merge_ranges0 ?
-			expand_cigar2(cigar_elt, 1, Ds_as_Ns, &range_ae) :
-			expand_cigar(cigar_elt, 1, Ds_as_Ns, &range_ae);
+			cigar_string_to_ranges2(cigar_string, 1,
+				Ds_as_Ns, &range_ae) :
+			cigar_string_to_ranges(cigar_string, 1,
+				Ds_as_Ns, &range_ae);
 	if (errmsg != NULL)
 		error("%s", errmsg);
 	return RangeAE_asIRanges(&range_ae);
@@ -474,18 +524,18 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges, SEXP merge_ranges)
  */
 SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 {
-	SEXP cigar_elt, ans, ans_cirl, ans_cirl_unlistData,
+	SEXP cigar_string, ans, ans_cirl, ans_cirl_unlistData,
 	     ans_cirl_partitioning, ans_cirl_partitioning_end;
-	int ans_length, Ds_as_Ns, i, pos_elt, flag_elt;
+	int cigar_length, Ds_as_Ns, i, pos_elt, flag_elt;
 	RangeAE range_ae;
 	const char *errmsg;
 
-	ans_length = LENGTH(pos);
+	cigar_length = LENGTH(cigar);
 	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
-	/* we will generate at least 'ans_length' ranges, and possibly more */
-	range_ae = new_RangeAE(ans_length, 0);
-	PROTECT(ans_cirl_partitioning_end = NEW_INTEGER(ans_length));
-	for (i = 0; i < ans_length; i++) {
+	/* we will generate at least 'cigar_length' ranges, and possibly more */
+	range_ae = new_RangeAE(cigar_length, 0);
+	PROTECT(ans_cirl_partitioning_end = NEW_INTEGER(cigar_length));
+	for (i = 0; i < cigar_length; i++) {
 		if (flag != R_NilValue) {
 			flag_elt = INTEGER(flag)[i];
 			if (flag_elt == NA_INTEGER) {
@@ -495,8 +545,8 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 			if (flag_elt & 0x404)
 				continue;
 		}
-		cigar_elt = STRING_ELT(cigar, i);
-		if (cigar_elt == NA_STRING) {
+		cigar_string = STRING_ELT(cigar, i);
+		if (cigar_string == NA_STRING) {
 			UNPROTECT(1);
 			error("'cigar' contains %sNAs",
 			      flag != R_NilValue ? "unexpected " : "");
@@ -507,7 +557,8 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 			error("'pos' contains %sNAs",
 			      flag != R_NilValue ? "unexpected " : "");
 		}
-		errmsg = expand_cigar2(cigar_elt, pos_elt, Ds_as_Ns, &range_ae);
+		errmsg = cigar_string_to_ranges2(cigar_string, pos_elt,
+				Ds_as_Ns, &range_ae);
 		if (errmsg != NULL) {
 			UNPROTECT(1);
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
@@ -566,7 +617,7 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 		SEXP flag, SEXP drop_D_ranges, SEXP merge_ranges)
 {
-	SEXP rname_levels, cigar_elt, ans, ans_names;
+	SEXP rname_levels, cigar_string, ans, ans_names;
 	int ans_length, nreads, Ds_as_Ns, merge_ranges0,
 	    i, level, pos_elt, flag_elt;
 	RangeAEAE range_aeae;
@@ -586,8 +637,8 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 			if (flag_elt & 0x404)
 				continue;
 		}
-		cigar_elt = STRING_ELT(cigar, i);
-		if (cigar_elt == NA_STRING)
+		cigar_string = STRING_ELT(cigar, i);
+		if (cigar_string == NA_STRING)
 			error("'cigar' contains %sNAs",
 			      flag != R_NilValue ? "unexpected " : "");
 		level = INTEGER(rname)[i];
@@ -599,10 +650,10 @@ SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
 			error("'pos' contains %sNAs",
 			      flag != R_NilValue ? "unexpected " : "");
 		errmsg = merge_ranges0 ?
-			expand_cigar2(cigar_elt, pos_elt, Ds_as_Ns,
-				      range_aeae.elts + level - 1) :
-			expand_cigar(cigar_elt, pos_elt, Ds_as_Ns,
-				      range_aeae.elts + level - 1);
+			cigar_string_to_ranges2(cigar_string, pos_elt,
+				Ds_as_Ns, range_aeae.elts + level - 1) :
+			cigar_string_to_ranges(cigar_string, pos_elt,
+				Ds_as_Ns, range_aeae.elts + level - 1);
 		if (errmsg != NULL)
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
 	}

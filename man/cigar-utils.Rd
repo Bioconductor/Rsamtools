@@ -2,6 +2,7 @@
 \Rdversion{1.1}
 \alias{cigar-utils}
 
+\alias{validCigar}
 \alias{cigarToQWidth}
 
 \alias{cigarToIRanges}

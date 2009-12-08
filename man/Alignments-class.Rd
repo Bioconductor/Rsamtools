@@ -91,7 +91,7 @@
   Strictly speaking, the last 2 items can be inferred from the CIGAR
   and the "start" so, in theory, they don't need to be explicitely
   stored in the Alignments0 object. In fact, the internals of the
-  Alignments0 container could change and we don't want to comit to
+  Alignments0 container could change and we don't want to commit to
   any particular internal representation.
 
   Hence the rest of this man page will focus on describing how to:

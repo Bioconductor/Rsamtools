@@ -91,7 +91,58 @@ setMethod("end", "Alignments0", function(x, ...) end(gappedRanges(x)))
 ### Validity.
 ###
 
-### IMPLEMENT ME!
+.valid.Alignments0.rname <- function(x)
+{
+    x_rname <- rname(x)
+    if (!is.factor(x_rname) || !is.character(levels(x_rname))
+     || !is.null(names(x_rname)) || any(is.na(x_rname)))
+        return("'rname(x)' must be an unnamed character factor with no NAs")
+    if (length(x_rname) != length(cigar(x)))
+        return("'rname(x)' and 'cigar(x)' must have the same length")
+    NULL
+}
+
+.valid.Alignments0.strand <- function(x)
+{
+    x_strand <- strand(x)
+    if (!is.factor(x_strand) || !identical(levels(x_strand), c("+", "-", "*"))
+     || !is.null(names(x_strand)) || any(is.na(x_strand)))
+        return("'strand(x)' must be an unnamed character factor with no NAs (and with levels +, - and *)")
+    if (length(x_strand) != length(cigar(x)))
+        return("'strand(x)' and 'cigar(x)' must have the same length")
+    NULL
+}
+
+.valid.Alignments0.cigar <- function(x)
+{
+    x_cigar <- cigar(x)
+    if (!is.character(x_cigar) || !is.null(names(x_cigar)) || any(is.na(x_cigar)))
+        return("'cigar(x)' must be an unnamed character vector with no NAs")
+    tmp <- validCigar(x_cigar)
+    if (!is.null(tmp))
+        return(paste("in 'cigar(x)':", tmp))
+    NULL
+}
+
+.valid.Alignments0.gapped_ranges <- function(x)
+{
+    x_gapped_ranges <- gappedRanges(x)
+    if (!is(x_gapped_ranges, "GappedRanges") || !is.null(names(x_gapped_ranges)))
+        return("'gappedRanges(x)' must be an unnamed GappedRanges object")
+    if (length(x_gapped_ranges) != length(cigar(x)))
+        return("'gappedRanges(x)' and 'cigar(x)' must have the same length")
+    NULL
+}
+
+.valid.Alignments0 <- function(x)
+{
+    c(.valid.Alignments0.rname(x),
+      .valid.Alignments0.strand(x),
+      .valid.Alignments0.cigar(x),
+      .valid.Alignments0.gapped_ranges(x))
+}
+
+setValidity2("Alignments0", .valid.Alignments0, where=asNamespace("Rsamtools"))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -231,12 +282,13 @@ setMethod("[", "Alignments0",
     }
 )
 
+### WARNING: We override the *semantic* of the "[[" method for Ranges objects.
 setMethod("[[", "Alignments0",
     function(x, i, j, ..., exact=TRUE) gappedRanges(x)[[i]]
 )
 
-### Without this definition, we inherit the method for Sequence objects
-### which returns the same thing but is thousands of times slower!
+### WARNING: We override the *semantic* of the "elementLengths" method for
+### Ranges objects.
 setMethod("elementLengths", "Alignments0",
     function(x) elementLengths(gappedRanges(x))
 )
