@@ -231,7 +231,56 @@
 }
 
 \examples{
-  ## [TODO]
+f1 <- system.file("extdata", "ex1.bam", package="Rsamtools")
+al1 <- readBAMasAligments(f1)
+al1
+
+## ---------------------------------------------------------------------
+## A. BASIC MANIPULATION
+## ---------------------------------------------------------------------
+length(al1)
+head(al1)
+head(rname(al1))
+head(strand(al1))
+head(cigar(al1))
+head(qwidth(al1))
+head(start(al1))
+head(end(al1))
+head(qwidth(al1))
+table(qwidth(al1))
+gappedRanges(al1)
+
+## ---------------------------------------------------------------------
+## B. SUBSETTING
+## ---------------------------------------------------------------------
+al1[strand(al1) == "-"]
+al1[grep("I", cigar(al1), fixed=TRUE)]
+al1[grep("N", cigar(al1), fixed=TRUE)]  # no gaps
+
+## A confirmation that all the queries map to the reference with no
+## gaps:
+stopifnot(all(elementLengths(al1) == 1))
+al1[[1]]
+al1[[2]]
+ii <- grep("D", cigar(al1), fixed=TRUE)
+al1[ii]
+## Ds are NOT gaps:
+al1[[ii[1]]]
+al1[[ii[2]]]
+
+al1[qwidth(al1) != width(al1)]
+
+## This MUST return an empty object:
+al1[cigar(al1) == "35M" & qwidth(al1) != 35]
+## but this doesn't have too:
+al1[cigar(al1) != "35M" & qwidth(al1) == 35]
+
+
+
+## ---------------------------------------------------------------------
+## C. COVERAGE
+## ---------------------------------------------------------------------
+coverage(al1)
 }
 
 \keyword{methods}

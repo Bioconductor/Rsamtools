@@ -262,7 +262,9 @@ setMethod("[", "Alignments0",
         if (!is.atomic(i))
             stop("invalid subscript type")
         lx <- length(x)
-        if (is.numeric(i)) {
+        if (length(i) == 0L) {
+            i <- integer(0)
+        } else if (is.numeric(i)) {
             if (min(i) < 0L)
                 i <- seq_len(lx)[i]
             else if (!is.integer(i))
@@ -271,7 +273,7 @@ setMethod("[", "Alignments0",
             if (length(i) > lx)
                 stop("subscript out of bounds")
             i <- seq_len(lx)[i]
-        } else if (!is.null(i)) {
+        } else {
             stop("invalid subscript type")
         }
         x@strand <- subsetCompactRawVector(x@strand, i)
