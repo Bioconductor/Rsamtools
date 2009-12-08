@@ -240,7 +240,7 @@
 }
 
 \seealso{
-  \code{\link{scabBam}},
+  \code{\link{scanBam}},
   \link[IRanges]{NormalIRanges-class},
   \link[IRanges]{GappedRanges-class},
   \code{\link[IRanges]{coverage}},
