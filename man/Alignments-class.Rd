@@ -188,6 +188,14 @@
       \code{i} must be a single integer.
     }
     \item{}{
+      \code{elemenType(x)}:
+      Returns the type of \code{x[[i]]}.
+      Note that the semantic of the \code{[[} method for Alignments0
+      objects is different from the semantic of the method for
+      \link[IRanges]{Ranges} objects (the latter returns an integer
+      vector).
+    }
+    \item{}{
       \code{elementLengths(x)}:
       This is a convenience for \code{elementLengths(gappedRanges(x))}.
       Returns an integer vector of length \code{length(x)}
@@ -195,6 +203,10 @@
       Semantically equivalent to
       \preformatted{sapply(seq_len(length(x)), function(i) length(x[[i]]))}
       but much faster.
+      Note that the semantic of the \code{elementLengths} method for
+      Alignments0 objects is different from the semantic of the method
+      for \link[IRanges]{Ranges} objects (the latter returns the
+      \code{width} of the \link[IRanges]{Ranges} object).
     }
   }
 }
@@ -210,6 +222,11 @@
       \code{x}'s coverage of the corresponding reference sequence, that is,
       how many times each nucleotide position in the sequence is covered
       by the alignments in \code{x}.
+      Note that the semantic of the \code{coverage} method for
+      Alignments0 objects is different from the semantic of the method
+      for \link[IRanges]{Ranges} objects (the latter returns a single
+      integer-Rle object representing the coverage of all ranges
+      relatively to a unique imaginary reference sequence).
     }
   }
 }

@@ -300,6 +300,8 @@ setMethod("elementLengths", "Alignments0",
 ### The "coverage" method.
 ###
 
+### WARNING: We override the *semantic* of the "coverage" method for
+### Ranges objects.
 setMethod("coverage", "Alignments0",
     function (x, start=NA, end=NA, shift=0L, width=NULL, weight=1L, ...)
     {
