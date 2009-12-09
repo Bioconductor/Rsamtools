@@ -524,8 +524,8 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges, SEXP merge_ranges)
  */
 SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 {
-	SEXP cigar_string, ans, ans_cirl, ans_cirl_unlistData,
-	     ans_cirl_partitioning, ans_cirl_partitioning_end;
+	SEXP cigar_string, ans, ans_cnirl, ans_cnirl_unlistData,
+	     ans_cnirl_partitioning, ans_cnirl_partitioning_end;
 	int cigar_length, Ds_as_Ns, i, pos_elt, flag_elt;
 	RangeAE range_ae;
 	const char *errmsg;
@@ -534,7 +534,7 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
 	/* we will generate at least 'cigar_length' ranges, and possibly more */
 	range_ae = new_RangeAE(cigar_length, 0);
-	PROTECT(ans_cirl_partitioning_end = NEW_INTEGER(cigar_length));
+	PROTECT(ans_cnirl_partitioning_end = NEW_INTEGER(cigar_length));
 	for (i = 0; i < cigar_length; i++) {
 		if (flag != R_NilValue) {
 			flag_elt = INTEGER(flag)[i];
@@ -563,18 +563,18 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 			UNPROTECT(1);
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
 		}
-		INTEGER(ans_cirl_partitioning_end)[i] = range_ae.start.nelt;
+		INTEGER(ans_cnirl_partitioning_end)[i] = range_ae.start.nelt;
 	}
 	// TODO: Add C-level constructors in IRanges for PartitioningByEnd,
 	// CompressedIRangesList and GappedRanges objects and use them here.
-	PROTECT(ans_cirl_unlistData = RangeAE_asIRanges(&range_ae));
-	PROTECT(ans_cirl_partitioning = NEW_OBJECT(MAKE_CLASS("PartitioningByEnd")));
-	SET_SLOT(ans_cirl_partitioning, install("end"), ans_cirl_partitioning_end);
-	PROTECT(ans_cirl = NEW_OBJECT(MAKE_CLASS("CompressedIRangesList")));
-	SET_SLOT(ans_cirl, install("unlistData"), ans_cirl_unlistData);
-	SET_SLOT(ans_cirl, install("partitioning"), ans_cirl_partitioning);
+	PROTECT(ans_cnirl_unlistData = RangeAE_asIRanges(&range_ae));
+	PROTECT(ans_cnirl_partitioning = NEW_OBJECT(MAKE_CLASS("PartitioningByEnd")));
+	SET_SLOT(ans_cnirl_partitioning, install("end"), ans_cnirl_partitioning_end);
+	PROTECT(ans_cnirl = NEW_OBJECT(MAKE_CLASS("CompressedIRangesList")));
+	SET_SLOT(ans_cnirl, install("unlistData"), ans_cnirl_unlistData);
+	SET_SLOT(ans_cnirl, install("partitioning"), ans_cnirl_partitioning);
 	PROTECT(ans = NEW_OBJECT(MAKE_CLASS("GappedRanges")));
-	SET_SLOT(ans, install("cirl"), ans_cirl);
+	SET_SLOT(ans, install("cnirl"), ans_cnirl);
 	UNPROTECT(5);
 	return ans;
 }
