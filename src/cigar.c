@@ -570,7 +570,7 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 	PROTECT(ans_cnirl_unlistData = RangeAE_asIRanges(&range_ae));
 	PROTECT(ans_cnirl_partitioning = NEW_OBJECT(MAKE_CLASS("PartitioningByEnd")));
 	SET_SLOT(ans_cnirl_partitioning, install("end"), ans_cnirl_partitioning_end);
-	PROTECT(ans_cnirl = NEW_OBJECT(MAKE_CLASS("CompressedIRangesList")));
+	PROTECT(ans_cnirl = NEW_OBJECT(MAKE_CLASS("CompressedNormalIRangesList")));
 	SET_SLOT(ans_cnirl, install("unlistData"), ans_cnirl_unlistData);
 	SET_SLOT(ans_cnirl, install("partitioning"), ans_cnirl_partitioning);
 	PROTECT(ans = NEW_OBJECT(MAKE_CLASS("GappedRanges")));
