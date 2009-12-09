@@ -8,15 +8,11 @@
 ### See http://wiki.fhcrc.org/bioc/Multiple_alignment_rep_v1 for the details
 ### of the class proposal.
 setClass("Alignments0",
-    contains="Ranges",
     representation(
         rname="factor",  # character factor
         strand="raw",
         cigar="character",
-        gapped_ranges="GappedRanges"
-    ),
-    prototype(
-        elementType="NormalIRanges"
+        ranges="CompressedNormalIRangesList"
     )
 )
 
@@ -66,25 +62,22 @@ setMethod("strand", "Alignments0",
     function(x)
     {
         is_minus <- compactRawVectorAsLogical(x@strand, length(x))
-        ans <- factor(levels=c("+", "-", "*"))
-        ans[!is_minus] <- "+"
-        ans[is_minus] <- "-"
-        return(ans)
+        strand(ifelse(is_minus, "-", "+"))
     }
 )
 
 setGeneric("cigar", function(x) standardGeneric("cigar"))
 setMethod("cigar", "Alignments0", function(x) x@cigar)
 
+setMethod("ranges", "Alignments0", function(x) x@ranges)
+
 setGeneric("qwidth", function(x) standardGeneric("qwidth"))
 setMethod("qwidth", "Alignments0", function(x) cigarToQWidth(cigar(x)))
 
-setGeneric("gappedRanges", function(x) standardGeneric("gappedRanges"))
-setMethod("gappedRanges", "Alignments0", function(x) x@gapped_ranges)
-
-setMethod("start", "Alignments0", function(x, ...) start(gappedRanges(x)))
-
-setMethod("end", "Alignments0", function(x, ...) end(gappedRanges(x)))
+setGeneric("isSimple", function(x) standardGeneric("isSimple"))
+setMethod("isSimple", "Alignments0",
+    function(x) qwidth(x) == (max(ranges(x)) - min(ranges(x)) + 1L)
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -105,7 +98,7 @@ setMethod("end", "Alignments0", function(x, ...) end(gappedRanges(x)))
 .valid.Alignments0.strand <- function(x)
 {
     x_strand <- strand(x)
-    if (!is.factor(x_strand) || !identical(levels(x_strand), c("+", "-", "*"))
+    if (!is.factor(x_strand) || !identical(levels(x_strand), levels(strand()))
      || !is.null(names(x_strand)) || any(is.na(x_strand)))
         return("'strand(x)' must be an unnamed character factor with no NAs (and with levels +, - and *)")
     if (length(x_strand) != length(cigar(x)))
@@ -124,13 +117,13 @@ setMethod("end", "Alignments0", function(x, ...) end(gappedRanges(x)))
     NULL
 }
 
-.valid.Alignments0.gapped_ranges <- function(x)
+.valid.Alignments0.ranges <- function(x)
 {
-    x_gapped_ranges <- gappedRanges(x)
-    if (!is(x_gapped_ranges, "GappedRanges") || !is.null(names(x_gapped_ranges)))
-        return("'gappedRanges(x)' must be an unnamed GappedRanges object")
-    if (length(x_gapped_ranges) != length(cigar(x)))
-        return("'gappedRanges(x)' and 'cigar(x)' must have the same length")
+    x_ranges <- ranges(x)
+    if (!is(x_ranges, "CompressedNormalIRangesList") || !is.null(names(x_ranges)))
+        return("'ranges(x)' must be an unnamed CompressedNormalIRangesList object")
+    if (length(x_ranges) != length(cigar(x)))
+        return("'ranges(x)' and 'cigar(x)' must have the same length")
     NULL
 }
 
@@ -139,7 +132,7 @@ setMethod("end", "Alignments0", function(x, ...) end(gappedRanges(x)))
     c(.valid.Alignments0.rname(x),
       .valid.Alignments0.strand(x),
       .valid.Alignments0.cigar(x),
-      .valid.Alignments0.gapped_ranges(x))
+      .valid.Alignments0.ranges(x))
 }
 
 setValidity2("Alignments0", .valid.Alignments0, where=asNamespace("Rsamtools"))
@@ -157,9 +150,7 @@ setMethod("as.data.frame", "Alignments0",
         ans <- data.frame(rname=rname(x),
                           strand=strand(x),
                           cigar=cigar(x),
-                          start=start(x),
-                          end=end(x),
-                          width=width(x),
+                          pos=min(ranges(x)),
                           row.names=row.names,
                           check.rows=TRUE,
                           check.names=FALSE,
@@ -192,9 +183,7 @@ setMethod("show", "Alignments0",
               data.frame(rname=sketch(rname(object)),
                          strand=sketch(strand(object)),
                          cigar=sketch(cigar(object)),
-                         start=sketch(start(object)),
-                         end=sketch(end(object)),
-                         width=sketch(width(object)),
+                         pos=sketch(min(ranges(object))),
                          row.names=c(paste("[", 1:9, "]", sep=""), "...",
                                      paste("[", (lo-8L):lo, "]", sep="")),
                          check.rows=TRUE,
@@ -225,26 +214,10 @@ readBAMasAligments <- function(file, index=file, which=RangesList())
     ans_cigar <- bam$cigar@.cigar
     if (is.factor(ans_cigar))
         ans_cigar <- as.vector(ans_cigar)
-    ans_gapped_ranges <- cigarToGappedRanges(ans_cigar, bam$pos)
+    ans_ranges <- cigarToIRangesListByAlignment(ans_cigar, bam$pos)
     new("Alignments0", rname=ans_rname, strand=ans_strand,
-                       cigar=ans_cigar, gapped_ranges=ans_gapped_ranges)
+                       cigar=ans_cigar, ranges=ans_ranges)
 }
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Coercion.
-###
-
-setAs("Alignments0", "GappedRanges", function(from) gappedRanges(from))
-setAs("Alignments0", "CompressedIRangesList",
-    function(from) as(gappedRanges(from), "CompressedIRangesList")
-)
-setAs("Alignments0", "IRangesList",
-    function(from) as(gappedRanges(from), "IRangesList")
-)
-setAs("Alignments0", "RangesList",
-    function(from) as(gappedRanges(from), "RangesList")
-)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -279,20 +252,9 @@ setMethod("[", "Alignments0",
         x@strand <- subsetCompactRawVector(x@strand, i)
         x@rname <- x@rname[i]
         x@cigar <- x@cigar[i]
-        x@gapped_ranges <- x@gapped_ranges[i]
+        x@ranges <- x@ranges[i]
         x
     }
-)
-
-### WARNING: We override the *semantic* of the "[[" method for Ranges objects.
-setMethod("[[", "Alignments0",
-    function(x, i, j, ..., exact=TRUE) gappedRanges(x)[[i]]
-)
-
-### WARNING: We override the *semantic* of the "elementLengths" method for
-### Ranges objects.
-setMethod("elementLengths", "Alignments0",
-    function(x) elementLengths(gappedRanges(x))
 )
 
 
@@ -300,18 +262,15 @@ setMethod("elementLengths", "Alignments0",
 ### The "coverage" method.
 ###
 
-### WARNING: We override the *semantic* of the "coverage" method for
-### Ranges objects.
 setMethod("coverage", "Alignments0",
-    function (x, start=NA, end=NA, shift=0L, width=NULL, weight=1L, ...)
+    function(x, start=NA, end=NA, shift=0L, width=NULL, weight=1L, ...)
     {
         if (!identical(start, NA) || !identical(end, NA)
          || !identical(shift, 0L) || !is.null(width) || !identical(weight, 1L))
             stop("'start', 'end', 'shift', 'width' and 'weight' arguments ",
                  "are not supported yet, sorry!")
-        irl <- cigarToIRangesList(cigar(x), rname(x), start(x))
+        irl <- cigarToIRangesListByRName(cigar(x), rname(x), min(ranges(x)))
         irl <- irl[elementLengths(irl) != 0]  # drop empty elements
         coverage(irl)
     }
 )
-

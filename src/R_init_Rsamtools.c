@@ -23,8 +23,10 @@ static const R_CallMethodDef callMethods[] = {
 	{".split_cigar", (DL_FUNC) &split_cigar, 1},
 	{".cigar_to_qwidth", (DL_FUNC) &cigar_to_qwidth, 2},
 	{".cigar_to_IRanges", (DL_FUNC) &cigar_to_IRanges, 3},
-	{".cigar_to_GappedRanges", (DL_FUNC) &cigar_to_GappedRanges, 4},
-	{".cigar_to_list_of_IRanges", (DL_FUNC) &cigar_to_list_of_IRanges, 6},
+	{".cigar_to_list_of_IRanges_by_alignment",
+	 (DL_FUNC) &cigar_to_list_of_IRanges_by_alignment, 4},
+	{".cigar_to_list_of_IRanges_by_rname",
+	 (DL_FUNC) &cigar_to_list_of_IRanges_by_rname, 6},
 	/* Alignments_class.c */
 	{".logical_as_compact_raw_vector", (DL_FUNC) &logical_as_compact_raw_vector, 1},
 	{".compact_raw_vector_as_logical", (DL_FUNC) &compact_raw_vector_as_logical, 2},

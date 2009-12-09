@@ -91,8 +91,8 @@ cigar_table(SEXP cigar)
  * split_cigar()
  * cigar_to_qwidth()
  * cigar_to_IRanges()
- * cigar_to_GappedRanges()
- * cigar_to_list_of_IRanges()
+ * cigar_to_list_of_IRanges_by_alignment()
+ * cigar_to_list_of_IRanges_by_rname()
  */
 
 static char errmsg_buf[200];
@@ -517,15 +517,16 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges, SEXP merge_ranges)
  * 'cigar', 'pos' and 'flag' (when not NULL) are assumed to have the same
  * length (which is the number of aligned reads).
  *
- * Returns a GappedRanges object of the same length as the input.
- * NOTE: See note for cigar_to_list_of_IRanges() below about the strand.
+ * Returns a CompressedNormalIRangesList object of the same length as the input.
+ * NOTE: See note for cigar_to_list_of_IRanges_by_rname() below about the strand.
  * TODO: Support character factor 'cigar' in addition to current character
  *       vector format.
  */
-SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
+SEXP cigar_to_list_of_IRanges_by_alignment(SEXP cigar, SEXP pos, SEXP flag,
+		SEXP drop_D_ranges)
 {
-	SEXP cigar_string, ans, ans_cnirl, ans_cnirl_unlistData,
-	     ans_cnirl_partitioning, ans_cnirl_partitioning_end;
+	SEXP cigar_string;
+	SEXP ans, ans_unlistData, ans_partitioning, ans_partitioning_end;
 	int cigar_length, Ds_as_Ns, i, pos_elt, flag_elt;
 	RangeAE range_ae;
 	const char *errmsg;
@@ -534,7 +535,7 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 	Ds_as_Ns = LOGICAL(drop_D_ranges)[0];
 	/* we will generate at least 'cigar_length' ranges, and possibly more */
 	range_ae = new_RangeAE(cigar_length, 0);
-	PROTECT(ans_cnirl_partitioning_end = NEW_INTEGER(cigar_length));
+	PROTECT(ans_partitioning_end = NEW_INTEGER(cigar_length));
 	for (i = 0; i < cigar_length; i++) {
 		if (flag != R_NilValue) {
 			flag_elt = INTEGER(flag)[i];
@@ -563,19 +564,17 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
 			UNPROTECT(1);
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
 		}
-		INTEGER(ans_cnirl_partitioning_end)[i] = range_ae.start.nelt;
+		INTEGER(ans_partitioning_end)[i] = range_ae.start.nelt;
 	}
-	// TODO: Add C-level constructors in IRanges for PartitioningByEnd,
-	// CompressedIRangesList and GappedRanges objects and use them here.
-	PROTECT(ans_cnirl_unlistData = RangeAE_asIRanges(&range_ae));
-	PROTECT(ans_cnirl_partitioning = NEW_OBJECT(MAKE_CLASS("PartitioningByEnd")));
-	SET_SLOT(ans_cnirl_partitioning, install("end"), ans_cnirl_partitioning_end);
-	PROTECT(ans_cnirl = NEW_OBJECT(MAKE_CLASS("CompressedNormalIRangesList")));
-	SET_SLOT(ans_cnirl, install("unlistData"), ans_cnirl_unlistData);
-	SET_SLOT(ans_cnirl, install("partitioning"), ans_cnirl_partitioning);
-	PROTECT(ans = NEW_OBJECT(MAKE_CLASS("GappedRanges")));
-	SET_SLOT(ans, install("cnirl"), ans_cnirl);
-	UNPROTECT(5);
+	// TODO: Add C-level constructors in IRanges for PartitioningByEnd and
+	// CompressedNormalIRangesList objects and use them here.
+	PROTECT(ans_unlistData = RangeAE_asIRanges(&range_ae));
+	PROTECT(ans_partitioning = NEW_OBJECT(MAKE_CLASS("PartitioningByEnd")));
+	SET_SLOT(ans_partitioning, install("end"), ans_partitioning_end);
+	PROTECT(ans = NEW_OBJECT(MAKE_CLASS("CompressedNormalIRangesList")));
+	SET_SLOT(ans, install("unlistData"), ans_unlistData);
+	SET_SLOT(ans, install("partitioning"), ans_partitioning);
+	UNPROTECT(4);
 	return ans;
 }
 
@@ -614,7 +613,7 @@ SEXP cigar_to_GappedRanges(SEXP cigar, SEXP pos, SEXP flag, SEXP drop_D_ranges)
  * - Support character factor 'cigar' in addition to current character vector
  *   format.
  */
-SEXP cigar_to_list_of_IRanges(SEXP cigar, SEXP rname, SEXP pos,
+SEXP cigar_to_list_of_IRanges_by_rname(SEXP cigar, SEXP rname, SEXP pos,
 		SEXP flag, SEXP drop_D_ranges, SEXP merge_ranges)
 {
 	SEXP rname_levels, cigar_string, ans, ans_names;

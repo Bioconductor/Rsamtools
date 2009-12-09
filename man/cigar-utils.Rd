@@ -6,8 +6,8 @@
 \alias{cigarToQWidth}
 
 \alias{cigarToIRanges}
-\alias{cigarToGappedRanges}
-\alias{cigarToIRangesList}
+\alias{cigarToIRangesListByAlignment}
+\alias{cigarToIRangesListByRName}
 
 \alias{queryLoc2refLoc}
 \alias{queryLocs2refLocs}
@@ -27,9 +27,9 @@
 cigarToQWidth(cigar, before.hard.clipping=FALSE)
 
 cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
-cigarToGappedRanges(cigar, pos, flag=NULL, drop.D.ranges=FALSE)
-cigarToIRangesList(cigar, rname, pos, flag=NULL,
-                   drop.D.ranges=FALSE, merge.ranges=TRUE)
+cigarToIRangesListByAlignment(cigar, pos, flag=NULL, drop.D.ranges=FALSE)
+cigarToIRangesListByRName(cigar, rname, pos, flag=NULL, drop.D.ranges=FALSE,
+                          merge.ranges=TRUE)
 
 queryLoc2refLoc(qloc, cigar, pos=1)
 queryLocs2refLocs(qlocs, cigar, pos, flag=NULL)
@@ -83,8 +83,9 @@ summarizeCigarTable(x)
     the following meaning: when bit 0x004 is ON then "the query
     sequence itself is unmapped" and when bit 0x400 is ON then
     "the read is either a PCR duplicate or an optical duplicate".
-    When \code{flag} is provided, \code{cigarToGappedRanges} and
-    \code{cigarToIRangesList} ignore these reads.
+    When \code{flag} is provided,
+    \code{cigarToIRangesListByAlignment} and
+    \code{cigarToIRangesListByRName} ignore these reads.
   }
   \item{rname}{
     A character vector/factor containing the name of the
@@ -119,10 +120,11 @@ summarizeCigarTable(x)
   aligned base is at position 1 in the reference (i.e. at the
   first position).
 
-  For \code{cigarToGappedRanges}: A \link[IRanges]{GappedRanges} object
-  of the same length as \code{cigar}.
+  For \code{cigarToIRangesListByAlignment}: A
+  \link[IRanges]{CompressedNormalIRangesList} object of the same length as
+  \code{cigar}.
 
-  For \code{cigarToIRangesList}: A named \link[IRanges]{IRangesList}
+  For \code{cigarToIRangesListByRName}: A named \link[IRanges]{IRangesList}
   object with one element (\link[IRanges]{IRanges}) per unique reference
   sequence.
 
@@ -182,9 +184,9 @@ cigarToIRanges("3H15M55N4M2I6M2D5M6S", drop.D.ranges=TRUE)
 
 cigar <- c("40M", "3H15M55N4M2I6M2D5M6S", "2S10M2000N15M", "3H25M5H")
 pos <- c(1, 1001, 1,  351)
-cigarToGappedRanges(cigar, pos)
+cigarToIRangesListByAlignment(cigar, pos)
 rname <- c("chr6", "chr6", "chr2", "chr6")
-cigarToIRangesList(cigar, rname, pos)
+cigarToIRangesListByRName(cigar, rname, pos)
 
 splitCigar(cigar)
 cigarToRleList(cigar)
@@ -219,16 +221,16 @@ if (interactive()) {
   pos <- sample(80000000L, nreads, replace=TRUE)
 
   ## The following takes < 5 sec. to complete:
-  system.time(gpranges <- cigarToGappedRanges(cigar, pos))
+  system.time(gpranges <- cigarToIRangesListByAlignment(cigar, pos))
 
   ## The following takes < 10 sec. to complete:
-  system.time(irl <- cigarToIRangesList(cigar, rname, pos))
+  system.time(irl <- cigarToIRangesListByRName(cigar, rname, pos))
 
-  ## Internally, cigarToIRangesList() turns 'rname' into a factor
+  ## Internally, cigarToIRangesListByRName() turns 'rname' into a factor
   ## before starting the calculation. Hence it will run sligthly
   ## faster if 'rname' is already a factor.
   rname2 <- as.factor(rname)
-  system.time(irl2 <- cigarToIRangesList(cigar, rname2, pos))
+  system.time(irl2 <- cigarToIRangesListByRName(cigar, rname2, pos))
 
   ## The sizes of the resulting objects are about 240M and 160M,
   ## respectively:
@@ -257,7 +259,7 @@ extractCoverageFromBAM <- function(file)
   bam <- scanBam(file, param=param)[[1]]
   ## Note that unmapped reads and reads that are PCR/optical duplicates
   ## have already been filtered out by using the ScanBamParam object above.
-  irl <- cigarToIRangesList(as.vector(bam$cigar@.cigar), bam$rname, bam$pos)
+  irl <- cigarToIRangesListByRName(as.vector(bam$cigar@.cigar), bam$rname, bam$pos)
   irl <- irl[elementLengths(irl) != 0]  # drop empty elements
   coverage(irl)
 }

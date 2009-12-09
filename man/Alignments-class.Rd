@@ -11,22 +11,15 @@
 \alias{strand,Alignments0-method}
 \alias{cigar}
 \alias{cigar,Alignments0-method}
+\alias{ranges,Alignments0-method}
 \alias{qwidth}
 \alias{qwidth,Alignments0-method}
-\alias{gappedRanges}
-\alias{gappedRanges,Alignments0-method}
-\alias{start,Alignments0-method}
-\alias{end,Alignments0-method}
+\alias{isSimple}
+\alias{isSimple,Alignments0-method}
 \alias{as.data.frame,Alignments0-method}
 \alias{show,Alignments0-method}
 \alias{readBAMasAligments}
-\alias{coerce,Alignments0,GappedRanges-method}
-\alias{coerce,Alignments0,CompressedIRangesList-method}
-\alias{coerce,Alignments0,IRangesList-method}
-\alias{coerce,Alignments0,RangesList-method}
 \alias{[,Alignments0,ANY,ANY-method}
-\alias{[[,Alignments0,ANY,ANY-method}
-\alias{elementLengths,Alignments0-method}
 \alias{coverage,Alignments0-method}
 
 
@@ -37,7 +30,7 @@
   alignments that will hold just enough information for supporting
   the operations described below.
 
-  WARNING! This is work-in-progess. Expect frequent changes in
+  WARNING! This is work-in-progress. Expect frequent changes in
   functionalities. The name of the container is provisory and
   reflecting the fact that we are at a very early stage of its
   design/implementation.
@@ -49,7 +42,7 @@
   or "read", typically short) aligns to a reference sequence (typically
   long).
 
-  Most of the times, an Alignments0 object will be created by loading
+  Most of the time, an Alignments0 object will be created by loading
   records from a BAM (or SAM) file and each element in the resulting
   object will correspond to a record. BAM/SAM records generally contain
   a lot of information but only part of that information is loaded
@@ -75,26 +68,17 @@
           SAM/BAM record.)
     \item The CIGAR string in the "Extended CIGAR format" (see the SAM
           Format Specifications for the details).
-    \item The 1-based leftmost position/coordinate of the clipped query
-          relative to the reference sequence. We will refer to it as
-          the "start" of the query. (This is the POS field in a SAM/BAM
-          record.)
-    \item The 1-based rightmost position/coordinate of the clipped query
-          relative to the reference sequence. We will refer to it as
-          the "end" of the query. (This is NOT explicitly stored in a
-          SAM/BAM record but can be inferred from the POS and CIGAR fields.)
-    \item The 1-based positions/coordinates of the "gaps" in the
-          reference (aka "skipped regions from the reference"). Note
-          that a gap is encoded with an N in the CIGAR (a deletion,
-          encoded with a D, is NOT considered a gap).
+    \item The 1-based intervals, i.e. [start, end] ranges, of the
+          aligned clipped query relative to the reference sequence. A
+          simple alignment is represented by a single interval, while a
+          gapped alignment, which is defined to have non-aligned skipped
+          regions (or gaps) on the reference, contains an interval for
+          each region that is aligned. In CIGAR notation a non-aligned
+          gap is coded as an 'N', which is not to be confused with the
+          (aligned) deletion code 'D'.
   }
-  Strictly speaking, the last 2 items can be inferred from the CIGAR
-  and the "start" so, in theory, they don't need to be explicitely
-  stored in the Alignments0 object. In fact, the internals of the
-  Alignments0 container could change and we don't want to commit to
-  any particular internal representation.
 
-  Hence the rest of this man page will focus on describing how to:
+  The rest of this man page will focus on describing how to:
   \itemize{
     \item Access the information stored in an Alignments0 object in
           a way that is independent from how the data are actually
@@ -140,6 +124,13 @@
       containing the CIGAR string for each alignment.
     }
     \item{}{
+      \code{ranges(x)}:
+      Returns a \link[IRanges]{CompressedNormalIRangesList} object of
+      length \code{length(x)} where each element represents regions in
+      the reference to which a query is aligned. See Details section
+      above for more information.
+    }
+    \item{}{
       \code{qwidth(x)}:
       Returns an integer vector of length \code{length(x)}
       containing the length of the query *after* hard clipping
@@ -147,25 +138,11 @@
       the corresponding SAM/BAM record).
     }
     \item{}{
-      \code{start(x)}, \code{end(x)}:
-      Returns an integer vector of length \code{length(x)}
-      containing the "start" and "end" (respectively) of the query
-      for each alignment. See Details section above for the exact
-      definitions of the "start" and "end" of a query.
-    }
-    \item{}{
-      \code{width(x)}:
-      Defined as \code{end(x) - start(x) + 1L}.
-      Note that this is generally different from \code{qwidth(x)}
-      except for alignments with a trivial CIGAR string (i.e. a
-      string of the form \code{"<n>M"} where <n> is a number).
-    }
-    \item{}{
-      \code{gappedRanges(x)}:
-      Returns a \link[IRanges]{GappedRanges} object of length
-      \code{length(x)} where each element is a
-      \link[IRanges]{NormalIRanges} object representing a "gapped range".
-      More on this below.
+      \code{isSimple(x)}:
+      Returns a logical vector of length \code{length(x)} whose
+      elements indicate whether or not an alignment is simple
+      (i.e. contains only matches and mismatches and is represented
+      by a CIGAR string with a single 'M' run).
     }
   }
 }
@@ -178,35 +155,6 @@
       \code{x[i]}:
       Returns a new Alignments0 object made of the selected alignments.
       \code{i} can be a numeric or logical vector.
-    }
-    \item{}{
-      \code{x[[i]]}:
-      This is a convenience for \code{gappedRanges(x)[[i]]}.
-      Both return the \link[IRanges]{NormalIRanges} object
-      containing the regions in the reference (1 range per region)
-      to which the i-th query is aligned.
-      \code{i} must be a single integer.
-    }
-    \item{}{
-      \code{elemenType(x)}:
-      Returns the type of \code{x[[i]]}.
-      Note that the semantic of the \code{[[} method for Alignments0
-      objects is different from the semantic of the method for
-      \link[IRanges]{Ranges} objects (the latter returns an integer
-      vector).
-    }
-    \item{}{
-      \code{elementLengths(x)}:
-      This is a convenience for \code{elementLengths(gappedRanges(x))}.
-      Returns an integer vector of length \code{length(x)}
-      containing the number of ranges in x[[i]].
-      Semantically equivalent to
-      \preformatted{sapply(seq_len(length(x)), function(i) length(x[[i]]))}
-      but much faster.
-      Note that the semantic of the \code{elementLengths} method for
-      Alignments0 objects is different from the semantic of the method
-      for \link[IRanges]{Ranges} objects (the latter returns the
-      \code{width} of the \link[IRanges]{Ranges} object).
     }
   }
 }
@@ -236,13 +184,13 @@
 }
 
 \author{
-  H. Pages
+  H. Pages and P. Aboyoun
 }
 
 \seealso{
   \code{\link{scanBam}},
   \link[IRanges]{NormalIRanges-class},
-  \link[IRanges]{GappedRanges-class},
+  \link[IRanges]{CompressedNormalIRangesList-class},
   \code{\link[IRanges]{coverage}},
   \link[IRanges]{RleList-class}
 }
@@ -260,12 +208,11 @@ head(al1)
 head(rname(al1))
 head(strand(al1))
 head(cigar(al1))
-head(qwidth(al1))
-head(start(al1))
-head(end(al1))
+head(ranges(al1))
+head(min(ranges(al1)))
+head(max(ranges(al1)))
 head(qwidth(al1))
 table(qwidth(al1))
-gappedRanges(al1)
 
 ## ---------------------------------------------------------------------
 ## B. SUBSETTING
@@ -276,16 +223,16 @@ al1[grep("N", cigar(al1), fixed=TRUE)]  # no gaps
 
 ## A confirmation that all the queries map to the reference with no
 ## gaps:
-stopifnot(all(elementLengths(al1) == 1))
-al1[[1]]
-al1[[2]]
+stopifnot(all(elementLengths(ranges(al1)) == 1))
+ranges(al1)[[1]]
+ranges(al1)[[2]]
 ii <- grep("D", cigar(al1), fixed=TRUE)
 al1[ii]
 ## Ds are NOT gaps:
-al1[[ii[1]]]
-al1[[ii[2]]]
+ranges(al1)[[ii[1]]]
+ranges(al1)[[ii[2]]]
 
-al1[qwidth(al1) != width(al1)]
+al1[!isSimple(al1)]
 
 ## This MUST return an empty object:
 al1[cigar(al1) == "35M" & qwidth(al1) != 35]
