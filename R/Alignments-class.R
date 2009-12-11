@@ -21,14 +21,14 @@ setClass("Alignments0",
 ### Some low-level helper functions for manipulating the @strand slot.
 ###
 
-logicalAsCompactRawVector <- function(x)
+.logicalAsCompactRawVector <- function(x)
 {
     if (!is.logical(x))
         stop("'x' must be a logical vector")
     .Call(".logical_as_compact_raw_vector", x, PACKAGE="Rsamtools")
 }
 
-compactRawVectorAsLogical <- function(x, length.out)
+.compactRawVectorAsLogical <- function(x, length.out)
 {
     if (!is.raw(x))
         stop("'x' must be a raw vector")
@@ -39,7 +39,7 @@ compactRawVectorAsLogical <- function(x, length.out)
     .Call(".compact_raw_vector_as_logical", x, length.out, PACKAGE="Rsamtools")
 }
 
-subsetCompactRawVector <- function(x, i)
+.subsetCompactRawVector <- function(x, i)
 {
     if (!is.raw(x))
         stop("'x' must be a raw vector")
@@ -61,7 +61,7 @@ setMethod("rname", "Alignments0", function(x) x@rname)
 setMethod("strand", "Alignments0",
     function(x)
     {
-        is_minus <- compactRawVectorAsLogical(x@strand, length(x))
+        is_minus <- .compactRawVectorAsLogical(x@strand, length(x))
         strand(ifelse(is_minus, "-", "+"))
     }
 )
@@ -210,7 +210,7 @@ readBAMasAligments <- function(file, index=file, which=RangesList())
     ans_rname <- bam$rname
     if (!is.factor(ans_rname))
         ans_rname <- as.factor(ans_rname)
-    ans_strand <- logicalAsCompactRawVector(bam$strand == "-")
+    ans_strand <- .logicalAsCompactRawVector(bam$strand == "-")
     ans_cigar <- bam$cigar@.cigar
     if (is.factor(ans_cigar))
         ans_cigar <- as.vector(ans_cigar)
@@ -249,7 +249,7 @@ setMethod("[", "Alignments0",
         } else {
             stop("invalid subscript type")
         }
-        x@strand <- subsetCompactRawVector(x@strand, i)
+        x@strand <- .subsetCompactRawVector(x@strand, i)
         x@rname <- x@rname[i]
         x@cigar <- x@cigar[i]
         x@ranges <- x@ranges[i]

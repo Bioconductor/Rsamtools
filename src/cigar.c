@@ -566,14 +566,13 @@ SEXP cigar_to_list_of_IRanges_by_alignment(SEXP cigar, SEXP pos, SEXP flag,
 		}
 		INTEGER(ans_partitioning_end)[i] = range_ae.start.nelt;
 	}
-	// TODO: Add C-level constructors in IRanges for PartitioningByEnd and
-	// CompressedNormalIRangesList objects and use them here.
 	PROTECT(ans_unlistData = RangeAE_asIRanges(&range_ae));
-	PROTECT(ans_partitioning = NEW_OBJECT(MAKE_CLASS("PartitioningByEnd")));
-	SET_SLOT(ans_partitioning, install("end"), ans_partitioning_end);
-	PROTECT(ans = NEW_OBJECT(MAKE_CLASS("CompressedNormalIRangesList")));
-	SET_SLOT(ans, install("unlistData"), ans_unlistData);
-	SET_SLOT(ans, install("partitioning"), ans_partitioning);
+	PROTECT(ans_partitioning = new_PartitioningByEnd(
+			"PartitioningByEnd",
+			ans_partitioning_end, NULL));
+	PROTECT(ans = new_CompressedIRangesList(
+			"CompressedNormalIRangesList",
+			ans_unlistData, ans_partitioning));
 	UNPROTECT(4);
 	return ans;
 }
