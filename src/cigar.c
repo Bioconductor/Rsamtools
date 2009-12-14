@@ -163,6 +163,49 @@ static int get_next_cigar_OP(const char *cig0, int offset,
 	return offset - offset0;
 }
 
+static const char *cigar_string_op_table(SEXP cigar_string, int *table_row,
+		int cigar_length)
+{
+	const char *cig0;
+	int offset, n, OPL /* Operation Length */;
+	char OP /* Operation */;
+
+	if (cigar_string == NA_STRING)
+		return "CIGAR string is NA";
+	if (LENGTH(cigar_string) == 0)
+		return "CIGAR string is empty";
+	cig0 = CHAR(cigar_string);
+	offset = 0;
+	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
+		if (n == -1)
+			return errmsg_buf;
+		switch (OP) {
+		/* Alignment match (can be a sequence match or mismatch) */
+		    case 'M': *table_row += OPL; break;
+		/* Insertion to the reference */
+		    case 'I': *(table_row+cigar_length) += OPL; break;
+		/* Deletion (or skipped region) from the reference */
+		    case 'D': *(table_row+2*cigar_length) += OPL; break;
+		/* Deletion (or skipped region) from the reference */
+			case 'N': *(table_row+3*cigar_length) += OPL; break;
+		/* Soft clip on the read */
+		    case 'S': *(table_row+4*cigar_length) += OPL; break;
+		/* Hard clip on the read */
+		    case 'H': *(table_row+5*cigar_length) += OPL; break;
+		/* Padding (silent deletion from the padded reference
+		   sequence) */
+		    case 'P': *(table_row+6*cigar_length) += OPL; break;
+		    default:
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "unknown CIGAR operation '%c' at char %d",
+				 OP, offset + 1);
+			return errmsg_buf;
+		}
+		offset += n;
+	}
+	return NULL;
+}
+
 static const char *cigar_string_to_qwidth(SEXP cigar_string, int clip_reads,
 		int *qwidth)
 {
@@ -432,6 +475,60 @@ SEXP split_cigar(SEXP cigar)
 		UNPROTECT(3);
 	}
 	UNPROTECT(1);
+	return ans;
+}
+
+
+/* --- .Call ENTRY POINT ---
+ * Args:
+ *   cigar: character vector containing the extended CIGAR string for each
+ *          read;
+ * Return an integer matrix with the number of rows equal to the length of
+ * 'cigar' and 7 columns, one for each extended CIGAR operation containing
+ * a frequency count for the operations for each element of 'cigar'.
+ */
+SEXP cigar_op_table(SEXP cigar)
+{
+	SEXP cigar_string, ans, ans_dim, ans_dimnames, ans_colnames;
+	int cigar_length, i,*ans_row;
+	const char *errmsg;
+
+	cigar_length = LENGTH(cigar);
+	PROTECT(ans = NEW_INTEGER(7 * cigar_length));
+	memset(INTEGER(ans), 0, 7 * cigar_length * sizeof(int));
+	ans_row = INTEGER(ans);
+	for (i = 0, ans_row = INTEGER(ans); i < cigar_length; i++, ans_row++) {
+		cigar_string = STRING_ELT(cigar, i);
+		if (cigar_string == NA_STRING) {
+			INTEGER(ans)[i] = NA_INTEGER;
+			continue;
+		}
+		errmsg = cigar_string_op_table(cigar_string, ans_row, cigar_length);
+		if (errmsg != NULL) {
+			UNPROTECT(1);
+			error("in 'cigar' element %d: %s", i + 1, errmsg);
+		}
+	}
+	PROTECT(ans_dim = NEW_INTEGER(2));
+	INTEGER(ans_dim)[0] = cigar_length;;
+	INTEGER(ans_dim)[1] = 7;
+    SET_DIM(ans, ans_dim);
+
+    PROTECT(ans_colnames = NEW_CHARACTER(7));
+	SET_STRING_ELT(ans_colnames, 0, mkChar("M"));
+	SET_STRING_ELT(ans_colnames, 1, mkChar("I"));
+	SET_STRING_ELT(ans_colnames, 2, mkChar("D"));
+	SET_STRING_ELT(ans_colnames, 3, mkChar("N"));
+	SET_STRING_ELT(ans_colnames, 4, mkChar("S"));
+	SET_STRING_ELT(ans_colnames, 5, mkChar("H"));
+	SET_STRING_ELT(ans_colnames, 6, mkChar("P"));
+
+	PROTECT(ans_dimnames = NEW_LIST(2));
+	SET_ELEMENT(ans_dimnames, 0, R_NilValue);
+	SET_ELEMENT(ans_dimnames, 1, ans_colnames);
+	SET_DIMNAMES(ans, ans_dimnames);
+
+	UNPROTECT(4);
 	return ans;
 }
 

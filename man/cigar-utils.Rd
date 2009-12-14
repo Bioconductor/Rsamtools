@@ -3,6 +3,7 @@
 \alias{cigar-utils}
 
 \alias{validCigar}
+\alias{cigarOpTable}
 \alias{cigarToQWidth}
 
 \alias{cigarToIRanges}
@@ -24,6 +25,8 @@
   Utility functions for low-level CIGAR manipulation.
 }
 \usage{
+cigarOpTable(cigar)
+
 cigarToQWidth(cigar, before.hard.clipping=FALSE)
 
 cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
@@ -109,6 +112,10 @@ summarizeCigarTable(x)
 }
 
 \value{
+  For \code{cigarOpTable}: An integer matrix with number of rows equal
+  to the length of \code{cigar} and seven columns, one for each extended
+  CIGAR operation.
+
   For \code{cigarToQWidth}: An integer vector of the same length
   as \code{cigar} where each element is the width of the query as
   inferred from the corresponding element in \code{cigar}
@@ -121,8 +128,8 @@ summarizeCigarTable(x)
   first position).
 
   For \code{cigarToIRangesListByAlignment}: A
-  \link[IRanges]{CompressedNormalIRangesList} object of the same length as
-  \code{cigar}.
+  \link[IRanges]{CompressedNormalIRangesList} object of the same length
+  as \code{cigar}.
 
   For \code{cigarToIRangesListByRName}: A named \link[IRanges]{IRangesList}
   object with one element (\link[IRanges]{IRanges}) per unique reference
@@ -187,6 +194,8 @@ pos <- c(1, 1001, 1,  351)
 cigarToIRangesListByAlignment(cigar, pos)
 rname <- c("chr6", "chr6", "chr2", "chr6")
 cigarToIRangesListByRName(cigar, rname, pos)
+
+cigarOpTable(cigar)
 
 splitCigar(cigar)
 cigarToRleList(cigar)

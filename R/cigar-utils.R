@@ -10,6 +10,16 @@ validCigar <- function(cigar)
     .Call(".valid_cigar", cigar, 0L, PACKAGE="Rsamtools")
 }
 
+cigarOpTable <- function(cigar)
+{
+    if (!is.character(cigar)) {
+        if (!is.factor(cigar) || !is.character(levels(cigar)))
+            stop("'cigar' must be a character vector/factor")
+        cigar <- as.vector(cigar)
+    }
+    .Call(".cigar_op_table", cigar, PACKAGE="Rsamtools")
+}
+
 cigarToQWidth <- function(cigar, before.hard.clipping=FALSE)
 {
     if (!is.character(cigar)) {
