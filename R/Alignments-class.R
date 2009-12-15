@@ -124,6 +124,11 @@ setMethod("isSimple", "Alignments0",
         return("'ranges(x)' must be an unnamed CompressedNormalIRangesList object")
     if (length(x_ranges) != length(cigar(x)))
         return("'ranges(x)' and 'cigar(x)' must have the same length")
+    if (any(elementLengths(x_ranges) == 0L))
+        return("'ranges(x)' has elements with no ranges")
+    x_ranges2 <- cigarToIRangesListByAlignment(cigar(x), min(x_ranges))
+    if (!identical(x_ranges2, x_ranges))
+        return("'ranges(x)' and 'cigar(x)' are incompatible")
     NULL
 }
 
