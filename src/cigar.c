@@ -548,7 +548,7 @@ SEXP cigar_to_IRanges(SEXP cigar, SEXP drop_D_ranges, SEXP merge_ranges)
 				Ds_as_Ns, &range_ae);
 	if (errmsg != NULL)
 		error("%s", errmsg);
-	return RangeAE_asIRanges(&range_ae);
+	return new_IRanges_from_RangeAE("IRanges", &range_ae);
 }
 
 /* --- .Call ENTRY POINT ---
@@ -613,7 +613,8 @@ SEXP cigar_to_list_of_IRanges_by_alignment(SEXP cigar, SEXP pos, SEXP flag,
 		}
 		INTEGER(ans_partitioning_end)[i] = range_ae.start.nelt;
 	}
-	PROTECT(ans_unlistData = RangeAE_asIRanges(&range_ae));
+	PROTECT(ans_unlistData = new_IRanges_from_RangeAE(
+			"IRanges", &range_ae));
 	PROTECT(ans_partitioning = new_PartitioningByEnd(
 			"PartitioningByEnd",
 			ans_partitioning_end, NULL));
@@ -702,7 +703,8 @@ SEXP cigar_to_list_of_IRanges_by_rname(SEXP cigar, SEXP rname, SEXP pos,
 		if (errmsg != NULL)
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
 	}
-	PROTECT(ans = RangeAEAE_asLIST(&range_aeae));
+	PROTECT(ans = new_list_of_IRanges_from_RangeAEAE(
+				"IRanges", &range_aeae));
 	PROTECT(ans_names = duplicate(rname_levels));
 	SET_NAMES(ans, ans_names);
 	UNPROTECT(2);
