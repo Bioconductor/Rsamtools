@@ -29,7 +29,7 @@ ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE, what =
     scanBamWhat(), which = RangesList())
 
 # Constructor helpers
-scanBamFlag (isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
+scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
     hasUnmappedMate = NA, isMinusStrand = NA, isMateMinusStrand = NA, 
     isFirstMateRead = NA, isSecondMateRead = NA, isPrimaryRead = NA, 
     isValidVendorRead = NA, isDuplicate = NA) 
@@ -64,8 +64,9 @@ bamSimpleCigar(object)
   \item{which}{A \code{\linkS4class{RangesList}} object, consisting of
 	named \code{Ranges} elements. Names correspond to reference
 	sequences, and ranges to the regions on that reference sequence for
-	which matches are desired. Only records with a read overlapping
-	the specified ranges are returned.}
+	which matches are desired. Only records with a read overlapping the
+	specified ranges are returned. All ranges must have ends less than
+	or equal to 536870912.}
 
   \item{isPaired}{A logical(1) indicating whether unpaired (FALSE),
 	paired (TRUE), or any (NA) read should be returned.}

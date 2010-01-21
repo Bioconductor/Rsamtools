@@ -221,6 +221,25 @@ read_bam_header(SEXP fname, SEXP mode)
 void
 _scan_check_params(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
+	const int MAX_CHRLEN = 1 << 29; /* See samtools/bam_index.c */
+	if (R_NilValue != space) {
+		if (!IS_VECTOR(space) || LENGTH(space) != 3)
+			Rf_error("'space' must be list(3) or NULL");
+		if (!IS_CHARACTER(VECTOR_ELT(space, 0)))
+			Rf_error("internal: 'space[1]' must be character()");
+		if (!IS_INTEGER(VECTOR_ELT(space, 1)))
+			Rf_error("internal: 'space[2]' must be integer()");
+		if (!IS_INTEGER(VECTOR_ELT(space, 2)))
+			Rf_error("internal: 'space[3]' must be integer()");
+		if ((LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 1))) ||
+			(LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 2))))
+			Rf_error("internal: 'space' elements must all be the same length");
+		const int *end = INTEGER(VECTOR_ELT(space, 2)),
+			nrange = LENGTH(VECTOR_ELT(space, 2));
+		for (int irange = 0; irange < nrange; ++irange)
+			if (end[irange] > MAX_CHRLEN)
+				Rf_error("'end' must be <= %d", MAX_CHRLEN);
+	}
 	if (!IS_INTEGER(keepFlags) || LENGTH(keepFlags) != 2)
 		Rf_error("'keepFlags' must be integer(2)");
 	if (!IS_LOGICAL(isSimpleCigar)  || LENGTH(isSimpleCigar) != 1)

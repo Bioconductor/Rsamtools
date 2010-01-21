@@ -85,6 +85,19 @@ test_scanBam_which <- function()
 
 }
 
+test_scanBam_what_overflow <- function()
+{
+    ## src/samtools/bam_index.c requires that the largest bin be <= 512Mbp
+    which <- RangesList(seq1=IRanges(1000, 536870912L-1L))
+    checkTrue(validObject(scanBam(fl, param=ScanBamParam(which=which))))
+    which <- RangesList(seq1=IRanges(1000, 536870912L))
+    checkTrue(validObject(scanBam(fl, param=ScanBamParam(which=which))))
+    which <- RangesList(seq1=IRanges(1000, 536870912L+1L))
+    checkException(scanBam(fl, param=ScanBamParam(which=which)),
+                   silent=TRUE)
+    checkTrue(validObject(scanBam(fl)));
+}
+
 test_scanBam_what <- function()
 {
     p2 <- ScanBamParam(what=c("rname", "strand", "pos", "qwidth"))
