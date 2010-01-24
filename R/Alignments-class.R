@@ -205,7 +205,7 @@ setMethod("show", "Alignments0",
 ###
 
 ### This is our only constructor for now.
-readBAMasAligments <- function(file, index=file, which=RangesList())
+readBAMasAlignments <- function(file, index=file, which=RangesList())
 {
     param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE,
                                            isDuplicate=FALSE),
