@@ -21,3 +21,12 @@ setClass("Cigar",
          representation=representation("Sequence",
            .cigar="factor"),
          validity=.validity)
+         
+setClass("BamViews",
+         representation=representation(
+           bamPaths="character",
+           bamSamples="DataFrame",
+           bamRanges="RangedData",
+           bamExperiment="list"),
+         validity=.validity)
+           
