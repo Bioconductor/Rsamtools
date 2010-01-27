@@ -8,6 +8,7 @@
 \alias{bamSamples}
 \alias{bamRanges}
 \alias{bamExperiment}
+\alias{bamDirname<-}
 % methods
 \alias{dim,BamViews-method}
 \alias{[,BamViews,ANY,missing-method}
@@ -40,6 +41,8 @@ bamSamples(object)
 bamRanges(object)
 bamExperiment(object)
 
+bamDirname(object, ...) <- value
+
 ## Subset
 \S4method{[}{BamViews,ANY,ANY}(x, i, j, \dots, drop=TRUE)
 \S4method{[}{BamViews,ANY,missing}(x, i, j, \dots, drop=TRUE)
@@ -70,6 +73,9 @@ bamExperiment(object)
   \item{x}{An instance of \code{BamViews}.}
 
   \item{object}{An instance of \code{BamViews}.}
+
+  \item{value}{A character(1) used to replace the directory portion of
+    all \code{bamPath} elements.}
 
   \item{i}{During subsetting, a logical or numeric index into
 	\code{bamRanges}.}
@@ -158,5 +164,8 @@ v <- BamViews(fls, bamRanges=RangedData(rl, Count=seq_len(18L)))
 v
 v[1:5,]
 bamRanges(v[c(1:5, 11:15),])
+bamDirname(v) <- getwd()
+v
 }
+
 \keyword{classes}

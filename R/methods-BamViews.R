@@ -22,6 +22,13 @@ setMethod(.validity, "BamViews", function(object) {
 bamPaths <-
     function(object) slot(object, "bamPaths")
 
+`bamDirname<-` <-
+    function(object, ..., value)
+{
+    initialize(object,
+               bamPaths=file.path(value, basename(bamPaths(object))))
+}
+
 bamSamples <-
     function(object) slot(object, "bamSamples")
 
