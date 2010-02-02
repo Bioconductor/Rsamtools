@@ -211,15 +211,17 @@ readBAMasAlignments <- function(file, index=file, which=RangesList())
                                            isDuplicate=FALSE),
                           what=c("rname", "strand", "pos", "cigar"),
                           which=which)
-    bam <- scanBam(file, index=index, param=param)[[1]]
-    ans_rname <- bam$rname
+    bam <- scanBam(file, index=index, param=param)
+    ans_rname <- unlist(unname(lapply(bam, function(x) x$rname)))
     if (!is.factor(ans_rname))
         ans_rname <- as.factor(ans_rname)
-    ans_strand <- .logicalAsCompactRawVector(bam$strand == "-")
-    ans_cigar <- bam$cigar@.cigar
+    ans_strand <- unlist(unname(lapply(bam, function(x) x$strand)))
+    ans_strand <- .logicalAsCompactRawVector(ans_strand == "-")
+    ans_cigar <- unlist(unname(lapply(bam, function(x) x$cigar@.cigar)))
     if (is.factor(ans_cigar))
         ans_cigar <- as.vector(ans_cigar)
-    ans_ranges <- cigarToIRangesListByAlignment(ans_cigar, bam$pos)
+    ans_pos <- unlist(unname(lapply(bam, function(x) x$pos)))
+    ans_ranges <- cigarToIRangesListByAlignment(ans_cigar, ans_pos)
     new("Alignments0", rname=ans_rname, strand=ans_strand,
                        cigar=ans_cigar, ranges=ans_ranges)
 }
