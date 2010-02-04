@@ -14,7 +14,7 @@ readCigarTable <- function(file)
     if (length(fileData) != 1)
         stop("scanBam generated more than 1 list element")
     cigar <-
-      factor(fileData[[1]][["cigar"]]@.cigar[!is.na(fileData[[1]][["cigar"]]@.cigar)])
+      factor(cigars(fileData[[1]][["cigar"]])[!is.na(cigars(fileData[[1]][["cigar"]]))])
     cigarToCigarTable(cigar)
 }
 
