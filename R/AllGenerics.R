@@ -16,3 +16,11 @@ setGeneric("indexBam",
 
 setGeneric("readPileup",
            function(file, ...) standardGeneric("readPileup"))
+
+setGeneric("rname", function(x) standardGeneric("rname"))
+
+setGeneric("cigar", function(x) standardGeneric("cigar"))
+
+setGeneric("qwidth", function(x) standardGeneric("qwidth"))
+
+setGeneric("isSimple", function(x) standardGeneric("isSimple"))

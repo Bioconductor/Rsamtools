@@ -30,3 +30,15 @@ setClass("BamViews",
            bamExperiment="list"),
          validity=.validity)
            
+### Since we are at a very early stage of prototyping this container, we'll
+### call it Alignments0 for now.
+### See http://wiki.fhcrc.org/bioc/Multiple_alignment_rep_v1 for the details
+### of the class proposal.
+setClass("Alignments0",
+    representation(
+        rname="factor",  # character factor
+        strand="raw",
+        cigar="character",
+        ranges="CompressedNormalIRangesList"
+    )
+)

@@ -3,20 +3,6 @@
 ### -------------------------------------------------------------------------
 ###
 
-### Since we are at a very early stage of prototyping this container, we'll
-### call it Alignments0 for now.
-### See http://wiki.fhcrc.org/bioc/Multiple_alignment_rep_v1 for the details
-### of the class proposal.
-setClass("Alignments0",
-    representation(
-        rname="factor",  # character factor
-        strand="raw",
-        cigar="character",
-        ranges="CompressedNormalIRangesList"
-    )
-)
-
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Some low-level helper functions for manipulating the @strand slot.
 ###
@@ -55,7 +41,6 @@ setClass("Alignments0",
 
 setMethod("length", "Alignments0", function(x) length(x@cigar))
 
-setGeneric("rname", function(x) standardGeneric("rname"))
 setMethod("rname", "Alignments0", function(x) x@rname)
 
 setMethod("strand", "Alignments0",
@@ -66,15 +51,12 @@ setMethod("strand", "Alignments0",
     }
 )
 
-setGeneric("cigar", function(x) standardGeneric("cigar"))
 setMethod("cigar", "Alignments0", function(x) x@cigar)
 
 setMethod("ranges", "Alignments0", function(x) x@ranges)
 
-setGeneric("qwidth", function(x) standardGeneric("qwidth"))
 setMethod("qwidth", "Alignments0", function(x) cigarToQWidth(cigar(x)))
 
-setGeneric("isSimple", function(x) standardGeneric("isSimple"))
 setMethod("isSimple", "Alignments0",
     function(x) qwidth(x) == (max(ranges(x)) - min(ranges(x)) + 1L)
 )
