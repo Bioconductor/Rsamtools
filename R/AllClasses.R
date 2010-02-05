@@ -25,6 +25,7 @@ setClass("Cigar",
 setClass("BamViews",
          representation=representation(
            bamPaths="character",
+           bamIndicies="character",
            bamSamples="DataFrame",
            bamRanges="RangedData",
            bamExperiment="list"),

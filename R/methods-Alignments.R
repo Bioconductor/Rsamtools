@@ -187,8 +187,13 @@ setMethod("show", "Alignments0",
 ###
 
 ### This is our only constructor for now.
-readBAMasAlignments <- function(file, index=file, which=RangesList())
+setMethod(readBAMasAlignments, "character", 
+          function(file, index, ..., which)
 {
+    if (missing(index))
+        index <- file
+    if (missing(which))
+        which <- RangesList()
     param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE,
                                            isDuplicate=FALSE),
                           what=c("rname", "strand", "pos", "cigar"),
@@ -206,8 +211,7 @@ readBAMasAlignments <- function(file, index=file, which=RangesList())
     ans_ranges <- cigarToIRangesListByAlignment(ans_cigar, ans_pos)
     new("Alignments0", rname=ans_rname, strand=ans_strand,
                        cigar=ans_cigar, ranges=ans_ranges)
-}
-
+})
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Subsetting.

@@ -19,6 +19,7 @@
 \alias{as.data.frame,Alignments0-method}
 \alias{show,Alignments0-method}
 \alias{readBAMasAlignments}
+\alias{readBAMasAlignments,character-method}
 \alias{[,Alignments0,ANY,ANY-method}
 \alias{coverage,Alignments0-method}
 
@@ -90,7 +91,7 @@
 \section{Constructor}{
   \describe{
     \item{}{
-      \code{readBAMasAlignments(file, index=file, which=RangesList())}:
+      \code{readBAMasAlignments(file, index, ..., which)}:
       Loads a BAM file into an Alignments0 object.
       See \code{?\link{scanBam}} for a description of the arguments.
       Unlike SAM/BAM records, we don't support unaligned queries so

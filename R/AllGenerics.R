@@ -24,3 +24,8 @@ setGeneric("cigar", function(x) standardGeneric("cigar"))
 setGeneric("qwidth", function(x) standardGeneric("qwidth"))
 
 setGeneric("isSimple", function(x) standardGeneric("isSimple"))
+
+setGeneric("readBAMasAlignments",
+           function(file, index, ..., which)
+               standardGeneric("readBAMasAlignments"),
+           signature="file")

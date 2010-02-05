@@ -98,3 +98,62 @@ test_BamViews_subset_RangesList <- function()
 ##     .BamViews_ok(v[rl2,], dim=c(ni1, nj), bamRanges=rd1,
 ##                  bamSamples=sd1)
 }
+
+test_BamView_bamIndicies <- function()
+{
+    bv <- BamViews()
+    checkIdentical(character(0), bamIndicies(bv))
+
+    ## copy fls as bamIndicies
+    fls <- c(tempfile(), tempfile())    # does not exist
+    bv <- BamViews(fls)
+    checkIdentical(fls, bamPaths(bv))
+    checkIdentical(fls, bamIndicies(bv))
+
+    ## keep bamPaths, bamIndicies separate
+    ifls <- c(tempfile(), tempfile())    # does not exist
+    bv <- BamViews(fls, ifls)
+    checkIdentical(fls, bamPaths(bv))
+    checkIdentical(ifls, bamIndicies(bv))
+
+    ## subsetting
+    checkIdentical(fls[2], bamPaths(bv[,2]))
+    checkIdentical(ifls[1], bamIndicies(bv[,1]))
+
+}
+
+test_BamViews_auto.range <- function()
+{
+    fl <- tempfile()                    # does not exist
+    checkIdentical(RangedData(), bamRanges(BamViews(fl)))
+
+    bv <- msg <- NULL
+    suppressWarnings({
+        withCallingHandlers({
+            bv <<- BamViews(fl, auto.range=TRUE)
+        }, warning=function(w) {
+            msg <<- conditionMessage(w)
+        })
+    })
+    checkIdentical(RangedData(), bamRanges(res))
+    checkIdentical("some files do not exist; bamRanges not defined",
+                   msg)
+
+    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+    bv <- BamViews(c(fl, fl), auto.range=FALSE)
+    checkIdentical(RangedData(), bamRanges(bv))
+
+    bv <- BamViews(c(fl, fl), auto.range=TRUE)
+    checkIdentical(RangedData(IRanges(1, c(1575, 1584)),
+                              space=c("seq1", "seq2")),
+                   bamRanges(bv))
+}
+    
+test_BamViews_readBAMasAlignments <- function()
+{
+    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+    bv <- BamViews(c(fl, fl), auto.range=TRUE)
+    aln <- readBAMasAlignments(bv)
+    checkEquals(length(bamPaths(bv)), length(aln))
+    
+}
