@@ -1,6 +1,7 @@
 .BamViews_ok <-
     function(v, dim=c(0,0), bamRanges=RangedData(),
-             bamSamples=DataFrame(), bamExperiment=list())
+             bamSamples=DataFrame(row.names=character()),
+             bamExperiment=list())
 {
     checkTrue(validObject(v))
     checkEquals(dim, dim(v))
@@ -17,8 +18,10 @@ test_BamViews_constructors <- function()
     rd <- RangedData(RangesList(chr1=IRanges(1:5, 11:15),
                                 chr2=IRanges(101:105, 111:115)),
                      Values=rev(seq_len(ni)))
-    sd0 <- new("DataFrame", nrows=nj)
-    sd1 <- DataFrame(Score=seq_len(nj))
+    sd0 <- new("DataFrame", nrows=nj,
+               rownames=make.unique(basename(fls)))
+    sd1 <-DataFrame(Score=seq_len(nj),
+                     row.names=make.unique(basename(fls)))
 
     .BamViews_ok(BamViews(fls), dim=c(0, nj), bamSamples=sd0)
     .BamViews_ok(BamViews(fls, bamRanges=rd), dim=c(ni, nj),
@@ -99,7 +102,7 @@ test_BamViews_subset_RangesList <- function()
 ##                  bamSamples=sd1)
 }
 
-test_BamView_bamIndicies <- function()
+test_BamViews_bamIndicies <- function()
 {
     bv <- BamViews()
     checkIdentical(character(0), bamIndicies(bv))
@@ -130,12 +133,12 @@ test_BamViews_auto.range <- function()
     bv <- msg <- NULL
     suppressWarnings({
         withCallingHandlers({
-            bv <<- BamViews(fl, auto.range=TRUE)
+            bv <- BamViews(fl, auto.range=TRUE)
         }, warning=function(w) {
             msg <<- conditionMessage(w)
         })
     })
-    checkIdentical(RangedData(), bamRanges(res))
+    checkIdentical(RangedData(), bamRanges(bv))
     checkIdentical("some files do not exist; bamRanges not defined",
                    msg)
 
