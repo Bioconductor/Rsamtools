@@ -199,18 +199,7 @@ setMethod(show, "BamViews", function(object) {
     cat(class(object), "dim:",
         paste(dim(object), c("ranges", "samples"), collapse=" x "),
         "\n")
-    pathEqIdx <- all.equal(bamPaths(object), bamIndicies(object))
-    cat("bamPaths:",
-        if (length(bamPaths(object)) != 0) "\n  ",
-        paste(IRanges:::selectSome(bamPaths(object)), collapse="\n  "),
-              "\n", sep="")
-    pathEqIdx <- all.equal(bamPaths(object), bamIndicies(object))
-    cat("bamIndicies:",
-        if (pathEqIdx) "same as bamPaths"
-        else {
-            paste(IRanges:::selectSome(bamPaths(object)), collapse="\n  ")
-        },
-        "\n")
-    cat("detail: use bamSamples(), bamRanges(), bamExperiment()",
+    cat("names:", IRanges:::selectSome(names(object)), "\n")
+    cat("detail: use bamPaths(), bamSamples(), bamRanges(), ...",
         "\n")
 })
