@@ -154,9 +154,9 @@ test_BamViews_auto.range <- function()
     
 test_BamViews_readBAMasAlignments <- function()
 {
-    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-    bv <- BamViews(c(fl, fl), auto.range=TRUE)
+    fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
+            file.path("cases", "ex1_shuf1000.bam"))
+    bv <- BamViews(fl, auto.range=TRUE)
     aln <- readBAMasAlignments(bv)
     checkEquals(length(bamPaths(bv)), length(aln))
-    
 }

@@ -187,8 +187,13 @@ setMethod(readBAMasAlignments, "BamViews",
         index <- bamIndicies(file)
     if (!missing(which))
         file <- file[which,]
-    res <- .srapply(bamPaths(file), readBAMasAlignments,
-                    index=index, which=ranges(bamRanges(file)), ...)
+
+    fun <- function(i, bamViews, ..., verbose)
+        readBAMasAlignments(file=bamPaths(bamViews)[i],
+                            index=bamIndicies(bamViews)[i], ...)
+    res <- .srapply(seq_len(ncol(file)), fun, bamViews=file,
+                    ..., which=ranges(bamRanges(file)))
+
     names(res) <- rownames(bamSamples(file))
     do.call(new, list("SimpleList", listData=res,
                       elementMetadata=bamSamples(file)))
