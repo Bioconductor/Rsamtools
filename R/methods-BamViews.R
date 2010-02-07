@@ -191,8 +191,13 @@ setMethod(readBAMasAlignments, "BamViews",
     fun <- function(i, bamViews, ..., verbose)
         readBAMasAlignments(file=bamPaths(bamViews)[i],
                             index=bamIndicies(bamViews)[i], ...)
-    res <- .srapply(seq_len(ncol(file)), fun, bamViews=file,
-                    ..., which=ranges(bamRanges(file)))
+    idx <- structure(seq_len(ncol(file)), names=names(file))
+    res <- .srapply(idx, fun, bamViews=file, ...,
+                    which=ranges(bamRanges(file)))
+    if (length(res) != ncol(file))
+        stop("'readBAMasAlignments' failed on '",
+             paste(setdiff(names(file), names(res)), collapse="' '"),
+             "'")
 
     names(res) <- rownames(bamSamples(file))
     do.call(new, list("SimpleList", listData=res,
