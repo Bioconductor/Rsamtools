@@ -46,8 +46,14 @@ setMethod("rname", "Alignments0", function(x) x@rname)
 setMethod("strand", "Alignments0",
     function(x)
     {
-        is_minus <- .compactRawVectorAsLogical(x@strand, length(x))
-        strand(ifelse(is_minus, "-", "+"))
+        ## ifelse(logical(0)) returns logical(0); no
+        ## strand,logical-method
+        if (0L == length(x))
+            strand()
+        else {
+            is_minus <- .compactRawVectorAsLogical(x@strand, length(x))
+            strand(ifelse(is_minus, "-", "+"))
+        }
     }
 )
 
@@ -199,15 +205,20 @@ setMethod(readBAMasAlignments, "character",
                           what=c("rname", "strand", "pos", "cigar"),
                           which=which)
     bam <- scanBam(file, index=index, param=param)
-    ans_rname <- unlist(unname(lapply(bam, function(x) x$rname)))
+    ## unlist(list(factor())) returns integer(0), so exit early if all
+    ## values are empty
+    if (all(sapply(bam, function(x) length(x$rname) == 0)))
+        return(new("Alignments0"))
+    ans_rname <- unlist(unname(lapply(bam, "[[", "rname")))
     if (!is.factor(ans_rname))
         ans_rname <- as.factor(ans_rname)
-    ans_strand <- unlist(unname(lapply(bam, function(x) x$strand)))
+    ans_strand <- unlist(unname(lapply(bam, "[[", "strand")))
     ans_strand <- .logicalAsCompactRawVector(ans_strand == "-")
-    ans_cigar <- unlist(unname(lapply(bam, function(x) x$cigar@.cigar)))
+    ans_cigar <-
+        unlist(unname(lapply(bam, function(x) as.character(cigars(x$cigar)))))
     if (is.factor(ans_cigar))
         ans_cigar <- as.vector(ans_cigar)
-    ans_pos <- unlist(unname(lapply(bam, function(x) x$pos)))
+    ans_pos <- unlist(unname(lapply(bam, "[[", "pos")))
     ans_ranges <- cigarToIRangesListByAlignment(ans_cigar, ans_pos)
     new("Alignments0", rname=ans_rname, strand=ans_strand,
                        cigar=ans_cigar, ranges=ans_ranges)
