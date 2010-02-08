@@ -19,9 +19,11 @@
           "NULL", "NULL", "NULL", "NULL", "NULL", "NULL")
     dat <- .readPileup_table(file, colClasses, ...)
     idx <- .readPileup_indel_idx(dat)
-    if (variant == "SNP")
-        idx <- c(idx, idx-1)
-    dat <- dat[-idx,]
+    if (length(idx) > 0L) {
+        if (variant == "SNP")
+            idx <- c(idx, idx-1)
+        dat <- dat[-idx,]
+    }
     RangedData(ranges=IRanges(start=dat[,2],end=dat[,2]),
                referenceBase=factor(dat[,3], levels=DNA_ALPHABET),
                consensusBase=factor(dat[,4], levels=DNA_ALPHABET),
@@ -44,10 +46,12 @@
                     additionalIndels="integer", "NULL", "NULL")
     dat <- .readPileup_table(file, colClasses, ...)
     idx <- .readPileup_indel_idx(dat)
-
-    idx <- which(dat[[3]] == "*")
-    dat0 <- dat[idx-1,]
-    dat <- dat[idx,]
+    if (length(idx) != 0L) {
+        dat0 <- dat[idx-1,]
+        dat <- dat[idx,]
+    } else {
+        dat <- dat0 <- dat[FALSE,]
+    }
 
     RangedData(ranges=IRanges(start=dat0[,2],end=dat0[,2]),
                referenceBase=factor(dat0[,3], levels=DNA_ALPHABET),
@@ -74,5 +78,7 @@ setMethod(readPileup, "connection",
 
 setMethod(readPileup, "character", function(file, ...)
 {
-    callGeneric(file(file, "r"), ...)
+    conn <- file(file, "r")
+    on.exit(close(conn))
+    callGeneric(conn, ...)
 })
