@@ -22,8 +22,8 @@ test_readAligned_bam <- function()
                      class = "table")
     checkIdentical(exp, table(chromosome(aln)))
 
-    exp <- structure(c(1611L, 1631L, 0L, 36L), .Dim = 4L, .Dimnames =
-                     structure(list( c("-", "+", "*", NA)), .Names =
+    exp <- structure(c(1631L, 1611L, 0L, 36L), .Dim = 4L, .Dimnames =
+                     structure(list( c(levels(strand()), NA)), .Names =
                      ""), class = "table")
     checkIdentical(exp, table(strand(aln), useNA="always"))
 

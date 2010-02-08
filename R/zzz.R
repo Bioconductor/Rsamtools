@@ -1,6 +1,11 @@
+.STRAND_LEVELS <- c("+", "-", "*")
+
 .onLoad <-
     function(libname, pkgname)
 {
+    if (!identical(levels(strand()), .STRAND_LEVELS))
+        stop("internal: 'levels(strand())' not consistent with Rsamtools")
+
     msg <- "Rsamtools is experimental; expect frequent changes
             in data types and functionality.
 

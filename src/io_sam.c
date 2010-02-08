@@ -426,7 +426,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 			break;
 		case STRAND_IDX:
 			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
-				NA_INTEGER : ((bam1_strand(bam) + 1) % 2) + 1;
+				NA_INTEGER : (bam1_strand(bam) + 1);
 			break;
 		case POS_IDX:
 			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 

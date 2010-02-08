@@ -14,7 +14,16 @@ fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
              "integer", "integer", "Cigar", "factor", "integer",
              "integer", "DNAStringSet", "PhredQuality")
     checkIdentical(exp, as.vector(sapply(res, class)))
-    checkIdentical(c("-", "+", "*"), levels(res[["strand"]]))
+    checkIdentical(levels(strand()), levels(res[["strand"]]))
+}
+
+test_strand <- function()
+{
+
+    exp <- structure(integer(0), .Label = c("+", "-", "*"), class =
+                     "factor")
+    checkIdentical(exp, strand())
+    checkIdentical(levels(exp), Rsamtools:::.STRAND_LEVELS)
 }
 
 test_scanBam <- function()
@@ -30,8 +39,8 @@ test_scanBam <- function()
                      )), .Names = ""), class = "table")
     checkIdentical(exp, table(table(cigars(res[["cigar"]]))))
 
-    exp <- structure(c(1624L, 1647L, 0L, 36L), .Dim = 4L, .Dimnames =
-                     structure(list( c("-", "+", "*", NA)), .Names =
+    exp <- structure(c(1647L, 1624L, 0L, 36L), .Dim = 4L, .Dimnames =
+                     structure(list( c(levels(strand()), NA)), .Names =
                      ""), class = "table")
     checkIdentical(exp, table(res[["strand"]], useNA="always"))
 
@@ -173,4 +182,28 @@ test_scanBam_index <- function()
                    sapply(res, function(x) unique(sapply(x, length))))
 
     checkException(scanBam(fl, tempfile(), param=p1), silent=TRUE)
+}
+
+test_scanBam_sam <- function()
+{
+    tbl <- read.table(system.file("extdata", "ex1.sam",
+                                  package="Rsamtools"),
+                      sep="\t", quote="", fill=TRUE, comment="")
+    bam <- scanBam(system.file("extdata", "ex1.bam",
+                               package="Rsamtools"))[[1]]
+
+    checkIdentical(bam$flag, tbl[[2]])
+    
+    idx <- !is.na(bam$strand) & bam$strand=="+"
+    checkIdentical(as.character(tbl[[10]][idx]),
+                   as.character(bam$seq[idx]))
+    checkIdentical(as.character(tbl[[11]][idx]),
+                   as.character(bam$qual[idx]))
+
+    idx <- !is.na(bam$strand) & bam$strand=="-"
+    checkIdentical(as.character(tbl[[10]][idx]),
+                   as.character(reverseComplement(bam$seq[idx])))
+    checkIdentical(as.character(tbl[[11]][idx]),
+                   as.character(reverse(bam$qual[idx])))
+    
 }

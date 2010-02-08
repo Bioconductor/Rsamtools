@@ -78,8 +78,8 @@ scanBam(file, index=file, ...)
 	\code{cigar} encoding; normally equal to the width of the query
 	returned in \code{seq}.}
 
-  \item{mrnm}{The reference to which the mate (of a paired end
-	read) aligns.}
+  \item{mrnm}{The reference to which the mate (of a paired end or mate
+	pair read) aligns.}
 
   \item{mpos}{The position to which the mate aligns.}
 
