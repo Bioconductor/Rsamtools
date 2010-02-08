@@ -10,7 +10,8 @@ Description: This package provides an interface to the 'samtools'
   files. Facilities currently available include flexible file input.
 License: Artistic-2.0
 LazyLoad: yes
-Depends: methods, Biostrings (>= 2.15.0), IRanges (>= 1.5.26), BSgenome
+Depends: methods, Biostrings (>= 2.15.0), IRanges (>= 1.5.26), 
+  BSgenome (>= 1.15.4)
 Imports: methods, utils, Biostrings, IRanges, BSgenome
 Enhances: ShortRead
 LinkingTo: Biostrings, IRanges
