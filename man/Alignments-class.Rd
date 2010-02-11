@@ -14,8 +14,6 @@
 \alias{ranges,Alignments0-method}
 \alias{qwidth}
 \alias{qwidth,Alignments0-method}
-\alias{isSimple}
-\alias{isSimple,Alignments0-method}
 \alias{as.data.frame,Alignments0-method}
 \alias{show,Alignments0-method}
 \alias{readBAMasAlignments}
@@ -138,13 +136,6 @@
       (i.e. the length of the query sequence that is stored in
       the corresponding SAM/BAM record).
     }
-    \item{}{
-      \code{isSimple(x)}:
-      Returns a logical vector of length \code{length(x)} whose
-      elements indicate whether or not an alignment is simple
-      (i.e. contains only matches and mismatches and is represented
-      by a CIGAR string with a single 'M' run).
-    }
   }
 }
 
@@ -232,8 +223,6 @@ al1[ii]
 ## Ds are NOT gaps:
 ranges(al1)[[ii[1]]]
 ranges(al1)[[ii[2]]]
-
-al1[!isSimple(al1)]
 
 ## This MUST return an empty object:
 al1[cigar(al1) == "35M" & qwidth(al1) != 35]

@@ -9,6 +9,7 @@ importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet, PhredQuality)
 
 importFrom(BSgenome, strand)
+importClassesFrom(BSgenome, GenomicFeature, GenomicFeatureList)
 
 
 exportClasses(ScanBamParam, Cigar, BamViews)

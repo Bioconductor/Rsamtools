@@ -37,9 +37,24 @@ setClass("BamViews",
 ### of the class proposal.
 setClass("Alignments0",
     representation(
-        rname="factor",  # character factor
+        rname="factor",               # character factor
         strand="raw",
-        cigar="character",
+        cigar="character",            # extended CIGAR (see SAM format specs)
         ranges="CompressedNormalIRangesList"
     )
 )
+
+### The current implementation of GappedAlignments is based on the new
+### GenomicFeatureList container defined in BSgenome. With just the 'cigar'
+### slot as a proper additional slot, GappedAlignments is equivalent to
+### Alignments0 i.e. it allows storing the same information than Alignments0
+### (with some internal redundancy though that will make it slightly bigger).
+setClass("GappedAlignments",
+    contains="GenomicFeatureList",
+    representation(
+        cigar="character"             # extended CIGAR (see SAM format specs)
+        #mismatches="characterORNULL", # see MD optional field in SAM format specs
+        #values="DataFrame"
+    )
+)
+
