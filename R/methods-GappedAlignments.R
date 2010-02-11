@@ -8,11 +8,11 @@
 ###
 
 setMethod("rname", "GappedAlignments",
-    function(x) as.factor(seqnames(x@unlistData)[x@partitioning])
+    function(x) as.factor(seqnames(x@unlistData))[x@partitioning@end]
 )
 
 setMethod("strand", "GappedAlignments",
-    function(x) as.factor(strand(x@unlistData)[x@partitioning])
+    function(x) as.factor(strand(x@unlistData))[x@partitioning@end]
 )
 
 setMethod("cigar", "GappedAlignments", function(x) x@cigar)
