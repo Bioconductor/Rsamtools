@@ -1,4 +1,4 @@
-\name{Alignments-class}
+\name{Alignments0-class}
 \Rdversion{1.1}
 
 \alias{class:Alignments0}
@@ -16,8 +16,8 @@
 \alias{qwidth,Alignments0-method}
 \alias{as.data.frame,Alignments0-method}
 \alias{show,Alignments0-method}
-\alias{readBAMasAlignments}
-\alias{readBAMasAlignments,character-method}
+\alias{readBAMasAlignments0}
+\alias{readBAMasAlignments0,character-method}
 \alias{[,Alignments0,ANY,ANY-method}
 \alias{coverage,Alignments0-method}
 
@@ -89,7 +89,7 @@
 \section{Constructor}{
   \describe{
     \item{}{
-      \code{readBAMasAlignments(file, index, ..., which)}:
+      \code{readBAMasAlignments0(file, index, ..., which)}:
       Loads a BAM file into an Alignments0 object.
       See \code{?\link{scanBam}} for a description of the arguments.
       Unlike SAM/BAM records, we don't support unaligned queries so
@@ -189,52 +189,52 @@
 
 \examples{
 f1 <- system.file("extdata", "ex1.bam", package="Rsamtools")
-al1 <- readBAMasAlignments(f1)
-al1
+al0 <- readBAMasAlignments0(f1)
+al0
 
 ## ---------------------------------------------------------------------
 ## A. BASIC MANIPULATION
 ## ---------------------------------------------------------------------
-length(al1)
-head(al1)
-head(rname(al1))
-head(strand(al1))
-head(cigar(al1))
-head(ranges(al1))
-head(min(ranges(al1)))
-head(max(ranges(al1)))
-head(qwidth(al1))
-table(qwidth(al1))
+length(al0)
+head(al0)
+head(rname(al0))
+head(strand(al0))
+head(cigar(al0))
+head(ranges(al0))
+head(min(ranges(al0)))
+head(max(ranges(al0)))
+head(qwidth(al0))
+table(qwidth(al0))
 
 ## ---------------------------------------------------------------------
 ## B. SUBSETTING
 ## ---------------------------------------------------------------------
-al1[strand(al1) == "-"]
-al1[grep("I", cigar(al1), fixed=TRUE)]
-al1[grep("N", cigar(al1), fixed=TRUE)]  # no gaps
+al0[strand(al0) == "-"]
+al0[grep("I", cigar(al0), fixed=TRUE)]
+al0[grep("N", cigar(al0), fixed=TRUE)]  # no gaps
 
 ## A confirmation that all the queries map to the reference with no
 ## gaps:
-stopifnot(all(elementLengths(ranges(al1)) == 1))
-ranges(al1)[[1]]
-ranges(al1)[[2]]
-ii <- grep("D", cigar(al1), fixed=TRUE)
-al1[ii]
+stopifnot(all(elementLengths(ranges(al0)) == 1))
+ranges(al0)[[1]]
+ranges(al0)[[2]]
+ii <- grep("D", cigar(al0), fixed=TRUE)
+al0[ii]
 ## Ds are NOT gaps:
-ranges(al1)[[ii[1]]]
-ranges(al1)[[ii[2]]]
+ranges(al0)[[ii[1]]]
+ranges(al0)[[ii[2]]]
 
 ## This MUST return an empty object:
-al1[cigar(al1) == "35M" & qwidth(al1) != 35]
+al0[cigar(al0) == "35M" & qwidth(al0) != 35]
 ## but this doesn't have too:
-al1[cigar(al1) != "35M" & qwidth(al1) == 35]
+al0[cigar(al0) != "35M" & qwidth(al0) == 35]
 
 
 
 ## ---------------------------------------------------------------------
 ## C. COVERAGE
 ## ---------------------------------------------------------------------
-coverage(al1)
+coverage(al0)
 }
 
 \keyword{methods}

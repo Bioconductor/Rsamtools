@@ -189,7 +189,7 @@ setMethod("show", "Alignments0",
 ###
 
 ### This is our only constructor for now.
-setMethod(readBAMasAlignments, "character", 
+setMethod(readBAMasAlignments0, "character", 
           function(file, index, ..., which)
 {
     if (missing(index))

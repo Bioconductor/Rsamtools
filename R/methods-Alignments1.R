@@ -1,5 +1,5 @@
 ### =========================================================================
-### GappedAlignments objects
+### Alignments1 objects
 ### -------------------------------------------------------------------------
 ###
 
@@ -7,28 +7,28 @@
 ### Accessor-like methods.
 ###
 
-setMethod("rname", "GappedAlignments",
+setMethod("rname", "Alignments1",
     function(x) as.factor(seqnames(x@unlistData))[x@partitioning@end]
 )
 
-setMethod("strand", "GappedAlignments",
+setMethod("strand", "Alignments1",
     function(x) as.factor(strand(x@unlistData))[x@partitioning@end]
 )
 
-setMethod("cigar", "GappedAlignments", function(x) x@cigar)
+setMethod("cigar", "Alignments1", function(x) x@cigar)
 
-setMethod("ranges", "GappedAlignments",
+setMethod("ranges", "Alignments1",
     function(x) as(callNextMethod(), "CompressedNormalIRangesList")
 )
 
-setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(cigar(x)))
+setMethod("qwidth", "Alignments1", function(x) cigarToQWidth(cigar(x)))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity.
 ###
 
-.valid.GappedAlignments.cigar <- function(x)
+.valid.Alignments1.cigar <- function(x)
 {
     x_cigar <- cigar(x)
     if (!is.character(x_cigar) || !is.null(names(x_cigar)) || any(is.na(x_cigar)))
@@ -39,7 +39,7 @@ setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(cigar(x)))
     NULL
 }
 
-.valid.GappedAlignments.ranges <- function(x)
+.valid.Alignments1.ranges <- function(x)
 {
     x_ranges <- ranges(x)
     if (length(x_ranges) != length(cigar(x)))
@@ -52,14 +52,14 @@ setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(cigar(x)))
     NULL
 }
 
-.valid.GappedAlignments <- function(x)
+.valid.Alignments1 <- function(x)
 {
-    c(#.valid.GappedAlignments.rname(x),
-      #.valid.GappedAlignments.strand(x),
-      .valid.GappedAlignments.cigar(x))
+    c(#.valid.Alignments1.rname(x),
+      #.valid.Alignments1.strand(x),
+      .valid.Alignments1.cigar(x))
 }
 
-setValidity2("GappedAlignments", .valid.GappedAlignments,
+setValidity2("Alignments1", .valid.Alignments1,
     where=asNamespace("Rsamtools"))
 
 
@@ -67,7 +67,7 @@ setValidity2("GappedAlignments", .valid.GappedAlignments,
 ### The "show" method.
 ###
 
-setMethod("as.data.frame", "GappedAlignments",
+setMethod("as.data.frame", "Alignments1",
     function(x, row.names=NULL, optional=FALSE, ...)
     {
         if (!(is.null(row.names) || is.character(row.names)))
@@ -84,7 +84,7 @@ setMethod("as.data.frame", "GappedAlignments",
     }
 )
 
-setMethod("show", "GappedAlignments",
+setMethod("show", "Alignments1",
     function(object)
     {
         lo <- length(object)
@@ -125,8 +125,8 @@ setMethod("show", "GappedAlignments",
 ###
 
 ### This helper constructor is not exported for now.
-.GappedAlignments <- function(rname=factor(), strand=strand(),
-                              pos=integer(0), cigar=character(0))
+.newAlignments1 <- function(rname=factor(), strand=strand(),
+                            pos=integer(0), cigar=character(0))
 {
     if (is.factor(rname) && is.character(levels(rname)))
         rname <- as.character(rname)
@@ -145,13 +145,13 @@ setMethod("show", "GappedAlignments",
     ranges <- unlist(rg_list)
     unlistData <- GenomicFeature(seqnames=rname, ranges=ranges, strand=strand)
     partitioning <- PartitioningByEnd(cumsum(nrg_per_alignment))
-    new("GappedAlignments",
+    new("Alignments1",
         unlistData=unlistData,
         partitioning=partitioning,
         cigar=cigar)
 }
 
-setMethod(readBAMasGappedAlignments, "character",
+setMethod(readBAMasAlignments1, "character",
           function(file, index, ..., which)
 {
     if (missing(index))
@@ -166,13 +166,13 @@ setMethod(readBAMasGappedAlignments, "character",
     ## unlist(list(factor())) returns integer(0), so exit early if all
     ## values are empty
     if (all(sapply(bam, function(x) length(x$rname) == 0)))
-        return(.GappedAlignments())
+        return(.newAlignments1())
     rname <- unlist(unname(lapply(bam, "[[", "rname")))
     strand <- unlist(unname(lapply(bam, "[[", "strand")))
     pos <- unlist(unname(lapply(bam, "[[", "pos")))
     cigar <-
         unlist(unname(lapply(bam, function(x) as.character(cigars(x$cigar)))))
-    .GappedAlignments(rname=rname, strand=strand, pos=pos, cigar=cigar)
+    .newAlignments1(rname=rname, strand=strand, pos=pos, cigar=cigar)
 })
 
 
@@ -181,7 +181,7 @@ setMethod(readBAMasGappedAlignments, "character",
 ###
 
 ### Supported 'i' types: numeric vector, logical vector, NULL and missing.
-setMethod("[", "GappedAlignments",
+setMethod("[", "Alignments1",
     function(x, i, j, ... , drop=TRUE)
     {
         if (!missing(j) || length(list(...)) > 0L)
@@ -216,7 +216,7 @@ setMethod("[", "GappedAlignments",
 ### The "coverage" method.
 ###
 
-setMethod("coverage", "GappedAlignments",
+setMethod("coverage", "Alignments1",
     function(x, start=NA, end=NA, shift=0L, width=NULL, weight=1L, ...)
     {
         if (!identical(start, NA) || !identical(end, NA)

@@ -23,13 +23,13 @@ setGeneric("cigar", function(x) standardGeneric("cigar"))
 
 setGeneric("qwidth", function(x) standardGeneric("qwidth"))
 
-setGeneric("readBAMasAlignments",
+setGeneric("readBAMasAlignments0",
            function(file, index, ..., which)
-               standardGeneric("readBAMasAlignments"),
+               standardGeneric("readBAMasAlignments0"),
            signature="file")
 
-setGeneric("readBAMasGappedAlignments",
+setGeneric("readBAMasAlignments1",
            function(file, index, ..., which)
-               standardGeneric("readBAMasGappedAlignments"),
+               standardGeneric("readBAMasAlignments1"),
            signature="file")
 

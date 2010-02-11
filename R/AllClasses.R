@@ -30,12 +30,19 @@ setClass("BamViews",
            bamRanges="RangedData",
            bamExperiment="list"),
          validity=.validity)
-           
-### Since we are at a very early stage of prototyping this container, we'll
-### call it Alignments0 for now.
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### GappedAlignments objects
+###
+
+setClass("GappedAlignments", contains="Sequence", representation("VIRTUAL"))
+
+### First GappedAlignments implementation: Alignments0
 ### See http://wiki.fhcrc.org/bioc/Multiple_alignment_rep_v1 for the details
 ### of the class proposal.
 setClass("Alignments0",
+    contains="GappedAlignments",
     representation(
         rname="factor",               # character factor
         strand="raw",
@@ -44,17 +51,19 @@ setClass("Alignments0",
     )
 )
 
-### The current implementation of GappedAlignments is based on the new
-### GenomicFeatureList container defined in BSgenome. With just the 'cigar'
-### slot as a proper additional slot, GappedAlignments is equivalent to
-### Alignments0 i.e. it allows storing the same information than Alignments0
-### (with some internal redundancy though that will make it slightly bigger).
-setClass("GappedAlignments",
-    contains="GenomicFeatureList",
+### Second GappedAlignments implementation: Alignments1
+### The implementation of Alignments1 is based on the new GenomicFeatureList
+### container defined in BSgenome. With just the 'cigar' slot as a proper
+### additional slot, Alignments1 is equivalent to Alignments0 i.e. it allows
+### storing the same information than Alignments0 (with some internal
+### redundancy though that could make it slightly bigger).
+setClass("Alignments1",
+    contains=c("GappedAlignments", "GenomicFeatureList"),
     representation(
         cigar="character"             # extended CIGAR (see SAM format specs)
         #mismatches="characterORNULL", # see MD optional field in SAM format specs
         #values="DataFrame"
-    )
+    ),
+    prototype(elementType="GenomicFeature")
 )
 
