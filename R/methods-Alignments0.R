@@ -44,14 +44,7 @@ setMethod("length", "Alignments0", function(x) length(x@cigar))
 setMethod("rname", "Alignments0", function(x) x@rname)
 
 setMethod("strand", "Alignments0",
-    function(x)
-    {
-        is_minus <- .compactRawVectorAsLogical(x@strand, length(x))
-        ans <- factor(levels=c("+", "-", "*"))
-        ans[!is_minus] <- "+"
-        ans[is_minus] <- "-"
-        ans
-    }
+    function(x) strand(.compactRawVectorAsLogical(x@strand, length(x)))
 )
 
 setMethod("cigar", "Alignments0", function(x) x@cigar)
