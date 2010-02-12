@@ -5,7 +5,7 @@ import(IRanges)
 
 importFrom(utils, normalizePath, read.table)
 
-importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
+importClassesFrom(Biostrings, file, connection, DNAStringSet, BStringSet, PhredQuality)
 importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet, PhredQuality)
 
 importFrom(BSgenome, strand)
