@@ -65,9 +65,8 @@ setValidity2("Alignments1", .valid.Alignments1,
 ### Constructors.
 ###
 
-### This helper constructor is not exported for now.
-.newAlignments1 <- function(rname=factor(), strand=strand(),
-                            pos=integer(0), cigar=character(0))
+Alignments1 <- function(rname=factor(), strand=strand(),
+                        pos=integer(0), cigar=character(0))
 {
     if (is.factor(rname) && is.character(levels(rname)))
         rname <- as.character(rname)
@@ -75,7 +74,7 @@ setValidity2("Alignments1", .valid.Alignments1,
         stop("'rname' must be a character vector/factor")
     if (any(is.na(rname)))
         stop("'rname' cannot have NAs")
-    if (!is.factor(strand) || !is.character(levels(strand)))
+    if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
         stop("'strand' must be a character factor")
     if (!is.character(cigar) || any(is.na(cigar)))
         stop("'cigar' must be a character vector with no NAs")
@@ -107,14 +106,26 @@ setMethod(readBAMasAlignments1, "character",
     ## unlist(list(factor())) returns integer(0), so exit early if all
     ## values are empty
     if (all(sapply(bam, function(x) length(x$rname) == 0)))
-        return(.newAlignments1())
+        return(Alignments1())
     rname <- unlist(unname(lapply(bam, "[[", "rname")))
     strand <- unlist(unname(lapply(bam, "[[", "strand")))
     pos <- unlist(unname(lapply(bam, "[[", "pos")))
     cigar <-
         unlist(unname(lapply(bam, function(x) as.character(cigars(x$cigar)))))
-    .newAlignments1(rname=rname, strand=strand, pos=pos, cigar=cigar)
+    Alignments1(rname=rname, strand=strand, pos=pos, cigar=cigar)
 })
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Coercion.
+###
+
+setAs("Alignments0", "Alignments1",
+    function(from)
+        Alignments1(rname=rname(from), strand=strand(from),
+                    pos=start(from), cigar=cigar(from))
+
+)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

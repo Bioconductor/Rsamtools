@@ -36,7 +36,17 @@ setClass("BamViews",
 ### GappedAlignments objects
 ###
 
-setClass("GappedAlignments", contains="Sequence", representation("VIRTUAL"))
+### Incomplete implementation. The full implementation is achieved by each
+### concrete class below.
+setClass("GappedAlignments",
+    contains="Sequence",
+    representation(
+        "VIRTUAL",
+        cigar="character"              # extended CIGAR (see SAM format specs)
+        #mismatches="characterORNULL", # see MD optional field in SAM format specs
+        #values="DataFrame"
+    )
+)
 
 ### First GappedAlignments implementation: Alignments0
 ### See http://wiki.fhcrc.org/bioc/Multiple_alignment_rep_v1 for the details
@@ -46,7 +56,6 @@ setClass("Alignments0",
     representation(
         rname="factor",               # character factor
         strand="raw",
-        cigar="character",            # extended CIGAR (see SAM format specs)
         ranges="CompressedNormalIRangesList"
     )
 )
@@ -59,11 +68,7 @@ setClass("Alignments0",
 ### redundancy though that could make it slightly bigger).
 setClass("Alignments1",
     contains=c("GappedAlignments", "GenomicFeatureList"),
-    representation(
-        cigar="character"             # extended CIGAR (see SAM format specs)
-        #mismatches="characterORNULL", # see MD optional field in SAM format specs
-        #values="DataFrame"
-    ),
+    representation(),
     prototype(elementType="GenomicFeature")
 )
 

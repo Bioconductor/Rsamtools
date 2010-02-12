@@ -126,6 +126,26 @@ setValidity2("Alignments0", .valid.Alignments0, where=asNamespace("Rsamtools"))
 ### Constructors.
 ###
 
+Alignments0 <- function(rname=factor(), strand=strand(),
+                        pos=integer(0), cigar=character(0))
+{
+    if (!is.factor(rname) || !is.character(levels(rname))) {
+        if (!is.character(rname))
+            stop("'rname' must be a character vector/factor")
+        rname <- as.factor(rname)
+    }
+    if (any(is.na(rname)))
+        stop("'rname' cannot have NAs")
+    if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
+        stop("'strand' must be a character factor")
+    if (!is.character(cigar) || any(is.na(cigar)))
+        stop("'cigar' must be a character vector with no NAs")
+    ranges <- cigarToIRangesListByAlignment(cigar, pos)
+    strand <- .logicalAsCompactRawVector(strand == "-")
+    new("Alignments0", rname=rname, strand=strand,
+                       cigar=cigar, ranges=ranges)
+}
+
 ### This is our only constructor for now.
 setMethod(readBAMasAlignments0, "character", 
           function(file, index, ..., which)
@@ -142,21 +162,27 @@ setMethod(readBAMasAlignments0, "character",
     ## unlist(list(factor())) returns integer(0), so exit early if all
     ## values are empty
     if (all(sapply(bam, function(x) length(x$rname) == 0)))
-        return(new("Alignments0"))
-    ans_rname <- unlist(unname(lapply(bam, "[[", "rname")))
-    if (!is.factor(ans_rname))
-        ans_rname <- as.factor(ans_rname)
-    ans_strand <- unlist(unname(lapply(bam, "[[", "strand")))
-    ans_strand <- .logicalAsCompactRawVector(ans_strand == "-")
-    ans_cigar <-
+        return(Alignments0())
+    rname <- unlist(unname(lapply(bam, "[[", "rname")))
+    strand <- unlist(unname(lapply(bam, "[[", "strand")))
+    pos <- unlist(unname(lapply(bam, "[[", "pos")))
+    cigar <-
         unlist(unname(lapply(bam, function(x) as.character(cigars(x$cigar)))))
-    if (is.factor(ans_cigar))
-        ans_cigar <- as.vector(ans_cigar)
-    ans_pos <- unlist(unname(lapply(bam, "[[", "pos")))
-    ans_ranges <- cigarToIRangesListByAlignment(ans_cigar, ans_pos)
-    new("Alignments0", rname=ans_rname, strand=ans_strand,
-                       cigar=ans_cigar, ranges=ans_ranges)
+    Alignments0(rname=rname, strand=strand, pos=pos, cigar=cigar)
 })
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Coercion.
+###
+
+setAs("Alignments1", "Alignments0",
+    function(from)
+        Alignments0(rname=rname(from), strand=strand(from),
+                    pos=start(from), cigar=cigar(from))
+
+)
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Subsetting.

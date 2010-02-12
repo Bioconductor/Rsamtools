@@ -30,6 +30,8 @@
 \alias{readBAMasAlignments0,character-method}
 \alias{readBAMasAlignments1}
 \alias{readBAMasAlignments1,character-method}
+\alias{coerce,Alignments1,Alignments0-method}
+\alias{coerce,Alignments0,Alignments1-method}
 \alias{[,Alignments0,ANY,ANY-method}
 \alias{[,Alignments1,ANY,ANY-method}
 \alias{coverage,GappedAlignments-method}
