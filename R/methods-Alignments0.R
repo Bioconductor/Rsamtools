@@ -46,14 +46,11 @@ setMethod("rname", "Alignments0", function(x) x@rname)
 setMethod("strand", "Alignments0",
     function(x)
     {
-        ## ifelse(logical(0)) returns logical(0); no
-        ## strand,logical-method
-        if (0L == length(x))
-            strand()
-        else {
-            is_minus <- .compactRawVectorAsLogical(x@strand, length(x))
-            strand(ifelse(is_minus, "-", "+"))
-        }
+        is_minus <- .compactRawVectorAsLogical(x@strand, length(x))
+        ans <- factor(levels=c("+", "-", "*"))
+        ans[!is_minus] <- "+"
+        ans[is_minus] <- "-"
+        ans
     }
 )
 
