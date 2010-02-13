@@ -50,6 +50,7 @@ library(ShortRead)
             warning(msg)
         }
         param <- initialize(param, simpleCigar=TRUE,
+                            reverseComplement=TRUE,
                             what=.readAligned_bamWhat())
     }
     ## handle multiple files
