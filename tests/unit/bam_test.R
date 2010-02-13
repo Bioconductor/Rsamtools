@@ -56,12 +56,11 @@ test_scanBam <- function()
                      .Dimnames = structure(list( c("33", "34", "35",
                      "36", "40")), .Names = ""), class = "table")
     checkIdentical(exp, table(width(res[["seq"]])))
-    exp <- structure(c(36321L, 22060L, 22073L, 35958L, 139L), .Names =
-                     c("A", "C", "G", "T", "other"))
+    exp <- structure(c(40144L, 23398L, 20735L, 32135L, 139L),
+                     .Names = c("A", "C", "G", "T", "other"))
     checkIdentical(exp,
                    alphabetFrequency(res[["seq"]], collapse=TRUE,
                                      baseOnly=TRUE))
-
     exp <- structure(c(263, 1, 20, 178, 577, 163, 195, 287, 286, 853,
                        290, 367, 424, 340, 395, 604, 601, 694, 898,
                        784, 1215, 2298, 1814, 1889, 3330, 10633,
@@ -70,7 +69,8 @@ test_scanBam <- function()
                        "-", ".", "/", "0", "1", "2", "3", "4", "5",
                        "6", "7", "8", "9", ":", ";", "<", "=", ">",
                        "?", "@"))
-    checkIdentical(exp, rowSums(consensusMatrix(res[["qual"]])))
+    checkIdentical(exp,
+                   rowSums(consensusMatrix(res[["qual"]])))
 }
 
 test_scanBam_which <- function()
@@ -202,8 +202,8 @@ test_scanBam_sam <- function()
 
     idx <- !is.na(bam$strand) & bam$strand=="-"
     checkIdentical(as.character(tbl[[10]][idx]),
-                   as.character(reverseComplement(bam$seq[idx])))
+                   as.character(bam$seq[idx]))
     checkIdentical(as.character(tbl[[11]][idx]),
-                   as.character(reverse(bam$qual[idx])))
+                   as.character(bam$qual[idx]))
     
 }

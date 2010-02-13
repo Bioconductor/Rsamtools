@@ -1,15 +1,18 @@
 ScanBamParam <-
     function(flag=scanBamFlag(), simpleCigar=FALSE,
+             reverseComplement=FALSE,
              what=scanBamWhat(), which=RangesList())
 {
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
-        what=what, which=which)
+        reverseComplement=reverseComplement, what=what,
+        which=which)
 }
 
 setValidity("ScanBamParam", function(object) {
     msg <- NULL
     flag <- bamFlag(object)
     simpleCigar <- bamSimpleCigar(object)
+    reverseComplement <- bamReverseComplement(object)
     which <- bamWhich(object)
     what <- bamWhat(object)
     if (length(flag) != 2 || typeof(flag) != "integer")
@@ -20,8 +23,12 @@ setValidity("ScanBamParam", function(object) {
         else if (any(flag < 0 | flag >= 2^16))
             msg <- c(msg, "'flag' values must be >=0, <2048")
     }
-    if (length(simpleCigar) != 1 && !is.na(simpleCigar))
+    if (!((1L == length(simpleCigar)) &&
+          !is.na(simpleCigar)))
         msg <- c(msg, "'simpleCigar' must be logical(1), not NA")
+    if (!((1L == length(reverseComplement)) &&
+          !is.na(reverseComplement)))
+        msg <- c(msg, "'reverseComplement' must be logical(1)")
     if (length(which) != 0 &&
         (any(!nzchar(names(which))) || any(is.na(names(which)))))
         msg <- c(msg, "'which' elements must be named (not NA)")
@@ -32,6 +39,8 @@ setValidity("ScanBamParam", function(object) {
 
 bamFlag <- function(object) slot(object, "flag")
 bamSimpleCigar <- function(object) slot(object, "simpleCigar")
+bamReverseComplement <-
+    function(object) slot(object, "reverseComplement")
 bamWhich <- function(object) slot(object, "which")
 bamWhat <- function(object) slot(object, "what")
 
@@ -75,6 +84,8 @@ setMethod(show, "ScanBamParam",
     cat("bamFlag: keep '0' bits: ", bamFlag(object)[1],
         "; keep '1' bits: ", bamFlag(object)[2], "\n", sep="")
     cat("bamSimpleCigar: ", bamSimpleCigar(object), "\n", sep="")
+    cat("bamReverseComplement: ", bamReverseComplement(object), "\n",
+        sep="")
     cat("bamWhich:", length(bamWhich(object)), "elements\n")
     what <- paste("bamWhat: ", paste(bamWhat(object), collapse=", "))
     cat(strwrap(what, exdent=2), sep="\n")

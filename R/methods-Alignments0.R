@@ -119,7 +119,7 @@ setValidity2("Alignments0", .valid.Alignments0, where=asNamespace("Rsamtools"))
 ### Constructors.
 ###
 
-Alignments0 <- function(rname=factor(), strand=strand(),
+Alignments0 <- function(rname=factor(), strand=BSgenome::strand(),
                         pos=integer(0), cigar=character(0))
 {
     if (!is.factor(rname) || !is.character(levels(rname))) {

@@ -11,7 +11,7 @@ static const R_CallMethodDef callMethods[] = {
 	/* io_sam.c */
 	{".read_bam_header", (DL_FUNC) &read_bam_header, 2},
 	{".scan_bam_template", (DL_FUNC) &scan_bam_template, 0},
-	{".scan_bam", (DL_FUNC) &scan_bam, 7},
+	{".scan_bam", (DL_FUNC) &scan_bam, 8},
 	{".scan_bam_cleanup", (DL_FUNC) &scan_bam_cleanup, 0},
 	{".filter_bam", (DL_FUNC) & filter_bam, 8},
 	{".count_bam", (DL_FUNC) &count_bam, 6},

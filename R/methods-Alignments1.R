@@ -65,7 +65,7 @@ setValidity2("Alignments1", .valid.Alignments1,
 ### Constructors.
 ###
 
-Alignments1 <- function(rname=factor(), strand=strand(),
+Alignments1 <- function(rname=factor(), strand=BSgenome::strand(),
                         pos=integer(0), cigar=character(0))
 {
     if (is.factor(rname) && is.character(levels(rname)))

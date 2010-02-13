@@ -20,6 +20,7 @@ typedef struct {
 	bam_header_t *header;
 	int nrec, idx, irange;
 	uint32_t keep_flag[2], cigar_flag;
+	Rboolean reverseComplement;
 
 	void *extra;
 } _BAM_DATA;
@@ -90,7 +91,8 @@ _bam_tryindexload(const char *fname)
 }
 
 uint32_t
-_bamseq(const bam1_t *bam, unsigned char *BUF)
+_bamseq(const bam1_t *bam, unsigned char *BUF, 
+		Rboolean reverseComplement)
 {
 	static const char key[] = {
 		'\0', 'A', 'C',  '\0',  'G', '\0', '\0', '\0', 
@@ -101,19 +103,19 @@ _bamseq(const bam1_t *bam, unsigned char *BUF)
 	unsigned char *seq = bam1_seq(bam);
 	for (int i = 0; i < len; ++i)
 		BUF[i] = key[bam1_seqi(seq, i)];
-	if ((bam1_strand(bam) == 1))
+	if (reverseComplement && (bam1_strand(bam) == 1))
 		_reverseComplement(BUF, len);
 	return len;
 }
 
 uint32_t
-_bamqual(const bam1_t *bam, unsigned char *BUF)
+_bamqual(const bam1_t *bam, unsigned char *BUF, Rboolean reverse)
 {
 	uint32_t len = bam->core.l_qseq;
 	unsigned char *bamq = bam1_qual(bam);
 	for (int i = 0; i < len; ++i)
 		BUF[i] = bamq[i] + 33;
-	if ((bam1_strand(bam) == 1))
+	if (reverse && (bam1_strand(bam) == 1))
 		_reverse(BUF, len);
 	return len;
 }
@@ -247,7 +249,8 @@ _scan_check_params(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 }
 
 _BAM_DATA *
-_init_BAM_DATA(SEXP bfile, SEXP index, SEXP flag, SEXP isSimpleCigar)
+_init_BAM_DATA(SEXP bfile, SEXP index, SEXP flag, SEXP isSimpleCigar,
+			   Rboolean reverseComplement)
 {
 	_BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 2048, 32768);
 	bdata->parse_status = 0;
@@ -257,6 +260,7 @@ _init_BAM_DATA(SEXP bfile, SEXP index, SEXP flag, SEXP isSimpleCigar)
 	bdata->keep_flag[0] = INTEGER(flag)[0];
 	bdata->keep_flag[1] = INTEGER(flag)[1];
 	bdata->cigar_flag = LOGICAL(isSimpleCigar)[0];
+	bdata->reverseComplement = reverseComplement;
 	return bdata;
 }
 
@@ -409,6 +413,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 
 	SEXP s, r = VECTOR_ELT((SEXP) bd->extra, bd->irange);
 	int idx = bd->idx, start, len;
+	Rboolean reverseComplement=bd->reverseComplement;
 	
 	for (int i = 0; i < LENGTH(r); ++i) {
 		if ((s = VECTOR_ELT(r, i)) == R_NilValue)
@@ -468,13 +473,15 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 			break;
 		case SEQ_IDX:
 			start = TRUELENGTH(s);
-			len = _bamseq(bam, RAW(VECTOR_ELT(s, 0)) + start);
+			len = _bamseq(bam, RAW(VECTOR_ELT(s, 0)) + start,
+				reverseComplement);
 			SET_TRUELENGTH(s, start + len);
 			INTEGER(VECTOR_ELT(s, 1))[idx] = len;
 			break;
 		case QUAL_IDX:
 			start = TRUELENGTH(s);
-			len = _bamqual(bam, RAW(VECTOR_ELT(s, 0)) + start);
+			len = _bamqual(bam, RAW(VECTOR_ELT(s, 0)) + start,
+				reverseComplement);
 			SET_TRUELENGTH(s, start + len);
 			INTEGER(VECTOR_ELT(s, 1))[idx] = len;
 			break;
@@ -619,7 +626,7 @@ _scan_bam_finish(_BAM_DATA *bdata)
 SEXP
 scan_bam(SEXP fname, SEXP index, SEXP mode,
 		 SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-		 SEXP template_list)
+		 SEXP reverseComplement, SEXP template_list)
 {
 	if (!IS_LIST(template_list) || 
 		LENGTH(template_list) != N_TMPL_ELTS)
@@ -632,6 +639,9 @@ scan_bam(SEXP fname, SEXP index, SEXP mode,
 		if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
 			Rf_error("'template' names do not match scan_bam_template\n'");
 	_scan_check_params(space, keepFlags, isSimpleCigar);
+	if (!(IS_LOGICAL(reverseComplement) &&
+		  (1L == LENGTH(reverseComplement))))
+		Rf_error("'reverseComplement' must be logical(1)");
 
 	SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
 	SEXP count = PROTECT(_count_bam(bfile, index, mode, 
@@ -651,7 +661,9 @@ scan_bam(SEXP fname, SEXP index, SEXP mode,
 
 	SEXP result = 
 		PROTECT(_scan_bam_result_init(count, template_list, names));
-	_BAM_DATA *bdata = _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar);
+	_BAM_DATA *bdata = 
+		_init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, 
+					   LOGICAL(reverseComplement)[0]);
 	bdata->extra = (void *) result;
 
 	int status = 
@@ -710,7 +722,9 @@ _count_bam(SEXP bfile, SEXP index, SEXP mode,
 	setAttrib(result, R_NamesSymbol, nms);
 	UNPROTECT(1);
 
-	_BAM_DATA *bdata = _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar);
+	_BAM_DATA *bdata = 
+		_init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, 
+					   FALSE);
 	bdata->extra = result;
 
 	int status = 
@@ -764,7 +778,8 @@ _filter_bam(SEXP bfile, SEXP index,
 			SEXP fout_name, SEXP fout_mode)
 {
 	/* open destination */
-	_BAM_DATA *bdata = _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar);
+	_BAM_DATA *bdata = 
+		_init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, FALSE);
 	/* FIXME: this just copies the header... */
 	samfile_t *f_out = 
 		_bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),

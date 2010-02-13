@@ -6,7 +6,9 @@ setMethod(scanBam, "character",
 {
     tmpl <- .scanBamTemplate()
     tmpl[!names(tmpl) %in% bamWhat(param)] <- list(NULL)
-    x <- .io_bam(.scan_bam, file, index, tmpl, param=param)
+    reverseComplement <- bamReverseComplement(param)
+    x <- .io_bam(.scan_bam, file, index, reverseComplement, tmpl,
+                 param=param)
     which <- bamWhich(param)
     if (!is.null(space(which)))
         names(x) <-

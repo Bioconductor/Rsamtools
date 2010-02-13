@@ -14,6 +14,7 @@ setClass("ScanBamParam",
          representation=representation(
            flag="integer",
            simpleCigar="logical",
+           reverseComplement="logical",
            what="character",
            which="RangesList"))
 

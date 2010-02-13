@@ -11,6 +11,7 @@
 \alias{bamWhich}
 \alias{bamFlag}
 \alias{bamSimpleCigar}
+\alias{bamReverseComplement}
 % methods
 \alias{show,ScanBamParam-method}
 
@@ -25,8 +26,9 @@
 \usage{
 
 # Constructor
-ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE, what =
-    scanBamWhat(), which = RangesList())
+ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
+    reverseComplement = FALSE,
+    what = scanBamWhat(), which = RangesList())
 
 # Constructor helpers
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
@@ -40,6 +42,7 @@ bamWhat(object)
 bamWhich(object)
 bamFlag(object)
 bamSimpleCigar(object)
+bamReverseComplement(object)
 
 \S4method{show}{ScanBamParam}(object)
 
@@ -55,6 +58,11 @@ bamSimpleCigar(object)
 	those reads for which the cigar (run-length encoded representation
 	of the alignment) is missing or contains only matches / mismatches
 	(\code{'M'}).}
+
+  \item{reverseComplement}{A logical(1) vector which, when TRUE, returns
+	the sequence and quality scores of reads mapped to the minus strand
+	in the reverse complement (sequence) and reverse (quality) of the
+	read as stored in the BAM file.}
 
   \item{what}{A character vector naming the fields to
 	return. \code{scanBamWhat()} returns a vector of available
@@ -135,6 +143,10 @@ bamSimpleCigar(object)
      indicating, when TRUE, that only 'simple' cigars (empty or 'M') are
      returned.}
 
+   \item{\code{reverseComplement}}{Object of class \code{logical}
+	 indicating, when TRUE, that reads on the minus strand are to be
+	 reverse complemented (sequence) and reversed (quality).}
+
     \item{\code{what}}{Object of class \code{character} indicating
      what fields are to be returned.}
 
@@ -169,6 +181,10 @@ bamSimpleCigar(object)
 
 	\item{bamSimpleCigar}{Returns a \code{logical(1)} vector indicating
 	  whether reads without indels or clipping be kept.}
+
+	\item{bamReverseComplement}{Returns a \code{logical(1)} vector
+	  indicating whether reads on the minus strand will be returned with
+	  sequence reverse complemented and quality reversed.}
 
   }
 

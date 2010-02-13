@@ -13,6 +13,7 @@ library(ShortRead)
     function(dirPath, pattern=character(0), ..., 
              param=ScanBamParam(
                simpleCigar=TRUE,
+               reverseComplement=TRUE,
                what=.readAligned_bamWhat()))
 {
     files <- 
@@ -32,8 +33,12 @@ library(ShortRead)
         if (bamSimpleCigar(param) != TRUE) {
             msg <- paste("using 'TRUE' for 'bamSimpleCigar(param)'",
                          "(skipping reads with I, D, H, S, or P in 'cigar')")
-            msg <- paste(strwrap(msg, exdent=2),
-                         collapse="\n")
+            msg <- paste(strwrap(msg, exdent=2), collapse="\n")
+            warning(msg)
+        }
+        if (bamReverseComplement(param) != TRUE) {
+            msg <- "using 'TRUE' for 'bamReverseComplement(param)'"
+            msg <- paste(strwrap(msg, exdent=2), collapse="\n")
             warning(msg)
         }
         if (!setequal(bamWhat(param), .readAligned_bamWhat()))
@@ -41,8 +46,7 @@ library(ShortRead)
             msg <- sprintf("using '%s' for 'bamWhat(param)'",
                            paste(.readAligned_bamWhat(),
                                  collapse="', '"))
-            msg <- paste(strwrap(msg, exdent=2),
-                         collapse="\n")
+            msg <- paste(strwrap(msg, exdent=2), collapse="\n")
             warning(msg)
         }
         param <- initialize(param, simpleCigar=TRUE,
