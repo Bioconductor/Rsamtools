@@ -8,11 +8,11 @@
 ###
 
 setMethod("rname", "Alignments1",
-    function(x) seqnames(x@unlistData)[x@partitioning@end, drop=TRUE]
+    function(x) as.factor(seqnames(x@unlistData))[x@partitioning@end]
 )
 
 setMethod("strand", "Alignments1",
-    function(x) strand(x@unlistData)[x@partitioning@end, drop=TRUE]
+    function(x) as.factor(strand(x@unlistData))[x@partitioning@end]
 )
 
 setMethod("cigar", "Alignments1", function(x) x@cigar)
