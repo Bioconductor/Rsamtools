@@ -83,7 +83,7 @@ Alignments1 <- function(rname=factor(), strand=BSgenome::strand(),
     rname <- Rle(rname, nrg_per_alignment)
     strand <- Rle(strand, nrg_per_alignment)
     ranges <- unlist(rg_list)
-    unlistData <- GenomicFeature(seqnames=rname, ranges=ranges, strand=strand)
+    unlistData <- GRanges(seqnames=rname, ranges=ranges, strand=strand)
     partitioning <- PartitioningByEnd(cumsum(nrg_per_alignment))
     new("Alignments1",
         unlistData=unlistData,

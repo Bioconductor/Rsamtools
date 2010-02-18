@@ -62,14 +62,14 @@ setClass("Alignments0",
 )
 
 ### Second GappedAlignments implementation: Alignments1
-### The implementation of Alignments1 is based on the new GenomicFeatureList
+### The implementation of Alignments1 is based on the new GRangesList
 ### container defined in BSgenome. With just the 'cigar' slot as a proper
 ### additional slot, Alignments1 is equivalent to Alignments0 i.e. it allows
 ### storing the same information than Alignments0 (with some internal
 ### redundancy though that could make it slightly bigger).
 setClass("Alignments1",
-    contains=c("GappedAlignments", "GenomicFeatureList"),
+    contains=c("GappedAlignments", "GRangesList"),
     representation(),
-    prototype(elementType="GenomicFeature")
+    prototype(elementType="GRanges")
 )
 

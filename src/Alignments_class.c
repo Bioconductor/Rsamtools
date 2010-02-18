@@ -6,6 +6,23 @@
 
 #define BIT7_MASK (1 << (CHAR_BIT-1))
 
+#define END_OP 0
+#define S_H_OP 1
+#define N_OP   2
+#define BAD_OP 3
+#define P_OP   4
+#define I_OP   5
+#define D_OP   6
+#define M_OP   7
+
+static const unsigned char BitsSetTable256[256] =
+{
+#   define B2(n) n,     n+1,     n+1,     n+2
+#   define B4(n) B2(n), B2(n+1), B2(n+1), B2(n+2)
+#   define B6(n) B4(n), B4(n+1), B4(n+1), B4(n+2)
+    B6(0), B6(1), B6(1), B6(2)
+};
+
 /* Compact encoding of a logical vector */
 SEXP logical_as_compact_raw_vector(SEXP x)
 {
@@ -105,3 +122,78 @@ SEXP subset_compact_raw_vector(SEXP x, SEXP subscript)
 	return ans;
 }
 
+SEXP compact_raw_vector_bit_count(SEXP x)
+{
+	SEXP ans;
+	Rbyte *x_elt;
+	int *ans_elt, ans_length, i;
+
+	ans_length = LENGTH(x);
+	PROTECT(ans = NEW_INTEGER(ans_length));
+	for (i = 0, x_elt = RAW(x), ans_elt = INTEGER(ans); i < ans_length;
+			i++, x_elt++, ans_elt++) {
+		*ans_elt = BitsSetTable256[*x_elt];
+	}
+	UNPROTECT(1);
+	return(ans);
+}
+
+SEXP compact_raw_vector_last_bit(SEXP x)
+{
+	SEXP ans;
+	Rbyte LAST_MASK, *x_elt;
+	int *ans_elt, ans_length, i;
+
+	LAST_MASK = BIT7_MASK >> 7;
+	ans_length = LENGTH(x);
+	PROTECT(ans = NEW_INTEGER(ans_length));
+	for (i = 0, x_elt = RAW(x), ans_elt = INTEGER(ans); i < ans_length;
+			i++, x_elt++, ans_elt++) {
+		*ans_elt = (*x_elt & LAST_MASK) != 0;
+	}
+	UNPROTECT(1);
+	return(ans);
+}
+
+SEXP compact_raw_vector_set_op(SEXP query, SEXP ref, SEXP align)
+{
+	SEXP ans;
+	Rbyte *ans_elt, query_elt, ref_elt, align_elt;
+	int ans_length, i, j, k, op;
+
+	ans_length = 8 * LENGTH(query);
+	PROTECT(ans = NEW_RAW(ans_length));
+	j = k = 0;
+	query_elt = RAW(query)[0];
+	ref_elt = RAW(ref)[0];
+	align_elt = RAW(align)[0];
+	for (i = 0, ans_elt = RAW(ans); i < ans_length; i++, ans_elt++) {
+		if (j >= CHAR_BIT) {
+			j = 0;
+			k++;
+			query_elt = RAW(query)[k];
+			ref_elt = RAW(ref)[k];
+			align_elt = RAW(align)[k];
+		}
+		op =
+			((query_elt & BIT7_MASK) != 0) +
+			(((ref_elt & BIT7_MASK) != 0) << 1) +
+			(((align_elt & BIT7_MASK) != 0) << 2);
+		switch (op) {
+			case M_OP:   *ans_elt = 'M'; break;
+			case I_OP:   *ans_elt = 'I'; break;
+			case D_OP:   *ans_elt = 'D'; break;
+			case N_OP:   *ans_elt = 'N'; break;
+			case S_H_OP: *ans_elt = 'S'; break;
+			case P_OP:   *ans_elt = 'P'; break;
+			case END_OP: *ans_elt = '|'; break;
+			case BAD_OP: *ans_elt = '?'; break;
+		}
+		query_elt <<= 1;
+		ref_elt <<= 1;
+		align_elt <<= 1;
+		j++;
+	}
+	UNPROTECT(1);
+	return(ans);
+}

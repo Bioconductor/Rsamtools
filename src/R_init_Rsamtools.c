@@ -23,6 +23,7 @@ static const R_CallMethodDef callMethods[] = {
 	{".split_cigar", (DL_FUNC) &split_cigar, 1},
 	{".cigar_op_table", (DL_FUNC) &cigar_op_table, 1},
 	{".cigar_to_qwidth", (DL_FUNC) &cigar_to_qwidth, 2},
+	{".cigar_to_qwidth2", (DL_FUNC) &cigar_to_qwidth2, 2},
 	{".cigar_to_IRanges", (DL_FUNC) &cigar_to_IRanges, 3},
 	{".cigar_to_list_of_IRanges_by_alignment",
 	 (DL_FUNC) &cigar_to_list_of_IRanges_by_alignment, 4},
@@ -32,6 +33,9 @@ static const R_CallMethodDef callMethods[] = {
 	{".logical_as_compact_raw_vector", (DL_FUNC) &logical_as_compact_raw_vector, 1},
 	{".compact_raw_vector_as_logical", (DL_FUNC) &compact_raw_vector_as_logical, 2},
 	{".subset_compact_raw_vector", (DL_FUNC) &subset_compact_raw_vector, 2},
+	{".compact_raw_vector_bit_count", (DL_FUNC) &compact_raw_vector_bit_count, 1},
+	{".compact_raw_vector_last_bit", (DL_FUNC) &compact_raw_vector_last_bit, 1},
+	{".compact_raw_vector_set_op", (DL_FUNC) &compact_raw_vector_set_op, 3},
     {NULL, NULL, 0}
 };
 
