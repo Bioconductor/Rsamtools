@@ -36,6 +36,9 @@
 \alias{[,Alignments0,ANY,ANY-method}
 \alias{[,Alignments1,ANY,ANY-method}
 \alias{coverage,GappedAlignments-method}
+\alias{findOverlaps,GappedAlignments,ANY-method}
+\alias{findOverlaps,ANY,GappedAlignments-method}
+\alias{findOverlaps,GappedAlignments,GappedAlignments-method}
 
 
 \title{GappedAlignments objects}
@@ -217,11 +220,11 @@
 }
 
 \section{Other methods}{
-  In the code snippets below, \code{x} is a GappedAlignments object.
 
   \describe{
     \item{}{
       \code{coverage(x)}:
+      \code{x} is a GappedAlignments object.
       Returns a named \link[IRanges]{RleList} object with one element
       (integer-Rle) per unique reference sequence. Each element represents
       \code{x}'s coverage of the corresponding reference sequence, that is,
@@ -232,6 +235,19 @@
       for \link[IRanges]{Ranges} objects (the latter returns a single
       integer-Rle object representing the coverage of all ranges
       relatively to a unique imaginary reference sequence).
+    }
+    \item{}{
+      \code{findOverlaps(query, subject, ...)}:
+      \code{query} or \code{subject} or both are GappedAlignments objects.
+      Equivalent to \code{findOverlaps(granges(query), subject, ...)}
+      when \code{query} is a GappedAlignments object, or to
+      \code{findOverlaps(query, granges(subject), ...)} when
+      \code{subject} is a GappedAlignments object, or to
+      \code{findOverlaps(granges(query), granges(subject), ...)}
+      when both are GappedAlignments objects.
+      See \link[BSgenome]{findOverlaps,GRangesList,GRanges-method}
+      in the BSgenome package for more information (in particular for
+      a description of the extra arguments and the returned object).
     }
   }
 }
@@ -250,7 +266,8 @@
   \link[IRanges]{NormalIRanges-class},
   \link[IRanges]{CompressedNormalIRangesList-class},
   \code{\link[IRanges]{coverage}},
-  \link[IRanges]{RleList-class}
+  \link[IRanges]{RleList-class},
+  \link[BSgenome]{findOverlaps,GRangesList,GRanges-method}
 }
 
 \examples{
@@ -309,9 +326,14 @@ al0[cigar(al0) == "35M" & qwidth(al0) != 35]
 al0[cigar(al0) != "35M" & qwidth(al0) == 35]
 
 ## ---------------------------------------------------------------------
-## C. COVERAGE
+## C. coverage()
 ## ---------------------------------------------------------------------
 coverage(al0)
+
+## ---------------------------------------------------------------------
+## D. findOverlaps()
+## ---------------------------------------------------------------------
+findOverlaps(al0, granges(al0)[[1]])
 }
 
 \keyword{methods}

@@ -17,8 +17,13 @@
 ###   as.data.frame(x) - just a convenience used by show(x).
 ###   show(x)     - compact display in a data.frame-like fashion.
 ###   x[i]        - GappedAlignments object of the same class as 'x'.
+###
 ###   coverage(x) - named RleList object with one element (integer-Rle) per
 ###                 unique reference sequence.
+###
+###   findOverlaps(query, subject) - 'query' or 'subject' or both are
+###                 GappedAlignments objects. Just a convenient wrapper for
+###                 'findOverlaps(granges(query), subject, ...)', etc...
 ###
 ### Concrete GappedAlignments implementations just need to define:
 ###   length(x), rname(x), strand(x), cigar(x), granges(x), ranges(x), x[i]
@@ -155,6 +160,44 @@ setMethod("coverage", "GappedAlignments",
         irl <- cigarToIRangesListByRName(cigar(x), rname(x), start(x))
         irl <- irl[elementLengths(irl) != 0]  # drop empty elements
         coverage(irl)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The "findOverlaps" methods.
+###
+
+setMethod("findOverlaps", c("GappedAlignments", "ANY"),
+    function(query, subject, maxgap=0, multiple=TRUE,
+             type=c("any", "start", "end", "within", "equal"))
+    {
+        callGeneric(granges(query), subject,
+                    maxgap=maxgap, multiple=multiple, type=type)
+    }
+)
+
+setMethod("findOverlaps", c("ANY", "GappedAlignments"),
+    function(query, subject, maxgap=0, multiple=TRUE,
+             type=c("any", "start", "end", "within", "equal"))
+    {
+        callGeneric(query, granges(subject),
+                    maxgap=maxgap, multiple=multiple, type=type)
+    }
+)
+
+### Not strictly needed! Defining the above 2 methods covers that case but
+### with the following note:
+###   > findOverlaps(al1, al0)
+###   Note: Method with signature "GappedAlignments#ANY" chosen for
+###    function "findOverlaps", target signature "Alignments1#Alignments0".
+###    "ANY#GappedAlignments" would also be valid
+setMethod("findOverlaps", c("GappedAlignments", "GappedAlignments"),
+    function(query, subject, maxgap=0, multiple=TRUE,
+             type=c("any", "start", "end", "within", "equal"))
+    {
+        callGeneric(granges(query), granges(subject),
+                    maxgap=maxgap, multiple=multiple, type=type)
     }
 )
 
