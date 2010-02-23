@@ -279,7 +279,7 @@ static const char *cigar_string_to_qwidth2(SEXP cigar_string, int clip_reads,
 }
 
 static const char *Lqnarrow_cigar_string(SEXP cigar_string,
-		int Lqwidth, int *Loffset, int *newOPL, int *rshift)
+		int *Lqwidth, int *Loffset, int *rshift)
 {
 	const char *cig0;
 	int offset, n, OPL /* Operation Length */;
@@ -297,23 +297,21 @@ static const char *Lqnarrow_cigar_string(SEXP cigar_string,
 		switch (OP) {
 		/* Alignment match (can be a sequence match or mismatch) */
 		    case 'M':
-			if (Lqwidth < OPL) {
+			if (*Lqwidth < OPL) {
 				*Loffset = offset;
-				*newOPL = OPL - Lqwidth;
-				*rshift += Lqwidth;
+				*rshift += *Lqwidth;
 				return NULL;
 			}
-			Lqwidth -= OPL;
+			*Lqwidth -= OPL;
 			*rshift += OPL;
 		    break;
 		/* Insertion to the reference or soft/hard clip on the read */
 		    case 'I': case 'S': case 'H':
-			if (Lqwidth < OPL) {
+			if (*Lqwidth < OPL) {
 				*Loffset = offset;
-				*newOPL = OPL - Lqwidth;
 				return NULL;
 			}
-			Lqwidth -= OPL;
+			*Lqwidth -= OPL;
 		    break;
 		/* Deletion (or skipped region) from the reference */
 		    case 'D': case 'N':
@@ -335,16 +333,13 @@ static const char *Lqnarrow_cigar_string(SEXP cigar_string,
 		}
 		offset += n;
 	}
-	/* Should never happen */
 	snprintf(errmsg_buf, sizeof(errmsg_buf),
-		 "Rsamtools internal error in Lqnarrow_cigar_string(): "
-		 "'Lqwidth' value (%d) incompatible with CIGAR string",
-		 Lqwidth);
+		 "CIGAR is empty after qnarrowing");
 	return errmsg_buf;
 }
 
 static const char *Rqnarrow_cigar_string(SEXP cigar_string,
-		int Rqwidth, int *Roffset, int *newOPL)
+		int *Rqwidth, int *Roffset)
 {
 	const char *cig0;
 	int offset, n, OPL /* Operation Length */;
@@ -363,12 +358,11 @@ static const char *Rqnarrow_cigar_string(SEXP cigar_string,
 		switch (OP) {
 		/* M, I, S, H */
 		    case 'M': case 'I': case 'S': case 'H':
-			if (Rqwidth < OPL) {
+			if (*Rqwidth < OPL) {
 				*Roffset = offset;
-				*newOPL = OPL - Rqwidth;
 				return NULL;
 			}
-			Rqwidth -= OPL;
+			*Rqwidth -= OPL;
 		    break;
 		/* Deletion (or skipped region) from the reference */
 		    case 'D': case 'N':
@@ -388,11 +382,8 @@ static const char *Rqnarrow_cigar_string(SEXP cigar_string,
 			return errmsg_buf;
 		}
 	}
-	/* Should never happen */
 	snprintf(errmsg_buf, sizeof(errmsg_buf),
-		 "Rsamtools internal error in Rqnarrow_cigar_string(): "
-		 "'Rqwidth' value (%d) incompatible with CIGAR string",
-		 Rqwidth);
+		 "CIGAR is empty after qnarrowing");
 	return errmsg_buf;
 }
 
@@ -400,43 +391,41 @@ static const char *Rqnarrow_cigar_string(SEXP cigar_string,
 static const char *qnarrow_cigar_string(SEXP cigar_string,
 		int Lqwidth, int Rqwidth, char *cigar_buf, int *rshift)
 {
-	int Loffset, LnewOPL, Roffset, RnewOPL, buf_offset;
+	int Loffset, Roffset, buf_offset;
 	const char *cig0;
 	int offset, n, OPL /* Operation Length */;
 	char OP /* Operation */;
 	const char *errmsg;
 
 	//Rprintf("qnarrow_cigar_string():\n");
-	errmsg = Lqnarrow_cigar_string(cigar_string,
-			Lqwidth, &Loffset, &LnewOPL, rshift);
+	errmsg = Lqnarrow_cigar_string(cigar_string, &Lqwidth, &Loffset,
+				       rshift);
 	if (errmsg != NULL)
 		return errmsg;
-	//Rprintf("  Lqwidth=%d Loffset=%d LnewOPL=%d *rshift=%d\n",
-	//	Lqwidth, Loffset, LnewOPL, *rshift);
-	errmsg = Rqnarrow_cigar_string(cigar_string,
-			Rqwidth, &Roffset, &RnewOPL);
+	//Rprintf("  Lqwidth=%d Loffset=%d *rshift=%d\n",
+	//	Lqwidth, Loffset, *rshift);
+	errmsg = Rqnarrow_cigar_string(cigar_string, &Rqwidth, &Roffset);
 	if (errmsg != NULL)
 		return errmsg;
-	//Rprintf("  Rqwidth=%d Roffset=%d RnewOPL=%d\n",
-	//	Rqwidth, Roffset, RnewOPL);
-	/* Should never happen */
+	//Rprintf("  Rqwidth=%d Roffset=%d\n", Rqwidth, Roffset);
 	if (Roffset < Loffset) {
 		snprintf(errmsg_buf, sizeof(errmsg_buf),
-			 "Rsamtools internal error in qnarrow_cigar_string(): "
-			 "'Roffset' (=%d) < 'Loffset' (=%d)",
-			 Roffset, Loffset);
+			 "CIGAR is empty after qnarrowing");
 		return errmsg_buf;
 	}
 	buf_offset = 0;
 	cig0 = CHAR(cigar_string);
 	for (offset = Loffset; offset <= Roffset; offset += n) {
 		n = get_next_cigar_OP(cig0, offset, &OPL, &OP);
-		if (Loffset == Roffset)
-			OPL = LnewOPL + RnewOPL - OPL;
-		else if (offset == Loffset)
-			OPL = LnewOPL;
-		else if (offset == Roffset)
-			OPL = RnewOPL;
+		if (offset == Loffset)
+			OPL -= Lqwidth;
+		if (offset == Roffset)
+			OPL -= Rqwidth;
+		if (OPL <= 0) {
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "CIGAR is empty after qnarrowing");
+			return errmsg_buf;
+		}
 		buf_offset += sprintf(cigar_buf + buf_offset,
 				      "%d%c", OPL, OP);
 	}
