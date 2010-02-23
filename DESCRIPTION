@@ -1,7 +1,7 @@
 Package: Rsamtools
 Type: Package
 Title: Import and manipulation of samtools aligned sequences in R / Bioconductor
-Version: 0.1.35
+Version: 0.1.36
 Date: 2010-02-17
 Author: Martin Morgan, Herv\'e Pag\`es, Patrick Aboyoun
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
