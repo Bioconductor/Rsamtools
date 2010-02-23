@@ -16,7 +16,14 @@
 ###   ngap(x)     - integer vector of the same length as 'x'.
 ###   as.data.frame(x) - just a convenience used by show(x).
 ###   show(x)     - compact display in a data.frame-like fashion.
-###   x[i]        - GappedAlignments object of the same class as 'x'.
+###   x[i]        - GappedAlignments object of the same class as 'x'
+###                 (endomorphism).
+###
+###   shift(x, shift) - GappedAlignments object of the same length and class
+###                 as 'x' (endomorphism).
+###
+###   qnarrow(x, start=NA, end=NA, width=NA) - GappedAlignments object of the
+###                 same length and class as 'x' (endomorphism).
 ###
 ###   coverage(x) - named RleList object with one element (integer-Rle) per
 ###                 unique reference sequence.
@@ -26,7 +33,8 @@
 ###                 'findOverlaps(granges(query), subject, ...)', etc...
 ###
 ### Concrete GappedAlignments implementations just need to define:
-###   length(x), rname(x), strand(x), cigar(x), granges(x), ranges(x), x[i]
+###   length(x), rname(x), strand(x), cigar(x), granges(x), ranges(x),
+###   x[i] and shift(x, shift)
 ### and the default methods defined in this file will work.
 
 
@@ -142,6 +150,21 @@ setMethod("show", "GappedAlignments",
                          stringsAsFactors=FALSE)
         }
         show(showme)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The "qnarrow" method.
+###
+
+setMethod("qnarrow", "GappedAlignments",
+    function(x, start=NA, end=NA, width=NA)
+    {
+        narrowed_cigar <- cigarQNarrow(cigar(x),
+                                       start=start, end=end, width=width)
+        x@cigar <- as.character(narrowed_cigar)
+        shift(x, attr(narrowed_cigar, "rshift"))
     }
 )
 

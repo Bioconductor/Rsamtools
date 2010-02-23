@@ -35,6 +35,9 @@
 \alias{coerce,Alignments0,Alignments1-method}
 \alias{[,Alignments0,ANY,ANY-method}
 \alias{[,Alignments1,ANY,ANY-method}
+\alias{shift,Alignments0-method}
+\alias{shift,Alignments1-method}
+\alias{qnarrow,GappedAlignments-method}
 \alias{coverage,GappedAlignments-method}
 \alias{findOverlaps,GappedAlignments,ANY-method}
 \alias{findOverlaps,ANY,GappedAlignments-method}
@@ -223,6 +226,22 @@
 
   \describe{
     \item{}{
+      \code{shift(x, shift)}:
+      \code{x} is a GappedAlignments object.
+      Returns a new GappedAlignments object (of the same type as \code{x},
+      i.e. Alignments0 or Alignments1) where all the alignments have been
+      shifted along the reference by the number of positions specified in
+      the \code{shift} argument (vector of integers).
+    }
+    \item{}{
+      \code{qnarrow(x, start=NA, end=NA, width=NA)}:
+      \code{x} is a GappedAlignments object.
+      Returns a new GappedAlignments object (of the same type as \code{x},
+      i.e. Alignments0 or Alignments1) where all the query sequences have
+      been narrowed according to the \code{start}, \code{end} and
+      \code{width} arguments.
+    }
+    \item{}{
       \code{coverage(x)}:
       \code{x} is a GappedAlignments object.
       Returns a named \link[IRanges]{RleList} object with one element
@@ -326,12 +345,22 @@ al0[cigar(al0) == "35M" & qwidth(al0) != 35]
 al0[cigar(al0) != "35M" & qwidth(al0) == 35]
 
 ## ---------------------------------------------------------------------
-## C. coverage()
+## C. qnarrow()
+## ---------------------------------------------------------------------
+## This trims 3 nucleotides on the left and 5 nucleotides on the right
+## of each alignment:
+qnarrow(al0, start=4, end=-6)
+## Note that the 'start' and 'end' arguments specify what part of each
+## query sequence should be kept (negative values being relative to the
+## right end of the query sequence), not what part should be trimmed.
+
+## ---------------------------------------------------------------------
+## D. coverage()
 ## ---------------------------------------------------------------------
 coverage(al0)
 
 ## ---------------------------------------------------------------------
-## D. findOverlaps()
+## E. findOverlaps()
 ## ---------------------------------------------------------------------
 findOverlaps(al0, granges(al0)[[1]])
 }

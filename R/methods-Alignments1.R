@@ -153,3 +153,19 @@ setMethod("[", "Alignments1",
     }
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The "shift" method.
+###
+
+setMethod("shift", "Alignments1",
+    function(x, shift, use.names=TRUE)
+    {
+        shift <- normargShift(shift, length(x))
+        shift <- rep.int(shift, elementLengths(x@granges))
+        x@granges@unlistData <- shift(x@granges@unlistData,
+                                      shift, use.names=use.names)
+        x
+    }
+)
+
