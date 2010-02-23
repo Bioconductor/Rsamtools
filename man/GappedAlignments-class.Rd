@@ -11,15 +11,16 @@
 \alias{Alignments1-class}
 \alias{Alignments1}
 
-\alias{length,Alignments0-method}
+\alias{length,GappedAlignments-method}
 \alias{rname}
 \alias{rname,Alignments0-method}
 \alias{rname,Alignments1-method}
 \alias{strand,Alignments0-method}
 \alias{strand,Alignments1-method}
 \alias{cigar}
-\alias{cigar,Alignments0-method}
-\alias{cigar,Alignments1-method}
+\alias{cigar,GappedAlignments-method}
+\alias{granges,Alignments0-method}
+\alias{granges,Alignments1-method}
 \alias{ranges,Alignments0-method}
 \alias{ranges,Alignments1-method}
 \alias{qwidth}
@@ -169,8 +170,9 @@
       the corresponding SAM/BAM record).
     }
     \item{}{
-      \code{ranges(x)}:
-      Returns a \link[IRanges]{CompressedNormalIRangesList} object of
+      \code{granges(x)}, \code{ranges(x)}:
+      Returns a \link[BSgenome]{GRangesList} or
+      \link[IRanges]{CompressedNormalIRangesList} object of
       length \code{length(x)} where each element represents regions in
       the reference to which a query is aligned. See Details section
       above for more information.
@@ -244,6 +246,7 @@
 
 \seealso{
   \code{\link{scanBam}},
+  \link[BSgenome]{GRangesList-class},
   \link[IRanges]{NormalIRanges-class},
   \link[IRanges]{CompressedNormalIRangesList-class},
   \code{\link[IRanges]{coverage}},
@@ -266,7 +269,10 @@ head(cigar(al0))
 head(qwidth(al0))
 table(qwidth(al0))
 
-head(ranges(al0))
+granges(al0)  # a GRangesList object
+ranges(al0)   # a CompressedNormalIRangesList object
+stopifnot(identical(elementLengths(granges(al0)), elementLengths(ranges(al0))))
+
 head(start(al0))
 head(end(al0))
 head(width(al0))
@@ -281,23 +287,26 @@ al0[grep("N", cigar(al0), fixed=TRUE)]  # no gaps
 
 ## A confirmation that all the queries map to the reference with no
 ## gaps:
-stopifnot(all(elementLengths(ranges(al0)) == 1))
-ranges(al0)[[1]]
-ranges(al0)[[2]]
+stopifnot(all(ngap(al0) == 0))
+
+## Different ways to subset:
+al0[6]             # a GappedAlignments object of length 1
+granges(al0)[[6]]  # a GRanges object of length 1
+ranges(al0)[[6]]   # a NormalIRanges object of length 1
+
+## Ds are NOT gaps:
 ii <- grep("D", cigar(al0), fixed=TRUE)
 al0[ii]
-## Ds are NOT gaps:
-ranges(al0)[[ii[1]]]
-ranges(al0)[[ii[2]]]
+ngap(al0[ii])
+granges(al0[ii])
 
+## qwidth() vs width():
 al0[qwidth(al0) != width(al0)]
 
 ## This MUST return an empty object:
 al0[cigar(al0) == "35M" & qwidth(al0) != 35]
 ## but this doesn't have too:
 al0[cigar(al0) != "35M" & qwidth(al0) == 35]
-
-
 
 ## ---------------------------------------------------------------------
 ## C. COVERAGE

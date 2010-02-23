@@ -8,17 +8,25 @@
 ###
 
 setMethod("rname", "Alignments1",
-    function(x) as.factor(seqnames(x@unlistData))[x@partitioning@end]
+    function(x)
+    {
+        xgrg <- x@granges
+        as.factor(seqnames(xgrg@unlistData))[xgrg@partitioning@end]
+    }
 )
 
 setMethod("strand", "Alignments1",
-    function(x) as.factor(strand(x@unlistData))[x@partitioning@end]
+    function(x)
+    {
+        xgrg <- x@granges
+        as.factor(strand(xgrg@unlistData))[xgrg@partitioning@end]
+    }
 )
 
-setMethod("cigar", "Alignments1", function(x) x@cigar)
+setMethod("granges", "Alignments1", function(x) x@granges)
 
 setMethod("ranges", "Alignments1",
-    function(x) as(callNextMethod(), "CompressedNormalIRangesList")
+    function(x) as(ranges(x@granges), "CompressedNormalIRangesList")
 )
 
 
@@ -66,29 +74,11 @@ setValidity2("Alignments1", .valid.Alignments1,
 ###
 
 Alignments1 <- function(rname=factor(), strand=BSgenome::strand(),
-                        pos=integer(0), cigar=character(0))
+                        pos=integer(), cigar=character())
 {
-    if (is.factor(rname) && is.character(levels(rname)))
-        rname <- as.character(rname)
-    else if (!is.character(rname)) 
-        stop("'rname' must be a character vector/factor")
-    if (any(is.na(rname)))
-        stop("'rname' cannot have NAs")
-    if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
-        stop("'strand' must be a character factor")
-    if (!is.character(cigar) || any(is.na(cigar)))
-        stop("'cigar' must be a character vector with no NAs")
-    rg_list <- cigarToIRangesListByAlignment(cigar, pos)
-    nrg_per_alignment <- elementLengths(rg_list)
-    rname <- Rle(rname, nrg_per_alignment)
-    strand <- Rle(strand, nrg_per_alignment)
-    ranges <- unlist(rg_list)
-    unlistData <- GRanges(seqnames=rname, ranges=ranges, strand=strand)
-    partitioning <- PartitioningByEnd(cumsum(nrg_per_alignment))
-    new("Alignments1",
-        unlistData=unlistData,
-        partitioning=partitioning,
-        cigar=cigar)
+    ranges <- cigarToIRangesListByAlignment(cigar, pos)
+    granges <- GappedAlignmentsAsGRangesList(rname, strand, ranges)
+    new("Alignments1", cigar=cigar, granges=granges)
 }
 
 setMethod(readBAMasAlignments1, "character",
@@ -157,8 +147,8 @@ setMethod("[", "Alignments1",
         } else {
             stop("invalid subscript type")
         }
-        x <- callNextMethod()
         x@cigar <- x@cigar[i]
+        x@granges <- x@granges[i]
         x
     }
 )

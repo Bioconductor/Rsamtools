@@ -68,8 +68,9 @@ setClass("Alignments0",
 ### storing the same information than Alignments0 (with some internal
 ### redundancy though that could make it slightly bigger).
 setClass("Alignments1",
-    contains=c("GappedAlignments", "GRangesList"),
-    representation(),
-    prototype(elementType="GRanges")
+    contains="GappedAlignments",
+    representation(
+        granges="GRangesList"
+    )
 )
 

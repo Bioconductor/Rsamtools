@@ -9,6 +9,7 @@
 ###                 *).
 ###   cigar(x)    - character vector of the same length as 'x'.
 ###   qwidth(x)   - integer vector of the same length as 'x'.
+###   granges(x)  - GRangesList object of the same length as 'x'.
 ###   ranges(x)   - CompressedNormalIRangesList object of the same length as
 ###                 'x'.
 ###   start(x), end(x), width(x) - integer vectors of the same length as 'x'.
@@ -20,7 +21,7 @@
 ###                 unique reference sequence.
 ###
 ### Concrete GappedAlignments implementations just need to define:
-###   length(x), rname(x), strand(x), cigar(x), ranges(x), x[i]
+###   length(x), rname(x), strand(x), cigar(x), granges(x), ranges(x), x[i]
 ### and the default methods defined in this file will work.
 
 
@@ -28,6 +29,9 @@
 ### Accessor-like methods.
 ###
 
+setMethod("length", "GappedAlignments", function(x) length(x@cigar))
+
+setMethod("cigar", "GappedAlignments", function(x) x@cigar)
 setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(cigar(x)))
 
 setMethod("start", "GappedAlignments", function(x, ...) min(ranges(x)))
@@ -40,7 +44,40 @@ setMethod("ngap", "GappedAlignments",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### The "show" method.
+### Helper function.
+###
+
+### The arguments are the different components of a GappedAlignments object
+### instead of just the GappedAlignments object itself (arg 'x'). This allows
+### the function to be used in different contexts e.g. within the Alignments1()
+### constructor when 'x' doesn't exist yet but is in the process of being
+### constructed.
+GappedAlignmentsAsGRangesList <- function(rname, strand, ranges, check=TRUE)
+{
+    if (check) {
+        if (is.factor(rname) && is.character(levels(rname)))
+            rname <- as.character(rname)
+        else if (!is.character(rname))
+            stop("'rname' must be a character vector/factor")
+        if (any(is.na(rname)))
+            stop("'rname' cannot have NAs")
+        if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
+            stop("'strand' must be a character factor")
+        if (!is(ranges, "CompressedNormalIRangesList"))
+            stop("'ranges' must be a CompressedNormalIRangesList object")
+    }
+    nrg_per_alignment <- elementLengths(ranges)
+    rname <- Rle(rname, nrg_per_alignment)
+    strand <- Rle(strand, nrg_per_alignment)
+    ranges <- unlist(ranges)
+    unlistData <- GRanges(seqnames=rname, ranges=ranges, strand=strand)
+    partitioning <- PartitioningByEnd(cumsum(nrg_per_alignment))
+    new("GRangesList", unlistData=unlistData, partitioning=partitioning)
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The "as.data.frame" and "show" methods.
 ###
 
 setMethod("as.data.frame", "GappedAlignments",

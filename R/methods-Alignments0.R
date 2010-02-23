@@ -39,15 +39,16 @@
 ### Accessor-like methods.
 ###
 
-setMethod("length", "Alignments0", function(x) length(x@cigar))
-
 setMethod("rname", "Alignments0", function(x) x@rname)
 
 setMethod("strand", "Alignments0",
     function(x) strand(.compactRawVectorAsLogical(x@strand, length(x)))
 )
 
-setMethod("cigar", "Alignments0", function(x) x@cigar)
+setMethod("granges", "Alignments0",
+    function(x)
+        GappedAlignmentsAsGRangesList(rname(x), strand(x), ranges(x))
+)
 
 setMethod("ranges", "Alignments0", function(x) x@ranges)
 
