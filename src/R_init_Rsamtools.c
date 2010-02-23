@@ -24,6 +24,7 @@ static const R_CallMethodDef callMethods[] = {
 	{".cigar_op_table", (DL_FUNC) &cigar_op_table, 1},
 	{".cigar_to_qwidth", (DL_FUNC) &cigar_to_qwidth, 2},
 	{".cigar_to_qwidth2", (DL_FUNC) &cigar_to_qwidth2, 2},
+	{".cigar_qnarrow", (DL_FUNC) &cigar_qnarrow, 3},
 	{".cigar_to_IRanges", (DL_FUNC) &cigar_to_IRanges, 3},
 	{".cigar_to_list_of_IRanges_by_alignment",
 	 (DL_FUNC) &cigar_to_list_of_IRanges_by_alignment, 4},

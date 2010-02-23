@@ -48,6 +48,18 @@ cigarToQWidth2 <- function(cigar, before.hard.clipping=FALSE)
           PACKAGE="Rsamtools")
 }
 
+cigarQNarrow <- function(cigar, start=NA, end=NA, width=NA)
+{
+    threeranges <- threebands(successiveIRanges(cigarToQWidth(cigar)),
+                              start=start, end=end, width=width)
+    C_ans <- .Call(".cigar_qnarrow",
+                   cigar, width(threeranges$left), width(threeranges$right),
+                   PACKAGE="Rsamtools")
+    ans <- C_ans[[1L]]
+    attr(ans, "rshift") <- C_ans[[2L]]
+    ans
+}
+
 cigarToIRanges <- function(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
 {
     if (is.factor(cigar) && is.character(levels(cigar)))

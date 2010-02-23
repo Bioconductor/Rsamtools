@@ -5,6 +5,7 @@
 \alias{validCigar}
 \alias{cigarOpTable}
 \alias{cigarToQWidth}
+\alias{cigarQNarrow}
 
 \alias{cigarToIRanges}
 \alias{cigarToIRangesListByAlignment}
