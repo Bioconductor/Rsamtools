@@ -15,6 +15,9 @@
 \alias{rname}
 \alias{rname,Alignments0-method}
 \alias{rname,Alignments1-method}
+\alias{rname<-}
+\alias{rname<-,Alignments0-method}
+\alias{rname<-,Alignments1-method}
 \alias{strand,Alignments0-method}
 \alias{strand,Alignments1-method}
 \alias{cigar}
@@ -160,6 +163,12 @@
       containing the name of the reference sequence for each alignment.
     }
     \item{}{
+      \code{rname(x) <- value}:
+      Replace the name of the reference sequence for each alignment.
+      \code{value} must be a character factor/vector, or a 'character' Rle,
+      or a 'factor' Rle, with the same length as \code{x}.
+    }
+    \item{}{
       \code{strand(x)}:
       Returns a character factor of length \code{length(x)}
       (with levels +, - and *) containing the strand in the reference
@@ -302,6 +311,12 @@ al0
 length(al0)
 head(al0)
 head(rname(al0))
+levels(rname(al0))
+
+## Rename the reference sequences:
+rname(al0) <- sub("seq", "chr", rname(al0))
+levels(rname(al0))
+
 head(strand(al0))
 head(cigar(al0))
 head(qwidth(al0))

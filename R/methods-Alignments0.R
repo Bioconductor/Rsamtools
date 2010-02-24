@@ -41,6 +41,14 @@
 
 setMethod("rname", "Alignments0", function(x) x@rname)
 
+setReplaceMethod("rname", "Alignments0",
+    function(x, value)
+    {
+        x@rname <- normargRNameReplaceValue(x, value)
+        x
+    }
+)
+
 setMethod("strand", "Alignments0",
     function(x) strand(.compactRawVectorAsLogical(x@strand, length(x)))
 )

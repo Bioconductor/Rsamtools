@@ -19,6 +19,8 @@ setGeneric("readPileup",
 
 setGeneric("rname", function(x) standardGeneric("rname"))
 
+setGeneric("rname<-", function(x, value) standardGeneric("rname<-"))
+
 setGeneric("cigar", function(x) standardGeneric("cigar"))
 
 setGeneric("qwidth", function(x) standardGeneric("qwidth"))

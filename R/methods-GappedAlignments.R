@@ -5,6 +5,7 @@
 ### Formal API:
 ###   length(x)   - single integer. Nb of alignments in 'x'.
 ###   rname(x)    - character factor of the same length as 'x'.
+###   rname(x) <- value - replacement form of 'rname(x)'.
 ###   strand(x)   - character factor of the same length as 'x' (levels: +, -,
 ###                 *).
 ###   cigar(x)    - character vector of the same length as 'x'.
@@ -35,9 +36,9 @@
 ###                 GappedAlignments objects. Just a convenient wrapper for
 ###                 'findOverlaps(granges(query), subject, ...)', etc...
 ###
-### Concrete GappedAlignments implementations just need to define:
-###   length(x), rname(x), strand(x), cigar(x), granges(x), ranges(x),
-###   x[i], shift(x, shift) and updateCigarAndStart(x, cigar=NULL, start=NULL)
+### Concrete GappedAlignments implementations just need to implement:
+###   length, rname, rname<-, strand, cigar, granges, ranges,
+###   [, shift and updateCigarAndStart
 ### and the default methods defined in this file will work.
 
 
@@ -57,6 +58,56 @@ setMethod("width", "GappedAlignments", function(x) cigarToWidth(cigar(x)))
 setMethod("ngap", "GappedAlignments",
     function(x) {elementLengths(ranges(x)) - 1L}
 )
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Used by the "rname<-" methods.
+###
+
+normargRNameReplaceValue <- function(x, value, ans.type=c("factor", "Rle"))
+{
+    ans.type <- match.arg(ans.type)
+    if (!is.factor(value)
+     && !is.character(value)
+     && (!is(value, "Rle") || !is.character(runValue(value))
+                              && !is.factor(runValue(value))))
+        stop("'rname' value must be a character factor/vector, ",
+             "or a 'character' Rle, or a 'factor' Rle")
+    if (ans.type == "factor" && !is.factor(value)) {
+        value <- as.factor(value)
+    } else if (ans.type == "Rle") {
+        ## We want to return a 'character' Rle.
+        if (!is(value, "Rle")) {
+            if (!is.character(value))
+                value <- as.character(value)
+            value <- Rle(value)
+        } else if (!is.character(runValue(value))) {
+            runValue(value) <- as.character(runValue(value))
+        }
+    }
+    if (length(value) != length(x))
+        stop("'rname' value must be the same length as the object")
+
+    ## Check the mapping between old and new values.
+    old <- rname(x)  # guaranteed to be factor
+    if (ans.type == "factor") {
+        new <- value
+    } else {
+        old <- Rle(old)
+        if (!identical(runLength(old), runLength(value))) {
+            warning("mapping between old an new 'rname' values ",
+                    "is not one-to-one")
+            return(value)
+        }
+        old <- runValue(old)
+        new <- runValue(value)
+    }
+    mapping <- unique(data.frame(old=old, new=new))
+    if (any(duplicated(mapping$old)) || any(duplicated(mapping$new)))
+        warning("mapping between old an new 'rname' values ",
+                "is not one-to-one")
+    value
+}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

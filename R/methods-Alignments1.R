@@ -15,6 +15,16 @@ setMethod("rname", "Alignments1",
     }
 )
 
+setReplaceMethod("rname", "Alignments1",
+    function(x, value)
+    {
+        value <- normargRNameReplaceValue(x, value, ans.type="Rle")
+        value <- rep.int(value, elementLengths(x@granges))
+        seqnames(x@granges@unlistData) <- value
+        x
+    }
+)
+
 setMethod("strand", "Alignments1",
     function(x)
     {
