@@ -265,7 +265,7 @@ setMethod("coverage", "GappedAlignments",
 
 setMethod("findOverlaps", c("GappedAlignments", "ANY"),
     function(query, subject, maxgap=0, multiple=TRUE,
-             type=c("any", "start", "end", "within", "equal"))
+             type=c("any", "start", "end"))
     {
         callGeneric(granges(query), subject,
                     maxgap=maxgap, multiple=multiple, type=type)
@@ -274,7 +274,7 @@ setMethod("findOverlaps", c("GappedAlignments", "ANY"),
 
 setMethod("findOverlaps", c("ANY", "GappedAlignments"),
     function(query, subject, maxgap=0, multiple=TRUE,
-             type=c("any", "start", "end", "within", "equal"))
+             type=c("any", "start", "end"))
     {
         callGeneric(query, granges(subject),
                     maxgap=maxgap, multiple=multiple, type=type)
@@ -289,7 +289,7 @@ setMethod("findOverlaps", c("ANY", "GappedAlignments"),
 ###    "ANY#GappedAlignments" would also be valid
 setMethod("findOverlaps", c("GappedAlignments", "GappedAlignments"),
     function(query, subject, maxgap=0, multiple=TRUE,
-             type=c("any", "start", "end", "within", "equal"))
+             type=c("any", "start", "end"))
     {
         callGeneric(granges(query), granges(subject),
                     maxgap=maxgap, multiple=multiple, type=type)
