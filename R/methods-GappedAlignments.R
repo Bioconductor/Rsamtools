@@ -49,7 +49,7 @@ setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(cigar(x)))
 
 setMethod("start", "GappedAlignments", function(x, ...) min(ranges(x)))
 setMethod("end", "GappedAlignments", function(x, ...) max(ranges(x)))
-setMethod("width", "GappedAlignments", function(x) {end(x) - start(x) + 1L})
+setMethod("width", "GappedAlignments", function(x) cigarToWidth(cigar(x)))
 
 setMethod("ngap", "GappedAlignments",
     function(x) {elementLengths(ranges(x)) - 1L}
@@ -87,6 +87,75 @@ GappedAlignmentsAsGRangesList <- function(rname, strand, ranges, check=TRUE)
     partitioning <- PartitioningByEnd(cumsum(nrg_per_alignment))
     new("GRangesList", unlistData=unlistData, partitioning=partitioning)
 }
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Validity.
+###
+
+.valid.GappedAlignments.cigar <- function(x)
+{
+    x_cigar <- cigar(x)
+    if (!is.character(x_cigar) || !is.null(names(x_cigar)) || any(is.na(x_cigar)))
+        return("'cigar(x)' must be an unnamed character vector with no NAs")
+    tmp <- validCigar(x_cigar)
+    if (!is.null(tmp))
+        return(paste("in 'cigar(x)':", tmp))
+    NULL
+}
+
+.valid.GappedAlignments.rname <- function(x)
+{
+    x_rname <- rname(x)
+    if (!is.factor(x_rname) || !is.character(levels(x_rname))
+     || !is.null(names(x_rname)) || any(is.na(x_rname)))
+        return("'rname(x)' must be an unnamed character factor with no NAs")
+    if (length(x_rname) != length(cigar(x)))
+        return("'rname(x)' and 'cigar(x)' must have the same length")
+    NULL
+}
+
+.valid.GappedAlignments.strand <- function(x)
+{
+    x_strand <- strand(x)
+    if (!is.factor(x_strand) || !identical(levels(x_strand), levels(strand()))
+     || !is.null(names(x_strand)) || any(is.na(x_strand)))
+        return("'strand(x)' must be an unnamed character factor with no NAs (and with levels +, - and *)")
+    if (length(x_strand) != length(cigar(x)))
+        return("'strand(x)' and 'cigar(x)' must have the same length")
+    NULL
+}
+
+.valid.GappedAlignments.ranges <- function(x)
+{
+    x_ranges <- ranges(x)
+    if (!is(x_ranges, "CompressedNormalIRangesList") || !is.null(names(x_ranges)))
+        return("'ranges(x)' must be an unnamed CompressedNormalIRangesList object")
+    if (length(x_ranges) != length(cigar(x)))
+        return("'ranges(x)' and 'cigar(x)' must have the same length")
+    if (any(elementLengths(x_ranges) == 0L))
+        return("'ranges(x)' has elements with no ranges")
+    x_start <- min(x_ranges)
+    x_end <- max(x_ranges)
+    if (!identical(x_end - x_start + 1L, width(x)))
+        return("'ranges(x)' and 'width(x)' are out of sync")
+    x_ranges2 <- cigarToIRangesListByAlignment(cigar(x), x_start)
+    if (!identical(x_ranges2, x_ranges))
+        return("'ranges(x)' and 'cigar(x)' are out of sync")
+    NULL
+}
+
+.valid.GappedAlignments <- function(x)
+{
+    c(.valid.GappedAlignments.cigar(x),
+      .valid.GappedAlignments.rname(x),
+      .valid.GappedAlignments.strand(x),
+      #.valid.GappedAlignments.granges(x),
+      .valid.GappedAlignments.ranges(x))
+}
+
+setValidity2("GappedAlignments", .valid.GappedAlignments,
+             where=asNamespace("Rsamtools"))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

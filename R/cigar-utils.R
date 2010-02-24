@@ -48,6 +48,16 @@ cigarToQWidth2 <- function(cigar, before.hard.clipping=FALSE)
           PACKAGE="Rsamtools")
 }
 
+cigarToWidth <- function(cigar)
+{
+    if (!is.character(cigar)) {
+        if (!is.factor(cigar) || !is.character(levels(cigar)))
+            stop("'cigar' must be a character vector/factor")
+        cigar <- as.vector(cigar)
+    }
+    .Call(".cigar_to_width", cigar, PACKAGE="Rsamtools")
+}
+
 cigarQNarrow <- function(cigar, start=NA, end=NA, width=NA)
 {
     threeranges <- threebands(successiveIRanges(cigarToQWidth(cigar)),

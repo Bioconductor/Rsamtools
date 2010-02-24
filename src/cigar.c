@@ -97,6 +97,7 @@ cigar_table(SEXP cigar)
  * split_cigar()
  * cigar_op_table()
  * cigar_to_qwidth()
+ * cigar_to_width()
  * cigar_to_IRanges()
  * cigar_to_list_of_IRanges_by_alignment()
  * cigar_to_list_of_IRanges_by_rname()
@@ -273,6 +274,49 @@ static const char *cigar_string_to_qwidth2(SEXP cigar_string, int clip_reads,
 			return errmsg_buf;
 		if (OP_IN_QUERY(OP))
 			*qwidth += OPL;
+		offset += n;
+	}
+	return NULL;
+}
+
+static const char *cigar_string_to_width(SEXP cigar_string, int *width)
+{
+	const char *cig0;
+	int offset, n, OPL /* Operation Length */;
+	char OP /* Operation */;
+
+	if (cigar_string == NA_STRING)
+		return "CIGAR string is NA";
+	if (LENGTH(cigar_string) == 0)
+		return "CIGAR string is empty";
+	cig0 = CHAR(cigar_string);
+	*width = offset = 0;
+	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
+		if (n == -1)
+			return errmsg_buf;
+		switch (OP) {
+		/* Alignment match (can be a sequence match or mismatch) */
+		    case 'M': *width += OPL; break;
+		/* Insertion to the reference */
+		    case 'I': break;
+		/* Deletion (or skipped region) from the reference */
+		    case 'D': case 'N': *width += OPL; break;
+		/* Soft/Hard clip on the read */
+		    case 'S': case 'H': break;
+		/* Padding (silent deletion from the padded reference
+		   sequence) */
+		    case 'P':
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "CIGAR operation '%c' (at char %d) is not "
+				 "supported yet, sorry!", OP, offset + 1);
+			return errmsg_buf;
+		    break;
+		    default:
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "unknown CIGAR operation '%c' at char %d",
+				 OP, offset + 1);
+			return errmsg_buf;
+		}
 		offset += n;
 	}
 	return NULL;
@@ -715,7 +759,7 @@ SEXP cigar_op_table(SEXP cigar)
  *          widths should be those of the reads before or after "hard
  *          clipping".
  * Return an integer vector of the same length as 'cigar' containing the
- * widths of the reads as inferred from the cigar information.
+ * lengths of the query sequences as inferred from the cigar information.
  */
 SEXP cigar_to_qwidth(SEXP cigar, SEXP before_hard_clipping)
 {
@@ -766,6 +810,38 @@ SEXP cigar_to_qwidth2(SEXP cigar, SEXP before_hard_clipping)
 			error("in 'cigar' element %d: %s", i + 1, errmsg);
 		}
 		INTEGER(ans)[i] = qwidth;
+	}
+	UNPROTECT(1);
+	return ans;
+}
+
+/* --- .Call ENTRY POINT ---
+ * Args:
+ *   cigar: character vector containing the extended CIGAR string for each
+ *          read.
+ * Return an integer vector of the same length as 'cigar' containing the
+ * widths of the alignments as inferred from the cigar information.
+ */
+SEXP cigar_to_width(SEXP cigar)
+{
+	SEXP ans, cigar_string;
+	int cigar_length, i, width;
+	const char *errmsg;
+
+	cigar_length = LENGTH(cigar);
+	PROTECT(ans = NEW_INTEGER(cigar_length));
+	for (i = 0; i < cigar_length; i++) {
+		cigar_string = STRING_ELT(cigar, i);
+		if (cigar_string == NA_STRING) {
+			INTEGER(ans)[i] = NA_INTEGER;
+			continue;
+		}
+		errmsg = cigar_string_to_width(cigar_string, &width);
+		if (errmsg != NULL) {
+			UNPROTECT(1);
+			error("in 'cigar' element %d: %s", i + 1, errmsg);
+		}
+		INTEGER(ans)[i] = width;
 	}
 	UNPROTECT(1);
 	return ans;

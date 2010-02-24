@@ -5,6 +5,7 @@
 \alias{validCigar}
 \alias{cigarOpTable}
 \alias{cigarToQWidth}
+\alias{cigarToWidth}
 \alias{cigarQNarrow}
 
 \alias{cigarToIRanges}
@@ -29,6 +30,7 @@
 cigarOpTable(cigar)
 
 cigarToQWidth(cigar, before.hard.clipping=FALSE)
+cigarToWidth(cigar)
 
 cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
 cigarToIRangesListByAlignment(cigar, pos, flag=NULL, drop.D.ranges=FALSE)
@@ -118,8 +120,15 @@ summarizeCigarTable(x)
   CIGAR operation.
 
   For \code{cigarToQWidth}: An integer vector of the same length
-  as \code{cigar} where each element is the width of the query as
-  inferred from the corresponding element in \code{cigar}
+  as \code{cigar} where each element is the width of the query (i.e.
+  the length of the query sequence) as inferred from the corresponding
+  element in \code{cigar} (NAs in \code{cigar} will produce NAs in the
+  returned vector).
+
+  For \code{cigarToWidth}: An integer vector of the same length
+  as \code{cigar} where each element is the width of the alignment
+  (i.e. its total length on the reference, gaps included)
+  as inferred from the corresponding element in \code{cigar}
   (NAs in \code{cigar} will produce NAs in the returned vector).
 
   For \code{cigarToIRanges}: An \link[IRanges]{IRanges} object
@@ -183,29 +192,33 @@ summarizeCigarTable(x)
 ## A. SIMPLE EXAMPLES
 ## ---------------------------------------------------------------------
 
-cigarToQWidth("3H15M55N4M2I6M2D5M6S")
-cigarToQWidth("3H15M55N4M2I6M2D5M6S", before.hard.clipping=TRUE)
+## With a cigar vector of length 1:
+cigar1 <- "3H15M55N4M2I6M2D5M6S"
+cigarToQWidth(cigar1)
+cigarToQWidth(cigar1, before.hard.clipping=TRUE)
+cigarToWidth(cigar1)
 
-cigarToIRanges("3H15M55N4M2I6M2D5M6S")
-cigarToIRanges("3H15M55N4M2I6M2D5M6S", merge.ranges=FALSE)
-cigarToIRanges("3H15M55N4M2I6M2D5M6S", drop.D.ranges=TRUE)
+cigarToIRanges(cigar1)
+cigarToIRanges(cigar1, merge.ranges=FALSE)
+cigarToIRanges(cigar1, drop.D.ranges=TRUE)
 
-cigar <- c("40M", "3H15M55N4M2I6M2D5M6S", "2S10M2000N15M", "3H25M5H")
+## With a cigar vector of length 4:
+cigar2 <- c("40M", cigar1, "2S10M2000N15M", "3H25M5H")
 pos <- c(1, 1001, 1,  351)
-cigarToIRangesListByAlignment(cigar, pos)
+cigarToIRangesListByAlignment(cigar2, pos)
 rname <- c("chr6", "chr6", "chr2", "chr6")
-cigarToIRangesListByRName(cigar, rname, pos)
+cigarToIRangesListByRName(cigar2, rname, pos)
 
-cigarOpTable(cigar)
+cigarOpTable(cigar2)
 
-splitCigar(cigar)
-cigarToRleList(cigar)
+splitCigar(cigar2)
+cigarToRleList(cigar2)
 
-cigarToCigarTable(cigar)
-cigarToCigarTable(cigar)[,"cigar"]
-cigarToCigarTable(cigar)[,"count"]
+cigarToCigarTable(cigar2)
+cigarToCigarTable(cigar2)[,"cigar"]
+cigarToCigarTable(cigar2)[,"count"]
 
-summarizeCigarTable(cigarToCigarTable(cigar))
+summarizeCigarTable(cigarToCigarTable(cigar2))
 
 ## ---------------------------------------------------------------------
 ## B. PERFORMANCE
@@ -219,28 +232,28 @@ if (interactive()) {
   set.seed(123)
   nreads <- 20000000L
   njunctionreads <- nreads * 5L / 100L
-  cigar <- character(nreads)
-  cigar[] <- "40M"
+  cigar3 <- character(nreads)
+  cigar3[] <- "40M"
   junctioncigars <- paste(
       paste(10:30, "M", sep=""),
       paste(sample(80:8000, njunctionreads, replace=TRUE), "N", sep=""),
       paste(30:10, "M", sep=""), sep="")
-  cigar[sample(nreads, njunctionreads)] <- junctioncigars
+  cigar3[sample(nreads, njunctionreads)] <- junctioncigars
   some_fake_rnames <- paste("chr", c(1:6, "X"), sep="")
   rname <- sample(some_fake_rnames, nreads, replace=TRUE)
   pos <- sample(80000000L, nreads, replace=TRUE)
 
   ## The following takes < 5 sec. to complete:
-  system.time(gpranges <- cigarToIRangesListByAlignment(cigar, pos))
+  system.time(gpranges <- cigarToIRangesListByAlignment(cigar3, pos))
 
   ## The following takes < 10 sec. to complete:
-  system.time(irl <- cigarToIRangesListByRName(cigar, rname, pos))
+  system.time(irl <- cigarToIRangesListByRName(cigar3, rname, pos))
 
   ## Internally, cigarToIRangesListByRName() turns 'rname' into a factor
   ## before starting the calculation. Hence it will run sligthly
   ## faster if 'rname' is already a factor.
   rname2 <- as.factor(rname)
-  system.time(irl2 <- cigarToIRangesListByRName(cigar, rname2, pos))
+  system.time(irl2 <- cigarToIRangesListByRName(cigar3, rname2, pos))
 
   ## The sizes of the resulting objects are about 240M and 160M,
   ## respectively:

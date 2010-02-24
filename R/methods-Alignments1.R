@@ -31,45 +31,6 @@ setMethod("ranges", "Alignments1",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Validity.
-###
-
-.valid.Alignments1.cigar <- function(x)
-{
-    x_cigar <- cigar(x)
-    if (!is.character(x_cigar) || !is.null(names(x_cigar)) || any(is.na(x_cigar)))
-        return("'cigar(x)' must be an unnamed character vector with no NAs")
-    tmp <- validCigar(x_cigar)
-    if (!is.null(tmp))
-        return(paste("in 'cigar(x)':", tmp))
-    NULL
-}
-
-.valid.Alignments1.ranges <- function(x)
-{
-    x_ranges <- ranges(x)
-    if (length(x_ranges) != length(cigar(x)))
-        return("'ranges(x)' and 'cigar(x)' must have the same length")
-    if (any(elementLengths(x_ranges) == 0L))
-        return("'ranges(x)' has elements with no ranges")
-    x_ranges2 <- cigarToIRangesListByAlignment(cigar(x), min(x_ranges))
-    if (!identical(x_ranges2, x_ranges))
-        return("'ranges(x)' and 'cigar(x)' are incompatible")
-    NULL
-}
-
-.valid.Alignments1 <- function(x)
-{
-    c(#.valid.Alignments1.rname(x),
-      #.valid.Alignments1.strand(x),
-      .valid.Alignments1.cigar(x))
-}
-
-setValidity2("Alignments1", .valid.Alignments1,
-    where=asNamespace("Rsamtools"))
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructors.
 ###
 

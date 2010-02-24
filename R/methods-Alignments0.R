@@ -54,69 +54,6 @@ setMethod("ranges", "Alignments0", function(x) x@ranges)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Validity.
-###
-
-.valid.Alignments0.rname <- function(x)
-{
-    x_rname <- rname(x)
-    if (!is.factor(x_rname) || !is.character(levels(x_rname))
-     || !is.null(names(x_rname)) || any(is.na(x_rname)))
-        return("'rname(x)' must be an unnamed character factor with no NAs")
-    if (length(x_rname) != length(cigar(x)))
-        return("'rname(x)' and 'cigar(x)' must have the same length")
-    NULL
-}
-
-.valid.Alignments0.strand <- function(x)
-{
-    x_strand <- strand(x)
-    if (!is.factor(x_strand) || !identical(levels(x_strand), levels(strand()))
-     || !is.null(names(x_strand)) || any(is.na(x_strand)))
-        return("'strand(x)' must be an unnamed character factor with no NAs (and with levels +, - and *)")
-    if (length(x_strand) != length(cigar(x)))
-        return("'strand(x)' and 'cigar(x)' must have the same length")
-    NULL
-}
-
-.valid.Alignments0.cigar <- function(x)
-{
-    x_cigar <- cigar(x)
-    if (!is.character(x_cigar) || !is.null(names(x_cigar)) || any(is.na(x_cigar)))
-        return("'cigar(x)' must be an unnamed character vector with no NAs")
-    tmp <- validCigar(x_cigar)
-    if (!is.null(tmp))
-        return(paste("in 'cigar(x)':", tmp))
-    NULL
-}
-
-.valid.Alignments0.ranges <- function(x)
-{
-    x_ranges <- ranges(x)
-    if (!is(x_ranges, "CompressedNormalIRangesList") || !is.null(names(x_ranges)))
-        return("'ranges(x)' must be an unnamed CompressedNormalIRangesList object")
-    if (length(x_ranges) != length(cigar(x)))
-        return("'ranges(x)' and 'cigar(x)' must have the same length")
-    if (any(elementLengths(x_ranges) == 0L))
-        return("'ranges(x)' has elements with no ranges")
-    x_ranges2 <- cigarToIRangesListByAlignment(cigar(x), min(x_ranges))
-    if (!identical(x_ranges2, x_ranges))
-        return("'ranges(x)' and 'cigar(x)' are incompatible")
-    NULL
-}
-
-.valid.Alignments0 <- function(x)
-{
-    c(.valid.Alignments0.rname(x),
-      .valid.Alignments0.strand(x),
-      .valid.Alignments0.cigar(x),
-      .valid.Alignments0.ranges(x))
-}
-
-setValidity2("Alignments0", .valid.Alignments0, where=asNamespace("Rsamtools"))
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructors.
 ###
 
