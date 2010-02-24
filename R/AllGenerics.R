@@ -35,6 +35,10 @@ setGeneric("readBAMasAlignments1",
                standardGeneric("readBAMasAlignments1"),
            signature="file")
 
+setGeneric("updateCigarAndStart",
+           function(x, cigar=NULL, start=NULL)
+               standardGeneric("updateCigarAndStart"))
+
 setGeneric("qnarrow",
            function(x, start=NA, end=NA, width=NA)
                standardGeneric("qnarrow"))

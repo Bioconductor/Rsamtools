@@ -168,3 +168,32 @@ setMethod("shift", "Alignments0",
     }
 )
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The "updateCigarAndStart" method.
+###
+### Performs atomic update of the cigar/start information.
+###
+
+setMethod("updateCigarAndStart", "Alignments0",
+    function(x, cigar=NULL, start=NULL)
+    {
+        if (is.null(cigar))
+            cigar <- cigar(x)
+        else if (!is.character(cigar) || length(cigar) != length(x))
+            stop("when not NULL, 'cigar' must be a character vector ",
+                 "of the same length as 'x'")
+        if (is.null(start))
+            start <- start(x)
+        else if (!is.integer(start) || length(start) != length(x))
+            stop("when not NULL, 'start' must be an integer vector ",
+                 "of the same length as 'x'")
+        ranges <- cigarToIRangesListByAlignment(cigar, start)
+        ## Atomic update (until the 2 slots are updated, x@cigar and x@ranges
+        ## will be temporarily out of sync):
+        x@cigar <- cigar
+        x@ranges <- ranges
+        x
+    }
+)
+

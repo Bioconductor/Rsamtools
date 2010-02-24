@@ -22,6 +22,9 @@
 ###   shift(x, shift) - GappedAlignments object of the same length and class
 ###                 as 'x' (endomorphism).
 ###
+###   updateCigarAndStart(x, cigar=NULL, start=NULL) - GappedAlignments
+###                 object of the same length and class as 'x' (endomorphism).
+###
 ###   qnarrow(x, start=NA, end=NA, width=NA) - GappedAlignments object of the
 ###                 same length and class as 'x' (endomorphism).
 ###
@@ -34,7 +37,7 @@
 ###
 ### Concrete GappedAlignments implementations just need to define:
 ###   length(x), rname(x), strand(x), cigar(x), granges(x), ranges(x),
-###   x[i] and shift(x, shift)
+###   x[i], shift(x, shift) and updateCigarAndStart(x, cigar=NULL, start=NULL)
 ### and the default methods defined in this file will work.
 
 
@@ -230,10 +233,10 @@ setMethod("show", "GappedAlignments",
 setMethod("qnarrow", "GappedAlignments",
     function(x, start=NA, end=NA, width=NA)
     {
-        narrowed_cigar <- cigarQNarrow(cigar(x),
-                                       start=start, end=end, width=width)
-        x@cigar <- as.character(narrowed_cigar)
-        shift(x, attr(narrowed_cigar, "rshift"))
+        ans_cigar <- cigarQNarrow(cigar(x),
+                                  start=start, end=end, width=width)
+        ans_start <- start(x) + attr(ans_cigar, "rshift")
+        updateCigarAndStart(x, cigar=ans_cigar, start=ans_start)
     }
 )
 

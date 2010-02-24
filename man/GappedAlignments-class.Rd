@@ -37,6 +37,8 @@
 \alias{[,Alignments1,ANY,ANY-method}
 \alias{shift,Alignments0-method}
 \alias{shift,Alignments1-method}
+\alias{updateCigarAndStart,Alignments0-method}
+\alias{updateCigarAndStart,Alignments1-method}
 \alias{qnarrow,GappedAlignments-method}
 \alias{coverage,GappedAlignments-method}
 \alias{findOverlaps,GappedAlignments,ANY-method}
@@ -353,6 +355,10 @@ qnarrow(al0, start=4, end=-6)
 ## Note that the 'start' and 'end' arguments specify what part of each
 ## query sequence should be kept (negative values being relative to the
 ## right end of the query sequence), not what part should be trimmed.
+
+## Trimming on the left doesn't change the "end" of the queries.
+qnarrow(al0, start=21)
+stopifnot(identical(end(qnarrow(al0, start=21)), end(al0)))
 
 ## ---------------------------------------------------------------------
 ## D. coverage()
