@@ -37,19 +37,21 @@ setClass("BamViews",
 ### GappedAlignments objects
 ###
 
-### Incomplete implementation. The full implementation is achieved by each
-### concrete class below.
+### Incomplete implementation (the genomic ranges of the alignments are
+### missing). The full implementation is achieved by each concrete class below.
 setClass("GappedAlignments",
     contains="Sequence",
     representation(
         "VIRTUAL",
-        cigar="character"              # extended CIGAR (see SAM format specs)
+        cigar="character"             # extended CIGAR (see SAM format specs)
         #mismatches="characterORNULL", # see MD optional field in SAM format specs
         #values="DataFrame"
     )
 )
 
 ### First GappedAlignments implementation: Alignments0
+### The genomic ranges of the alignments are stored in 3 slots: 'rname',
+### 'strand' and 'ranges'.
 ### See http://wiki.fhcrc.org/bioc/Multiple_alignment_rep_v1 for the details
 ### of the class proposal.
 setClass("Alignments0",
@@ -62,15 +64,24 @@ setClass("Alignments0",
 )
 
 ### Second GappedAlignments implementation: Alignments1
-### The implementation of Alignments1 is based on the new GRangesList
-### container defined in BSgenome. With just the 'cigar' slot as a proper
-### additional slot, Alignments1 is equivalent to Alignments0 i.e. it allows
-### storing the same information than Alignments0 (with some internal
-### redundancy though that could make it slightly bigger).
+### The genomic ranges of the alignments are stored in the 'granges' slot of
+### type GRangesList.
 setClass("Alignments1",
     contains="GappedAlignments",
     representation(
         granges="GRangesList"
+    )
+)
+
+### Third GappedAlignments implementation: Alignments2
+### The genomic ranges of the alignments are stored in 3 slots: 'rname',
+### 'strand' and 'start'.
+setClass("Alignments2",
+    contains="GappedAlignments",
+    representation(
+        rname="factor",               # character factor
+        strand="raw",
+        start="integer"               # POS field in SAM
     )
 )
 

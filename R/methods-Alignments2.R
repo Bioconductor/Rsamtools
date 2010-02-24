@@ -1,5 +1,5 @@
 ### =========================================================================
-### Alignments1 objects
+### Alignments2 objects
 ### -------------------------------------------------------------------------
 ###
 
@@ -8,52 +8,60 @@
 ### Accessor-like methods.
 ###
 
-setMethod("rname", "Alignments1",
-    function(x)
-    {
-        xgrg <- x@granges
-        as.factor(seqnames(xgrg@unlistData))[xgrg@partitioning@end]
-    }
-)
+setMethod("rname", "Alignments2", function(x) x@rname)
 
-setReplaceMethod("rname", "Alignments1",
+setReplaceMethod("rname", "Alignments2",
     function(x, value)
     {
-        value <- normargRNameReplaceValue(x, value, ans.type="Rle")
-        value <- rep.int(value, elementLengths(x@granges))
-        seqnames(x@granges@unlistData) <- value
+        x@rname <- normargRNameReplaceValue(x, value)
         x
     }
 )
 
-setMethod("strand", "Alignments1",
+setMethod("strand", "Alignments2",
+    function(x) strand(.compactRawVectorAsLogical(x@strand, length(x)))
+)
+
+setMethod("granges", "Alignments2",
     function(x)
-    {
-        xgrg <- x@granges
-        as.factor(strand(xgrg@unlistData))[xgrg@partitioning@end]
-    }
+        GappedAlignmentsAsGRangesList(x@rname, strand(x), ranges(x))
 )
 
-setMethod("granges", "Alignments1", function(x) x@granges)
-
-setMethod("ranges", "Alignments1",
-    function(x) as(ranges(x@granges), "CompressedNormalIRangesList")
+setMethod("ranges", "Alignments2",
+    function(x)
+        cigarToIRangesListByAlignment(x@cigar, x@start)
 )
+
+setMethod("start", "Alignments2", function(x, ...) x@start)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructors.
 ###
 
-Alignments1 <- function(rname=factor(), strand=BSgenome::strand(),
-                        pos=integer(), cigar=character())
+Alignments2 <- function(rname=factor(), strand=BSgenome::strand(),
+                        pos=integer(0), cigar=character(0))
 {
-    ranges <- cigarToIRangesListByAlignment(cigar, pos)
-    granges <- GappedAlignmentsAsGRangesList(rname, strand, ranges)
-    new("Alignments1", cigar=cigar, granges=granges)
+    if (!is.factor(rname) || !is.character(levels(rname))) {
+        if (!is.character(rname))
+            stop("'rname' must be a character vector/factor")
+        rname <- as.factor(rname)
+    }
+    if (any(is.na(rname)))
+        stop("'rname' cannot have NAs")
+    if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
+        stop("'strand' must be a character factor")
+    if (!is.integer(pos) || any(is.na(pos)))
+        stop("'pos' must be an integer vector with no NAs")
+    if (!is.character(cigar) || any(is.na(cigar)))
+        stop("'cigar' must be a character vector with no NAs")
+    strand <- .logicalAsCompactRawVector(strand == "-")
+    new("Alignments2", rname=rname, strand=strand,
+                       cigar=cigar, start=pos)
 }
 
-setMethod(readBAMasAlignments1, "character",
+### This is our only constructor for now.
+setMethod(readBAMasAlignments2, "character", 
           function(file, index, ..., which)
 {
     if (missing(index))
@@ -68,13 +76,13 @@ setMethod(readBAMasAlignments1, "character",
     ## unlist(list(factor())) returns integer(0), so exit early if all
     ## values are empty
     if (all(sapply(bam, function(x) length(x$rname) == 0)))
-        return(Alignments1())
+        return(Alignments2())
     rname <- unlist(unname(lapply(bam, "[[", "rname")))
     strand <- unlist(unname(lapply(bam, "[[", "strand")))
     pos <- unlist(unname(lapply(bam, "[[", "pos")))
     cigar <-
         unlist(unname(lapply(bam, function(x) as.character(cigars(x$cigar)))))
-    Alignments1(rname=rname, strand=strand, pos=pos, cigar=cigar)
+    Alignments2(rname=rname, strand=strand, pos=pos, cigar=cigar)
 })
 
 
@@ -82,9 +90,9 @@ setMethod(readBAMasAlignments1, "character",
 ### Coercion.
 ###
 
-setAs("GappedAlignments", "Alignments1",
+setAs("GappedAlignments", "Alignments2",
     function(from)
-        Alignments1(rname=rname(from), strand=strand(from),
+        Alignments2(rname=rname(from), strand=strand(from),
                     pos=start(from), cigar=cigar(from))
 
 )
@@ -95,11 +103,13 @@ setAs("GappedAlignments", "Alignments1",
 ###
 
 ### Supported 'i' types: numeric vector, logical vector, NULL and missing.
-setMethod("[", "Alignments1",
+setMethod("[", "Alignments2",
     function(x, i, j, ... , drop=TRUE)
     {
         x <- callNextMethod()
-        x@granges <- x@granges[i]
+        x@rname <- x@rname[i]
+        x@strand <- .subsetCompactRawVector(x@strand, i)
+        x@start <- x@start[i]
         x
     }
 )
@@ -109,13 +119,11 @@ setMethod("[", "Alignments1",
 ### The "shift" method.
 ###
 
-setMethod("shift", "Alignments1",
+setMethod("shift", "Alignments2",
     function(x, shift, use.names=TRUE)
     {
         shift <- normargShift(shift, length(x))
-        shift <- rep.int(shift, elementLengths(x@granges))
-        x@granges@unlistData <- shift(x@granges@unlistData,
-                                      shift, use.names=use.names)
+        x@start <- x@start + shift
         x
     }
 )
@@ -127,7 +135,7 @@ setMethod("shift", "Alignments1",
 ### Performs atomic update of the cigar/start information.
 ###
 
-setMethod("updateCigarAndStart", "Alignments1",
+setMethod("updateCigarAndStart", "Alignments2",
     function(x, cigar=NULL, start=NULL)
     {
         if (is.null(cigar))
@@ -140,12 +148,8 @@ setMethod("updateCigarAndStart", "Alignments1",
         else if (!is.integer(start) || length(start) != length(x))
             stop("when not NULL, 'start' must be an integer vector ",
                  "of the same length as 'x'")
-        ranges <- cigarToIRangesListByAlignment(cigar, start)
-        granges <- GappedAlignmentsAsGRangesList(rname(x), strand(x), ranges)
-        ## Atomic update (until the 2 slots are updated, x@cigar and x@granges
-        ## will be temporarily out of sync):
         x@cigar <- cigar
-        x@granges <- granges
+        x@start <- start
         x
     }
 )

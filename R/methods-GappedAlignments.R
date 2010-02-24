@@ -49,11 +49,11 @@
 setMethod("length", "GappedAlignments", function(x) length(x@cigar))
 
 setMethod("cigar", "GappedAlignments", function(x) x@cigar)
-setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(cigar(x)))
+setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(x@cigar))
 
 setMethod("start", "GappedAlignments", function(x, ...) min(ranges(x)))
 setMethod("end", "GappedAlignments", function(x, ...) max(ranges(x)))
-setMethod("width", "GappedAlignments", function(x) cigarToWidth(cigar(x)))
+setMethod("width", "GappedAlignments", function(x) cigarToWidth(x@cigar))
 
 setMethod("ngap", "GappedAlignments",
     function(x) {elementLengths(ranges(x)) - 1L}
@@ -273,6 +273,41 @@ setMethod("show", "GappedAlignments",
                          stringsAsFactors=FALSE)
         }
         show(showme)
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Subsetting.
+###
+
+### Supported 'i' types: numeric vector, logical vector, NULL and missing.
+setMethod("[", "GappedAlignments",
+    function(x, i, j, ... , drop=TRUE)
+    {
+        if (!missing(j) || length(list(...)) > 0L)
+            stop("invalid subsetting")
+        if (missing(i))
+            return(x)
+        if (!is.atomic(i))
+            stop("invalid subscript type")
+        lx <- length(x)
+        if (length(i) == 0L) {
+            i <- integer(0)
+        } else if (is.numeric(i)) {
+            if (min(i) < 0L)
+                i <- seq_len(lx)[i]
+            else if (!is.integer(i))
+                i <- as.integer(i)
+        } else if (is.logical(i)) {
+            if (length(i) > lx)
+                stop("subscript out of bounds")
+            i <- seq_len(lx)[i]
+        } else {
+            stop("invalid subscript type")
+        }
+        x@cigar <- x@cigar[i]
+        x
     }
 )
 

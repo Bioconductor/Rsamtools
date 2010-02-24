@@ -3,6 +3,7 @@
 ### -------------------------------------------------------------------------
 ###
 
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Some low-level helper functions for manipulating the @strand slot.
 ###
@@ -115,7 +116,7 @@ setMethod(readBAMasAlignments0, "character",
 ### Coercion.
 ###
 
-setAs("Alignments1", "Alignments0",
+setAs("GappedAlignments", "Alignments0",
     function(from)
         Alignments0(rname=rname(from), strand=strand(from),
                     pos=start(from), cigar=cigar(from))
@@ -131,30 +132,9 @@ setAs("Alignments1", "Alignments0",
 setMethod("[", "Alignments0",
     function(x, i, j, ... , drop=TRUE)
     {
-        if (!missing(j) || length(list(...)) > 0L)
-            stop("invalid subsetting")
-        if (missing(i))
-            return(x)
-        if (!is.atomic(i))
-            stop("invalid subscript type")
-        lx <- length(x)
-        if (length(i) == 0L) {
-            i <- integer(0)
-        } else if (is.numeric(i)) {
-            if (min(i) < 0L)
-                i <- seq_len(lx)[i]
-            else if (!is.integer(i))
-                i <- as.integer(i)
-        } else if (is.logical(i)) {
-            if (length(i) > lx)
-                stop("subscript out of bounds")
-            i <- seq_len(lx)[i]
-        } else {
-            stop("invalid subscript type")
-        }
-        x@strand <- .subsetCompactRawVector(x@strand, i)
+        x <- callNextMethod()
         x@rname <- x@rname[i]
-        x@cigar <- x@cigar[i]
+        x@strand <- .subsetCompactRawVector(x@strand, i)
         x@ranges <- x@ranges[i]
         x
     }

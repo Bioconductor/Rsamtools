@@ -37,6 +37,11 @@ setGeneric("readBAMasAlignments1",
                standardGeneric("readBAMasAlignments1"),
            signature="file")
 
+setGeneric("readBAMasAlignments2",
+           function(file, index, ..., which)
+               standardGeneric("readBAMasAlignments2"),
+           signature="file")
+
 setGeneric("updateCigarAndStart",
            function(x, cigar=NULL, start=NULL)
                standardGeneric("updateCigarAndStart"))
