@@ -134,12 +134,12 @@ GappedAlignmentsAsGRangesList <- function(rname, strand, ranges, check=TRUE)
             stop("'ranges' must be a CompressedNormalIRangesList object")
     }
     nrg_per_alignment <- elementLengths(ranges)
-    rname <- Rle(rname, nrg_per_alignment)
+    seqnames <- Rle(rname, nrg_per_alignment)
     strand <- Rle(strand, nrg_per_alignment)
-    ranges <- unlist(ranges)
-    unlistData <- GRanges(seqnames=rname, ranges=ranges, strand=strand)
-    partitioning <- PartitioningByEnd(cumsum(nrg_per_alignment))
-    new("GRangesList", unlistData=unlistData, partitioning=partitioning)
+    granges <- GRanges(seqnames=seqnames,
+                       ranges=ranges@unlistData,
+                       strand=strand)
+    new("GRangesList", unlistData=granges, partitioning=ranges@partitioning)
 }
 
 
