@@ -98,6 +98,7 @@ cigar_table(SEXP cigar)
  * cigar_op_table()
  * cigar_to_qwidth()
  * cigar_to_width()
+ * cigar_qnarrow()
  * cigar_to_IRanges()
  * cigar_to_list_of_IRanges_by_alignment()
  * cigar_to_list_of_IRanges_by_rname()
@@ -468,6 +469,166 @@ static const char *qnarrow_cigar_string(SEXP cigar_string,
 		if (OPL <= 0) {
 			snprintf(errmsg_buf, sizeof(errmsg_buf),
 				 "CIGAR is empty after qnarrowing");
+			return errmsg_buf;
+		}
+		buf_offset += sprintf(cigar_buf + buf_offset,
+				      "%d%c", OPL, OP);
+	}
+	return NULL;
+}
+
+static const char *Lnarrow_cigar_string(SEXP cigar_string,
+		int *Lwidth, int *Loffset, int *rshift)
+{
+	const char *cig0;
+	int offset, n, OPL /* Operation Length */;
+	char OP /* Operation */;
+
+	if (cigar_string == NA_STRING)
+		return "CIGAR string is NA";
+	if (LENGTH(cigar_string) == 0)
+		return "CIGAR string is empty";
+	cig0 = CHAR(cigar_string);
+	*rshift = offset = 0;
+	while ((n = get_next_cigar_OP(cig0, offset, &OPL, &OP))) {
+		if (n == -1)
+			return errmsg_buf;
+		switch (OP) {
+		/* Alignment match (can be a sequence match or mismatch) */
+		    case 'M':
+			if (*Lwidth < OPL) {
+				*Loffset = offset;
+				*rshift += *Lwidth;
+				return NULL;
+			}
+			*Lwidth -= OPL;
+			*rshift += OPL;
+		    break;
+		/* Insertion to the reference or soft/hard clip on the read */
+		    case 'I': case 'S': case 'H':
+		    break;
+		/* Deletion (or skipped region) from the reference */
+		    case 'D': case 'N':
+			if (*Lwidth < OPL)
+				*Lwidth = 0;
+			else
+				*Lwidth -= OPL;
+			*rshift += OPL;
+		    break;
+		/* Padding (silent deletion from the padded reference
+		   sequence) */
+		    case 'P':
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "CIGAR operation '%c' (at char %d) is not "
+				 "supported yet, sorry!", OP, offset + 1);
+			return errmsg_buf;
+		    break;
+		    default:
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "unknown CIGAR operation '%c' at char %d",
+				 OP, offset + 1);
+			return errmsg_buf;
+		}
+		offset += n;
+	}
+	snprintf(errmsg_buf, sizeof(errmsg_buf),
+		 "CIGAR is empty after narrowing");
+	return errmsg_buf;
+}
+
+static const char *Rnarrow_cigar_string(SEXP cigar_string,
+		int *Rwidth, int *Roffset)
+{
+	const char *cig0;
+	int offset, n, OPL /* Operation Length */;
+	char OP /* Operation */;
+
+	if (cigar_string == NA_STRING)
+		return "CIGAR string is NA";
+	if (LENGTH(cigar_string) == 0)
+		return "CIGAR string is empty";
+	cig0 = CHAR(cigar_string);
+	offset = LENGTH(cigar_string);
+	while ((n = get_prev_cigar_OP(cig0, offset, &OPL, &OP))) {
+		if (n == -1)
+			return errmsg_buf;
+		offset -= n;
+		switch (OP) {
+		/* Alignment match (can be a sequence match or mismatch) */
+		    case 'M':
+			if (*Rwidth < OPL) {
+				*Roffset = offset;
+				return NULL;
+			}
+			*Rwidth -= OPL;
+		    break;
+		/* Insertion to the reference or soft/hard clip on the read */
+		    case 'I': case 'S': case 'H':
+		    break;
+		/* Deletion (or skipped region) from the reference */
+		    case 'D': case 'N':
+			if (*Rwidth < OPL)
+				*Rwidth = 0;
+			else
+				*Rwidth -= OPL;
+		    break;
+		/* Padding (silent deletion from the padded reference
+		   sequence) */
+		    case 'P':
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "CIGAR operation '%c' (at char %d) is not "
+				 "supported yet, sorry!", OP, offset + 1);
+			return errmsg_buf;
+		    break;
+		    default:
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "unknown CIGAR operation '%c' at char %d",
+				 OP, offset + 1);
+			return errmsg_buf;
+		}
+	}
+	snprintf(errmsg_buf, sizeof(errmsg_buf),
+		 "CIGAR is empty after narrowing");
+	return errmsg_buf;
+}
+
+/* FIXME: 'cigar_buf' is under the risk of a buffer overflow! */
+static const char *narrow_cigar_string(SEXP cigar_string,
+		int Lwidth, int Rwidth, char *cigar_buf, int *rshift)
+{
+	int Loffset, Roffset, buf_offset;
+	const char *cig0;
+	int offset, n, OPL /* Operation Length */;
+	char OP /* Operation */;
+	const char *errmsg;
+
+	//Rprintf("narrow_cigar_string():\n");
+	errmsg = Lnarrow_cigar_string(cigar_string, &Lwidth, &Loffset,
+				      rshift);
+	if (errmsg != NULL)
+		return errmsg;
+	//Rprintf("  Lwidth=%d Loffset=%d *rshift=%d\n",
+	//	Lwidth, Loffset, *rshift);
+	errmsg = Rnarrow_cigar_string(cigar_string, &Rwidth, &Roffset);
+	if (errmsg != NULL)
+		return errmsg;
+	//Rprintf("  Rwidth=%d Roffset=%d\n", Rwidth, Roffset);
+	if (Roffset < Loffset) {
+		snprintf(errmsg_buf, sizeof(errmsg_buf),
+			 "CIGAR is empty after narrowing");
+		return errmsg_buf;
+	}
+	buf_offset = 0;
+	cig0 = CHAR(cigar_string);
+	for (offset = Loffset; offset <= Roffset; offset += n) {
+		n = get_next_cigar_OP(cig0, offset, &OPL, &OP);
+		if (offset == Loffset)
+			OPL -= Lwidth;
+		if (offset == Roffset)
+			OPL -= Rwidth;
+		if (OPL <= 0) {
+			snprintf(errmsg_buf, sizeof(errmsg_buf),
+				 "CIGAR is empty after narrowing");
 			return errmsg_buf;
 		}
 		buf_offset += sprintf(cigar_buf + buf_offset,
@@ -873,6 +1034,43 @@ SEXP cigar_qnarrow(SEXP cigar, SEXP left_qwidth, SEXP right_qwidth)
 		errmsg = qnarrow_cigar_string(cigar_string,
 				INTEGER(left_qwidth)[i],
 				INTEGER(right_qwidth)[i],
+				cigar_buf, INTEGER(ans_rshift) + i);
+		if (errmsg != NULL) {
+			UNPROTECT(2);
+			error("in 'cigar' element %d: %s", i + 1, errmsg);
+		}
+		PROTECT(ans_cigar_string = mkChar(cigar_buf));
+		SET_STRING_ELT(ans_cigar, i, ans_cigar_string);
+		UNPROTECT(1);
+	}
+
+	PROTECT(ans = NEW_LIST(2));
+	SET_VECTOR_ELT(ans, 0, ans_cigar);
+	SET_VECTOR_ELT(ans, 1, ans_rshift);
+	UNPROTECT(3);
+	return ans;
+}
+
+SEXP cigar_narrow(SEXP cigar, SEXP left_width, SEXP right_width)
+{
+	SEXP ans, ans_cigar, ans_cigar_string, ans_rshift, cigar_string;
+	int cigar_length, i;
+	static char cigar_buf[1024];
+	const char *errmsg;
+
+	cigar_length = LENGTH(cigar);
+	PROTECT(ans_cigar = NEW_CHARACTER(cigar_length));
+	PROTECT(ans_rshift = NEW_INTEGER(cigar_length));
+	for (i = 0; i < cigar_length; i++) {
+		cigar_string = STRING_ELT(cigar, i);
+		if (cigar_string == NA_STRING) {
+			SET_STRING_ELT(ans_cigar, i, NA_STRING);
+			INTEGER(ans_rshift)[i] = NA_INTEGER;
+			continue;
+		}
+		errmsg = narrow_cigar_string(cigar_string,
+				INTEGER(left_width)[i],
+				INTEGER(right_width)[i],
 				cigar_buf, INTEGER(ans_rshift) + i);
 		if (errmsg != NULL) {
 			UNPROTECT(2);

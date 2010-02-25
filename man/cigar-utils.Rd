@@ -7,6 +7,7 @@
 \alias{cigarToQWidth}
 \alias{cigarToWidth}
 \alias{cigarQNarrow}
+\alias{cigarNarrow}
 
 \alias{cigarToIRanges}
 \alias{cigarToIRangesListByAlignment}
@@ -31,6 +32,9 @@ cigarOpTable(cigar)
 
 cigarToQWidth(cigar, before.hard.clipping=FALSE)
 cigarToWidth(cigar)
+
+cigarQNarrow(cigar, start=NA, end=NA, width=NA)
+cigarNarrow(cigar, start=NA, end=NA, width=NA)
 
 cigarToIRanges(cigar, drop.D.ranges=FALSE, merge.ranges=TRUE)
 cigarToIRangesListByAlignment(cigar, pos, flag=NULL, drop.D.ranges=FALSE)
@@ -63,6 +67,11 @@ summarizeCigarTable(x)
     sequences stored in the SAM/BAM file.
     If YES (\code{before.hard.clipping=TRUE}), then the returned
     widths are the lengths of the original reads.
+  }
+  \item{start,end,width}{
+    Vectors of integers. NAs and negative values are accepted and
+    "solved" according to the rules of the SEW (Start/End/Width)
+    interface (see \code{?\link[IRanges]{solveUserSEW}} for the details).
   }
   \item{drop.D.ranges}{
     Should the ranges corresponding to a deletion from the
@@ -124,6 +133,13 @@ summarizeCigarTable(x)
   the length of the query sequence) as inferred from the corresponding
   element in \code{cigar} (NAs in \code{cigar} will produce NAs in the
   returned vector).
+
+  For \code{cigarQNarrow} and \code{cigarNarrow}: A character vector
+  of the same length as \code{cigar} containing the narrowed cigars.
+  In addition the vector has an "rshift" attribute which is an integer
+  vector of the same length as \code{cigar}. It contains the values that
+  would need to be added to the POS field of a SAM/BAM file as a
+  consequence of this cigar narrowing.
 
   For \code{cigarToWidth}: An integer vector of the same length
   as \code{cigar} where each element is the width of the alignment
@@ -194,10 +210,30 @@ summarizeCigarTable(x)
 
 ## With a cigar vector of length 1:
 cigar1 <- "3H15M55N4M2I6M2D5M6S"
+
+## cigarToQWidth()/cigarToWidth():
 cigarToQWidth(cigar1)
 cigarToQWidth(cigar1, before.hard.clipping=TRUE)
 cigarToWidth(cigar1)
 
+## cigarQNarrow():
+cigarQNarrow(cigar1, start=4, end=-3)
+cigarQNarrow(cigar1, start=10)
+cigarQNarrow(cigar1, start=19)
+cigarQNarrow(cigar1, start=24)
+
+## cigarNarrow():
+cigarNarrow(cigar1)  # only drops the soft/hard clipping
+cigarNarrow(cigar1, start=10)
+cigarNarrow(cigar1, start=15)
+cigarNarrow(cigar1, start=15, width=57)
+cigarNarrow(cigar1, start=16)
+#cigarNarrow(cigar1, start=16, width=55)  # ERROR! (empty cigar)
+cigarNarrow(cigar1, start=71)
+cigarNarrow(cigar1, start=72)
+cigarNarrow(cigar1, start=75)
+
+## cigarToIRanges():
 cigarToIRanges(cigar1)
 cigarToIRanges(cigar1, merge.ranges=FALSE)
 cigarToIRanges(cigar1, drop.D.ranges=TRUE)

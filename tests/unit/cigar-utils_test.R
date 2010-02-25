@@ -45,6 +45,36 @@ test_cigarQNarrow <- function()
     checkEquals(ans, ans0)
 }
 
+test_cigarNarrow <- function()
+{
+    cigar <- c("25M4D10M", "6S17M6I3M3S")
+
+    ans <- cigarNarrow(cigar)
+    ans0 <- c("25M4D10M", "17M6I3M")
+    attr(ans0, "rshift") <- c(0L, 0L)
+    checkEquals(ans, ans0)
+
+    ans <- cigarNarrow(cigar, start=3, end=-3)
+    ans0 <- c("23M4D8M", "15M6I1M")
+    attr(ans0, "rshift") <- c(2L, 2L)
+    checkEquals(ans, ans0)
+
+    ans <- cigarNarrow(cigar, start=7, end=-4)
+    ans0 <- c("19M4D7M", "11M")
+    attr(ans0, "rshift") <- c(6L, 6L)
+    checkEquals(ans, ans0)
+
+    ans <- cigarNarrow(cigar, start=8, end=-5)
+    ans0 <- c("18M4D6M", "9M")
+    attr(ans0, "rshift") <- c(7L, 7L)
+    checkEquals(ans, ans0)
+
+    ans <- cigarNarrow(cigar, start=26, end=-10)
+    ans0 <- c("1M", "1I")
+    attr(ans0, "rshift") <- c(29L, 17L)
+    checkEquals(ans, ans0)
+}
+
 test_cigarToIRangesListByRName <- function()
 {
     cigar <- c("30M5000N10M", "50M", "90M10M5I50M10D40M", "18M10I22M", "99I")
