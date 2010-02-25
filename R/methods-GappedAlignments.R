@@ -29,6 +29,9 @@
 ###   qnarrow(x, start=NA, end=NA, width=NA) - GappedAlignments object of the
 ###                 same length and class as 'x' (endomorphism).
 ###
+###   narrow(x, start=NA, end=NA, width=NA) - GappedAlignments object of the
+###                 same length and class as 'x' (endomorphism).
+###
 ###   coverage(x) - named RleList object with one element (integer-Rle) per
 ###                 unique reference sequence.
 ###
@@ -314,7 +317,7 @@ setMethod("[", "GappedAlignments",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### The "qnarrow" method.
+### The "qnarrow" and "narrow" methods.
 ###
 
 setMethod("qnarrow", "GappedAlignments",
@@ -322,6 +325,16 @@ setMethod("qnarrow", "GappedAlignments",
     {
         ans_cigar <- cigarQNarrow(cigar(x),
                                   start=start, end=end, width=width)
+        ans_start <- start(x) + attr(ans_cigar, "rshift")
+        updateCigarAndStart(x, cigar=ans_cigar, start=ans_start)
+    }
+)
+
+setMethod("narrow", "GappedAlignments",
+    function(x, start=NA, end=NA, width=NA, use.names=TRUE)
+    {
+        ans_cigar <- cigarNarrow(cigar(x),
+                                 start=start, end=end, width=width)
         ans_start <- start(x) + attr(ans_cigar, "rshift")
         updateCigarAndStart(x, cigar=ans_cigar, start=ans_start)
     }

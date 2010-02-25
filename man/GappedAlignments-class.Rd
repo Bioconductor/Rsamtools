@@ -44,6 +44,7 @@
 \alias{updateCigarAndStart,Alignments0-method}
 \alias{updateCigarAndStart,Alignments1-method}
 \alias{qnarrow,GappedAlignments-method}
+\alias{narrow,GappedAlignments-method}
 \alias{coverage,GappedAlignments-method}
 \alias{findOverlaps,GappedAlignments,ANY-method}
 \alias{findOverlaps,ANY,GappedAlignments-method}
@@ -240,18 +241,35 @@
     \item{}{
       \code{shift(x, shift)}:
       \code{x} is a GappedAlignments object.
-      Returns a new GappedAlignments object (of the same type as \code{x},
-      i.e. Alignments0 or Alignments1) where all the alignments have been
-      shifted along the reference by the number of positions specified in
-      the \code{shift} argument (vector of integers).
+      Returns a new GappedAlignments object of the same length and type
+      (i.e. Alignments0 or Alignments1) as \code{x} where all the alignments
+      have been shifted along the reference by the number of positions
+      specified in the \code{shift} argument (vector of integers).
     }
     \item{}{
       \code{qnarrow(x, start=NA, end=NA, width=NA)}:
       \code{x} is a GappedAlignments object.
-      Returns a new GappedAlignments object (of the same type as \code{x},
-      i.e. Alignments0 or Alignments1) where all the query sequences have
-      been narrowed according to the \code{start}, \code{end} and
-      \code{width} arguments.
+      Returns a new GappedAlignments object of the same length and type
+      (i.e. Alignments0 or Alignments1) as \code{x} describing how the
+      narrowed query sequences align to the reference.
+      The \code{start}/\code{end}/\code{width} arguments describe how
+      to narrow the query sequences. They must be vectors of integers.
+      NAs and negative values are accepted and "solved" according to the
+      rules of the SEW (Start/End/Width) interface (see
+      \code{?\link[IRanges]{solveUserSEW}} for the details).
+    }
+    \item{}{
+      \code{narrow(x, start=NA, end=NA, width=NA)}:
+      \code{x} is a GappedAlignments object.
+      Returns a new GappedAlignments object of the same length and type
+      (i.e. Alignments0 or Alignments1) as \code{x} describing the
+      narrowed alignments. Unlike with \code{qnarrow} the
+      \code{start}/\code{end}/\code{width} arguments here describe
+      the narrowing on the reference side.
+      Like with \code{qnarrow}, they must be vectors of integers.
+      NAs and negative values are accepted and "solved" according to the
+      rules of the SEW (Start/End/Width) interface (see
+      \code{?\link[IRanges]{solveUserSEW}} for the details).
     }
     \item{}{
       \code{coverage(x)}:
@@ -363,8 +381,11 @@ al0[cigar(al0) == "35M" & qwidth(al0) != 35]
 al0[cigar(al0) != "35M" & qwidth(al0) == 35]
 
 ## ---------------------------------------------------------------------
-## C. qnarrow()
+## C. qnarrow()/narrow()
 ## ---------------------------------------------------------------------
+## Note that there is no difference between qnarrow() and narrow() when
+## all the alignments are simple and with no indels.
+
 ## This trims 3 nucleotides on the left and 5 nucleotides on the right
 ## of each alignment:
 qnarrow(al0, start=4, end=-6)
