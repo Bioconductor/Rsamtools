@@ -15,7 +15,7 @@ timingsGappedAlignments <- function(class, bam_filename)
     cat("----------------------------------------------------------------\n")
     f <- file.path(bam_dir, bam_filename)
 
-    ## readBAMasAlignments[123]:
+    ## readBAMasAlignments[012]:
     readfuncname <- paste("readBAMas", class, sep="")
     T0 <- system.time(x <- get(readfuncname)(f))[["elapsed"]]
     cat("x <- ", readfuncname, "(file): ", T0, "\n", sep="")

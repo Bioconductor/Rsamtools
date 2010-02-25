@@ -38,7 +38,9 @@ setClass("BamViews",
 ###
 
 ### Incomplete implementation (the genomic ranges of the alignments are
-### missing). The full implementation is achieved by each concrete class below.
+### missing). The full implementation is achieved by each concrete class
+### below. See inst/doc/GappedAlignments-timings.txt for the timings (and
+### memory footprint) of the various GappedAlignments implementations.
 setClass("GappedAlignments",
     contains="Sequence",
     representation(
