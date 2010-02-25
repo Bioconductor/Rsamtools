@@ -10,39 +10,58 @@
 \alias{class:Alignments1}
 \alias{Alignments1-class}
 \alias{Alignments1}
+\alias{class:Alignments2}
+\alias{Alignments2-class}
+\alias{Alignments2}
 
 \alias{length,GappedAlignments-method}
 \alias{rname}
 \alias{rname,Alignments0-method}
 \alias{rname,Alignments1-method}
+\alias{rname,Alignments2-method}
 \alias{rname<-}
 \alias{rname<-,Alignments0-method}
 \alias{rname<-,Alignments1-method}
+\alias{rname<-,Alignments2-method}
 \alias{strand,Alignments0-method}
 \alias{strand,Alignments1-method}
+\alias{strand,Alignments2-method}
 \alias{cigar}
 \alias{cigar,GappedAlignments-method}
+\alias{granges}
 \alias{granges,Alignments0-method}
 \alias{granges,Alignments1-method}
+\alias{granges,Alignments2-method}
 \alias{ranges,Alignments0-method}
 \alias{ranges,Alignments1-method}
+\alias{ranges,Alignments2-method}
 \alias{qwidth}
 \alias{qwidth,GappedAlignments-method}
+\alias{normargRNameReplaceValue}
+\alias{GappedAlignmentsAsGRangesList}
 \alias{as.data.frame,GappedAlignments-method}
 \alias{show,GappedAlignments-method}
 \alias{readBAMasAlignments0}
 \alias{readBAMasAlignments0,character-method}
 \alias{readBAMasAlignments1}
 \alias{readBAMasAlignments1,character-method}
+\alias{readBAMasAlignments2}
+\alias{readBAMasAlignments2,character-method}
 \alias{coerce,GappedAlignments,Alignments0-method}
 \alias{coerce,GappedAlignments,Alignments1-method}
+\alias{coerce,GappedAlignments,Alignments2-method}
 \alias{[,GappedAlignments,ANY,ANY-method}
 \alias{[,Alignments0,ANY,ANY-method}
 \alias{[,Alignments1,ANY,ANY-method}
+\alias{[,Alignments2,ANY,ANY-method}
 \alias{shift,Alignments0-method}
 \alias{shift,Alignments1-method}
+\alias{shift,Alignments2-method}
+\alias{updateCigarAndStart}
 \alias{updateCigarAndStart,Alignments0-method}
 \alias{updateCigarAndStart,Alignments1-method}
+\alias{updateCigarAndStart,Alignments2-method}
+\alias{qnarrow}
 \alias{qnarrow,GappedAlignments-method}
 \alias{narrow,GappedAlignments-method}
 \alias{coverage,GappedAlignments-method}
@@ -58,11 +77,11 @@
   purpose is to store a set of alignments that will hold just enough
   information for supporting the operations described below.
 
-  There are currently 2 concrete implementations of the container:
-  Alignments0 and Alignments1. Both implementations are equivalent
-  from a user point of view i.e. they hold the same data (but organized
-  differently) and allow the same operations. This is a temporary
-  situation until the developpers make a choice.
+  There are currently 3 concrete implementations of the container:
+  Alignments0, Alignments1 and Alignments2. These implementations are
+  equivalent from a user point of view i.e. they hold the same data
+  (but organized differently) and allow the same operations. This is
+  a temporary situation until the developpers make a choice.
 
   WARNING! This is work-in-progress. Expect frequent changes in
   functionalities. The name of the containers are provisory and
@@ -124,11 +143,12 @@
 
   Strictly speaking, the last 2 items can be inferred from the CIGAR
   and the "start" so, in theory, they don't need to be explicitely
-  stored in the GappedAlignments object. However, both implementations
-  (Alignments0 and Alignments1) store it for performance reasons but
-  at the cost of some redundancy (which impact on memory footprint
-  seems to be acceptable).
-  
+  stored in the GappedAlignments object. However, the 2 first
+  implementations (Alignments0 and Alignments1) store it for performance
+  reasons but at the cost of some redundancy (which impact on memory
+  footprint seems to be acceptable). Alignments2 just stores the strict
+  minimum (no redundancy) and is the smaller of the 3 containers.
+
   The rest of this man page will focus on describing how to:
   \itemize{
     \item Access the information stored in a GappedAlignments object
@@ -142,8 +162,10 @@
   \describe{
     \item{}{
       \code{readBAMasAlignments0(file, index, ..., which)},
-      \code{readBAMasAlignments1(file, index, ..., which)}:
-      Loads a BAM file into an Alignments0 (or Alignments1) object.
+      \code{readBAMasAlignments1(file, index, ..., which)},
+      \code{readBAMasAlignments3(file, index, ..., which)}:
+      Loads a BAM file into an Alignments0 (or Alignments1, or
+      Alignments2) object.
       See \code{?\link{scanBam}} for a description of the arguments.
       Unlike SAM/BAM records, we don't support unaligned queries so
       we discard those records.
@@ -229,8 +251,8 @@
     \item{}{
       \code{x[i]}:
       Returns a new GappedAlignments object (of the same type as \code{x},
-      i.e. Alignments0 or Alignments1) made of the selected alignments.
-      \code{i} can be a numeric or logical vector.
+      i.e. Alignments0, Alignments1 or Alignments2) made of the selected
+      alignments. \code{i} can be a numeric or logical vector.
     }
   }
 }
@@ -242,16 +264,17 @@
       \code{shift(x, shift)}:
       \code{x} is a GappedAlignments object.
       Returns a new GappedAlignments object of the same length and type
-      (i.e. Alignments0 or Alignments1) as \code{x} where all the alignments
-      have been shifted along the reference by the number of positions
-      specified in the \code{shift} argument (vector of integers).
+      (i.e. Alignments0, Alignments1 or Alignments2) as \code{x} where
+      all the alignments have been shifted along the reference by the
+      number of positions specified in the \code{shift} argument (vector
+      of integers).
     }
     \item{}{
       \code{qnarrow(x, start=NA, end=NA, width=NA)}:
       \code{x} is a GappedAlignments object.
       Returns a new GappedAlignments object of the same length and type
-      (i.e. Alignments0 or Alignments1) as \code{x} describing how the
-      narrowed query sequences align to the reference.
+      (i.e. Alignments0, Alignments1 or Alignments2) as \code{x}
+      describing how the narrowed query sequences align to the reference.
       The \code{start}/\code{end}/\code{width} arguments describe how
       to narrow the query sequences. They must be vectors of integers.
       NAs and negative values are accepted and "solved" according to the
@@ -262,10 +285,10 @@
       \code{narrow(x, start=NA, end=NA, width=NA)}:
       \code{x} is a GappedAlignments object.
       Returns a new GappedAlignments object of the same length and type
-      (i.e. Alignments0 or Alignments1) as \code{x} describing the
-      narrowed alignments. Unlike with \code{qnarrow} the
-      \code{start}/\code{end}/\code{width} arguments here describe
-      the narrowing on the reference side.
+      (i.e. Alignments0, Alignments1 or Alignments2) as \code{x}
+      describing the narrowed alignments. Unlike with \code{qnarrow}
+      now the \code{start}/\code{end}/\code{width} arguments describe
+      the narrowing on the reference side, not the query side.
       Like with \code{qnarrow}, they must be vectors of integers.
       NAs and negative values are accepted and "solved" according to the
       rules of the SEW (Start/End/Width) interface (see
