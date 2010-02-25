@@ -37,9 +37,41 @@
 ###                 'findOverlaps(granges(query), subject, ...)', etc...
 ###
 ### Concrete GappedAlignments implementations just need to implement:
-###   length, rname, rname<-, strand, cigar, granges, ranges,
-###   [ and updateCigarAndStart
+###   length, rname, rname<-, strand, cigar, ranges, [ and updateCigarAndStart
 ### and the default methods defined in this file will work.
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Helper function.
+###
+
+### The arguments are the different components of a GappedAlignments object
+### instead of just the GappedAlignments object itself (arg 'x'). This allows
+### the function to be used in different contexts e.g. within the Alignments1()
+### constructor when 'x' doesn't exist yet but is in the process of being
+### constructed.
+GappedAlignmentsAsGRangesList <- function(rname, strand, ranges, check=TRUE)
+{
+    if (check) {
+        if (is.factor(rname) && is.character(levels(rname)))
+            rname <- as.character(rname)
+        else if (!is.character(rname))
+            stop("'rname' must be a character vector/factor")
+        if (any(is.na(rname)))
+            stop("'rname' cannot have NAs")
+        if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
+            stop("'strand' must be a character factor")
+        if (!is(ranges, "CompressedNormalIRangesList"))
+            stop("'ranges' must be a CompressedNormalIRangesList object")
+    }
+    nrg_per_alignment <- elementLengths(ranges)
+    seqnames <- Rle(rname, nrg_per_alignment)
+    strand <- Rle(strand, nrg_per_alignment)
+    granges <- GRanges(seqnames=seqnames,
+                       ranges=ranges@unlistData,
+                       strand=strand)
+    new("GRangesList", unlistData=granges, partitioning=ranges@partitioning)
+}
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -51,8 +83,13 @@ setMethod("length", "GappedAlignments", function(x) length(x@cigar))
 setMethod("cigar", "GappedAlignments", function(x) x@cigar)
 setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(x@cigar))
 
+setMethod("granges", "GappedAlignments",
+    function(x)
+        GappedAlignmentsAsGRangesList(rname(x), strand(x), ranges(x))
+)
+
 setMethod("start", "GappedAlignments", function(x, ...) min(ranges(x)))
-setMethod("end", "GappedAlignments", function(x, ...) max(ranges(x)))
+setMethod("end", "GappedAlignments", function(x, ...) {start(x) + width(x) - 1L})
 setMethod("width", "GappedAlignments", function(x) cigarToWidth(x@cigar))
 
 setMethod("ngap", "GappedAlignments",
@@ -107,39 +144,6 @@ normargRNameReplaceValue <- function(x, value, ans.type=c("factor", "Rle"))
         warning("mapping between old an new 'rname' values ",
                 "is not one-to-one")
     value
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Helper function.
-###
-
-### The arguments are the different components of a GappedAlignments object
-### instead of just the GappedAlignments object itself (arg 'x'). This allows
-### the function to be used in different contexts e.g. within the Alignments1()
-### constructor when 'x' doesn't exist yet but is in the process of being
-### constructed.
-GappedAlignmentsAsGRangesList <- function(rname, strand, ranges, check=TRUE)
-{
-    if (check) {
-        if (is.factor(rname) && is.character(levels(rname)))
-            rname <- as.character(rname)
-        else if (!is.character(rname))
-            stop("'rname' must be a character vector/factor")
-        if (any(is.na(rname)))
-            stop("'rname' cannot have NAs")
-        if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
-            stop("'strand' must be a character factor")
-        if (!is(ranges, "CompressedNormalIRangesList"))
-            stop("'ranges' must be a CompressedNormalIRangesList object")
-    }
-    nrg_per_alignment <- elementLengths(ranges)
-    seqnames <- Rle(rname, nrg_per_alignment)
-    strand <- Rle(strand, nrg_per_alignment)
-    granges <- GRanges(seqnames=seqnames,
-                       ranges=ranges@unlistData,
-                       strand=strand)
-    new("GRangesList", unlistData=granges, partitioning=ranges@partitioning)
 }
 
 

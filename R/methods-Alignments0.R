@@ -54,12 +54,9 @@ setMethod("strand", "Alignments0",
     function(x) strand(.compactRawVectorAsLogical(x@strand, length(x)))
 )
 
-setMethod("granges", "Alignments0",
-    function(x)
-        GappedAlignmentsAsGRangesList(rname(x), strand(x), ranges(x))
-)
-
 setMethod("ranges", "Alignments0", function(x) x@ranges)
+
+setMethod("end", "Alignments0", function(x, ...) max(x@ranges))
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

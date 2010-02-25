@@ -14,6 +14,7 @@
 \alias{Alignments2-class}
 \alias{Alignments2}
 
+\alias{GappedAlignmentsAsGRangesList}
 \alias{length,GappedAlignments-method}
 \alias{rname}
 \alias{rname,Alignments0-method}
@@ -29,16 +30,13 @@
 \alias{cigar}
 \alias{cigar,GappedAlignments-method}
 \alias{granges}
-\alias{granges,Alignments0-method}
-\alias{granges,Alignments1-method}
-\alias{granges,Alignments2-method}
+\alias{granges,GappedAlignments-method}
 \alias{ranges,Alignments0-method}
 \alias{ranges,Alignments1-method}
 \alias{ranges,Alignments2-method}
 \alias{qwidth}
 \alias{qwidth,GappedAlignments-method}
 \alias{normargRNameReplaceValue}
-\alias{GappedAlignmentsAsGRangesList}
 \alias{as.data.frame,GappedAlignments-method}
 \alias{show,GappedAlignments-method}
 \alias{readBAMasAlignments0}

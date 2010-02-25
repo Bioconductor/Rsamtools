@@ -22,11 +22,6 @@ setMethod("strand", "Alignments2",
     function(x) strand(.compactRawVectorAsLogical(x@strand, length(x)))
 )
 
-setMethod("granges", "Alignments2",
-    function(x)
-        GappedAlignmentsAsGRangesList(x@rname, strand(x), ranges(x))
-)
-
 setMethod("ranges", "Alignments2",
     function(x)
         cigarToIRangesListByAlignment(x@cigar, x@start)
