@@ -98,7 +98,8 @@ setAs("GappedAlignments", "Alignments1",
 setMethod("[", "Alignments1",
     function(x, i, j, ... , drop=TRUE)
     {
-        x <- callNextMethod()
+        i <- callNextMethod()
+        x@cigar <- x@cigar[i]
         x@granges <- x@granges[i]
         x
     }

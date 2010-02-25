@@ -281,7 +281,9 @@ setMethod("show", "GappedAlignments",
 ### Subsetting.
 ###
 
-### Supported 'i' types: numeric vector, logical vector, NULL and missing.
+### Doesn't subset anything, just convert 'i' into integer vector and return
+### it. Supported input types for 'i': numeric vector, logical vector, NULL
+### and missing.
 setMethod("[", "GappedAlignments",
     function(x, i, j, ... , drop=TRUE)
     {
@@ -306,8 +308,7 @@ setMethod("[", "GappedAlignments",
         } else {
             stop("invalid subscript type")
         }
-        x@cigar <- x@cigar[i]
-        x
+        i
     }
 )
 

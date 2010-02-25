@@ -106,7 +106,8 @@ setAs("GappedAlignments", "Alignments2",
 setMethod("[", "Alignments2",
     function(x, i, j, ... , drop=TRUE)
     {
-        x <- callNextMethod()
+        i <- callNextMethod()
+        x@cigar <- x@cigar[i]
         x@rname <- x@rname[i]
         x@strand <- .subsetCompactRawVector(x@strand, i)
         x@start <- x@start[i]
