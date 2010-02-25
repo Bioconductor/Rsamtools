@@ -54,9 +54,6 @@
 \alias{[,Alignments0,ANY,ANY-method}
 \alias{[,Alignments1,ANY,ANY-method}
 \alias{[,Alignments2,ANY,ANY-method}
-\alias{shift,Alignments0-method}
-\alias{shift,Alignments1-method}
-\alias{shift,Alignments2-method}
 \alias{updateCigarAndStart}
 \alias{updateCigarAndStart,Alignments0-method}
 \alias{updateCigarAndStart,Alignments1-method}
@@ -260,15 +257,6 @@
 \section{Other methods}{
 
   \describe{
-    \item{}{
-      \code{shift(x, shift)}:
-      \code{x} is a GappedAlignments object.
-      Returns a new GappedAlignments object of the same length and type
-      (i.e. Alignments0, Alignments1 or Alignments2) as \code{x} where
-      all the alignments have been shifted along the reference by the
-      number of positions specified in the \code{shift} argument (vector
-      of integers).
-    }
     \item{}{
       \code{qnarrow(x, start=NA, end=NA, width=NA)}:
       \code{x} is a GappedAlignments object.

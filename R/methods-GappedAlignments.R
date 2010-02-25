@@ -20,9 +20,6 @@
 ###   x[i]        - GappedAlignments object of the same class as 'x'
 ###                 (endomorphism).
 ###
-###   shift(x, shift) - GappedAlignments object of the same length and class
-###                 as 'x' (endomorphism).
-###
 ###   updateCigarAndStart(x, cigar=NULL, start=NULL) - GappedAlignments
 ###                 object of the same length and class as 'x' (endomorphism).
 ###
@@ -41,7 +38,7 @@
 ###
 ### Concrete GappedAlignments implementations just need to implement:
 ###   length, rname, rname<-, strand, cigar, granges, ranges,
-###   [, shift and updateCigarAndStart
+###   [ and updateCigarAndStart
 ### and the default methods defined in this file will work.
 
 

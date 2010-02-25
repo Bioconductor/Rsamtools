@@ -117,20 +117,6 @@ setMethod("[", "Alignments2",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### The "shift" method.
-###
-
-setMethod("shift", "Alignments2",
-    function(x, shift, use.names=TRUE)
-    {
-        shift <- normargShift(shift, length(x))
-        x@start <- x@start + shift
-        x
-    }
-)
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### The "updateCigarAndStart" method.
 ###
 ### Performs atomic update of the cigar/start information.
