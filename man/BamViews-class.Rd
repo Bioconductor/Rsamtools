@@ -123,6 +123,9 @@ bamDirname(x, ...) <- value
   \item{which}{An optional \code{\linkS4class{RangesList}} instance to
      further subset \code{file}.}
 
+  \item{ans.subtype}{See \code{?\link{readBAMasGappedAlignments}} for
+     a description of this argument.}
+
 }
 
 \section{Objects from the Class}{
@@ -226,6 +229,10 @@ bamDirname(x, ...) <- value
 
 }
 \author{Martin Morgan}
+
+\seealso{
+  \code{\link{readBAMasGappedAlignments}}
+}
 
 \examples{
 
