@@ -66,8 +66,8 @@ timingsGappedAlignments <- function(class, bam_filename)
     ## narrow():
     TN1 <- system.time(nx1 <- narrow(x, start=4, end=-6))[["elapsed"]]
     cat("nx1 <- narrow(x, start=4, end=-6): ", TN1, "\n", sep="")
-    TN2 <- system.time(nx2 <- narrow(x, start=14, end=-16))[["elapsed"]]
-    cat("nx2 <- narrow(x, start=14, end=-16): ", TN2, "\n", sep="")
+    TN2 <- system.time(nx2 <- narrow(x, start=14, end=-13))[["elapsed"]]
+    cat("nx2 <- narrow(x, start=14, end=-13): ", TN2, "\n", sep="")
 
     ## coverage():
     TCVG <- system.time(cvg <- coverage(x))[["elapsed"]]
