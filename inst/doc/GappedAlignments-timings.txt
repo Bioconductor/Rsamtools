@@ -14,7 +14,7 @@ x_rname <- rname(x):                      0            0.338        0
 x_strand <- strand(x):                    1.825        0.407        1.577
 x_cigar <- cigar(x):                      0.001        0.001        0
 x_qwidth <- qwidth(x):                    0.761        0.718        0.718
-x_granges <- granges(x):                  8.267        0            9.235
+x_grglist <- grglist(x):                  8.267        0            9.235
 x_ranges <- ranges(x):                    0            1.351        1.097
 x_start <- start(x):                      0.338        1.695        0
 x_end <- end(x):                          0.439        1.747        0.873
@@ -29,7 +29,7 @@ qnx2 <- qnarrow(x, start=14, end=-16):   17.981       25.992       14.469
 nx1 <- narrow(x, start=4, end=-6):       17.582       25.292       14.614
 nx2 <- narrow(x, start=14, end=-16):     17.1         25.856       14.935
 cvg <- coverage(x):                      11.946       14.068       11.525
-fo1 <- findOverlaps(x, granges(x)[[1]]): 21.783        6.936       25.304
+fo1 <- findOverlaps(x, grglist(x)[[1]]): 21.783        6.936       25.304
 
 -------------------------------------------------------------------------
 FILE2: NA19240.chrom1.454.ssaha2.SRP000032.2009_10.bam
@@ -41,7 +41,7 @@ x_rname <- rname(x):                      0            0.045        0.001
 x_strand <- strand(x):                    0.21         0.054        0.209
 x_cigar <- cigar(x):                      0            0            0
 x_qwidth <- qwidth(x):                    0.454        0.449        0.45
-x_granges <- granges(x):                  1.27         0            2.093
+x_grglist <- grglist(x):                  1.27         0            2.093
 x_ranges <- ranges(x):                    0            0.149        0.512
 x_start <- start(x):                      0.045        0.194        0
 x_end <- end(x):                          0.049        0.199        0.463
@@ -56,7 +56,7 @@ qnx2 <- qnarrow(x, start=14, end=-16):   16.89        24.663       16.581
 nx1 <- narrow(x, start=4, end=-6):       14.513       18.156       13.742
 nx2 <- narrow(x, start=14, end=-16):     16.041       18.448       10.835
 cvg <- coverage(x):                       3.843        4.792        4.608
-fo1 <- findOverlaps(x, granges(x)[[1]]): 10.652        2.045       15.277
+fo1 <- findOverlaps(x, grglist(x)[[1]]): 10.652        2.045       15.277
 
 -------------------------------------------------------------------------
 FILE3: NA19240.chrom6.SLX.maq.SRP000032.2009_07.subset.bam
@@ -68,7 +68,7 @@ x_rname <- rname(x):                      0            0.366        0
 x_strand <- strand(x):                    1.816        0.445        1.854
 x_cigar <- cigar(x):                      0            0            0
 x_qwidth <- qwidth(x):                    0.726        0.724        0.724
-x_granges <- granges(x):                  9.347        0           13.684
+x_grglist <- grglist(x):                  9.347        0           13.684
 x_ranges <- ranges(x):                    0            1.491        1.218
 x_start <- start(x):                      0.363        1.916        0
 x_end <- end(x):                          0.393        ?            ?
@@ -83,5 +83,5 @@ qnx2 <- qnarrow(x, start=14, end=-16):   18.869       31.548       15.928
 nx1 <- narrow(x, start=4, end=-6):       17.913        ?            ?
 nx2 <- narrow(x, start=14, end=-16):      ?            ?            ?
 cvg <- coverage(x):                       ?            ?            ?
-fo1 <- findOverlaps(x, granges(x)[[1]]): 32.184       11.443       34.746
+fo1 <- findOverlaps(x, grglist(x)[[1]]): 32.184       11.443       34.746
 

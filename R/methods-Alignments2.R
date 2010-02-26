@@ -22,7 +22,7 @@ setMethod("strand", "Alignments2",
     function(x) strand(.compactRawVectorAsLogical(x@strand, length(x)))
 )
 
-setMethod("ranges", "Alignments2",
+setMethod("rglist", "Alignments2",
     function(x) cigarToIRangesListByAlignment(x@cigar, x@start)
 )
 

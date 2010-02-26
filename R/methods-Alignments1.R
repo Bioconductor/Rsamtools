@@ -11,7 +11,7 @@
 setMethod("rname", "Alignments1",
     function(x)
     {
-        xgrg <- x@granges
+        xgrg <- x@grglist
         as.factor(seqnames(xgrg@unlistData))[xgrg@partitioning@end]
     }
 )
@@ -20,8 +20,8 @@ setReplaceMethod("rname", "Alignments1",
     function(x, value)
     {
         value <- normargRNameReplaceValue(x, value, ans.type="Rle")
-        value <- rep.int(value, elementLengths(x@granges))
-        seqnames(x@granges@unlistData) <- value
+        value <- rep.int(value, elementLengths(x@grglist))
+        seqnames(x@grglist@unlistData) <- value
         x
     }
 )
@@ -29,15 +29,15 @@ setReplaceMethod("rname", "Alignments1",
 setMethod("strand", "Alignments1",
     function(x)
     {
-        xgrg <- x@granges
+        xgrg <- x@grglist
         as.factor(strand(xgrg@unlistData))[xgrg@partitioning@end]
     }
 )
 
-setMethod("granges", "Alignments1", function(x) x@granges)
+setMethod("grglist", "Alignments1", function(x) x@grglist)
 
-setMethod("ranges", "Alignments1",
-    function(x) as(ranges(x@granges), "CompressedNormalIRangesList")
+setMethod("rglist", "Alignments1",
+    function(x) as(ranges(x@grglist), "CompressedNormalIRangesList")
 )
 
 
@@ -48,9 +48,9 @@ setMethod("ranges", "Alignments1",
 Alignments1 <- function(rname=factor(), strand=BSgenome::strand(),
                         pos=integer(), cigar=character())
 {
-    ranges <- cigarToIRangesListByAlignment(cigar, pos)
-    granges <- GappedAlignmentsAsGRangesList(rname, strand, ranges)
-    new("Alignments1", cigar=cigar, granges=granges)
+    rglist <- cigarToIRangesListByAlignment(cigar, pos)
+    grglist <- GappedAlignmentsAsGRangesList(rname, strand, rglist)
+    new("Alignments1", cigar=cigar, grglist=grglist)
 }
 
 setMethod(readBAMasAlignments1, "character",
@@ -100,7 +100,7 @@ setMethod("[", "Alignments1",
     {
         i <- callNextMethod()
         x@cigar <- x@cigar[i]
-        x@granges <- x@granges[i]
+        x@grglist <- x@grglist[i]
         x
     }
 )
@@ -125,12 +125,12 @@ setMethod("updateCigarAndStart", "Alignments1",
         else if (!is.integer(start) || length(start) != length(x))
             stop("when not NULL, 'start' must be an integer vector ",
                  "of the same length as 'x'")
-        ranges <- cigarToIRangesListByAlignment(cigar, start)
-        granges <- GappedAlignmentsAsGRangesList(rname(x), strand(x), ranges)
-        ## Atomic update (until the 2 slots are updated, x@cigar and x@granges
+        rglist <- cigarToIRangesListByAlignment(cigar, start)
+        grglist <- GappedAlignmentsAsGRangesList(rname(x), strand(x), rglist)
+        ## Atomic update (until the 2 slots are updated, x@cigar and x@grglist
         ## will be temporarily out of sync):
         x@cigar <- cigar
-        x@granges <- granges
+        x@grglist <- grglist
         x
     }
 )

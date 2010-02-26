@@ -25,7 +25,9 @@ setGeneric("cigar", function(x) standardGeneric("cigar"))
 
 setGeneric("qwidth", function(x) standardGeneric("qwidth"))
 
-setGeneric("granges", function(x) standardGeneric("granges"))
+setGeneric("grglist", function(x) standardGeneric("grglist"))
+
+setGeneric("rglist", function(x) standardGeneric("rglist"))
 
 setGeneric("readBAMasAlignments0",
            function(file, index, ..., which)

@@ -53,7 +53,7 @@ setClass("GappedAlignments",
 
 ### First GappedAlignments implementation: Alignments0
 ### The genomic ranges of the alignments are stored in 3 slots: 'rname',
-### 'strand' and 'ranges'.
+### 'strand' and 'rglist'.
 ### See http://wiki.fhcrc.org/bioc/Multiple_alignment_rep_v1 for the details
 ### of the class proposal.
 setClass("Alignments0",
@@ -61,17 +61,17 @@ setClass("Alignments0",
     representation(
         rname="factor",               # character factor
         strand="raw",
-        ranges="CompressedNormalIRangesList"
+        rglist="CompressedNormalIRangesList"
     )
 )
 
 ### Second GappedAlignments implementation: Alignments1
-### The genomic ranges of the alignments are stored in the 'granges' slot of
+### The genomic ranges of the alignments are stored in the 'grglist' slot of
 ### type GRangesList.
 setClass("Alignments1",
     contains="GappedAlignments",
     representation(
-        granges="GRangesList"
+        grglist="GRangesList"
     )
 )
 

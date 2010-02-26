@@ -54,7 +54,7 @@ setMethod("strand", "Alignments0",
     function(x) strand(.compactRawVectorAsLogical(x@strand, length(x)))
 )
 
-setMethod("ranges", "Alignments0", function(x) x@ranges)
+setMethod("rglist", "Alignments0", function(x) x@rglist)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -75,10 +75,10 @@ Alignments0 <- function(rname=factor(), strand=BSgenome::strand(),
         stop("'strand' must be a character factor")
     if (!is.character(cigar) || any(is.na(cigar)))
         stop("'cigar' must be a character vector with no NAs")
-    ranges <- cigarToIRangesListByAlignment(cigar, pos)
+    rglist <- cigarToIRangesListByAlignment(cigar, pos)
     strand <- .logicalAsCompactRawVector(strand == "-")
     new("Alignments0", rname=rname, strand=strand,
-                       cigar=cigar, ranges=ranges)
+                       cigar=cigar, rglist=rglist)
 }
 
 ### This is our only constructor for now.
@@ -131,7 +131,7 @@ setMethod("[", "Alignments0",
         x@cigar <- x@cigar[i]
         x@rname <- x@rname[i]
         x@strand <- .subsetCompactRawVector(x@strand, i)
-        x@ranges <- x@ranges[i]
+        x@rglist <- x@rglist[i]
         x
     }
 )
@@ -156,11 +156,11 @@ setMethod("updateCigarAndStart", "Alignments0",
         else if (!is.integer(start) || length(start) != length(x))
             stop("when not NULL, 'start' must be an integer vector ",
                  "of the same length as 'x'")
-        ranges <- cigarToIRangesListByAlignment(cigar, start)
-        ## Atomic update (until the 2 slots are updated, x@cigar and x@ranges
+        rglist <- cigarToIRangesListByAlignment(cigar, start)
+        ## Atomic update (until the 2 slots are updated, x@cigar and x@rglist
         ## will be temporarily out of sync):
         x@cigar <- cigar
-        x@ranges <- ranges
+        x@rglist <- rglist
         x
     }
 )

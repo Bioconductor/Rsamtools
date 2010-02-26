@@ -30,8 +30,8 @@ timingsGappedAlignments <- function(class, bam_filename)
     cat("x_cigar <- cigar(x): ", TA3, "\n", sep="")
     TA4 <- system.time(x_qwidth <- qwidth(x))[["elapsed"]]
     cat("x_qwidth <- qwidth(x): ", TA4, "\n", sep="")
-    TA5 <- system.time(x_granges <- granges(x))[["elapsed"]]
-    cat("x_granges <- granges(x): ", TA5, "\n", sep="")
+    TA5 <- system.time(x_grglist <- grglist(x))[["elapsed"]]
+    cat("x_grglist <- grglist(x): ", TA5, "\n", sep="")
     TA6 <- system.time(x_ranges <- ranges(x))[["elapsed"]]
     cat("x_ranges <- ranges(x): ", TA6, "\n", sep="")
     TA7 <- system.time(x_start <- start(x))[["elapsed"]]
@@ -74,8 +74,8 @@ timingsGappedAlignments <- function(class, bam_filename)
     cat("cvg <- coverage(x): ", TCVG, "\n", sep="")
 
     ## findOverlaps():
-    TFO1 <- system.time(fo1 <- findOverlaps(x, granges(x)[[1]]))[["elapsed"]]
-    cat("fo1 <- findOverlaps(x, granges(x)[[1]]): ", TFO1, "\n", sep="")
+    TFO1 <- system.time(fo1 <- findOverlaps(x, grglist(x)[[1]]))[["elapsed"]]
+    cat("fo1 <- findOverlaps(x, grglist(x)[[1]]): ", TFO1, "\n", sep="")
 }
 
 for (file in c(f1, f2, f3)) {

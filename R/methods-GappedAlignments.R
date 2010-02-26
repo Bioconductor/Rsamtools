@@ -10,8 +10,8 @@
 ###                 *).
 ###   cigar(x)    - character vector of the same length as 'x'.
 ###   qwidth(x)   - integer vector of the same length as 'x'.
-###   granges(x)  - GRangesList object of the same length as 'x'.
-###   ranges(x)   - CompressedNormalIRangesList object of the same length as
+###   grglist(x)  - GRangesList object of the same length as 'x'.
+###   rglist(x)   - CompressedNormalIRangesList object of the same length as
 ###                 'x'.
 ###   start(x), end(x), width(x) - integer vectors of the same length as 'x'.
 ###   ngap(x)     - integer vector of the same length as 'x'.
@@ -34,10 +34,10 @@
 ###
 ###   findOverlaps(query, subject) - 'query' or 'subject' or both are
 ###                 GappedAlignments objects. Just a convenient wrapper for
-###                 'findOverlaps(granges(query), subject, ...)', etc...
+###                 'findOverlaps(grglist(query), subject, ...)', etc...
 ###
 ### Concrete GappedAlignments implementations just need to implement:
-###   length, rname, rname<-, strand, cigar, ranges, [ and updateCigarAndStart
+###   length, rname, rname<-, strand, cigar, rglist, [ and updateCigarAndStart
 ### and the default methods defined in this file will work.
 
 
@@ -50,7 +50,7 @@
 ### the function to be used in different contexts e.g. within the Alignments1()
 ### constructor when 'x' doesn't exist yet but is in the process of being
 ### constructed.
-GappedAlignmentsAsGRangesList <- function(rname, strand, ranges, check=TRUE)
+GappedAlignmentsAsGRangesList <- function(rname, strand, rglist, check=TRUE)
 {
     if (check) {
         if (is.factor(rname) && is.character(levels(rname)))
@@ -61,16 +61,16 @@ GappedAlignmentsAsGRangesList <- function(rname, strand, ranges, check=TRUE)
             stop("'rname' cannot have NAs")
         if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
             stop("'strand' must be a character factor")
-        if (!is(ranges, "CompressedNormalIRangesList"))
-            stop("'ranges' must be a CompressedNormalIRangesList object")
+        if (!is(rglist, "CompressedNormalIRangesList"))
+            stop("'rglist' must be a CompressedNormalIRangesList object")
     }
-    nrg_per_alignment <- elementLengths(ranges)
+    nrg_per_alignment <- elementLengths(rglist)
     seqnames <- Rle(rname, nrg_per_alignment)
     strand <- Rle(strand, nrg_per_alignment)
-    granges <- GRanges(seqnames=seqnames,
-                       ranges=ranges@unlistData,
+    grglist <- GRanges(seqnames=seqnames,
+                       ranges=rglist@unlistData,
                        strand=strand)
-    new("GRangesList", unlistData=granges, partitioning=ranges@partitioning)
+    new("GRangesList", unlistData=grglist, partitioning=rglist@partitioning)
 }
 
 
@@ -83,17 +83,17 @@ setMethod("length", "GappedAlignments", function(x) length(x@cigar))
 setMethod("cigar", "GappedAlignments", function(x) x@cigar)
 setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(x@cigar))
 
-setMethod("granges", "GappedAlignments",
+setMethod("grglist", "GappedAlignments",
     function(x)
-        GappedAlignmentsAsGRangesList(rname(x), strand(x), ranges(x))
+        GappedAlignmentsAsGRangesList(rname(x), strand(x), rglist(x))
 )
 
-setMethod("start", "GappedAlignments", function(x, ...) min(ranges(x)))
-setMethod("end", "GappedAlignments", function(x, ...) max(ranges(x)))
+setMethod("start", "GappedAlignments", function(x, ...) min(rglist(x)))
+setMethod("end", "GappedAlignments", function(x, ...) max(rglist(x)))
 setMethod("width", "GappedAlignments", function(x) cigarToWidth(x@cigar))
 
 setMethod("ngap", "GappedAlignments",
-    function(x) {elementLengths(ranges(x)) - 1L}
+    function(x) {elementLengths(rglist(x)) - 1L}
 )
 
 
@@ -184,22 +184,22 @@ normargRNameReplaceValue <- function(x, value, ans.type=c("factor", "Rle"))
     NULL
 }
 
-.valid.GappedAlignments.ranges <- function(x)
+.valid.GappedAlignments.rglist <- function(x)
 {
-    x_ranges <- ranges(x)
-    if (!is(x_ranges, "CompressedNormalIRangesList") || !is.null(names(x_ranges)))
-        return("'ranges(x)' must be an unnamed CompressedNormalIRangesList object")
-    if (length(x_ranges) != length(cigar(x)))
-        return("'ranges(x)' and 'cigar(x)' must have the same length")
-    if (any(elementLengths(x_ranges) == 0L))
-        return("'ranges(x)' has elements with no ranges")
-    x_start <- min(x_ranges)
-    x_end <- max(x_ranges)
+    x_rglist <- rglist(x)
+    if (!is(x_rglist, "CompressedNormalIRangesList") || !is.null(names(x_rglist)))
+        return("'rglist(x)' must be an unnamed CompressedNormalIRangesList object")
+    if (length(x_rglist) != length(cigar(x)))
+        return("'rglist(x)' and 'cigar(x)' must have the same length")
+    if (any(elementLengths(x_rglist) == 0L))
+        return("'rglist(x)' has elements with no ranges")
+    x_start <- min(x_rglist)
+    x_end <- max(x_rglist)
     if (!identical(x_end - x_start + 1L, width(x)))
-        return("'ranges(x)' and 'width(x)' are out of sync")
-    x_ranges2 <- cigarToIRangesListByAlignment(cigar(x), x_start)
-    if (!identical(x_ranges2, x_ranges))
-        return("'ranges(x)' and 'cigar(x)' are out of sync")
+        return("'rglist(x)' and 'width(x)' are out of sync")
+    x_rglist2 <- cigarToIRangesListByAlignment(cigar(x), x_start)
+    if (!identical(x_rglist2, x_rglist))
+        return("'rglist(x)' and 'cigar(x)' are out of sync")
     NULL
 }
 
@@ -208,8 +208,8 @@ normargRNameReplaceValue <- function(x, value, ans.type=c("factor", "Rle"))
     c(.valid.GappedAlignments.cigar(x),
       .valid.GappedAlignments.rname(x),
       .valid.GappedAlignments.strand(x),
-      #.valid.GappedAlignments.granges(x),
-      .valid.GappedAlignments.ranges(x))
+      #.valid.GappedAlignments.grglist(x),
+      .valid.GappedAlignments.rglist(x))
 }
 
 setValidity2("GappedAlignments", .valid.GappedAlignments,
@@ -368,7 +368,7 @@ setMethod("findOverlaps", c("GappedAlignments", "ANY"),
     function(query, subject, maxgap=0, multiple=TRUE,
              type=c("any", "start", "end"))
     {
-        callGeneric(granges(query), subject,
+        callGeneric(grglist(query), subject,
                     maxgap=maxgap, multiple=multiple, type=type)
     }
 )
@@ -377,7 +377,7 @@ setMethod("findOverlaps", c("ANY", "GappedAlignments"),
     function(query, subject, maxgap=0, multiple=TRUE,
              type=c("any", "start", "end"))
     {
-        callGeneric(query, granges(subject),
+        callGeneric(query, grglist(subject),
                     maxgap=maxgap, multiple=multiple, type=type)
     }
 )
@@ -392,7 +392,7 @@ setMethod("findOverlaps", c("GappedAlignments", "GappedAlignments"),
     function(query, subject, maxgap=0, multiple=TRUE,
              type=c("any", "start", "end"))
     {
-        callGeneric(granges(query), granges(subject),
+        callGeneric(grglist(query), grglist(subject),
                     maxgap=maxgap, multiple=multiple, type=type)
     }
 )

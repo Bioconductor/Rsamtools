@@ -29,11 +29,13 @@
 \alias{strand,Alignments2-method}
 \alias{cigar}
 \alias{cigar,GappedAlignments-method}
-\alias{granges}
-\alias{granges,GappedAlignments-method}
-\alias{ranges,Alignments0-method}
-\alias{ranges,Alignments1-method}
-\alias{ranges,Alignments2-method}
+\alias{grglist}
+\alias{grglist,GappedAlignments-method}
+\alias{grglist,Alignments1-method}
+\alias{rglist}
+\alias{rglist,Alignments0-method}
+\alias{rglist,Alignments1-method}
+\alias{rglist,Alignments2-method}
 \alias{qwidth}
 \alias{qwidth,GappedAlignments-method}
 \alias{normargRNameReplaceValue}
@@ -206,7 +208,7 @@
       the corresponding SAM/BAM record).
     }
     \item{}{
-      \code{granges(x)}, \code{ranges(x)}:
+      \code{grglist(x)}, \code{rglist(x)}:
       Returns a \link[BSgenome]{GRangesList} or
       \link[IRanges]{CompressedNormalIRangesList} object of
       length \code{length(x)} where each element represents regions in
@@ -220,7 +222,7 @@
       for each alignment. See Details section above for the exact
       definitions of the "start" and "end" of a query.
       Note that \code{start(x)} and \code{end(x)} are equivalent
-      to \code{min(ranges(x))} and \code{max(ranges(x))},
+      to \code{min(rglist(x))} and \code{max(rglist(x))},
       respectively.
     }
     \item{}{
@@ -234,7 +236,7 @@
       \code{ngap(x)}:
       Returns an integer vector of length \code{length(x)}
       containing the number of gaps for each alignment.
-      Equivalent to \code{elementLengths(ranges(x)) - 1L}.
+      Equivalent to \code{elementLengths(rglist(x)) - 1L}.
     }
   }
 }
@@ -297,11 +299,11 @@
     \item{}{
       \code{findOverlaps(query, subject, ...)}:
       \code{query} or \code{subject} or both are GappedAlignments objects.
-      Equivalent to \code{findOverlaps(granges(query), subject, ...)}
+      Equivalent to \code{findOverlaps(grglist(query), subject, ...)}
       when \code{query} is a GappedAlignments object, or to
-      \code{findOverlaps(query, granges(subject), ...)} when
+      \code{findOverlaps(query, grglist(subject), ...)} when
       \code{subject} is a GappedAlignments object, or to
-      \code{findOverlaps(granges(query), granges(subject), ...)}
+      \code{findOverlaps(grglist(query), grglist(subject), ...)}
       when both are GappedAlignments objects.
       See \link[BSgenome]{findOverlaps,GRangesList,GRanges-method}
       in the BSgenome package for more information (in particular for
@@ -350,9 +352,9 @@ head(cigar(al0))
 head(qwidth(al0))
 table(qwidth(al0))
 
-granges(al0)  # a GRangesList object
-ranges(al0)   # a CompressedNormalIRangesList object
-stopifnot(identical(elementLengths(granges(al0)), elementLengths(ranges(al0))))
+grglist(al0)  # a GRangesList object
+rglist(al0)   # a CompressedNormalIRangesList object
+stopifnot(identical(elementLengths(grglist(al0)), elementLengths(rglist(al0))))
 
 head(start(al0))
 head(end(al0))
@@ -372,14 +374,14 @@ stopifnot(all(ngap(al0) == 0))
 
 ## Different ways to subset:
 al0[6]             # a GappedAlignments object of length 1
-granges(al0)[[6]]  # a GRanges object of length 1
-ranges(al0)[[6]]   # a NormalIRanges object of length 1
+grglist(al0)[[6]]  # a GRanges object of length 1
+rglist(al0)[[6]]   # a NormalIRanges object of length 1
 
 ## Ds are NOT gaps:
 ii <- grep("D", cigar(al0), fixed=TRUE)
 al0[ii]
 ngap(al0[ii])
-granges(al0[ii])
+grglist(al0[ii])
 
 ## qwidth() vs width():
 al0[qwidth(al0) != width(al0)]
@@ -414,7 +416,7 @@ coverage(al0)
 ## ---------------------------------------------------------------------
 ## E. findOverlaps()
 ## ---------------------------------------------------------------------
-findOverlaps(al0, granges(al0)[[1]])
+findOverlaps(al0, grglist(al0)[[1]])
 }
 
 \keyword{methods}

@@ -280,7 +280,7 @@ if (interactive()) {
   pos <- sample(80000000L, nreads, replace=TRUE)
 
   ## The following takes < 5 sec. to complete:
-  system.time(gpranges <- cigarToIRangesListByAlignment(cigar3, pos))
+  system.time(rglist <- cigarToIRangesListByAlignment(cigar3, pos))
 
   ## The following takes < 10 sec. to complete:
   system.time(irl <- cigarToIRangesListByRName(cigar3, rname, pos))
@@ -293,7 +293,7 @@ if (interactive()) {
 
   ## The sizes of the resulting objects are about 240M and 160M,
   ## respectively:
-  object.size(gpranges)
+  object.size(rglist)
   object.size(irl)
 }
 
