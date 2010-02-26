@@ -14,6 +14,7 @@
 \alias{Alignments2-class}
 \alias{Alignments2}
 
+\alias{GappedAlignmentsAsGRanges}
 \alias{GappedAlignmentsAsGRangesList}
 \alias{length,GappedAlignments-method}
 \alias{rname}
@@ -32,6 +33,8 @@
 \alias{grglist}
 \alias{grglist,GappedAlignments-method}
 \alias{grglist,Alignments1-method}
+\alias{grg}
+\alias{grg,GappedAlignments-method}
 \alias{rglist}
 \alias{rglist,Alignments0-method}
 \alias{rglist,Alignments1-method}
@@ -208,11 +211,11 @@
       the corresponding SAM/BAM record).
     }
     \item{}{
-      \code{grglist(x)}, \code{rglist(x)}:
-      Returns a \link[BSgenome]{GRangesList} or
-      \link[IRanges]{CompressedNormalIRangesList} object of
-      length \code{length(x)} where each element represents regions in
-      the reference to which a query is aligned. See Details section
+      \code{grglist(x)}, \code{grg(x)}, \code{rglist(x)}:
+      Returns a \link[BSgenome]{GRangesList}, a \link[BSgenome]{GRanges}
+      or a \link[IRanges]{CompressedNormalIRangesList} object of
+      length \code{length(x)} where each element represents the regions
+      in the reference to which a query is aligned. See Details section
       above for more information.
     }
     \item{}{
@@ -222,12 +225,14 @@
       for each alignment. See Details section above for the exact
       definitions of the "start" and "end" of a query.
       Note that \code{start(x)} and \code{end(x)} are equivalent
-      to \code{min(rglist(x))} and \code{max(rglist(x))},
-      respectively.
+      to \code{start(grg(x))} and \code{end(grg(x))}, respectively
+      (or, alternatively, to \code{min(rglist(x))} and
+      \code{max(rglist(x))}, respectively).
     }
     \item{}{
       \code{width(x)}:
-      Defined as \code{end(x) - start(x) + 1L}.
+      Equivalent to \code{width(grg(x))} (or, alternatively, to
+      \code{end(x) - start(x) + 1L}).
       Note that this is generally different from \code{qwidth(x)}
       except for alignments with a trivial CIGAR string (i.e. a
       string of the form \code{"<n>M"} where <n> is a number).
@@ -353,6 +358,7 @@ head(qwidth(al0))
 table(qwidth(al0))
 
 grglist(al0)  # a GRangesList object
+grg(al0)      # a GRanges object
 rglist(al0)   # a CompressedNormalIRangesList object
 stopifnot(identical(elementLengths(grglist(al0)), elementLengths(rglist(al0))))
 
@@ -416,7 +422,7 @@ coverage(al0)
 ## ---------------------------------------------------------------------
 ## E. findOverlaps()
 ## ---------------------------------------------------------------------
-findOverlaps(al0, grglist(al0)[[1]])
+findOverlaps(al0, grg(al0)[1])
 }
 
 \keyword{methods}

@@ -27,6 +27,8 @@ setGeneric("qwidth", function(x) standardGeneric("qwidth"))
 
 setGeneric("grglist", function(x) standardGeneric("grglist"))
 
+setGeneric("grg", function(x) standardGeneric("grg"))
+
 setGeneric("rglist", function(x) standardGeneric("rglist"))
 
 setGeneric("readBAMasAlignments0",

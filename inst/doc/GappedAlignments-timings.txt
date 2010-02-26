@@ -29,7 +29,7 @@ qnx2 <- qnarrow(x, start=14, end=-16):   17.981       25.992       14.469
 nx1 <- narrow(x, start=4, end=-6):       17.582       25.292       14.614
 nx2 <- narrow(x, start=14, end=-16):     17.1         25.856       14.935
 cvg <- coverage(x):                      11.946       14.068       11.525
-fo1 <- findOverlaps(x, grglist(x)[[1]]): 21.783        6.936       25.304
+fo1 <- findOverlaps(x, grg(x)[1]):       21.783        6.936       25.304
 
 -------------------------------------------------------------------------
 FILE2: NA19240.chrom1.454.ssaha2.SRP000032.2009_10.bam
@@ -56,7 +56,7 @@ qnx2 <- qnarrow(x, start=14, end=-16):   16.89        24.663       16.581
 nx1 <- narrow(x, start=4, end=-6):       14.513       18.156       13.742
 nx2 <- narrow(x, start=14, end=-16):     16.041       18.448       10.835
 cvg <- coverage(x):                       3.843        4.792        4.608
-fo1 <- findOverlaps(x, grglist(x)[[1]]): 10.652        2.045       15.277
+fo1 <- findOverlaps(x, grg(x)[1]):       10.652        2.045       15.277
 
 -------------------------------------------------------------------------
 FILE3: NA19240.chrom6.SLX.maq.SRP000032.2009_07.subset.bam
@@ -83,5 +83,5 @@ qnx2 <- qnarrow(x, start=14, end=-16):   18.869       31.548       15.928
 nx1 <- narrow(x, start=4, end=-6):       17.913        ?            ?
 nx2 <- narrow(x, start=14, end=-16):      ?            ?            ?
 cvg <- coverage(x):                       ?            ?            ?
-fo1 <- findOverlaps(x, grglist(x)[[1]]): 32.184       11.443       34.746
+fo1 <- findOverlaps(x, grg(x)[1]):       32.184       11.443       34.746
 

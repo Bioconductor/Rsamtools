@@ -11,6 +11,7 @@
 ###   cigar(x)    - character vector of the same length as 'x'.
 ###   qwidth(x)   - integer vector of the same length as 'x'.
 ###   grglist(x)  - GRangesList object of the same length as 'x'.
+###   grg(x)      - GRanges object of the same length as 'x'.
 ###   rglist(x)   - CompressedNormalIRangesList object of the same length as
 ###                 'x'.
 ###   start(x), end(x), width(x) - integer vectors of the same length as 'x'.
@@ -42,14 +43,37 @@
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Helper function.
+### Two central helper functions.
+###
+### Note that their arguments are the different components of a
+### GappedAlignments object instead of just the GappedAlignments object
+### itself (arg 'x'). This allows them to be used in different contexts e.g.
+### within the Alignments1() constructor when 'x' doesn't exist yet but is
+### in the process of being constructed.
 ###
 
-### The arguments are the different components of a GappedAlignments object
-### instead of just the GappedAlignments object itself (arg 'x'). This allows
-### the function to be used in different contexts e.g. within the Alignments1()
-### constructor when 'x' doesn't exist yet but is in the process of being
-### constructed.
+GappedAlignmentsAsGRanges <- function(rname, strand, start, width, check=TRUE)
+{
+    if (check) {
+        if (is.factor(rname) && is.character(levels(rname)))
+            rname <- as.character(rname)
+        else if (!is.character(rname))
+            stop("'rname' must be a character vector/factor")
+        if (any(is.na(rname)))
+            stop("'rname' cannot have NAs")
+        if (!is.factor(strand) || !identical(levels(strand), .STRAND_LEVELS))
+            stop("'strand' must be a character factor")
+        if (!is.integer(start))
+            stop("'start' must be an integer vector")
+        if (!is.integer(width))
+            stop("'width' must be an integer vector")
+    }
+    seqnames <- Rle(rname)
+    strand <- Rle(strand)
+    ranges <- IRanges(start=start, width=width)
+    GRanges(seqnames=seqnames, ranges=ranges, strand=strand)
+}
+
 GappedAlignmentsAsGRangesList <- function(rname, strand, rglist, check=TRUE)
 {
     if (check) {
@@ -67,10 +91,10 @@ GappedAlignmentsAsGRangesList <- function(rname, strand, rglist, check=TRUE)
     nrg_per_alignment <- elementLengths(rglist)
     seqnames <- Rle(rname, nrg_per_alignment)
     strand <- Rle(strand, nrg_per_alignment)
-    grglist <- GRanges(seqnames=seqnames,
-                       ranges=rglist@unlistData,
-                       strand=strand)
-    new("GRangesList", unlistData=grglist, partitioning=rglist@partitioning)
+    unlistData <- GRanges(seqnames=seqnames,
+                          ranges=rglist@unlistData,
+                          strand=strand)
+    new("GRangesList", unlistData=unlistData, partitioning=rglist@partitioning)
 }
 
 
@@ -86,6 +110,10 @@ setMethod("qwidth", "GappedAlignments", function(x) cigarToQWidth(x@cigar))
 setMethod("grglist", "GappedAlignments",
     function(x)
         GappedAlignmentsAsGRangesList(rname(x), strand(x), rglist(x))
+)
+setMethod("grg", "GappedAlignments",
+    function(x)
+        GappedAlignmentsAsGRanges(rname(x), strand(x), start(x), width(x))
 )
 
 setMethod("start", "GappedAlignments", function(x, ...) min(rglist(x)))
@@ -209,6 +237,7 @@ normargRNameReplaceValue <- function(x, value, ans.type=c("factor", "Rle"))
       .valid.GappedAlignments.rname(x),
       .valid.GappedAlignments.strand(x),
       #.valid.GappedAlignments.grglist(x),
+      #.valid.GappedAlignments.grg(x),
       .valid.GappedAlignments.rglist(x))
 }
 
