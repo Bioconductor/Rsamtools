@@ -23,11 +23,11 @@ setMethod("strand", "Alignments2",
 )
 
 setMethod("ranges", "Alignments2",
-    function(x)
-        cigarToIRangesListByAlignment(x@cigar, x@start)
+    function(x) cigarToIRangesListByAlignment(x@cigar, x@start)
 )
 
 setMethod("start", "Alignments2", function(x, ...) x@start)
+setMethod("end", "Alignments2", function(x, ...) {x@start + width(x) - 1L})
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

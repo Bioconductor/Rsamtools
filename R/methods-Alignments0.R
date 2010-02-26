@@ -56,8 +56,6 @@ setMethod("strand", "Alignments0",
 
 setMethod("ranges", "Alignments0", function(x) x@ranges)
 
-setMethod("end", "Alignments0", function(x, ...) max(x@ranges))
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructors.

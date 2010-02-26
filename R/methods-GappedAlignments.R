@@ -89,7 +89,7 @@ setMethod("granges", "GappedAlignments",
 )
 
 setMethod("start", "GappedAlignments", function(x, ...) min(ranges(x)))
-setMethod("end", "GappedAlignments", function(x, ...) {start(x) + width(x) - 1L})
+setMethod("end", "GappedAlignments", function(x, ...) max(ranges(x)))
 setMethod("width", "GappedAlignments", function(x) cigarToWidth(x@cigar))
 
 setMethod("ngap", "GappedAlignments",
