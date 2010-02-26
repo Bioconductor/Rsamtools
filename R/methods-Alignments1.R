@@ -42,7 +42,7 @@ setMethod("rglist", "Alignments1",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Constructors.
+### Constructor.
 ###
 
 Alignments1 <- function(rname=factor(), strand=BSgenome::strand(),
@@ -52,30 +52,6 @@ Alignments1 <- function(rname=factor(), strand=BSgenome::strand(),
     grglist <- GappedAlignmentsAsGRangesList(rname, strand, rglist)
     new("Alignments1", cigar=cigar, grglist=grglist)
 }
-
-setMethod(readBAMasAlignments1, "character",
-          function(file, index, ..., which)
-{
-    if (missing(index))
-        index <- file
-    if (missing(which))
-        which <- RangesList()
-    param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE,
-                                           isDuplicate=FALSE),
-                          what=c("rname", "strand", "pos", "cigar"),
-                          which=which)
-    bam <- scanBam(file, index=index, param=param)
-    ## unlist(list(factor())) returns integer(0), so exit early if all
-    ## values are empty
-    if (all(sapply(bam, function(x) length(x$rname) == 0)))
-        return(Alignments1())
-    rname <- unlist(unname(lapply(bam, "[[", "rname")))
-    strand <- unlist(unname(lapply(bam, "[[", "strand")))
-    pos <- unlist(unname(lapply(bam, "[[", "pos")))
-    cigar <-
-        unlist(unname(lapply(bam, function(x) as.character(cigars(x$cigar)))))
-    Alignments1(rname=rname, strand=strand, pos=pos, cigar=cigar)
-})
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

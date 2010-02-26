@@ -24,7 +24,7 @@
 \alias{[,BamViews,ANY,missing-method}
 \alias{[,BamViews,RangesList,ANY-method}
 \alias{[,BamViews,RangesList,missing-method}
-\alias{readBAMasAlignments0,BamViews-method}
+\alias{readBAMasGappedAlignments,BamViews-method}
 \alias{show,BamViews-method}
 
 \title{Views into a set of BAM files}
@@ -66,7 +66,8 @@ bamDirname(x, ...) <- value
 \S4method{[}{BamViews,missing,ANY}(x, i, j, \dots, drop=TRUE)
 
 ## Input
-\S4method{readBAMasAlignments0}{BamViews}(file, index, ..., which)
+\S4method{readBAMasGappedAlignments}{BamViews}(file, index, ..., which,
+                                               ans.subtype="Alignments0")
 
 ## Show
 \S4method{show}{BamViews}(object)
@@ -112,7 +113,7 @@ bamDirname(x, ...) <- value
   \item{drop}{A logical(1), \emph{ignored} by all \code{BamViews}
 	subsetting methods.}
 
-  %% readBAMasAlignments0
+  %% readBAMasGappedAlignments
 
   \item{file}{An instance of \code{BamViews}.}
 
@@ -208,8 +209,8 @@ bamDirname(x, ...) <- value
 	\item{"["}{Subset the object by \code{bamRanges} or
 	  \code{bamSamples}.}
 
-    \item{readBAMasAlignments0}{Visit each path in \code{bamPaths(file)},
-      returning the result of \code{readBAMasAlignments0} applied to the
+    \item{readBAMasGappedAlignments}{Visit each path in \code{bamPaths(file)},
+      returning the result of \code{readBAMasGappedAlignments} applied to the
       specified path. When \code{index} is missing, it is set equal to
       \code{bamIndicies(file)}. When \code{which} is missing, only reads in
       \code{bamRanges(file)} are returned. When \code{which} is present,
@@ -242,7 +243,7 @@ v
 bv <- BamViews(fls,
                bamSamples=DataFrame(info="test", row.names="ex1"),
                auto.range=TRUE)
-aln <- readBAMasAlignments0(bv)
+aln <- readBAMasGappedAlignments(bv)
 aln
 aln[colnames(bv)]
 elementMetadata(aln)

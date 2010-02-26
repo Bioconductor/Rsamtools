@@ -15,10 +15,10 @@ timingsGappedAlignments <- function(class, bam_filename)
     cat("----------------------------------------------------------------\n")
     f <- file.path(bam_dir, bam_filename)
 
-    ## readBAMasAlignments[012]:
-    readfuncname <- paste("readBAMas", class, sep="")
-    T0 <- system.time(x <- get(readfuncname)(f))[["elapsed"]]
-    cat("x <- ", readfuncname, "(file): ", T0, "\n", sep="")
+    ## readBAMasGappedAlignments:
+    T0 <- system.time(x <-
+            readBAMasGappedAlignments(f, ans.subtype=class))[["elapsed"]]
+    cat("x <- readBAMasGappedAlignments(file): ", T0, "\n", sep="")
     cat("object.size(x): ", object.size(x), "\n", sep="")
 
     ## Accessors:
@@ -32,8 +32,8 @@ timingsGappedAlignments <- function(class, bam_filename)
     cat("x_qwidth <- qwidth(x): ", TA4, "\n", sep="")
     TA5 <- system.time(x_grglist <- grglist(x))[["elapsed"]]
     cat("x_grglist <- grglist(x): ", TA5, "\n", sep="")
-    TA6 <- system.time(x_ranges <- ranges(x))[["elapsed"]]
-    cat("x_ranges <- ranges(x): ", TA6, "\n", sep="")
+    TA6 <- system.time(x_rglist <- rglist(x))[["elapsed"]]
+    cat("x_rglist <- rglist(x): ", TA6, "\n", sep="")
     TA7 <- system.time(x_start <- start(x))[["elapsed"]]
     cat("x_start <- start(x): ", TA7, "\n", sep="")
     TA8 <- system.time(x_end <- end(x))[["elapsed"]]

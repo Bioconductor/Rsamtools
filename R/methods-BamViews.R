@@ -180,8 +180,9 @@ setMethod("[", c("BamViews", "RangesList", "ANY"),
     reduce(result)
 }
 
-setMethod(readBAMasAlignments0, "BamViews",
-          function(file, index, ..., which=RangesList())
+setMethod(readBAMasGappedAlignments, "BamViews",
+          function(file, index, ..., which=RangesList(),
+                   ans.subtype="Alignments0")
 {
     if (missing(index))
         index <- bamIndicies(file)
@@ -189,13 +190,15 @@ setMethod(readBAMasAlignments0, "BamViews",
         file <- file[which,]
 
     fun <- function(i, bamViews, ..., verbose)
-        readBAMasAlignments0(file=bamPaths(bamViews)[i],
-                             index=bamIndicies(bamViews)[i], ...)
+        readBAMasGappedAlignments(file=bamPaths(bamViews)[i],
+                                  index=bamIndicies(bamViews)[i],
+                                  ...,
+                                  ans.subtype=ans.subtype)
     idx <- structure(seq_len(ncol(file)), names=names(file))
     res <- .srapply(idx, fun, bamViews=file, ...,
                     which=ranges(bamRanges(file)))
     if (length(res) != ncol(file))
-        stop("'readBAMasAlignments0' failed on '",
+        stop("'readBAMasGappedAlignments' failed on '",
              paste(setdiff(names(file), names(res)), collapse="' '"),
              "'")
 

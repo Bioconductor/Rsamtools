@@ -1,20 +1,20 @@
-test_readBAMasAlignments0 <- function()
+test_readBAMasGappedAlignments <- function()
 {
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
     which <- RangesList(seq1=IRanges(1, width=100))
-    result <- readBAMasAlignments0(fl, which=which)
+    result <- readBAMasGappedAlignments(fl, which=which)
     checkTrue(validObject(result))
 }
 
-test_readBAMasAlignments0_length0 <- function()
+test_readBAMasGappedAlignments_length0 <- function()
 {
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
     which <- RangesList(seq1=IRanges(100000, width=100))
-    result <- readBAMasAlignments0(fl, which=which)
+    result <- readBAMasGappedAlignments(fl, which=which)
     checkTrue(validObject(result))
 
     which <- RangesList(seq1=IRanges(c(1, 100000), width=100))
-    result <- readBAMasAlignments0(fl, which=which)
+    result <- readBAMasGappedAlignments(fl, which=which)
     checkTrue(validObject(result))
 }

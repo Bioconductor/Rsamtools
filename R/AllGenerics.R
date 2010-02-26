@@ -31,19 +31,9 @@ setGeneric("grg", function(x) standardGeneric("grg"))
 
 setGeneric("rglist", function(x) standardGeneric("rglist"))
 
-setGeneric("readBAMasAlignments0",
-           function(file, index, ..., which)
-               standardGeneric("readBAMasAlignments0"),
-           signature="file")
-
-setGeneric("readBAMasAlignments1",
-           function(file, index, ..., which)
-               standardGeneric("readBAMasAlignments1"),
-           signature="file")
-
-setGeneric("readBAMasAlignments2",
-           function(file, index, ..., which)
-               standardGeneric("readBAMasAlignments2"),
+setGeneric("readBAMasGappedAlignments",
+           function(file, index, ..., which, ans.subtype="Alignments0")
+               standardGeneric("readBAMasGappedAlignments"),
            signature="file")
 
 setGeneric("updateCigarAndStart",

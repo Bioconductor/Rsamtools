@@ -31,7 +31,7 @@ setMethod("end", "Alignments2", function(x, ...) {x@start + width(x) - 1L})
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Constructors.
+### Constructor.
 ###
 
 Alignments2 <- function(rname=factor(), strand=BSgenome::strand(),
@@ -54,31 +54,6 @@ Alignments2 <- function(rname=factor(), strand=BSgenome::strand(),
     new("Alignments2", rname=rname, strand=strand,
                        cigar=cigar, start=pos)
 }
-
-### This is our only constructor for now.
-setMethod(readBAMasAlignments2, "character", 
-          function(file, index, ..., which)
-{
-    if (missing(index))
-        index <- file
-    if (missing(which))
-        which <- RangesList()
-    param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE,
-                                           isDuplicate=FALSE),
-                          what=c("rname", "strand", "pos", "cigar"),
-                          which=which)
-    bam <- scanBam(file, index=index, param=param)
-    ## unlist(list(factor())) returns integer(0), so exit early if all
-    ## values are empty
-    if (all(sapply(bam, function(x) length(x$rname) == 0)))
-        return(Alignments2())
-    rname <- unlist(unname(lapply(bam, "[[", "rname")))
-    strand <- unlist(unname(lapply(bam, "[[", "strand")))
-    pos <- unlist(unname(lapply(bam, "[[", "pos")))
-    cigar <-
-        unlist(unname(lapply(bam, function(x) as.character(cigars(x$cigar)))))
-    Alignments2(rname=rname, strand=strand, pos=pos, cigar=cigar)
-})
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

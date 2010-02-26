@@ -44,12 +44,8 @@
 \alias{normargRNameReplaceValue}
 \alias{as.data.frame,GappedAlignments-method}
 \alias{show,GappedAlignments-method}
-\alias{readBAMasAlignments0}
-\alias{readBAMasAlignments0,character-method}
-\alias{readBAMasAlignments1}
-\alias{readBAMasAlignments1,character-method}
-\alias{readBAMasAlignments2}
-\alias{readBAMasAlignments2,character-method}
+\alias{readBAMasGappedAlignments}
+\alias{readBAMasGappedAlignments,character-method}
 \alias{coerce,GappedAlignments,Alignments0-method}
 \alias{coerce,GappedAlignments,Alignments1-method}
 \alias{coerce,GappedAlignments,Alignments2-method}
@@ -161,9 +157,8 @@
 \section{Constructor}{
   \describe{
     \item{}{
-      \code{readBAMasAlignments0(file, index, ..., which)},
-      \code{readBAMasAlignments1(file, index, ..., which)},
-      \code{readBAMasAlignments3(file, index, ..., which)}:
+      \code{readBAMasGappedAlignments(file, index, ..., which,
+                                      ans.subtype="Alignments0")}:
       Loads a BAM file into an Alignments0 (or Alignments1, or
       Alignments2) object.
       See \code{?\link{scanBam}} for a description of the arguments.
@@ -337,7 +332,7 @@
 
 \examples{
 f1 <- system.file("extdata", "ex1.bam", package="Rsamtools")
-al0 <- readBAMasAlignments0(f1)
+al0 <- readBAMasGappedAlignments(f1)
 al0
 
 ## ---------------------------------------------------------------------
