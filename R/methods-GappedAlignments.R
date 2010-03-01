@@ -424,20 +424,24 @@ setMethod("coverage", "GappedAlignments",
 ###
 
 setMethod("findOverlaps", c("GappedAlignments", "ANY"),
-    function(query, subject, maxgap=0, multiple=TRUE,
-             type=c("any", "start", "end"))
+    function(query, subject, maxgap=0L,
+             type=c("any", "start", "end"),
+             select=c("all", "first"))
     {
         callGeneric(grglist(query), subject,
-                    maxgap=maxgap, multiple=multiple, type=type)
+                    maxgap=maxgap, type=match.arg(type),
+                    select=match.arg(select))
     }
 )
 
 setMethod("findOverlaps", c("ANY", "GappedAlignments"),
-    function(query, subject, maxgap=0, multiple=TRUE,
-             type=c("any", "start", "end"))
+    function(query, subject, maxgap=0L,
+             type=c("any", "start", "end"),
+             select=c("all", "first"))
     {
-        callGeneric(query, grglist(subject),
-                    maxgap=maxgap, multiple=multiple, type=type)
+        callGeneric(grglist(query), subject,
+                    maxgap=maxgap, type=match.arg(type),
+                    select=match.arg(select))
     }
 )
 
@@ -448,11 +452,12 @@ setMethod("findOverlaps", c("ANY", "GappedAlignments"),
 ###    function "findOverlaps", target signature "Alignments1#Alignments0".
 ###    "ANY#GappedAlignments" would also be valid
 setMethod("findOverlaps", c("GappedAlignments", "GappedAlignments"),
-    function(query, subject, maxgap=0, multiple=TRUE,
-             type=c("any", "start", "end"))
+    function(query, subject, maxgap=0L,
+             type=c("any", "start", "end"),
+             select=c("all", "first"))
     {
-        callGeneric(grglist(query), grglist(subject),
-                    maxgap=maxgap, multiple=multiple, type=type)
+        callGeneric(grglist(query), subject,
+                    maxgap=maxgap, type=match.arg(type),
+                    select=match.arg(select))
     }
 )
-
