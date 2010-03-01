@@ -37,6 +37,10 @@
 ###                 GappedAlignments objects. Just a convenient wrapper for
 ###                 'findOverlaps(grglist(query), subject, ...)', etc...
 ###
+###   countOverlaps(query, subject) - 'query' or 'subject' or both are
+###                 GappedAlignments objects. Just a convenient wrapper for
+###                 'countOverlaps(grglist(query), subject, ...)', etc...
+###
 ### Concrete GappedAlignments implementations just need to implement:
 ###   length, rname, rname<-, strand, cigar, rglist, [ and updateCigarAndStart
 ### and the default methods defined in this file will work.
@@ -439,7 +443,7 @@ setMethod("findOverlaps", c("ANY", "GappedAlignments"),
              type=c("any", "start", "end"),
              select=c("all", "first"))
     {
-        callGeneric(grglist(query), subject,
+        callGeneric(query, grglist(subject),
                     maxgap=maxgap, type=match.arg(type),
                     select=match.arg(select))
     }
@@ -456,8 +460,37 @@ setMethod("findOverlaps", c("GappedAlignments", "GappedAlignments"),
              type=c("any", "start", "end"),
              select=c("all", "first"))
     {
-        callGeneric(grglist(query), subject,
+        callGeneric(grglist(query), grglist(subject),
                     maxgap=maxgap, type=match.arg(type),
                     select=match.arg(select))
+    }
+)
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### The "countOverlaps" methods.
+###
+
+setMethod("countOverlaps", c("GappedAlignments", "ANY"),
+    function(query, subject, maxgap=0L, type=c("any", "start", "end"))
+    {
+        callGeneric(grglist(query), subject,
+                    maxgap=maxgap, type=match.arg(type))
+    }
+)
+
+setMethod("countOverlaps", c("ANY", "GappedAlignments"),
+    function(query, subject, maxgap=0L, type=c("any", "start", "end"))
+    {
+        callGeneric(query, grglist(subject),
+                    maxgap=maxgap, type=match.arg(type))
+    }
+)
+
+setMethod("countOverlaps", c("GappedAlignments", "GappedAlignments"),
+    function(query, subject, maxgap=0L, type=c("any", "start", "end"))
+    {
+        callGeneric(grglist(query), grglist(subject),
+                    maxgap=maxgap, type=match.arg(type))
     }
 )

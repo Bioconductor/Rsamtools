@@ -64,6 +64,9 @@
 \alias{findOverlaps,GappedAlignments,ANY-method}
 \alias{findOverlaps,ANY,GappedAlignments-method}
 \alias{findOverlaps,GappedAlignments,GappedAlignments-method}
+\alias{countOverlaps,GappedAlignments,ANY-method}
+\alias{countOverlaps,ANY,GappedAlignments-method}
+\alias{countOverlaps,GappedAlignments,GappedAlignments-method}
 
 
 \title{GappedAlignments objects}
@@ -309,6 +312,19 @@
       in the BSgenome package for more information (in particular for
       a description of the extra arguments and the returned object).
     }
+    \item{}{
+      \code{countOverlaps(query, subject, ...)}:
+      \code{query} or \code{subject} or both are GappedAlignments objects.
+      Equivalent to \code{countOverlaps(grglist(query), subject, ...)}
+      when \code{query} is a GappedAlignments object, or to
+      \code{findOverlaps(query, grglist(subject), ...)} when
+      \code{subject} is a GappedAlignments object, or to
+      \code{findOverlaps(grglist(query), grglist(subject), ...)}
+      when both are GappedAlignments objects.
+      See \link[BSgenome]{countOverlaps,GRangesList,GRanges-method}
+      in the BSgenome package for more information (in particular for
+      a description of the extra arguments).
+    }
   }
 }
 
@@ -415,9 +431,10 @@ stopifnot(identical(end(qnarrow(al0, start=21)), end(al0)))
 coverage(al0)
 
 ## ---------------------------------------------------------------------
-## E. findOverlaps()
+## E. findOverlaps()/countOverlaps()
 ## ---------------------------------------------------------------------
 findOverlaps(al0, grg(al0)[1])
+sum(countOverlaps(al0, grg(al0)[1]))
 }
 
 \keyword{methods}
