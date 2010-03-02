@@ -300,30 +300,21 @@
       relatively to a unique imaginary reference sequence).
     }
     \item{}{
-      \code{findOverlaps(query, subject, ...)}:
-      \code{query} or \code{subject} or both are GappedAlignments objects.
-      Equivalent to \code{findOverlaps(grglist(query), subject, ...)}
-      when \code{query} is a GappedAlignments object, or to
-      \code{findOverlaps(query, grglist(subject), ...)} when
-      \code{subject} is a GappedAlignments object, or to
-      \code{findOverlaps(grglist(query), grglist(subject), ...)}
-      when both are GappedAlignments objects.
-      See \link[BSgenome]{findOverlaps,GRangesList,GRanges-method}
-      in the BSgenome package for more information (in particular for
-      a description of the extra arguments and the returned object).
-    }
-    \item{}{
+      \code{findOverlaps(query, subject, ...)},
       \code{countOverlaps(query, subject, ...)}:
       \code{query} or \code{subject} or both are GappedAlignments objects.
-      Equivalent to \code{countOverlaps(grglist(query), subject, ...)}
+      \code{findOverlaps(query, subject, ...)} is equivalent
+      to \code{findOverlaps(grglist(query), subject, ...)}
       when \code{query} is a GappedAlignments object, or to
       \code{findOverlaps(query, grglist(subject), ...)} when
       \code{subject} is a GappedAlignments object, or to
       \code{findOverlaps(grglist(query), grglist(subject), ...)}
       when both are GappedAlignments objects.
-      See \link[BSgenome]{countOverlaps,GRangesList,GRanges-method}
+      The same apply to \code{countOverlaps(query, subject, ...)}.
+      See \link[BSgenome]{findOverlaps,GRangesList,GRanges-method}
+      and \link[BSgenome]{countOverlaps,GRangesList,GRanges-method}
       in the BSgenome package for more information (in particular for
-      a description of the extra arguments).
+      a description of the extra arguments and the returned object).
     }
   }
 }
