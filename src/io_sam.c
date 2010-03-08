@@ -6,171 +6,253 @@
 #include "Biostrings_interface.h"
 
 typedef enum {
-	OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR=1, 
-	CIGAR_BUFFER_OVERFLOW_ERROR = 2
+    OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR=1, 
+    CIGAR_BUFFER_OVERFLOW_ERROR = 2
 } _BAM_PARSE_STATUS;
 
 typedef struct {
-	int BLOCKSIZE;			  /* size to grow vectors */
-	int BUF_SZ, CIGAR_BUF_SZ; /* qual / seq and cigar scratch buffer */
-	char *BUF, *CIGAR_BUF;	  /* string representation of CIGAR */
+    int BLOCKSIZE;            /* size to grow vectors */
+    int BUF_SZ, CIGAR_BUF_SZ; /* qual / seq and cigar scratch buffer */
+    char *BUF, *CIGAR_BUF;    /* string representation of CIGAR */
 
-	_BAM_PARSE_STATUS parse_status;
-	samfile_t *sfile;
-	bam_header_t *header;
-	int nrec, idx, irange;
-	uint32_t keep_flag[2], cigar_flag;
-	Rboolean reverseComplement;
+    _BAM_PARSE_STATUS parse_status;
+    samfile_t *sfile;
+    bam_header_t *header;
+    int nrec, idx, irange;
+    uint32_t keep_flag[2], cigar_flag;
+    Rboolean reverseComplement;
 
-	void *extra;
+    void *extra;
 } _BAM_DATA;
 
 typedef int (*_PARSE1_FUNC)(const bam1_t *, void *);
 
 
 static const char *TMPL_ELT_NMS[] = {
-	"qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
-	"mrnm", "mpos", "isize", "seq", "qual"
-	/* "tag", "vtype", "value" */
+    "qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
+    "mrnm", "mpos", "isize", "seq", "qual", "tag"
+    /* "vtype", "value" */
 };
 
 static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
 
 enum {
-	QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, QWIDTH_IDX,
-	MAPQ_IDX, CIGAR_IDX, MRNM_IDX, MPOS_IDX, ISIZE_IDX, SEQ_IDX,
-	QUAL_IDX
+    QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, QWIDTH_IDX,
+    MAPQ_IDX, CIGAR_IDX, MRNM_IDX, MPOS_IDX, ISIZE_IDX, SEQ_IDX,
+    QUAL_IDX, TAG_IDX
 };
 
 enum { CIGAR_SIMPLE = 1 };
 
 SEXP _count_bam(SEXP bfile, SEXP index, SEXP mode, 
-				SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
+                SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 
 _BAM_DATA *
 _Calloc_BAM_DATA(int blocksize, int buf_sz, int cigar_buf_sz)
 {
-	_BAM_DATA *bd = (_BAM_DATA *) Calloc(1, _BAM_DATA);
-	bd->BLOCKSIZE = blocksize;
-	bd->BUF_SZ = buf_sz;
-	bd->BUF = Calloc(bd->BUF_SZ, char);
-	bd->CIGAR_BUF_SZ = cigar_buf_sz;
-	bd->CIGAR_BUF = Calloc(bd->CIGAR_BUF_SZ, char);
-	return bd;
+    _BAM_DATA *bd = (_BAM_DATA *) Calloc(1, _BAM_DATA);
+    bd->BLOCKSIZE = blocksize;
+    bd->BUF_SZ = buf_sz;
+    bd->BUF = Calloc(bd->BUF_SZ, char);
+    bd->CIGAR_BUF_SZ = cigar_buf_sz;
+    bd->CIGAR_BUF = Calloc(bd->CIGAR_BUF_SZ, char);
+    return bd;
 }
 
 void
 _Free_BAM_DATA(_BAM_DATA *bd)
 {
-	Free(bd->BUF);
-	Free(bd->CIGAR_BUF);
-	Free(bd);
+    Free(bd->BUF);
+    Free(bd->CIGAR_BUF);
+    Free(bd);
 }
 
 samfile_t *
 _bam_tryopen(const char *fname, const char *mode, void *aux)
 {
-	samfile_t *sfile = samopen(fname, mode, aux);
-	if (sfile == 0)
-		Rf_error("failed to open SAM/BAM file\n  file: '%s'", fname);
-	if (sfile->header == 0 || sfile->header->n_targets == 0) {
-		samclose(sfile);
-		Rf_error("SAM/BAM header missing or empty\n  file: '%s'", 
-				 fname);
-	}
-	return sfile;
+    samfile_t *sfile = samopen(fname, mode, aux);
+    if (sfile == 0)
+        Rf_error("failed to open SAM/BAM file\n  file: '%s'", fname);
+    if (sfile->header == 0 || sfile->header->n_targets == 0) {
+        samclose(sfile);
+        Rf_error("SAM/BAM header missing or empty\n  file: '%s'", 
+                 fname);
+    }
+    return sfile;
 }
 
 bam_index_t *
 _bam_tryindexload(const char *fname)
 {
-	bam_index_t *index = bam_index_load(fname);
-	if (index == 0)
-		Rf_error("failed to load BAM index\n  file: %s", fname);
-	return index;
+    bam_index_t *index = bam_index_load(fname);
+    if (index == 0)
+        Rf_error("failed to load BAM index\n  file: %s", fname);
+    return index;
 }
 
 uint32_t
 _bamseq(const bam1_t *bam, unsigned char *BUF, 
-		Rboolean reverseComplement)
+        Rboolean reverseComplement)
 {
-	static const char key[] = {
-		'\0', 'A', 'C',  '\0',  'G', '\0', '\0', '\0', 
-		'T', '\0', '\0', '\0', '\0', '\0', '\0', 'N'
-	};
-	
-	uint32_t len = bam->core.l_qseq;
-	unsigned char *seq = bam1_seq(bam);
-	for (int i = 0; i < len; ++i)
-		BUF[i] = key[bam1_seqi(seq, i)];
-	if (reverseComplement && (bam1_strand(bam) == 1))
-		_reverseComplement(BUF, len);
-	return len;
+    static const char key[] = {
+        '\0', 'A', 'C',  '\0',  'G', '\0', '\0', '\0', 
+        'T', '\0', '\0', '\0', '\0', '\0', '\0', 'N'
+    };
+    
+    uint32_t len = bam->core.l_qseq;
+    unsigned char *seq = bam1_seq(bam);
+    for (int i = 0; i < len; ++i)
+        BUF[i] = key[bam1_seqi(seq, i)];
+    if (reverseComplement && (bam1_strand(bam) == 1))
+        _reverseComplement(BUF, len);
+    return len;
 }
 
 uint32_t
 _bamqual(const bam1_t *bam, unsigned char *BUF, Rboolean reverse)
 {
-	uint32_t len = bam->core.l_qseq;
-	unsigned char *bamq = bam1_qual(bam);
-	for (int i = 0; i < len; ++i)
-		BUF[i] = bamq[i] + 33;
-	if (reverse && (bam1_strand(bam) == 1))
-		_reverse(BUF, len);
-	return len;
+    uint32_t len = bam->core.l_qseq;
+    unsigned char *bamq = bam1_qual(bam);
+    for (int i = 0; i < len; ++i)
+        BUF[i] = bamq[i] + 33;
+    if (reverse && (bam1_strand(bam) == 1))
+        _reverse(BUF, len);
+    return len;
 }
 
 int
 _bamcigar(const uint32_t *cigar, const uint32_t n_cigar, 
-		  char *buf, int buf_sz)
+          char *buf, int buf_sz)
 {
-	const char lookup[] = { 'M', 'I', 'D', 'N', 'S', 'H', 'P' };
-	buf[0] = '\0';
-	for (uint32_t i = 0; i < n_cigar; ++i) {
-		int n = snprintf(buf, buf_sz, "%u%c", cigar[i] >> 4, 
-						 lookup[cigar[i] & BAM_CIGAR_MASK]);
-		if (n >= buf_sz)
-			return -1;
-		buf += n;
-		buf_sz -= n;
-	}
-	return buf_sz;
+    const char lookup[] = { 'M', 'I', 'D', 'N', 'S', 'H', 'P' };
+    buf[0] = '\0';
+    for (uint32_t i = 0; i < n_cigar; ++i) {
+        int n = snprintf(buf, buf_sz, "%u%c", cigar[i] >> 4, 
+                         lookup[cigar[i] & BAM_CIGAR_MASK]);
+        if (n >= buf_sz)
+            return -1;
+        buf += n;
+        buf_sz -= n;
+    }
+    return buf_sz;
+}
+
+void
+_tag_type_check(const char *tagname, SEXP tag, SEXPTYPE is)
+{
+    SEXPTYPE was = TYPEOF(tag);
+    if (was == is)
+        return;
+    error("tag '%s' type is inconsistent; was '%s', is '%s'",
+          tagname, Rf_type2char(was), Rf_type2char(is));
+}
+
+void
+_bamtags(const bam1_t *bam, _BAM_DATA *bd, SEXP tags)
+{
+    int idx = bd->idx;
+    SEXP nms = GET_ATTR(tags, R_NamesSymbol);
+    for (int i = 0; i < LENGTH(nms); ++i) {
+        const char *tagname = CHAR(STRING_ELT(nms, i));
+        uint8_t *aux = bam_aux_get(bam, tagname);
+        if (0 == aux)
+            continue;           /* no matching tag found */
+        SEXP tag = VECTOR_ELT(tags, i);
+        if (R_NilValue == tag) { /* allocate */
+            int n = INTEGER(getAttrib(tags, install("count")))[0];
+            switch (aux[0]) {
+            case 'c': case 'C': case 'i': case 'I': case 's': case 'S':
+                tag = NEW_INTEGER(n);
+                for (int j = 0; j < n; ++j)
+                    INTEGER(tag)[j] = NA_INTEGER;
+                break;
+            case 'd': case 'f':
+                tag = NEW_NUMERIC(n);
+                for (int j = 0; j < n; ++j)
+                    REAL(tag)[j] = NA_REAL;
+                break;
+            case 'A': case 'Z':
+                tag = NEW_CHARACTER(n);
+                for (int j = 0; j < n; ++j)
+                    SET_STRING_ELT(tag, j, NA_STRING);
+                break;
+            case 'H':
+                tag = NEW_RAW(n);
+                break;
+            default:
+                error("unknown tag type '%c'", aux[0]);
+                break;
+            }
+            SET_VECTOR_ELT(tags, i, tag);
+        }
+        switch (aux[0]) {
+        case 'c': case 'C': case 's': case 'S': case 'i': case 'I': 
+            _tag_type_check(tagname, tag, INTSXP);
+            INTEGER(tag)[idx] = bam_aux2i(aux);
+            break;
+        case 'f':
+            _tag_type_check(tagname, tag, REALSXP);
+            REAL(tag)[idx] = (double) bam_aux2f(aux);
+            break;
+        case 'd':
+            _tag_type_check(tagname, tag, REALSXP);
+            REAL(tag)[idx] = bam_aux2d(aux);
+            break;
+        case 'A':
+            _tag_type_check(tagname, tag, STRSXP);
+            char *v = " ";
+            v[0] = bam_aux2A(aux);
+            SET_STRING_ELT(tag, idx, mkChar(v));
+            break;
+        case 'Z':
+            _tag_type_check(tagname, tag, STRSXP);
+            SET_STRING_ELT(tag, idx, mkChar(bam_aux2Z(aux)));
+            break;
+        case 'H':               /* FIXME: one byte or many? */
+            _tag_type_check(tagname, tag, RAWSXP);
+            RAW(tag)[idx] = aux[1];
+            break;
+        default:
+            error("unknown tag type '%c'", aux[0]);
+            break;
+        }
+    }
 }
 
 static void
 _bamfile_finalizer(SEXP externalptr)
 {
-	if (NULL == R_ExternalPtrAddr(externalptr))
-		return;
-	samclose((samfile_t *) R_ExternalPtrAddr(externalptr));
-	R_SetExternalPtrAddr(externalptr, NULL);
+    if (NULL == R_ExternalPtrAddr(externalptr))
+        return;
+    samclose((samfile_t *) R_ExternalPtrAddr(externalptr));
+    R_SetExternalPtrAddr(externalptr, NULL);
 }
 
 SEXP
 _scan_bam_open(SEXP fname, SEXP mode)
 {
-	if (!IS_CHARACTER(fname) || LENGTH(fname) != 1)
-		Rf_error("'fname' must be character(1)");
-	if (!IS_CHARACTER(mode) || LENGTH(mode) != 1)
-		Rf_error("'mode' must be character(1)");
+    if (!IS_CHARACTER(fname) || LENGTH(fname) != 1)
+        Rf_error("'fname' must be character(1)");
+    if (!IS_CHARACTER(mode) || LENGTH(mode) != 1)
+        Rf_error("'mode' must be character(1)");
 
-	const char *file = translateChar(STRING_ELT(fname, 0));
-	samfile_t *sfile = 
-		_bam_tryopen(file, CHAR(STRING_ELT(mode, 0)), 0);
-	if ((sfile->type & 1) != 1) {
-		samclose(sfile);
-		Rf_error("'fname' is not a BAM file\n  file: %s", file);
-	}
-	SEXP ext = PROTECT(R_MakeExternalPtr(sfile, install("BAM_file"), fname));
-	R_RegisterCFinalizerEx(ext, _bamfile_finalizer, TRUE);
-	UNPROTECT(1);
-	return ext;
+    const char *file = translateChar(STRING_ELT(fname, 0));
+    samfile_t *sfile = 
+        _bam_tryopen(file, CHAR(STRING_ELT(mode, 0)), 0);
+    if ((sfile->type & 1) != 1) {
+        samclose(sfile);
+        Rf_error("'fname' is not a BAM file\n  file: %s", file);
+    }
+    SEXP ext = PROTECT(R_MakeExternalPtr(sfile, install("BAM_file"), fname));
+    R_RegisterCFinalizerEx(ext, _bamfile_finalizer, TRUE);
+    UNPROTECT(1);
+    return ext;
 }
 
 void
 scan_bam_close(SEXP bfile)
 {
-	_bamfile_finalizer(bfile);
+    _bamfile_finalizer(bfile);
 }
 
 /* parse header */
@@ -178,44 +260,44 @@ scan_bam_close(SEXP bfile)
 SEXP
 read_bam_header(SEXP fname, SEXP mode)
 {
-	if (!IS_CHARACTER(fname) || 1 != LENGTH(fname))
-		error("'fname' must be character(1)");
-	if (!IS_CHARACTER(mode) || 1 != LENGTH(mode))
-		error("'mode' must be character(1)");
+    if (!IS_CHARACTER(fname) || 1 != LENGTH(fname))
+        error("'fname' must be character(1)");
+    if (!IS_CHARACTER(mode) || 1 != LENGTH(mode))
+        error("'mode' must be character(1)");
 
-	samfile_t *sfile = 
-		_bam_tryopen(translateChar(STRING_ELT(fname, 0)), 
-					 CHAR(STRING_ELT(mode, 0)), 0);
-	bam_header_t *header = sfile->header;
-	int n_elts = header->n_targets;
+    samfile_t *sfile = 
+        _bam_tryopen(translateChar(STRING_ELT(fname, 0)), 
+                     CHAR(STRING_ELT(mode, 0)), 0);
+    bam_header_t *header = sfile->header;
+    int n_elts = header->n_targets;
 
-	SEXP ans = PROTECT(NEW_LIST(2));
+    SEXP ans = PROTECT(NEW_LIST(2));
 
-	/* target length / name */
-	SET_VECTOR_ELT(ans, 0, NEW_INTEGER(n_elts));
-	SEXP tlen = VECTOR_ELT(ans, 0); /* target length */
-	SEXP tnm = PROTECT(NEW_CHARACTER(n_elts)); /* target name */
-	setAttrib(tlen, R_NamesSymbol, tnm);
-	UNPROTECT(1);
-	for (int j = 0; j < n_elts; ++j) {
-		INTEGER(tlen)[j] = header->target_len[j];
-		SET_STRING_ELT(tnm, j, mkChar(header->target_name[j]));
-	}
+    /* target length / name */
+    SET_VECTOR_ELT(ans, 0, NEW_INTEGER(n_elts));
+    SEXP tlen = VECTOR_ELT(ans, 0); /* target length */
+    SEXP tnm = PROTECT(NEW_CHARACTER(n_elts)); /* target name */
+    setAttrib(tlen, R_NamesSymbol, tnm);
+    UNPROTECT(1);
+    for (int j = 0; j < n_elts; ++j) {
+        INTEGER(tlen)[j] = header->target_len[j];
+        SET_STRING_ELT(tnm, j, mkChar(header->target_name[j]));
+    }
 
-	/* 'aux' character string */
-	char *txt = (char *) R_alloc(header->l_text + 1, sizeof(char));
-	strncpy(txt, header->text, header->l_text);
-	txt[header->l_text] = '\0';
-	SET_VECTOR_ELT(ans, 1, mkString(txt));
+    /* 'aux' character string */
+    char *txt = (char *) R_alloc(header->l_text + 1, sizeof(char));
+    strncpy(txt, header->text, header->l_text);
+    txt[header->l_text] = '\0';
+    SET_VECTOR_ELT(ans, 1, mkString(txt));
 
-	samclose(sfile);
+    samclose(sfile);
 
-	SEXP nms = PROTECT(NEW_CHARACTER(2));
-	SET_STRING_ELT(nms, 0, mkChar("targets"));
-	SET_STRING_ELT(nms, 1, mkChar("text"));
-	setAttrib(ans, R_NamesSymbol, nms);
-	UNPROTECT(2);
-	return ans;
+    SEXP nms = PROTECT(NEW_CHARACTER(2));
+    SET_STRING_ELT(nms, 0, mkChar("targets"));
+    SET_STRING_ELT(nms, 1, mkChar("text"));
+    setAttrib(ans, R_NamesSymbol, nms);
+    UNPROTECT(2);
+    return ans;
 }
 
 /* general functions */
@@ -223,468 +305,492 @@ read_bam_header(SEXP fname, SEXP mode)
 void
 _scan_check_params(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
-	const int MAX_CHRLEN = 1 << 29; /* See samtools/bam_index.c */
-	if (R_NilValue != space) {
-		if (!IS_VECTOR(space) || LENGTH(space) != 3)
-			Rf_error("'space' must be list(3) or NULL");
-		if (!IS_CHARACTER(VECTOR_ELT(space, 0)))
-			Rf_error("internal: 'space[1]' must be character()");
-		if (!IS_INTEGER(VECTOR_ELT(space, 1)))
-			Rf_error("internal: 'space[2]' must be integer()");
-		if (!IS_INTEGER(VECTOR_ELT(space, 2)))
-			Rf_error("internal: 'space[3]' must be integer()");
-		if ((LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 1))) ||
-			(LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 2))))
-			Rf_error("internal: 'space' elements must all be the same length");
-		const int *end = INTEGER(VECTOR_ELT(space, 2)),
-			nrange = LENGTH(VECTOR_ELT(space, 2));
-		for (int irange = 0; irange < nrange; ++irange)
-			if (end[irange] > MAX_CHRLEN)
-				Rf_error("'end' must be <= %d", MAX_CHRLEN);
-	}
-	if (!IS_INTEGER(keepFlags) || LENGTH(keepFlags) != 2)
-		Rf_error("'keepFlags' must be integer(2)");
-	if (!IS_LOGICAL(isSimpleCigar)  || LENGTH(isSimpleCigar) != 1)
-		Rf_error("'isSimpleCigar' must be logical(1)");
+    const int MAX_CHRLEN = 1 << 29; /* See samtools/bam_index.c */
+    if (R_NilValue != space) {
+        if (!IS_VECTOR(space) || LENGTH(space) != 3)
+            Rf_error("'space' must be list(3) or NULL");
+        if (!IS_CHARACTER(VECTOR_ELT(space, 0)))
+            Rf_error("internal: 'space[1]' must be character()");
+        if (!IS_INTEGER(VECTOR_ELT(space, 1)))
+            Rf_error("internal: 'space[2]' must be integer()");
+        if (!IS_INTEGER(VECTOR_ELT(space, 2)))
+            Rf_error("internal: 'space[3]' must be integer()");
+        if ((LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 1))) ||
+            (LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 2))))
+            Rf_error("internal: 'space' elements must all be the same length");
+        const int *end = INTEGER(VECTOR_ELT(space, 2)),
+            nrange = LENGTH(VECTOR_ELT(space, 2));
+        for (int irange = 0; irange < nrange; ++irange)
+            if (end[irange] > MAX_CHRLEN)
+                Rf_error("'end' must be <= %d", MAX_CHRLEN);
+    }
+    if (!IS_INTEGER(keepFlags) || LENGTH(keepFlags) != 2)
+        Rf_error("'keepFlags' must be integer(2)");
+    if (!IS_LOGICAL(isSimpleCigar)  || LENGTH(isSimpleCigar) != 1)
+        Rf_error("'isSimpleCigar' must be logical(1)");
 }
 
 _BAM_DATA *
 _init_BAM_DATA(SEXP bfile, SEXP index, SEXP flag, SEXP isSimpleCigar,
-			   Rboolean reverseComplement)
+               Rboolean reverseComplement)
 {
-	_BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 2048, 32768);
-	bdata->parse_status = 0;
-	bdata->sfile = (samfile_t *) R_ExternalPtrAddr(bfile);
-	bdata->header= bdata->sfile->header;
-	bdata->nrec = bdata->idx = bdata->irange = 0; 
-	bdata->keep_flag[0] = INTEGER(flag)[0];
-	bdata->keep_flag[1] = INTEGER(flag)[1];
-	bdata->cigar_flag = LOGICAL(isSimpleCigar)[0];
-	bdata->reverseComplement = reverseComplement;
-	return bdata;
+    _BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 2048, 32768);
+    bdata->parse_status = 0;
+    bdata->sfile = (samfile_t *) R_ExternalPtrAddr(bfile);
+    bdata->header= bdata->sfile->header;
+    bdata->nrec = bdata->idx = bdata->irange = 0; 
+    bdata->keep_flag[0] = INTEGER(flag)[0];
+    bdata->keep_flag[1] = INTEGER(flag)[1];
+    bdata->cigar_flag = LOGICAL(isSimpleCigar)[0];
+    bdata->reverseComplement = reverseComplement;
+    return bdata;
 }
 
 Rboolean
 _bam_filter(const bam1_t *bam, _BAM_DATA *bdata)
 {
-	/* 
-	   flag : 1101
-	   keep0: 1111
-	   keep1: 1111
-	   test = (keep0 & ~flag) | (keep1 & flag) = 0010 | 1101 = 1111
-	   ~test = 0000 = FALSE
+    /* 
+       flag : 1101
+       keep0: 1111
+       keep1: 1111
+       test = (keep0 & ~flag) | (keep1 & flag) = 0010 | 1101 = 1111
+       ~test = 0000 = FALSE
        
-	   flag:  1101
-	   keep0: 1101
-	   keep1: 1111
-	   test = (keep0 & ~flag) | (keep1 & flag) = 0000 | 1101 = 1101
-	   ~test = 0010 = TRUE
-	   
-	   flag:  1101
-	   keep0: 1111
-	   keep1: 1101
-	   test = (keep0 & ~flag) | (keep1 & flag) = 0010 | 1101 = 1111
-	   ~test = 0000 = FALSE
+       flag:  1101
+       keep0: 1101
+       keep1: 1111
+       test = (keep0 & ~flag) | (keep1 & flag) = 0000 | 1101 = 1101
+       ~test = 0010 = TRUE
+       
+       flag:  1101
+       keep0: 1111
+       keep1: 1101
+       test = (keep0 & ~flag) | (keep1 & flag) = 0010 | 1101 = 1111
+       ~test = 0000 = FALSE
 
-	*/
+    */
 
-	uint32_t test = (bdata->keep_flag[0] & ~bam->core.flag) | 
-		(bdata->keep_flag[1] & bam->core.flag);
-	if (~test & 2047u)
-		return FALSE;
+    uint32_t test = (bdata->keep_flag[0] & ~bam->core.flag) | 
+        (bdata->keep_flag[1] & bam->core.flag);
+    if (~test & 2047u)
+        return FALSE;
 
-	uint32_t *cigar = bam1_cigar(bam);
-	uint32_t n_cigar = bam->core.n_cigar;
-	if (bdata->cigar_flag == CIGAR_SIMPLE)
-	{
-		if (!(n_cigar == 0 || 
-			  (n_cigar == 1  && ((cigar[0] & BAM_CIGAR_MASK) == 0))))
-			return FALSE;
-	}
-	return TRUE;
+    uint32_t *cigar = bam1_cigar(bam);
+    uint32_t n_cigar = bam->core.n_cigar;
+    if (bdata->cigar_flag == CIGAR_SIMPLE)
+    {
+        if (!(n_cigar == 0 || 
+              (n_cigar == 1  && ((cigar[0] & BAM_CIGAR_MASK) == 0))))
+            return FALSE;
+    }
+    return TRUE;
 }
 
 int
 _scan_bam_all(_BAM_DATA *bd, _PARSE1_FUNC parse1)
 {
-	bam1_t *bam = bam_init1();
-	int r = 0;
-	while ((r = samread(bd->sfile, bam)) >= 0) {
-		int result = (*parse1)(bam, bd);
-		if (result < 0) return result;
-	}
-	return bd->idx;
+    bam1_t *bam = bam_init1();
+    int r = 0;
+    while ((r = samread(bd->sfile, bam)) >= 0) {
+        int result = (*parse1)(bam, bd);
+        if (result < 0) return result;
+    }
+    return bd->idx;
 }
 
 int
 _scan_bam_fetch(_BAM_DATA *bd, const char *fname, const char *indexfname,
-				SEXP space, int* start, int* end,
-				_PARSE1_FUNC parse1)
+                SEXP space, int* start, int* end,
+                _PARSE1_FUNC parse1)
 {
-	int tid;
-	samfile_t *sfile = bd->sfile;
-	int n_tot = 0;
-	
-	for (int irange = 0; irange < LENGTH(space); ++irange) {
-		const char* spc = translateChar(STRING_ELT(space, irange));
-		for (tid = 0; tid < sfile->header->n_targets; ++tid) {
-			if (strcmp(spc, sfile->header->target_name[tid]) == 0)
-				break;
-		}
-		if (tid == sfile->header->n_targets) {
-			Rf_warning("'space' not in BAM header\n  file: %s\n  space: %s",
-					   fname, spc);
-			return -1;
-		}
+    int tid;
+    samfile_t *sfile = bd->sfile;
+    int n_tot = 0;
+    
+    for (int irange = 0; irange < LENGTH(space); ++irange) {
+        const char* spc = translateChar(STRING_ELT(space, irange));
+        for (tid = 0; tid < sfile->header->n_targets; ++tid) {
+            if (strcmp(spc, sfile->header->target_name[tid]) == 0)
+                break;
+        }
+        if (tid == sfile->header->n_targets) {
+            Rf_warning("'space' not in BAM header\n  file: %s\n  space: %s",
+                       fname, spc);
+            return -1;
+        }
 
-		bam_index_t *bindex = _bam_tryindexload(indexfname);
-		if (bindex == 0) {
-			Rf_warning("failed to read BAM index\n  base file: %s", 
-					   fname);
-			return -1;
-		}
+        bam_index_t *bindex = _bam_tryindexload(indexfname);
+        if (bindex == 0) {
+            Rf_warning("failed to read BAM index\n  base file: %s", 
+                       fname);
+            return -1;
+        }
 
-		bam_fetch(sfile->x.bam, bindex, tid, 
-				  start[irange], end[irange], bd, parse1);
-		bam_index_destroy(bindex);
-		n_tot += bd->idx;
-		bd->irange += 1;
-		bd->idx = 0;
-	}
-	return n_tot;
+        bam_fetch(sfile->x.bam, bindex, tid, 
+                  start[irange], end[irange], bd, parse1);
+        bam_index_destroy(bindex);
+        n_tot += bd->idx;
+        bd->irange += 1;
+        bd->idx = 0;
+    }
+    return n_tot;
 }
 
 int
 _do_scan_bam(_BAM_DATA *bdata, SEXP bfile, SEXP index,
-			 SEXP space, _PARSE1_FUNC parse1)
+             SEXP space, _PARSE1_FUNC parse1)
 {
-	int status;
+    int status;
 
-	if (space == R_NilValue) {	/* everything */
-		status = _scan_bam_all(bdata, parse1);
-	} else {					/* fetch */
-		const char *fname = 
-			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
-		const char *indexfname =
-			translateChar(STRING_ELT(index, 0));
-		status = _scan_bam_fetch(bdata, fname, indexfname,
-								 VECTOR_ELT(space, 0),
-								 INTEGER(VECTOR_ELT(space, 1)),
-								 INTEGER(VECTOR_ELT(space, 2)),
-								 parse1);
-	}
-	return status;
+    if (space == R_NilValue) {  /* everything */
+        status = _scan_bam_all(bdata, parse1);
+    } else {                    /* fetch */
+        const char *fname = 
+            translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
+        const char *indexfname =
+            translateChar(STRING_ELT(index, 0));
+        status = _scan_bam_fetch(bdata, fname, indexfname,
+                                 VECTOR_ELT(space, 0),
+                                 INTEGER(VECTOR_ELT(space, 1)),
+                                 INTEGER(VECTOR_ELT(space, 2)),
+                                 parse1);
+    }
+    return status;
 }
 
 /* parse */
 
 SEXP
-scan_bam_template()
+scan_bam_template(SEXP tag)
 {
-	SEXP tmpl = PROTECT(NEW_LIST(N_TMPL_ELTS));
-	SET_VECTOR_ELT(tmpl, QNAME_IDX, NEW_CHARACTER(0));
-	SET_VECTOR_ELT(tmpl, FLAG_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, RNAME_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, STRAND_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, POS_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, QWIDTH_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, MAPQ_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, CIGAR_IDX, NEW_CHARACTER(0)); /* FIXME: cigar */
-	SET_VECTOR_ELT(tmpl, MRNM_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, MPOS_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, ISIZE_IDX, NEW_INTEGER(0));
-	SET_VECTOR_ELT(tmpl, SEQ_IDX, NEW_CHARACTER(0));
-	SET_VECTOR_ELT(tmpl, QUAL_IDX, NEW_CHARACTER(0));
+    if (R_NilValue != tag)
+        if (!IS_CHARACTER(tag))
+            Rf_error("'tag' must be NULL or 'character()'");
+    SEXP tmpl = PROTECT(NEW_LIST(N_TMPL_ELTS));
+    SET_VECTOR_ELT(tmpl, QNAME_IDX, NEW_CHARACTER(0));
+    SET_VECTOR_ELT(tmpl, FLAG_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, RNAME_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, STRAND_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, POS_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, QWIDTH_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, MAPQ_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, CIGAR_IDX, NEW_CHARACTER(0)); /* FIXME: cigar */
+    SET_VECTOR_ELT(tmpl, MRNM_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, MPOS_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, ISIZE_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, SEQ_IDX, NEW_CHARACTER(0));
+    SET_VECTOR_ELT(tmpl, QUAL_IDX, NEW_CHARACTER(0));
+    if (R_NilValue == tag) {
+        SET_VECTOR_ELT(tmpl, TAG_IDX, R_NilValue);
+    } else {
+        SET_VECTOR_ELT(tmpl, TAG_IDX, NEW_LIST(LENGTH(tag)));
+        SET_ATTR(VECTOR_ELT(tmpl, TAG_IDX), R_NamesSymbol, tag);
+    }
 
-	SEXP names = PROTECT(NEW_CHARACTER(N_TMPL_ELTS));
-	for (int i = 0; i < N_TMPL_ELTS; ++i)
-		SET_STRING_ELT(names, i, mkChar(TMPL_ELT_NMS[i]));
-	SET_ATTR(tmpl, R_NamesSymbol, names);
-	UNPROTECT(2);
-	return tmpl;
+    SEXP names = PROTECT(NEW_CHARACTER(N_TMPL_ELTS));
+    for (int i = 0; i < N_TMPL_ELTS; ++i)
+        SET_STRING_ELT(names, i, mkChar(TMPL_ELT_NMS[i]));
+    SET_ATTR(tmpl, R_NamesSymbol, names);
+    UNPROTECT(2);
+    return tmpl;
 }
 
 int
 _scan_bam_parse1(const bam1_t *bam, void *data)
 {
-	_BAM_DATA *bd = (_BAM_DATA *) data;
-	if (FALSE == _bam_filter(bam, bd))
-		return 0;
+    _BAM_DATA *bd = (_BAM_DATA *) data;
+    if (FALSE == _bam_filter(bam, bd))
+        return 0;
 
-	SEXP s, r = VECTOR_ELT((SEXP) bd->extra, bd->irange);
-	int idx = bd->idx, start, len;
-	Rboolean reverseComplement=bd->reverseComplement;
-	
-	for (int i = 0; i < LENGTH(r); ++i) {
-		if ((s = VECTOR_ELT(r, i)) == R_NilValue)
-			continue;
-		switch(i) {
-		case QNAME_IDX:
-			SET_STRING_ELT(s, idx, mkChar(bam1_qname(bam)));
-			break;
-		case FLAG_IDX:
-			INTEGER(s)[idx] = bam->core.flag;
-			break;
-		case RNAME_IDX:
-			INTEGER(s)[idx] = 
-				bam->core.tid < 0 ? NA_INTEGER : bam->core.tid + 1;
-			break;
-		case STRAND_IDX:
-			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
-				NA_INTEGER : (bam1_strand(bam) + 1);
-			break;
-		case POS_IDX:
-			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
-				NA_INTEGER : bam->core.pos + 1;
-			break;
-		case QWIDTH_IDX:
-			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
-				NA_INTEGER : bam_cigar2qlen(&bam->core, bam1_cigar(bam));
-			break;
-		case MAPQ_IDX:
-			INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
-				NA_INTEGER : bam->core.qual;
-			break;
-		case CIGAR_IDX:
-			if (bam->core.flag & BAM_FUNMAP)
-				SET_STRING_ELT(s, idx, NA_STRING);
-			else {
-				if (_bamcigar(bam1_cigar(bam), bam->core.n_cigar,
-							  bd->CIGAR_BUF, bd->CIGAR_BUF_SZ) < 0)
-				{
-					bd->parse_status |= CIGAR_BUFFER_OVERFLOW_ERROR;
-					return -bd->idx;
-				}
-				SET_STRING_ELT(s, idx, mkChar(bd->CIGAR_BUF));
-			}
-			break;
-		case MRNM_IDX:
-			INTEGER(s)[idx] = bam->core.mtid < 0 ? 
-				NA_INTEGER : bam->core.mtid + 1;
-			break;
-		case MPOS_IDX:
-			INTEGER(s)[idx] = bam->core.flag & BAM_FMUNMAP ?
-				NA_INTEGER : bam->core.mpos + 1;
-			break;
-		case ISIZE_IDX:
-			INTEGER(s)[idx] = 
-				bam->core.flag & (BAM_FUNMAP | BAM_FMUNMAP) ?
-				NA_INTEGER : bam->core.isize;
-			break;
-		case SEQ_IDX:
-			start = TRUELENGTH(s);
-			len = _bamseq(bam, RAW(VECTOR_ELT(s, 0)) + start,
-				reverseComplement);
-			SET_TRUELENGTH(s, start + len);
-			INTEGER(VECTOR_ELT(s, 1))[idx] = len;
-			break;
-		case QUAL_IDX:
-			start = TRUELENGTH(s);
-			len = _bamqual(bam, RAW(VECTOR_ELT(s, 0)) + start,
-				reverseComplement);
-			SET_TRUELENGTH(s, start + len);
-			INTEGER(VECTOR_ELT(s, 1))[idx] = len;
-			break;
-		default:
-			break;
-		}
-	}
-	bd->idx += 1;
-	return 1;
+    SEXP s, r = VECTOR_ELT((SEXP) bd->extra, bd->irange);
+    int idx = bd->idx, start, len;
+    Rboolean reverseComplement=bd->reverseComplement;
+    
+    for (int i = 0; i < LENGTH(r); ++i) {
+        if ((s = VECTOR_ELT(r, i)) == R_NilValue)
+            continue;
+        switch(i) {
+        case QNAME_IDX:
+            SET_STRING_ELT(s, idx, mkChar(bam1_qname(bam)));
+            break;
+        case FLAG_IDX:
+            INTEGER(s)[idx] = bam->core.flag;
+            break;
+        case RNAME_IDX:
+            INTEGER(s)[idx] = 
+                bam->core.tid < 0 ? NA_INTEGER : bam->core.tid + 1;
+            break;
+        case STRAND_IDX:
+            INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
+                NA_INTEGER : (bam1_strand(bam) + 1);
+            break;
+        case POS_IDX:
+            INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
+                NA_INTEGER : bam->core.pos + 1;
+            break;
+        case QWIDTH_IDX:
+            INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
+                NA_INTEGER : bam_cigar2qlen(&bam->core, bam1_cigar(bam));
+            break;
+        case MAPQ_IDX:
+            INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
+                NA_INTEGER : bam->core.qual;
+            break;
+        case CIGAR_IDX:
+            if (bam->core.flag & BAM_FUNMAP)
+                SET_STRING_ELT(s, idx, NA_STRING);
+            else {
+                if (_bamcigar(bam1_cigar(bam), bam->core.n_cigar,
+                              bd->CIGAR_BUF, bd->CIGAR_BUF_SZ) < 0)
+                {
+                    bd->parse_status |= CIGAR_BUFFER_OVERFLOW_ERROR;
+                    return -bd->idx;
+                }
+                SET_STRING_ELT(s, idx, mkChar(bd->CIGAR_BUF));
+            }
+            break;
+        case MRNM_IDX:
+            INTEGER(s)[idx] = bam->core.mtid < 0 ? 
+                NA_INTEGER : bam->core.mtid + 1;
+            break;
+        case MPOS_IDX:
+            INTEGER(s)[idx] = bam->core.flag & BAM_FMUNMAP ?
+                NA_INTEGER : bam->core.mpos + 1;
+            break;
+        case ISIZE_IDX:
+            INTEGER(s)[idx] = 
+                bam->core.flag & (BAM_FUNMAP | BAM_FMUNMAP) ?
+                NA_INTEGER : bam->core.isize;
+            break;
+        case SEQ_IDX:
+            start = TRUELENGTH(s);
+            len = _bamseq(bam, RAW(VECTOR_ELT(s, 0)) + start,
+                          reverseComplement);
+            SET_TRUELENGTH(s, start + len);
+            INTEGER(VECTOR_ELT(s, 1))[idx] = len;
+            break;
+        case QUAL_IDX:
+            start = TRUELENGTH(s);
+            len = _bamqual(bam, RAW(VECTOR_ELT(s, 0)) + start,
+                           reverseComplement);
+            SET_TRUELENGTH(s, start + len);
+            INTEGER(VECTOR_ELT(s, 1))[idx] = len;
+            break;
+        case TAG_IDX:
+            _bamtags(bam, bd, s);
+            break;
+        default:
+            break;
+        }
+    }
+    bd->idx += 1;
+    return 1;
 }
 
 SEXP
 _scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
 {
- 	int nrange = LENGTH(VECTOR_ELT(count, 0));
-	SEXP result = PROTECT(NEW_LIST(nrange));
-	/* result: 
-	   range1: tmpl1, tmpl2...
-	   range2: tmpl1, tmpl2...
-	   ...
-	*/
-	for (int irange = 0; irange < nrange; ++irange) 
-	{
-		int n_read = INTEGER(VECTOR_ELT(count, 0))[irange],
-			n_nucs = INTEGER(VECTOR_ELT(count, 1))[irange];
-
-		SEXP tmpl = PROTECT(scan_bam_template());
-		for (int i = 0; i < LENGTH(names); ++i) {
-			if (VECTOR_ELT(template_list, i) == R_NilValue)
-				SET_VECTOR_ELT(tmpl, i, R_NilValue);
-			else {
-				if (SEQ_IDX == i || QUAL_IDX == i) {
-					SEXP lst = PROTECT(NEW_LIST(2));
-					SET_TRUELENGTH(lst, 0); /* nucleotide count */
-					SET_VECTOR_ELT(lst, 0, NEW_RAW(n_nucs));
-					SET_VECTOR_ELT(lst, 1, NEW_INTEGER(n_read));
-					SET_VECTOR_ELT(tmpl, i, lst);
-					UNPROTECT(1);
-				} else {
-					SEXP elt = allocVector(TYPEOF(VECTOR_ELT(tmpl, i)),
-										   n_read);
-					SET_VECTOR_ELT(tmpl, i, elt);
-				}
-			}
-		}
-		SET_VECTOR_ELT(result, irange, tmpl);
-		UNPROTECT(1);
-	}
-	UNPROTECT(1);
-	return result;
+    int nrange = LENGTH(VECTOR_ELT(count, 0));
+    SEXP result = PROTECT(NEW_LIST(nrange));
+    /* result: 
+       range1: tmpl1, tmpl2...
+       range2: tmpl1, tmpl2...
+       ...
+    */
+    for (int irange = 0; irange < nrange; ++irange) 
+    {
+        int n_read = INTEGER(VECTOR_ELT(count, 0))[irange],
+            n_nucs = INTEGER(VECTOR_ELT(count, 1))[irange];
+        SEXP tag = VECTOR_ELT(template_list, TAG_IDX);
+        SEXP tmpl;
+        if (R_NilValue == tag)
+            tmpl = PROTECT(scan_bam_template(R_NilValue));
+        else {
+            SEXP nms = getAttrib(tag, R_NamesSymbol);
+            tmpl = PROTECT(scan_bam_template(nms));
+            SEXP count = PROTECT(ScalarInteger(n_read));
+            setAttrib(VECTOR_ELT(tmpl, TAG_IDX), 
+                      install("count"), count);
+            UNPROTECT(1);
+        }
+        for (int i = 0; i < LENGTH(names); ++i) {
+            if (TAG_IDX == i)
+                continue;
+            else if (VECTOR_ELT(template_list, i) == R_NilValue)
+                SET_VECTOR_ELT(tmpl, i, R_NilValue);
+            else {
+                if (SEQ_IDX == i || QUAL_IDX == i) {
+                    SEXP lst = PROTECT(NEW_LIST(2));
+                    SET_TRUELENGTH(lst, 0); /* nucleotide count */
+                    SET_VECTOR_ELT(lst, 0, NEW_RAW(n_nucs));
+                    SET_VECTOR_ELT(lst, 1, NEW_INTEGER(n_read));
+                    SET_VECTOR_ELT(tmpl, i, lst);
+                    UNPROTECT(1);
+                } else {
+                    SEXP elt = allocVector(TYPEOF(VECTOR_ELT(tmpl, i)),
+                                           n_read);
+                    SET_VECTOR_ELT(tmpl, i, elt);
+                }
+            }
+        }
+        SET_VECTOR_ELT(result, irange, tmpl);
+        UNPROTECT(1);
+    }
+    UNPROTECT(1);
+    return result;
 }
 
 SEXP
 _as_XStringSet(SEXP lst, const char *baseclass)
 {
-	SEXP seq = VECTOR_ELT(lst, 0);
-	SEXP width = VECTOR_ELT(lst, 1);
+    SEXP seq = VECTOR_ELT(lst, 0);
+    SEXP width = VECTOR_ELT(lst, 1);
 
-	ENCODE_FUNC encode = _encoder(baseclass);
-	char *str = (char *) RAW(seq);
-	for (int i = 0; i < LENGTH(seq); ++i)		
-		str[i] = encode(str[i]);
-	SEXP ptr = PROTECT(new_SharedVector("SharedRaw", seq));
-	SEXP xstring = PROTECT(new_XVector(baseclass, ptr, 0, LENGTH(seq)));
+    ENCODE_FUNC encode = _encoder(baseclass);
+    char *str = (char *) RAW(seq);
+    for (int i = 0; i < LENGTH(seq); ++i)       
+        str[i] = encode(str[i]);
+    SEXP ptr = PROTECT(new_SharedVector("SharedRaw", seq));
+    SEXP xstring = PROTECT(new_XVector(baseclass, ptr, 0, LENGTH(seq)));
 
-	SEXP start = PROTECT(NEW_INTEGER(LENGTH(width)));
-	int s = 1;
-	for (int i = 0; i < LENGTH(width); ++i) {
-		INTEGER(start)[i] = s;
-		s += INTEGER(width)[i];
-	}
-	SEXP irange = 
-		PROTECT(new_IRanges("IRanges", start, width, R_NilValue));
-	SEXP xstringset = PROTECT(new_XStringSet(NULL, xstring, irange));
-	UNPROTECT(5);
-	return xstringset;
+    SEXP start = PROTECT(NEW_INTEGER(LENGTH(width)));
+    int s = 1;
+    for (int i = 0; i < LENGTH(width); ++i) {
+        INTEGER(start)[i] = s;
+        s += INTEGER(width)[i];
+    }
+    SEXP irange = 
+        PROTECT(new_IRanges("IRanges", start, width, R_NilValue));
+    SEXP xstringset = PROTECT(new_XStringSet(NULL, xstring, irange));
+    UNPROTECT(5);
+    return xstringset;
 }
 
 SEXP
 _as_PhredQuality(SEXP lst)
 {
-	SEXP xstringset = PROTECT(_as_XStringSet(lst, "BString"));
+    SEXP xstringset = PROTECT(_as_XStringSet(lst, "BString"));
 
-	SEXP s, t, nmspc, result;
-	nmspc = PROTECT(_get_namespace("Rsamtools"));
-	NEW_CALL(s, t, "PhredQuality", nmspc, 2);
-	CSET_CDR(t, "x", xstringset);
-	CEVAL_TO(s, nmspc, result);
-	UNPROTECT(2);
-	return result;
+    SEXP s, t, nmspc, result;
+    nmspc = PROTECT(_get_namespace("Rsamtools"));
+    NEW_CALL(s, t, "PhredQuality", nmspc, 2);
+    CSET_CDR(t, "x", xstringset);
+    CEVAL_TO(s, nmspc, result);
+    UNPROTECT(2);
+    return result;
 }
 
 void
 _scan_bam_finish1range(_BAM_DATA *bdata, SEXP result)
 {
-	SEXP s;
-	if ((s = VECTOR_ELT(result, STRAND_IDX)) != R_NilValue) {
-		SEXP strand_lvls = PROTECT(_get_strand_levels());
-		_as_factor_SEXP(s, strand_lvls);
-		UNPROTECT(1);
-	}
-	if ((s = VECTOR_ELT(result, RNAME_IDX)) != R_NilValue) {
-		_as_factor(s, (const char **) bdata->header->target_name,
-				   bdata->header->n_targets);
-	}
-	if ((s = VECTOR_ELT(result, MRNM_IDX)) != R_NilValue) {
-		_as_factor(s, (const char **) bdata->header->target_name,
-				   bdata->header->n_targets);
-	}
-	if ((s = VECTOR_ELT(result, CIGAR_IDX)) != R_NilValue) {
-		SEXP ss, tt, nmspc;
-		nmspc = PROTECT(_get_namespace("Rsamtools"));
-		NEW_CALL(ss, tt, "Cigar", nmspc, 2);
-		CSET_CDR(tt, "cigars", s);
-		CEVAL_TO(ss, nmspc, s);
-		PROTECT(s);
-		SET_VECTOR_ELT(result, CIGAR_IDX, s);
-		UNPROTECT(2);
-	}
-	if ((s = VECTOR_ELT(result, SEQ_IDX)) != R_NilValue)
-	{
-		s = PROTECT(_as_XStringSet(s, "DNAString"));
-		SET_VECTOR_ELT(result, SEQ_IDX, s);
-		UNPROTECT(1);
-	}
-	if ((s = VECTOR_ELT(result, QUAL_IDX)) != R_NilValue)
-	{
-		PROTECT(s = _as_PhredQuality(s));
-		SET_VECTOR_ELT(result, QUAL_IDX, s);
-		UNPROTECT(1);
-	}
+    SEXP s;
+    if ((s = VECTOR_ELT(result, STRAND_IDX)) != R_NilValue) {
+        SEXP strand_lvls = PROTECT(_get_strand_levels());
+        _as_factor_SEXP(s, strand_lvls);
+        UNPROTECT(1);
+    }
+    if ((s = VECTOR_ELT(result, RNAME_IDX)) != R_NilValue) {
+        _as_factor(s, (const char **) bdata->header->target_name,
+                   bdata->header->n_targets);
+    }
+    if ((s = VECTOR_ELT(result, MRNM_IDX)) != R_NilValue) {
+        _as_factor(s, (const char **) bdata->header->target_name,
+                   bdata->header->n_targets);
+    }
+    if ((s = VECTOR_ELT(result, CIGAR_IDX)) != R_NilValue) {
+        SEXP ss, tt, nmspc;
+        nmspc = PROTECT(_get_namespace("Rsamtools"));
+        NEW_CALL(ss, tt, "Cigar", nmspc, 2);
+        CSET_CDR(tt, "cigars", s);
+        CEVAL_TO(ss, nmspc, s);
+        PROTECT(s);
+        SET_VECTOR_ELT(result, CIGAR_IDX, s);
+        UNPROTECT(2);
+    }
+    if ((s = VECTOR_ELT(result, SEQ_IDX)) != R_NilValue)
+    {
+        s = PROTECT(_as_XStringSet(s, "DNAString"));
+        SET_VECTOR_ELT(result, SEQ_IDX, s);
+        UNPROTECT(1);
+    }
+    if ((s = VECTOR_ELT(result, QUAL_IDX)) != R_NilValue)
+    {
+        PROTECT(s = _as_PhredQuality(s));
+        SET_VECTOR_ELT(result, QUAL_IDX, s);
+        UNPROTECT(1);
+    }
 }
 
 void
 _scan_bam_finish(_BAM_DATA *bdata)
 {
-	SEXP result = (SEXP) bdata->extra;
-	for (int irange = 0; irange < LENGTH(result); ++irange)
-		_scan_bam_finish1range(bdata, VECTOR_ELT(result, irange));
+    SEXP result = (SEXP) bdata->extra;
+    for (int irange = 0; irange < LENGTH(result); ++irange)
+        _scan_bam_finish1range(bdata, VECTOR_ELT(result, irange));
 }
 
 SEXP
 scan_bam(SEXP fname, SEXP index, SEXP mode,
-		 SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-		 SEXP reverseComplement, SEXP template_list)
+         SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+         SEXP reverseComplement, SEXP template_list)
 {
-	if (!IS_LIST(template_list) || 
-		LENGTH(template_list) != N_TMPL_ELTS)
-		Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
-	SEXP names = GET_ATTR(template_list, R_NamesSymbol);
-	if (!IS_CHARACTER(names) || LENGTH(names) != N_TMPL_ELTS)
-		Rf_error("'names(template)' must be character(%d)", 
-				 N_TMPL_ELTS);
-	for (int i = 0; i < LENGTH(names); ++i)
-		if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
-			Rf_error("'template' names do not match scan_bam_template\n'");
-	_scan_check_params(space, keepFlags, isSimpleCigar);
-	if (!(IS_LOGICAL(reverseComplement) &&
-		  (1L == LENGTH(reverseComplement))))
-		Rf_error("'reverseComplement' must be logical(1)");
+    if (!IS_LIST(template_list) || 
+        LENGTH(template_list) != N_TMPL_ELTS)
+        Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
+    SEXP names = GET_ATTR(template_list, R_NamesSymbol);
+    if (!IS_CHARACTER(names) || LENGTH(names) != N_TMPL_ELTS)
+        Rf_error("'names(template)' must be character(%d)", 
+                 N_TMPL_ELTS);
+    for (int i = 0; i < LENGTH(names); ++i)
+        if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
+            Rf_error("'template' names do not match scan_bam_template\n'");
+    _scan_check_params(space, keepFlags, isSimpleCigar);
+    if (!(IS_LOGICAL(reverseComplement) &&
+          (1L == LENGTH(reverseComplement))))
+        Rf_error("'reverseComplement' must be logical(1)");
 
-	SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
-	SEXP count = PROTECT(_count_bam(bfile, index, mode, 
-									space, keepFlags, isSimpleCigar));
-	if (R_NilValue == count) {
-		scan_bam_close(bfile);
-		UNPROTECT(2);
-		Rf_error("Failed to scan BAM\n  file: %s", 
-				 translateChar(STRING_ELT(fname, 0)));
-	}
-	if (R_NilValue == space) {
-		/* bam file invalid if fully scanned */
-		scan_bam_close(bfile);
-		UNPROTECT(2); PROTECT(count);
-		bfile = PROTECT(_scan_bam_open(fname, mode));
-	}
+    SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
+    SEXP count = PROTECT(_count_bam(bfile, index, mode, 
+                                    space, keepFlags, isSimpleCigar));
+    if (R_NilValue == count) {
+        scan_bam_close(bfile);
+        UNPROTECT(2);
+        Rf_error("Failed to scan BAM\n  file: %s", 
+                 translateChar(STRING_ELT(fname, 0)));
+    }
+    if (R_NilValue == space) {
+        /* bam file invalid if fully scanned */
+        scan_bam_close(bfile);
+        UNPROTECT(2); PROTECT(count);
+        bfile = PROTECT(_scan_bam_open(fname, mode));
+    }
 
-	SEXP result = 
-		PROTECT(_scan_bam_result_init(count, template_list, names));
-	_BAM_DATA *bdata = 
-		_init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, 
-					   LOGICAL(reverseComplement)[0]);
-	bdata->extra = (void *) result;
+    SEXP result = 
+        PROTECT(_scan_bam_result_init(count, template_list, names));
+    _BAM_DATA *bdata = 
+        _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, 
+                       LOGICAL(reverseComplement)[0]);
+    bdata->extra = (void *) result;
 
-	int status = 
-		_do_scan_bam(bdata, bfile, index, space, _scan_bam_parse1);
-	if (status < 0) {
-		int idx = bdata->idx;
-		_BAM_PARSE_STATUS parse_status = bdata->parse_status;
-		const char *fname0 = 
-			translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
-		scan_bam_close(bfile);
-		_Free_BAM_DATA(bdata);
-		Rf_error("failed to scan BAM\n  file: %s\n  last record: %d\n  error status: %d",
-				 fname0, idx, parse_status);
-	}
+    int status = 
+        _do_scan_bam(bdata, bfile, index, space, _scan_bam_parse1);
+    if (status < 0) {
+        int idx = bdata->idx;
+        _BAM_PARSE_STATUS parse_status = bdata->parse_status;
+        const char *fname0 = 
+            translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
+        scan_bam_close(bfile);
+        _Free_BAM_DATA(bdata);
+        Rf_error("failed to scan BAM\n  file: %s\n  last record: %d\n  error status: %d",
+                 fname0, idx, parse_status);
+    }
 
-	_scan_bam_finish(bdata);
-	_Free_BAM_DATA(bdata);
-	scan_bam_close(bfile);
-	UNPROTECT(3);
+    _scan_bam_finish(bdata);
+    _Free_BAM_DATA(bdata);
+    scan_bam_close(bfile);
+    UNPROTECT(3);
 
-	return result;
+    return result;
 }
 
 /* count */
@@ -692,71 +798,71 @@ scan_bam(SEXP fname, SEXP index, SEXP mode,
 int
 _count_bam1(const bam1_t *bam, void *data)
 {
-	_BAM_DATA *bd = (_BAM_DATA *) data;
-	bd->idx += 1;
-	if (FALSE == _bam_filter(bam, bd))
-		return 0;
-	SEXP cnt = (SEXP) (bd->extra);
-	INTEGER(VECTOR_ELT(cnt, 0))[bd->irange] += 1;
-	INTEGER(VECTOR_ELT(cnt, 1))[bd->irange] += bam->core.l_qseq;
-	return 1;
+    _BAM_DATA *bd = (_BAM_DATA *) data;
+    bd->idx += 1;
+    if (FALSE == _bam_filter(bam, bd))
+        return 0;
+    SEXP cnt = (SEXP) (bd->extra);
+    INTEGER(VECTOR_ELT(cnt, 0))[bd->irange] += 1;
+    INTEGER(VECTOR_ELT(cnt, 1))[bd->irange] += bam->core.l_qseq;
+    return 1;
 }
 
 SEXP
 _count_bam(SEXP bfile, SEXP index, SEXP mode, 
-		   SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
+           SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
-	SEXP result = PROTECT(NEW_LIST(2));
-	int spc_length = 
-		(R_NilValue == space) ? 1 : LENGTH(VECTOR_ELT(space, 0));
-	SET_VECTOR_ELT(result, 0, NEW_INTEGER(spc_length));
-	SET_VECTOR_ELT(result, 1, NEW_INTEGER(spc_length));
-	for (int i = 0; i < spc_length; ++i) {
-		INTEGER(VECTOR_ELT(result, 0))[i] =
-			INTEGER(VECTOR_ELT(result, 1))[i] = 0;
-	}
+    SEXP result = PROTECT(NEW_LIST(2));
+    int spc_length = 
+        (R_NilValue == space) ? 1 : LENGTH(VECTOR_ELT(space, 0));
+    SET_VECTOR_ELT(result, 0, NEW_INTEGER(spc_length));
+    SET_VECTOR_ELT(result, 1, NEW_INTEGER(spc_length));
+    for (int i = 0; i < spc_length; ++i) {
+        INTEGER(VECTOR_ELT(result, 0))[i] =
+            INTEGER(VECTOR_ELT(result, 1))[i] = 0;
+    }
 
-	SEXP nms = PROTECT(NEW_CHARACTER(2));
-	SET_STRING_ELT(nms, 0, mkChar("records"));
-	SET_STRING_ELT(nms, 1, mkChar("nucleotides"));
-	setAttrib(result, R_NamesSymbol, nms);
-	UNPROTECT(1);
+    SEXP nms = PROTECT(NEW_CHARACTER(2));
+    SET_STRING_ELT(nms, 0, mkChar("records"));
+    SET_STRING_ELT(nms, 1, mkChar("nucleotides"));
+    setAttrib(result, R_NamesSymbol, nms);
+    UNPROTECT(1);
 
-	_BAM_DATA *bdata = 
-		_init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, 
-					   FALSE);
-	bdata->extra = result;
+    _BAM_DATA *bdata = 
+        _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, 
+                       FALSE);
+    bdata->extra = result;
 
-	int status = 
-		_do_scan_bam(bdata, bfile, index, space, _count_bam1);
-	if (status < 0) 
-		result = R_NilValue;
+    int status = 
+        _do_scan_bam(bdata, bfile, index, space, _count_bam1);
+    if (status < 0) 
+        result = R_NilValue;
 
-	_Free_BAM_DATA(bdata);
-	UNPROTECT(1);
-	return result;
+    _Free_BAM_DATA(bdata);
+    UNPROTECT(1);
+    return result;
 }
 
 SEXP
 count_bam(SEXP fname, SEXP index, SEXP mode, 
-		  SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
-{	
-	_scan_check_params(space, keepFlags, isSimpleCigar);
-	SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
-	SEXP count = PROTECT(_count_bam(bfile, index, mode, space, 
-									keepFlags, isSimpleCigar));
-	scan_bam_close(bfile);
-	UNPROTECT(2);
+          SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
+{   
+    _scan_check_params(space, keepFlags, isSimpleCigar);
+    SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
+    SEXP count = PROTECT(_count_bam(bfile, index, mode, space, 
+                                    keepFlags, isSimpleCigar));
+    scan_bam_close(bfile);
+    UNPROTECT(2);
 
-	if (R_NilValue == count)
-		Rf_error("failed to count BAM\n  file: %s", fname);
-	return count;
+    if (R_NilValue == count)
+        Rf_error("failed to count BAM\n  file: %s", fname);
+    return count;
 }
 
 void
 scan_bam_cleanup()
 {
-	/* placeholder */
+    /* placeholder */
 }
 
 /* filterBam */
@@ -764,64 +870,64 @@ scan_bam_cleanup()
 int
 _filter_bam1(const bam1_t *bam, void *data)
 {
-	_BAM_DATA *bd = (_BAM_DATA *) data;
-	bd->idx += 1;
-	if (FALSE == _bam_filter(bam, bd))
-		return 0;
-	samwrite((samfile_t*) bd->extra, bam);
-	return 1;
+    _BAM_DATA *bd = (_BAM_DATA *) data;
+    bd->idx += 1;
+    if (FALSE == _bam_filter(bam, bd))
+        return 0;
+    samwrite((samfile_t*) bd->extra, bam);
+    return 1;
 }
 
 SEXP
 _filter_bam(SEXP bfile, SEXP index,
-			SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-			SEXP fout_name, SEXP fout_mode)
+            SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+            SEXP fout_name, SEXP fout_mode)
 {
-	/* open destination */
-	_BAM_DATA *bdata = 
-		_init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, FALSE);
-	/* FIXME: this just copies the header... */
-	samfile_t *f_out = 
-		_bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),
-					 CHAR(STRING_ELT(fout_mode, 0)),
-					 ((samfile_t *) R_ExternalPtrAddr(bfile))->header);
-	bdata->extra = f_out;
+    /* open destination */
+    _BAM_DATA *bdata = 
+        _init_BAM_DATA(bfile, index, keepFlags, isSimpleCigar, FALSE);
+    /* FIXME: this just copies the header... */
+    samfile_t *f_out = 
+        _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),
+                     CHAR(STRING_ELT(fout_mode, 0)),
+                     ((samfile_t *) R_ExternalPtrAddr(bfile))->header);
+    bdata->extra = f_out;
 
-	int status = 
-		_do_scan_bam(bdata, bfile, index, space, _filter_bam1);
+    int status = 
+        _do_scan_bam(bdata, bfile, index, space, _filter_bam1);
 
-	/* sort and index destintation ? */
-	/* cleanup */
-	samclose(f_out);
-	_Free_BAM_DATA(bdata);
+    /* sort and index destintation ? */
+    /* cleanup */
+    samclose(f_out);
+    _Free_BAM_DATA(bdata);
 
-	return status < 0 ? R_NilValue : fout_name;
+    return status < 0 ? R_NilValue : fout_name;
 }
 
 
 SEXP
 filter_bam(SEXP fname, SEXP index, SEXP mode,
-		   SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-		   SEXP fout_name, SEXP fout_mode)
+           SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+           SEXP fout_name, SEXP fout_mode)
 {
-	_scan_check_params(space, keepFlags, isSimpleCigar);
-	if (!IS_CHARACTER(fout_name) || 1 != LENGTH(fout_name))
-		Rf_error("'fout_name' must be character(1)");
-	if (!IS_CHARACTER(fout_mode) || 1 != LENGTH(fout_mode))
-		Rf_error("'fout_mode' must be character(1)");
-	
-	SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
-	SEXP result = 
-		PROTECT(_filter_bam(bfile, index, space, keepFlags, 
-							isSimpleCigar, fout_name, fout_mode));
+    _scan_check_params(space, keepFlags, isSimpleCigar);
+    if (!IS_CHARACTER(fout_name) || 1 != LENGTH(fout_name))
+        Rf_error("'fout_name' must be character(1)");
+    if (!IS_CHARACTER(fout_mode) || 1 != LENGTH(fout_mode))
+        Rf_error("'fout_mode' must be character(1)");
+    
+    SEXP bfile = PROTECT(_scan_bam_open(fname, mode));
+    SEXP result = 
+        PROTECT(_filter_bam(bfile, index, space, keepFlags, 
+                            isSimpleCigar, fout_name, fout_mode));
 
-	scan_bam_close(bfile);
-	UNPROTECT(2);
+    scan_bam_close(bfile);
+    UNPROTECT(2);
 
-	if (R_NilValue == result)
-		Rf_error("failed to filter BAM\n  file: %s\n  to:", 
-				 fname, fout_name);
-	return result;
+    if (R_NilValue == result)
+        Rf_error("failed to filter BAM\n  file: %s\n  to:", 
+                 fname, fout_name);
+    return result;
 }
 
 /* index_bam */
@@ -829,13 +935,13 @@ filter_bam(SEXP fname, SEXP index, SEXP mode,
 SEXP
 index_bam(SEXP fname)
 {
-	if (!IS_CHARACTER(fname) || 1 != LENGTH(fname))
-		Rf_error("'fname' must be character(1)");
-	const char *fbam = translateChar(STRING_ELT(fname, 0));
-	int status = bam_index_build(fbam);
-	if (0 != status)
-		Rf_error("failed to build index\n  file: %s", fbam);
-	char *fidx = (char *) R_alloc(strlen(fbam) + 5, sizeof(char));
-	sprintf(fidx, "%s.bai", fidx);
-	return mkString(fidx);
+    if (!IS_CHARACTER(fname) || 1 != LENGTH(fname))
+        Rf_error("'fname' must be character(1)");
+    const char *fbam = translateChar(STRING_ELT(fname, 0));
+    int status = bam_index_build(fbam);
+    if (0 != status)
+        Rf_error("failed to build index\n  file: %s", fbam);
+    char *fidx = (char *) R_alloc(strlen(fbam) + 5, sizeof(char));
+    sprintf(fidx, "%s.bai", fidx);
+    return mkString(fidx);
 }

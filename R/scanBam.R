@@ -1,11 +1,16 @@
-.scanBamTemplate <- function()
-    .Call(.scan_bam_template)
+.scanBamTemplate <-
+    function(tag=character(0))
+{
+    .Call(.scan_bam_template, tag)
+}
 
 setMethod(scanBam, "character",
           function(file, index=file, ..., param=ScanBamParam())
 {
-    tmpl <- .scanBamTemplate()
-    tmpl[!names(tmpl) %in% bamWhat(param)] <- list(NULL)
+    tmpl <- .scanBamTemplate(bamTag(param))
+    tmpl[!names(tmpl) %in% c(bamWhat(param), "tag")] <- list(NULL)
+    if (0L == length(tmpl[["tag"]]))
+        tmpl["tag"] <- list(NULL)
     reverseComplement <- bamReverseComplement(param)
     x <- .io_bam(.scan_bam, file, index, reverseComplement, tmpl,
                  param=param)

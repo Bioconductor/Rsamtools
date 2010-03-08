@@ -5,7 +5,7 @@
 
 /* io_sam.c */
 SEXP read_bam_header(SEXP fname, SEXP mode);
-SEXP scan_bam_template();
+SEXP scan_bam_template(SEXP tags);
 SEXP scan_bam(SEXP fname, SEXP index, SEXP mode,
 			  SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
 			  SEXP reverseComplement, SEXP template_list);

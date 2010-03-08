@@ -7,9 +7,14 @@ CHANGES IN VERSION 1.0.0
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o scanBam returns minus-strand reads in the manner presented in
-      the BAM file, i.e., as though on the positive strand. This
-      occurs in revision 0.1.34
+    the BAM file, i.e., as though on the positive strand. This occurs
+    in revision 0.1.34
 
 NEW FEATURES
 
+    o ScanBamParam() accepts 'tag' argument for parsing optional fields
+
 BUG FIXES
+
+    o No changes classified as 'bug fixes' (package under active
+    development)

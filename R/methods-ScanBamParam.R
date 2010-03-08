@@ -1,10 +1,10 @@
 ScanBamParam <-
     function(flag=scanBamFlag(), simpleCigar=FALSE,
-             reverseComplement=FALSE,
+             reverseComplement=FALSE, tag=character(0),
              what=scanBamWhat(), which=RangesList())
 {
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
-        reverseComplement=reverseComplement, what=what,
+        reverseComplement=reverseComplement, tag=tag, what=what,
         which=which)
 }
 
@@ -13,8 +13,9 @@ setValidity("ScanBamParam", function(object) {
     flag <- bamFlag(object)
     simpleCigar <- bamSimpleCigar(object)
     reverseComplement <- bamReverseComplement(object)
-    which <- bamWhich(object)
+    tag <- bamTag(object)
     what <- bamWhat(object)
+    which <- bamWhich(object)
     if (length(flag) != 2 || typeof(flag) != "integer")
         msg <- c(msg, "'flag' must be integer(2)")
     else {
@@ -29,11 +30,13 @@ setValidity("ScanBamParam", function(object) {
     if (!((1L == length(reverseComplement)) &&
           !is.na(reverseComplement)))
         msg <- c(msg, "'reverseComplement' must be logical(1)")
+    if (0 != length(tag) && any(2 != nchar(tag)))
+        msg <- c(msg, "'tag' must be two letters, e.g,, 'MD'")
+    if (!all(what %in% scanBamWhat()))
+        msg <- c(msg, "'what' must be from 'scanBamWhat()'")
     if (length(which) != 0 &&
         (any(!nzchar(names(which))) || any(is.na(names(which)))))
         msg <- c(msg, "'which' elements must be named (not NA)")
-    if (!all(what %in% scanBamWhat()))
-        msg <- c(msg, "all 'what' must be from 'scanBamWhat()'")
     if (is.null(msg)) TRUE else msg
 })
 
@@ -41,6 +44,7 @@ bamFlag <- function(object) slot(object, "flag")
 bamSimpleCigar <- function(object) slot(object, "simpleCigar")
 bamReverseComplement <-
     function(object) slot(object, "reverseComplement")
+bamTag <- function(object) slot(object, "tag")
 bamWhich <- function(object) slot(object, "which")
 bamWhat <- function(object) slot(object, "what")
 
@@ -74,7 +78,8 @@ scanBamFlag <-
 
 scanBamWhat <- function()
 {
-    names(.Call(.scan_bam_template))
+    nms <- names(.scanBamTemplate())
+    nms[nms != "tag"]
 }
 
 setMethod(show, "ScanBamParam",
@@ -86,6 +91,7 @@ setMethod(show, "ScanBamParam",
     cat("bamSimpleCigar: ", bamSimpleCigar(object), "\n", sep="")
     cat("bamReverseComplement: ", bamReverseComplement(object), "\n",
         sep="")
+    cat("bamTag:", paste(bamTag(object), collapse=", "), "\n")
     cat("bamWhich:", length(bamWhich(object)), "elements\n")
     what <- paste("bamWhat: ", paste(bamWhat(object), collapse=", "))
     cat(strwrap(what, exdent=2), sep="\n")

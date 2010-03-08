@@ -154,7 +154,7 @@ test_BamViews_auto.range <- function()
     
 test_BamViews_readBAMasGappedAlignments <- function()
 {
-    checkTrue(validObject(readBAMasreadBAMasGappedAlignments(BamViews())))
+    checkTrue(validObject(readBAMasGappedAlignments(BamViews())))
 
     fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
             file.path("cases", "ex1_shuf1000.bam"))

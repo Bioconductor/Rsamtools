@@ -7,6 +7,7 @@
 \alias{scanBamWhat}
 \alias{scanBamFlag}
 % accessors
+\alias{bamTag}
 \alias{bamWhat}
 \alias{bamWhich}
 \alias{bamFlag}
@@ -27,7 +28,7 @@
 
 # Constructor
 ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
-    reverseComplement = FALSE,
+    reverseComplement = FALSE, tag = character(0),
     what = scanBamWhat(), which = RangesList())
 
 # Constructor helpers
@@ -38,6 +39,7 @@ scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA,
 scanBamWhat()
 
 # Accessors
+bamTag(object)
 bamWhat(object)
 bamWhich(object)
 bamFlag(object)
@@ -63,6 +65,11 @@ bamReverseComplement(object)
 	the sequence and quality scores of reads mapped to the minus strand
 	in the reverse complement (sequence) and reverse (quality) of the
 	read as stored in the BAM file.}
+
+  \item{tag}{A character vector naming tags to be extracted. A tag is an
+    optional field, with arbitrary information, stored with each
+    record. Tags are identified by two-letter codes, so all elements of
+    \code{tag} must have exactly 2 characters.}
 
   \item{what}{A character vector naming the fields to
 	return. \code{scanBamWhat()} returns a vector of available
@@ -140,18 +147,21 @@ bamReverseComplement(object)
       (\code{keep1}) bit set.}
 
     \item{\code{simpleCigar}}{Object of class \code{logical}
-     indicating, when TRUE, that only 'simple' cigars (empty or 'M') are
-     returned.}
+      indicating, when TRUE, that only 'simple' cigars (empty or 'M') are
+      returned.}
 
-   \item{\code{reverseComplement}}{Object of class \code{logical}
-	 indicating, when TRUE, that reads on the minus strand are to be
-	 reverse complemented (sequence) and reversed (quality).}
+    \item{\code{reverseComplement}}{Object of class \code{logical}
+	  indicating, when TRUE, that reads on the minus strand are to be
+	  reverse complemented (sequence) and reversed (quality).}
+
+    \item{\code{tag}}{Object of class \code{character} indicating what
+      tags are to be returned.}
 
     \item{\code{what}}{Object of class \code{character} indicating
-     what fields are to be returned.}
+      what fields are to be returned.}
 
     \item{\code{which}}{Object of class \code{RangesList} indicating
-     which reference sequence and coordinate reads must overlap.}
+      which reference sequence and coordinate reads must overlap.}
 
   }
 }
@@ -170,8 +180,11 @@ bamReverseComplement(object)
   Accessors:
   \describe{
 
+    \item{bamTag}{Returns a \code{character} vector of tags to be
+      extracted.}
+
 	\item{bamWhat}{Returns a \code{character} vector of fields to be
-	extracted.}
+	  extracted.}
 
 	\item{bamWhich}{Returns a \code{RangesList} of bounds on reads to
 	  be extracted. A length 0 \code{RangesList} represents all reads.}
@@ -202,24 +215,28 @@ bamReverseComplement(object)
   \code{\link{scanBam}}
 }
 \examples{
-# defaults
+## defaults
 p0 <- ScanBamParam()
 
-# subset of reads based on genomic coordinates
+## subset of reads based on genomic coordinates
 which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
 p1 <- ScanBamParam(which=which)
 
-# subset of reads based on 'flag' value
+## subset of reads based on 'flag' value
 p2 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))
 
-# subset of fields
+## subset of fields
 p3 <- ScanBamParam(what=c("rname", "strand", "pos", "qwidth"))
                 
-# use
+## use
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 res <- scanBam(fl, param=p2)[[1]]
 lapply(res, head)
 
+## tags; NM: edit distance; H1: 1-difference hits
+p4 <- ScanBamParam(tag=c("NM", "H1"))
+bam4 <- scanBam(fl, param=p4)
+str(bam4[[1]][["tag"]])
 }
 \keyword{classes}

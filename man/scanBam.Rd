@@ -39,10 +39,12 @@ scanBam(file, index=file, ...)
   several salient points are reiterated here. \code{ScanBamParam} can
   contain a field \code{what}, specifying the components of the BAM
   records to be returned. Valid values of \code{what} are available with
-  \code{\link{scanBamWhat}}. \code{ScanBamParam} can contain an
-  argument \code{which} that specifies a subset of reads to return. This
-  requires that the BAM file be indexed, and that the file be named
-  following samtools convention as \code{<bam_filename>.bai}.
+  \code{\link{scanBamWhat}}. \code{ScanBamParam} can contain an argument
+  \code{which} that specifies a subset of reads to return. This requires
+  that the BAM file be indexed, and that the file be named following
+  samtools convention as \code{<bam_filename>.bai}. \code{ScanBamParam}
+  can contain an argument \code{tag} to specify which tags will be
+  extracted. 
 
 }
 
@@ -53,9 +55,9 @@ scanBam(file, index=file, ...)
   \code{bamWhich(param)}; the outer list is of length one when
   \code{bamWhich(param)} has length 0. Each inner list contains elements
   named after \code{scanBamWhat()}; elements omitted from
-  \code{bamWhat(param)} have value \code{NULL}. The content of non-null
-  elements are as follows, taken from the description in the samtools
-  API documentation:
+  \code{bamWhat(param)} are removed. The content of non-null elements
+  are as follows, taken from the description in the samtools API
+  documentation:
 
   \item{qname}{The query name, i.e., identifier, associated with the
 	read.}

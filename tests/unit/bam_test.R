@@ -207,3 +207,26 @@ test_scanBam_sam <- function()
                    as.character(bam$qual[idx]))
     
 }
+
+test_scanBam_tag <- function()
+{
+    checkIdentical(character(0), bamTag(ScanBamParam()))
+    tag <- c("MF", "Aq", "NM", "UQ", "H0", "H1")
+    param <- ScanBamParam(tag=tag)
+    checkTrue(validObject(param))
+    checkIdentical(tag, bamTag(param))
+    ## tags must be two letters
+    checkException(ScanBamParam(tag="XYZ"), silent=TRUE)
+
+    tag <- c("MF", "Aq", "NM", "UQ", "H0", "H1")
+    param <- ScanBamParam(tag=tag)
+    fl <- file.path("cases", "ex1_shuf1000.bam")
+    bam <- scanBam(fl, param=param)[[1]][["tag"]]
+    checkIdentical(tag, names(bam))
+    checkTrue(all(1000L == sapply(bam, length)))
+    exp <- structure(c(818L, 117L, 27L, 10L, 11L, 4L, 1L, 1L, 11L),
+                     .Dim = 9L, .Dimnames = structure(list( c("0",
+                     "1", "2", "3", "4", "5", "6", "7", NA)), .Names =
+                     ""), class = "table")
+    checkIdentical(exp, table(bam[["NM"]], useNA="always"))
+}
