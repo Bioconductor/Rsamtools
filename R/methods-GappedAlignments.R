@@ -381,7 +381,7 @@ setMethod("[", "GappedAlignments",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### The "qnarrow" and "narrow" methods.
+### The "qnarrow", "narrow", and "pintersect" methods.
 ###
 
 setMethod("qnarrow", "GappedAlignments",
@@ -401,6 +401,27 @@ setMethod("narrow", "GappedAlignments",
                                  start=start, end=end, width=width)
         ans_start <- start(x) + attr(ans_cigar, "rshift")
         updateCigarAndStart(x, cigar=ans_cigar, start=ans_start)
+    }
+)
+
+setMethod("pintersect", c("GappedAlignments", "GRanges"),
+    function(x, y, ...)
+    {
+        bounds <- try(callGeneric(grg(x), y), silent = TRUE)
+        if (inherits(bounds, "try-error"))
+            stop("CIGAR is empty after intersection")
+        start <- start(x) - (start(bounds) - 1L)
+        start[IRanges:::whichAsVector(start < 1L)] <- 1L
+        end <- (end(bounds) - 1L) - end(x)
+        end[IRanges:::whichAsVector(end > -1L)] <- -1L
+        narrow(x, start=start, end=end)
+    }
+)
+
+setMethod("pintersect", c("GRanges", "GappedAlignments"),
+    function(x, y, ...)
+    {
+        callGeneric(y, x)
     }
 )
 

@@ -60,6 +60,8 @@
 \alias{qnarrow}
 \alias{qnarrow,GappedAlignments-method}
 \alias{narrow,GappedAlignments-method}
+\alias{pintersect,GappedAlignments,GRanges-method}
+\alias{pintersect,GRanges,GappedAlignments-method}
 \alias{coverage,GappedAlignments-method}
 \alias{findOverlaps,GappedAlignments,ANY-method}
 \alias{findOverlaps,ANY,GappedAlignments-method}
@@ -284,6 +286,16 @@
       NAs and negative values are accepted and "solved" according to the
       rules of the SEW (Start/End/Width) interface (see
       \code{?\link[IRanges]{solveUserSEW}} for the details).
+    }
+    \item{}{
+      \code{pintersect(x, y)}:
+      Either \code{x} is a GappedAlignments object and \code{y} is a
+      GRanges object or \code{x} is a GRanges object and \code{y} is a
+      GappedAlignments object.
+      Returns a new GappedAlignments object of the same length and type
+      (i.e. Alignments0, Alignments1 or Alignments2) as the 
+      GappedAlignments input argument. Like with \code{narrow}, the
+      resulting "parallel" intersection is with respect to the reference.
     }
     \item{}{
       \code{coverage(x)}:
