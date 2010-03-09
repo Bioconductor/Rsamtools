@@ -350,8 +350,8 @@
 }
 
 \examples{
-f1 <- system.file("extdata", "ex1.bam", package="Rsamtools")
-aln1 <- readBAMasGappedAlignments(f1)
+aln1_file <- system.file("extdata", "ex1.bam", package="Rsamtools")
+aln1 <- readBAMasGappedAlignments(aln1_file)
 aln1
 
 ## ---------------------------------------------------------------------
