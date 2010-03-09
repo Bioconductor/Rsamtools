@@ -431,12 +431,11 @@ setMethod("pintersect", c("GRanges", "GappedAlignments"),
 ###
 
 setMethod("coverage", "GappedAlignments",
-    function(x, start=NA, end=NA, shift=0L, width=NULL, weight=1L, ...)
+    function(x, shift=0L, width=NULL, weight=1L, ...)
     {
-        if (!identical(start, NA) || !identical(end, NA)
-         || !identical(shift, 0L) || !is.null(width) || !identical(weight, 1L))
-            stop("'start', 'end', 'shift', 'width' and 'weight' arguments ",
-                 "are not supported yet, sorry!")
+        if (!identical(shift, 0L) || !is.null(width) || !identical(weight, 1L))
+            stop("'shift', 'width' and 'weight' arguments are not ",
+                 "supported yet, sorry!")
         irl <- cigarToIRangesListByRName(cigar(x), rname(x), start(x))
         irl <- irl[elementLengths(irl) != 0]  # drop empty elements
         coverage(irl)
