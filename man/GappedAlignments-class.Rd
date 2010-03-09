@@ -351,65 +351,65 @@
 
 \examples{
 f1 <- system.file("extdata", "ex1.bam", package="Rsamtools")
-al0 <- readBAMasGappedAlignments(f1)
-al0
+aln1 <- readBAMasGappedAlignments(f1)
+aln1
 
 ## ---------------------------------------------------------------------
 ## A. BASIC MANIPULATION
 ## ---------------------------------------------------------------------
-length(al0)
-head(al0)
-head(rname(al0))
-levels(rname(al0))
+length(aln1)
+head(aln1)
+head(rname(aln1))
+levels(rname(aln1))
 
 ## Rename the reference sequences:
-rname(al0) <- sub("seq", "chr", rname(al0))
-levels(rname(al0))
+rname(aln1) <- sub("seq", "chr", rname(aln1))
+levels(rname(aln1))
 
-head(strand(al0))
-head(cigar(al0))
-head(qwidth(al0))
-table(qwidth(al0))
+head(strand(aln1))
+head(cigar(aln1))
+head(qwidth(aln1))
+table(qwidth(aln1))
 
-grglist(al0)  # a GRangesList object
-grg(al0)      # a GRanges object
-rglist(al0)   # a CompressedNormalIRangesList object
-stopifnot(identical(elementLengths(grglist(al0)), elementLengths(rglist(al0))))
+grglist(aln1)  # a GRangesList object
+grg(aln1)      # a GRanges object
+rglist(aln1)   # a CompressedNormalIRangesList object
+stopifnot(identical(elementLengths(grglist(aln1)), elementLengths(rglist(aln1))))
 
-head(start(al0))
-head(end(al0))
-head(width(al0))
-head(ngap(al0))
+head(start(aln1))
+head(end(aln1))
+head(width(aln1))
+head(ngap(aln1))
 
 ## ---------------------------------------------------------------------
 ## B. SUBSETTING
 ## ---------------------------------------------------------------------
-al0[strand(al0) == "-"]
-al0[grep("I", cigar(al0), fixed=TRUE)]
-al0[grep("N", cigar(al0), fixed=TRUE)]  # no gaps
+aln1[strand(aln1) == "-"]
+aln1[grep("I", cigar(aln1), fixed=TRUE)]
+aln1[grep("N", cigar(aln1), fixed=TRUE)]  # no gaps
 
 ## A confirmation that all the queries map to the reference with no
 ## gaps:
-stopifnot(all(ngap(al0) == 0))
+stopifnot(all(ngap(aln1) == 0))
 
 ## Different ways to subset:
-al0[6]             # a GappedAlignments object of length 1
-grglist(al0)[[6]]  # a GRanges object of length 1
-rglist(al0)[[6]]   # a NormalIRanges object of length 1
+aln1[6]             # a GappedAlignments object of length 1
+grglist(aln1)[[6]]  # a GRanges object of length 1
+rglist(aln1)[[6]]   # a NormalIRanges object of length 1
 
 ## Ds are NOT gaps:
-ii <- grep("D", cigar(al0), fixed=TRUE)
-al0[ii]
-ngap(al0[ii])
-grglist(al0[ii])
+ii <- grep("D", cigar(aln1), fixed=TRUE)
+aln1[ii]
+ngap(aln1[ii])
+grglist(aln1[ii])
 
 ## qwidth() vs width():
-al0[qwidth(al0) != width(al0)]
+aln1[qwidth(aln1) != width(aln1)]
 
 ## This MUST return an empty object:
-al0[cigar(al0) == "35M" & qwidth(al0) != 35]
+aln1[cigar(aln1) == "35M" & qwidth(aln1) != 35]
 ## but this doesn't have too:
-al0[cigar(al0) != "35M" & qwidth(al0) == 35]
+aln1[cigar(aln1) != "35M" & qwidth(aln1) == 35]
 
 ## ---------------------------------------------------------------------
 ## C. qnarrow()/narrow()
@@ -419,25 +419,25 @@ al0[cigar(al0) != "35M" & qwidth(al0) == 35]
 
 ## This trims 3 nucleotides on the left and 5 nucleotides on the right
 ## of each alignment:
-qnarrow(al0, start=4, end=-6)
+qnarrow(aln1, start=4, end=-6)
 ## Note that the 'start' and 'end' arguments specify what part of each
 ## query sequence should be kept (negative values being relative to the
 ## right end of the query sequence), not what part should be trimmed.
 
 ## Trimming on the left doesn't change the "end" of the queries.
-qnarrow(al0, start=21)
-stopifnot(identical(end(qnarrow(al0, start=21)), end(al0)))
+qnarrow(aln1, start=21)
+stopifnot(identical(end(qnarrow(aln1, start=21)), end(aln1)))
 
 ## ---------------------------------------------------------------------
 ## D. coverage()
 ## ---------------------------------------------------------------------
-coverage(al0)
+coverage(aln1)
 
 ## ---------------------------------------------------------------------
 ## E. findOverlaps()/countOverlaps()
 ## ---------------------------------------------------------------------
-findOverlaps(al0, grg(al0)[1])
-sum(countOverlaps(al0, grg(al0)[1]))
+findOverlaps(aln1, grg(aln1)[1])
+sum(countOverlaps(aln1, grg(aln1)[1]))
 }
 
 \keyword{methods}
