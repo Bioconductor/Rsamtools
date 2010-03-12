@@ -61,7 +61,7 @@ setMethod("rglist", "Alignments0", function(x) x@rglist)
 ### Constructor.
 ###
 
-Alignments0 <- function(rname=factor(), strand=BSgenome::strand(),
+Alignments0 <- function(rname=factor(), strand=strand(),
                         pos=integer(0), cigar=character(0))
 {
     if (!is.factor(rname) || !is.character(levels(rname))) {

@@ -212,8 +212,9 @@
     }
     \item{}{
       \code{grglist(x)}, \code{grg(x)}, \code{rglist(x)}:
-      Returns a \link[BSgenome]{GRangesList}, a \link[BSgenome]{GRanges}
-      or a \link[IRanges]{CompressedNormalIRangesList} object of
+      Returns a \link[GenomicRanges]{GRangesList}, a
+      \link[GenomicRanges]{GRanges} or a
+      \link[IRanges]{CompressedNormalIRangesList} object of
       length \code{length(x)} where each element represents the regions
       in the reference to which a query is aligned. See Details section
       above for more information.
@@ -323,9 +324,9 @@
       \code{findOverlaps(grglist(query), grglist(subject), ...)}
       when both are GappedAlignments objects.
       The same apply to \code{countOverlaps(query, subject, ...)}.
-      See \link[BSgenome]{findOverlaps,GRangesList,GRanges-method}
-      and \link[BSgenome]{countOverlaps,GRangesList,GRanges-method}
-      in the BSgenome package for more information (in particular for
+      See \link[GenomicRanges]{findOverlaps,GRangesList,GRanges-method}
+      and \link[GenomicRanges]{countOverlaps,GRangesList,GRanges-method}
+      in the GenomicRanges package for more information (in particular for
       a description of the extra arguments and the returned object).
     }
   }
@@ -341,12 +342,13 @@
 
 \seealso{
   \code{\link{scanBam}},
-  \link[BSgenome]{GRangesList-class},
+  \link[GenomicRanges]{GRangesList-class},
   \link[IRanges]{NormalIRanges-class},
   \link[IRanges]{CompressedNormalIRangesList-class},
   \code{\link[IRanges]{coverage}},
   \link[IRanges]{RleList-class},
-  \link[BSgenome]{findOverlaps,GRangesList,GRanges-method}
+  \link[GenomicRanges]{pintersect,GRanges,GRanges-method},
+  \link[GenomicRanges]{findOverlaps,GRangesList,GRanges-method}
 }
 
 \examples{

@@ -34,7 +34,7 @@ setMethod("end", "Alignments2", function(x, ...) {x@start + width(x) - 1L})
 ### Constructor.
 ###
 
-Alignments2 <- function(rname=factor(), strand=BSgenome::strand(),
+Alignments2 <- function(rname=factor(), strand=strand(),
                         pos=integer(0), cigar=character(0))
 {
     if (!is.factor(rname) || !is.character(levels(rname))) {

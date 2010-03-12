@@ -3,13 +3,13 @@ useDynLib(Rsamtools, .registration=TRUE)
 import(methods)
 import(IRanges)
 
+importFrom(GenomicRanges, seqnames, "seqnames<-", strand)
+importClassesFrom(GenomicRanges, GRanges, GRangesList)
+
 importFrom(utils, normalizePath, read.table)
 
 importClassesFrom(Biostrings, file, connection, DNAStringSet, BStringSet, PhredQuality)
 importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet, PhredQuality)
-
-importFrom(BSgenome, strand)
-importClassesFrom(BSgenome, GRanges, GRangesList)
 
 
 exportClasses(ScanBamParam, Cigar, BamViews)

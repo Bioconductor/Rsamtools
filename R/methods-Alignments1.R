@@ -45,7 +45,7 @@ setMethod("rglist", "Alignments1",
 ### Constructor.
 ###
 
-Alignments1 <- function(rname=factor(), strand=BSgenome::strand(),
+Alignments1 <- function(rname=factor(), strand=strand(),
                         pos=integer(), cigar=character())
 {
     rglist <- cigarToIRangesListByAlignment(cigar, pos)
