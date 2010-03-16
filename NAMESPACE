@@ -1,15 +1,19 @@
 useDynLib(Rsamtools, .registration=TRUE)
 
-import(methods)
-import(IRanges)
-
-importClassesFrom(GenomicRanges, GappedAlignments, Alignments0, Alignments1, Alignments2)
-
 importFrom(utils, normalizePath, read.table)
 
-importClassesFrom(Biostrings, file, connection, DNAStringSet, BStringSet, PhredQuality)
-importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet, PhredQuality)
+import(IRanges)
 
+importFrom(GenomicRanges, strand)
+
+importClassesFrom(GenomicRanges, GappedAlignments, Alignments0,
+                  Alignments1, Alignments2)
+
+importClassesFrom(Biostrings, file, connection, DNAStringSet,
+                  BStringSet, PhredQuality)
+
+importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet,
+           PhredQuality)
 
 exportClasses(ScanBamParam, Cigar, BamViews)
 
