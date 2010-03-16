@@ -4,7 +4,7 @@ Title: Import and manipulation of samtools aligned sequences in R /
   Bioconductor
 Version: 0.1.43
 Date: 2010-03-01
-Author: Martin Morgan, Herv\'e Pag\`es, Patrick Aboyoun
+Author: Martin Morgan, Herv\'e Pag\`es
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
 Description: This package provides an interface to the 'samtools'
   utilities for manipulating SAM (Sequence Alignment / Map) format
@@ -12,9 +12,9 @@ Description: This package provides an interface to the 'samtools'
 URL: https://hedgehog.fhcrc.org/bioconductor/trunk/madman/Rpacks/Rsamtools
 License: Artistic-2.0
 LazyLoad: yes
-Depends: methods, Biostrings (>= 2.15.0), IRanges (>= 1.5.56), 
-  GenomicRanges (>= 0.0.3)
-Imports: methods, utils, Biostrings, IRanges, GenomicRanges
+Depends: methods, IRanges (>= 1.5.56), GenomicRanges (>= 0.0.3),
+	Biostrings (>= 2.15.0)
+Imports: methods, utils, IRanges, GenomicRanges, Biostrings
 Enhances: ShortRead
 LinkingTo: Biostrings, IRanges
 biocViews: DataImport, Sequencing, HighThroughputSequencing

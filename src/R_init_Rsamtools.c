@@ -1,7 +1,6 @@
 #include <R_ext/Rdynload.h>
 #include "io_sam.h"
 #include "cigar.h"
-#include "Alignments_class.h"
 
 #ifdef _WIN32
 #include "samtools/knetfile.h"
@@ -19,13 +18,6 @@ static const R_CallMethodDef callMethods[] = {
 	/* cigar.c */
 	{".cigar_run_count", (DL_FUNC) &cigar_run_count, 1},
 	{".cigar_table", (DL_FUNC) &cigar_table, 1},
-	/* Alignments_class.c */
-	{".logical_as_compact_raw_vector", (DL_FUNC) &logical_as_compact_raw_vector, 1},
-	{".compact_raw_vector_as_logical", (DL_FUNC) &compact_raw_vector_as_logical, 2},
-	{".subset_compact_raw_vector", (DL_FUNC) &subset_compact_raw_vector, 2},
-	{".compact_raw_vector_bit_count", (DL_FUNC) &compact_raw_vector_bit_count, 1},
-	{".compact_raw_vector_last_bit", (DL_FUNC) &compact_raw_vector_last_bit, 1},
-	{".compact_raw_vector_set_op", (DL_FUNC) &compact_raw_vector_set_op, 3},
     {NULL, NULL, 0}
 };
 

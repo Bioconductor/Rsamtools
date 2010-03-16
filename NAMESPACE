@@ -3,8 +3,7 @@ useDynLib(Rsamtools, .registration=TRUE)
 import(methods)
 import(IRanges)
 
-importFrom(GenomicRanges, seqnames, "seqnames<-", strand, validCigar, cigarToQWidth, cigarToWidth, cigarQNarrow, cigarNarrow, cigarToIRanges, cigarToIRangesListByAlignment, cigarToIRangesListByRName)
-importClassesFrom(GenomicRanges, GRanges, GRangesList)
+importClassesFrom(GenomicRanges, GappedAlignments, Alignments0, Alignments1, Alignments2)
 
 importFrom(utils, normalizePath, read.table)
 
