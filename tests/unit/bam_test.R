@@ -11,7 +11,7 @@ fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 {
     .check0(res)
     exp <- c("character", "integer", "factor", "factor", "integer",
-             "integer", "integer", "Cigar", "factor", "integer",
+             "integer", "integer", "character", "factor", "integer",
              "integer", "DNAStringSet", "PhredQuality")
     checkIdentical(exp, as.vector(sapply(res, class)))
     checkIdentical(levels(strand()), levels(res[["strand"]]))
@@ -37,7 +37,7 @@ test_scanBam <- function()
                      = 9L, .Dimnames = structure(list( c("1", "2",
                      "3", "4", "6", "37", "112", "283", "2804"
                      )), .Names = ""), class = "table")
-    checkIdentical(exp, table(table(cigars(res[["cigar"]]))))
+    checkIdentical(exp, table(table(res[["cigar"]])))
 
     exp <- structure(c(1647L, 1624L, 0L, 36L), .Dim = 4L, .Dimnames =
                      structure(list( c(levels(strand()), NA)), .Names =

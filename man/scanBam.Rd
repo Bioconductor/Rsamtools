@@ -183,7 +183,7 @@ length(res0[["qname"]])
 lapply(res0, head, 3)
 table(width(res0[["seq"]])) # query widths
 table(res0[["qwidth"]], useNA="always") # query widths derived from cigar
-table(cigars(res0[["cigar"]]), useNA="always")
+table(res0[["cigar"]], useNA="always")
 table(res0[["strand"]], useNA="always")
 table(res0[["flag"]], useNA="always")
 

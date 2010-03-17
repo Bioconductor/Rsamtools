@@ -474,7 +474,7 @@ scan_bam_template(SEXP tag)
     SET_VECTOR_ELT(tmpl, POS_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, QWIDTH_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, MAPQ_IDX, NEW_INTEGER(0));
-    SET_VECTOR_ELT(tmpl, CIGAR_IDX, NEW_CHARACTER(0)); /* FIXME: cigar */
+    SET_VECTOR_ELT(tmpl, CIGAR_IDX, NEW_CHARACTER(0));
     SET_VECTOR_ELT(tmpl, MRNM_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, MPOS_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, ISIZE_IDX, NEW_INTEGER(0));
@@ -696,16 +696,6 @@ _scan_bam_finish1range(_BAM_DATA *bdata, SEXP result)
     if ((s = VECTOR_ELT(result, MRNM_IDX)) != R_NilValue) {
         _as_factor(s, (const char **) bdata->header->target_name,
                    bdata->header->n_targets);
-    }
-    if ((s = VECTOR_ELT(result, CIGAR_IDX)) != R_NilValue) {
-        SEXP ss, tt, nmspc;
-        nmspc = PROTECT(_get_namespace("Rsamtools"));
-        NEW_CALL(ss, tt, "Cigar", nmspc, 2);
-        CSET_CDR(tt, "cigars", s);
-        CEVAL_TO(ss, nmspc, s);
-        PROTECT(s);
-        SET_VECTOR_ELT(result, CIGAR_IDX, s);
-        UNPROTECT(2);
     }
     if ((s = VECTOR_ELT(result, SEQ_IDX)) != R_NilValue)
     {

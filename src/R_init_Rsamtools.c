@@ -1,6 +1,5 @@
 #include <R_ext/Rdynload.h>
 #include "io_sam.h"
-#include "cigar.h"
 
 #ifdef _WIN32
 #include "samtools/knetfile.h"
@@ -15,9 +14,6 @@ static const R_CallMethodDef callMethods[] = {
 	{".filter_bam", (DL_FUNC) & filter_bam, 8},
 	{".count_bam", (DL_FUNC) &count_bam, 6},
 	{".index_bam", (DL_FUNC) &index_bam, 1},
-	/* cigar.c */
-	{".cigar_run_count", (DL_FUNC) &cigar_run_count, 1},
-	{".cigar_table", (DL_FUNC) &cigar_table, 1},
     {NULL, NULL, 0}
 };
 

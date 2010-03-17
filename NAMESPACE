@@ -15,7 +15,7 @@ importClassesFrom(Biostrings, file, connection, DNAStringSet,
 importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet,
            PhredQuality)
 
-exportClasses(ScanBamParam, Cigar, BamViews)
+exportClasses(ScanBamParam, BamViews)
 
 exportPattern("^[^\\.]")
 

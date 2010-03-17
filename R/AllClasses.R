@@ -18,11 +18,6 @@ setClass("ScanBamParam",
            tag="character",
            what="character",
            which="RangesList"))
-
-setClass("Cigar",
-         representation=representation("Sequence",
-           .cigar="factor"),
-         validity=.validity)
          
 setClass("BamViews",
          representation=representation(
