@@ -1,4 +1,4 @@
-setMethod(readBAMasGappedAlignments, "character",
+setMethod(readBamGappedAlignments, "character",
           function(file, index, ..., which, ans.subtype="Alignments0")
 {
     if (missing(index))

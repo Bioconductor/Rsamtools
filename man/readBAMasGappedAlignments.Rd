@@ -1,8 +1,8 @@
-\name{readBAMasGappedAlignments}
+\name{readBamGappedAlignments}
 \Rdversion{1.1}
 
-\alias{readBAMasGappedAlignments}
-\alias{readBAMasGappedAlignments,character-method}
+\alias{readBamGappedAlignments}
+\alias{readBamGappedAlignments,character-method}
 
 \title{GappedAlignments objects}
 
@@ -11,7 +11,7 @@ Read a BAM file as a \link[GenomicRanges]{GappedAlignments} object.
 }
 
 \usage{
-readBAMasGappedAlignments(file, index, ..., which, ans.subtype="Alignments0")
+readBamGappedAlignments(file, index, ..., which, ans.subtype="Alignments0")
 }
 
 \arguments{
@@ -52,7 +52,7 @@ readBAMasGappedAlignments(file, index, ..., which, ans.subtype="Alignments0")
 
 \examples{
 aln1_file <- system.file("extdata", "ex1.bam", package="Rsamtools")
-aln1 <- readBAMasGappedAlignments(aln1_file)
+aln1 <- readBamGappedAlignments(aln1_file)
 aln1
 }
 

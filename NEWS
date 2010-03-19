@@ -10,6 +10,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
     the BAM file, i.e., as though on the positive strand. This occurs
     in revision 0.1.34
 
+    o readBamGappedAlignments replaces readBAMasGappedAlignments
+
 NEW FEATURES
 
     o ScanBamParam() accepts 'tag' argument for parsing optional fields

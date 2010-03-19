@@ -1,15 +1,14 @@
 Package: Rsamtools
 Type: Package
-Title: Import and manipulation of samtools aligned sequences in R /
-  Bioconductor
-Version: 0.1.45
+Title: Import aligned BAM file format sequences into R / Bioconductor
+Version: 0.1.46
 Date: 2010-03-01
 Author: Martin Morgan, Herv\'e Pag\`es
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
 Description: This package provides an interface to the 'samtools'
   utilities for manipulating SAM (Sequence Alignment / Map) format
   files. Facilities currently available include flexible file input.
-URL: https://hedgehog.fhcrc.org/bioconductor/trunk/madman/Rpacks/Rsamtools
+URL: http://bioconductor.org/packages/release/bioc/html/Rsamtools.html
 License: Artistic-2.0
 LazyLoad: yes
 Depends: methods, IRanges (>= 1.5.56), GenomicRanges (>= 0.0.3),

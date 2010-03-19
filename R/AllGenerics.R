@@ -17,8 +17,8 @@ setGeneric("indexBam",
 setGeneric("readPileup",
            function(file, ...) standardGeneric("readPileup"))
 
-setGeneric("readBAMasGappedAlignments",
+setGeneric("readBamGappedAlignments",
            function(file, index, ..., which, ans.subtype="Alignments0")
-               standardGeneric("readBAMasGappedAlignments"),
+               standardGeneric("readBamGappedAlignments"),
            signature="file")
 

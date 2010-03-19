@@ -24,7 +24,7 @@
 \alias{[,BamViews,ANY,missing-method}
 \alias{[,BamViews,RangesList,ANY-method}
 \alias{[,BamViews,RangesList,missing-method}
-\alias{readBAMasGappedAlignments,BamViews-method}
+\alias{readBamGappedAlignments,BamViews-method}
 \alias{show,BamViews-method}
 
 \title{Views into a set of BAM files}
@@ -66,7 +66,7 @@ bamDirname(x, ...) <- value
 \S4method{[}{BamViews,missing,ANY}(x, i, j, \dots, drop=TRUE)
 
 ## Input
-\S4method{readBAMasGappedAlignments}{BamViews}(file, index, ..., which,
+\S4method{readBamGappedAlignments}{BamViews}(file, index, ..., which,
                                                ans.subtype="Alignments0")
 
 ## Show
@@ -113,7 +113,7 @@ bamDirname(x, ...) <- value
   \item{drop}{A logical(1), \emph{ignored} by all \code{BamViews}
 	subsetting methods.}
 
-  %% readBAMasGappedAlignments
+  %% readBamGappedAlignments
 
   \item{file}{An instance of \code{BamViews}.}
 
@@ -123,7 +123,7 @@ bamDirname(x, ...) <- value
   \item{which}{An optional \code{\linkS4class{RangesList}} instance to
      further subset \code{file}.}
 
-  \item{ans.subtype}{See \code{?\link{readBAMasGappedAlignments}} for
+  \item{ans.subtype}{See \code{?\link{readBamGappedAlignments}} for
      a description of this argument.}
 
 }
@@ -212,8 +212,8 @@ bamDirname(x, ...) <- value
 	\item{"["}{Subset the object by \code{bamRanges} or
 	  \code{bamSamples}.}
 
-    \item{readBAMasGappedAlignments}{Visit each path in \code{bamPaths(file)},
-      returning the result of \code{readBAMasGappedAlignments} applied to the
+    \item{readBamGappedAlignments}{Visit each path in \code{bamPaths(file)},
+      returning the result of \code{readBamGappedAlignments} applied to the
       specified path. When \code{index} is missing, it is set equal to
       \code{bamIndicies(file)}. When \code{which} is missing, only reads in
       \code{bamRanges(file)} are returned. When \code{which} is present,
@@ -231,7 +231,7 @@ bamDirname(x, ...) <- value
 \author{Martin Morgan}
 
 \seealso{
-  \code{\link{readBAMasGappedAlignments}}
+  \code{\link{readBamGappedAlignments}}
 }
 
 \examples{
@@ -250,7 +250,7 @@ v
 bv <- BamViews(fls,
                bamSamples=DataFrame(info="test", row.names="ex1"),
                auto.range=TRUE)
-aln <- readBAMasGappedAlignments(bv)
+aln <- readBamGappedAlignments(bv)
 aln
 aln[colnames(bv)]
 elementMetadata(aln)

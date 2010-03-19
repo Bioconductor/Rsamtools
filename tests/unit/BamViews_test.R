@@ -152,15 +152,15 @@ test_BamViews_auto.range <- function()
                    bamRanges(bv))
 }
     
-test_BamViews_readBAMasGappedAlignments <- function()
+test_BamViews_readBamGappedAlignments <- function()
 {
-    checkTrue(validObject(readBAMasGappedAlignments(BamViews())))
+    checkTrue(validObject(readBamGappedAlignments(BamViews())))
 
     fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
             file.path("cases", "ex1_shuf1000.bam"))
     bv <- BamViews(fl, auto.range=TRUE)
     rng <- bamRanges(bv)
-    aln <- readBAMasGappedAlignments(bv)
+    aln <- readBamGappedAlignments(bv)
     checkEquals(length(bamPaths(bv)), length(aln))
 
     fl <- c(fl, tempfile())
@@ -168,12 +168,12 @@ test_BamViews_readBAMasGappedAlignments <- function()
     msg <- NULL
     suppressWarnings({
         tryCatch({
-            aln <- readBAMasGappedAlignments(bv)
+            aln <- readBamGappedAlignments(bv)
         }, error=function(err) {
             msg <<- conditionMessage(err)
         })
     })
-    tst <- sprintf("'readBAMasGappedAlignments' failed on '%s'",
+    tst <- sprintf("'readBamGappedAlignments' failed on '%s'",
                    names(bv)[3])
     checkIdentical(tst, msg)
 }
