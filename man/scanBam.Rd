@@ -1,4 +1,4 @@
-\name{scanBam}
+\name{BamInput}
 \Rdversion{1.1}
 
 \alias{scanBam}
@@ -82,11 +82,11 @@ filterBam(file, destination, index=file, ...)
   The \code{indexBam} function creates an index for each BAM file
   specified, analogous to the \sQuote{samtools index} function.
 
-  The \code{filterBam} function parses all records in \code{file},
-  writing each record satisfying the \code{bamFlag} and
-  \code{bamSimpleCigar} criteria of \code{param} to file
-  \code{destination}. An index file is created on the destination when
-  \code{indexDestination=TRUE}.
+  The \code{filterBam} function parses records in \code{file} satisfying
+  the \code{bamWhich} of \code{param}, writing each record satisfying
+  the \code{bamFlag} and \code{bamSimpleCigar} criteria of \code{param}
+  to file \code{destination}. An index file is created on the
+  destination when \code{indexDestination=TRUE}.
   
   Details of the \code{ScanBamParam} class are provide on its help page;
   several salient points are reiterated here. \code{ScanBamParam} can

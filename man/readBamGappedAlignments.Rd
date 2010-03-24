@@ -23,9 +23,10 @@ readBamGappedAlignments(file, index, ..., which, ans.subtype="Alignments0")
 
   \item{\dots}{Additional arguments, currently unused.}
   
-  \item{which}{An \code{\linkS4class{IRangesList}} object used as
-    \code{\link{bamWhich}} to specify ranges from which alignments will
-    be retrieved.}
+  \item{which}{An object passed to \code{which} in
+    \code{\linkS4class{ScanBamParam}} to specify ranges from which
+    alignments will be retrieved. Valid types are described on the
+    \code{\linkS4class{ScanBamParam}} help page.}
 
   \item{ans.subtype}{A (temporary) flag indicating the return type of
     the function.}

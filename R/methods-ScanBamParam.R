@@ -1,12 +1,42 @@
-ScanBamParam <-
-    function(flag=scanBamFlag(), simpleCigar=FALSE,
-             reverseComplement=FALSE, tag=character(0),
-             what=scanBamWhat(), which=RangesList())
+setMethod(ScanBamParam, c(which="missing"),
+          function(flag=scanBamFlag(), simpleCigar=FALSE,
+                   reverseComplement=FALSE, tag=character(0),
+                   what=scanBamWhat(), which)
+{
+    new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
+        reverseComplement=reverseComplement, tag=tag, what=what,
+        which=IRangesList())
+})
+
+setMethod(ScanBamParam, c(which="RangesList"),
+          function(flag=scanBamFlag(), simpleCigar=FALSE,
+                   reverseComplement=FALSE, tag=character(0),
+                   what=scanBamWhat(), which)
 {
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
         reverseComplement=reverseComplement, tag=tag, what=what,
         which=which)
-}
+})
+
+setMethod(ScanBamParam, c(which="RangedData"),
+          function(flag=scanBamFlag(), simpleCigar=FALSE,
+                   reverseComplement=FALSE, tag=character(0),
+                   what=scanBamWhat(), which)
+{
+    callGeneric(flag=flag, simpleCigar=simpleCigar,
+                reverseComplement=reverseComplement, tag=tag, what=what,
+                which=ranges(which))
+})
+
+setMethod(ScanBamParam, c(which="GRanges"),
+          function(flag=scanBamFlag(), simpleCigar=FALSE,
+                   reverseComplement=FALSE, tag=character(0),
+                   what=scanBamWhat(), which)
+{
+    callGeneric(flag=flag, simpleCigar=simpleCigar,
+                reverseComplement=reverseComplement, tag=tag, what=what,
+                which=split(ranges(which), seqnames(which)))
+})
 
 setValidity("ScanBamParam", function(object) {
     msg <- NULL

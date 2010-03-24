@@ -3,6 +3,10 @@
 \docType{class}
 \alias{ScanBamParam-class}
 \alias{ScanBamParam}
+\alias{ScanBamParam,missing-method}
+\alias{ScanBamParam,IRangesList-method}
+\alias{ScanBamParam,RangedData-method}
+\alias{ScanBamParam,GRanges-method}
 % helpers
 \alias{scanBamWhat}
 \alias{scanBamFlag}
@@ -18,10 +22,12 @@
 
 \title{Parameters for scanning BAM files}
 \description{
+
   Use \code{ScanBamParam()} to create a parameter object influencing
   what fields and which records are imported from a (binary) BAM file.
-  Use of \code{which} requires that an BAM index file
+  Use of \code{which} requires that a BAM index file
   (\code{<filename>.bai}) exists.
+
 }
 
 \usage{
@@ -29,7 +35,7 @@
 # Constructor
 ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
     reverseComplement = FALSE, tag = character(0),
-    what = scanBamWhat(), which = RangesList())
+    what = scanBamWhat(), which)
 
 # Constructor helpers
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
@@ -76,12 +82,16 @@ bamReverseComplement(object)
 	fields. Fields are described on the \code{\link{scanBam}} help
 	page.}
 
-  \item{which}{A \code{\linkS4class{RangesList}} object, consisting of
-	named \code{Ranges} elements. Names correspond to reference
+  \item{which}{A \code{\linkS4class{RangesList}},
+	\code{\linkS4class{RangedData}}, \code{\linkS4class{GRanges}}, or
+	missing object, from which a \code{IRangesList} instance will be
+	constructed. Names of the \code{IRangesList} correspond to reference
 	sequences, and ranges to the regions on that reference sequence for
-	which matches are desired. Only records with a read overlapping the
-	specified ranges are returned. All ranges must have ends less than
-	or equal to 536870912.}
+	which matches are desired. Because data types are coerced to
+	\code{IRangesList}, \code{which} does \emph{not} include strand
+	information (use the \code{flag} argument instead). Only records
+	with a read overlapping the specified ranges are returned. All
+	ranges must have ends less than or equal to 536870912.}
 
   \item{isPaired}{A logical(1) indicating whether unpaired (FALSE),
 	paired (TRUE), or any (NA) read should be returned.}
@@ -173,7 +183,9 @@ bamReverseComplement(object)
   Constructor:
   \describe{
 
-	\item{ScanBamParam:}{Returns a \code{ScanBamParam} object.}
+	\item{ScanBamParam:}{Returns a \code{ScanBamParam} object. The
+	  \code{which} argument to the constructor can be one of several
+	  different types, as documented above.}
 
   }
 
