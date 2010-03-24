@@ -4,7 +4,7 @@
 \alias{ScanBamParam-class}
 \alias{ScanBamParam}
 \alias{ScanBamParam,missing-method}
-\alias{ScanBamParam,IRangesList-method}
+\alias{ScanBamParam,RangesList-method}
 \alias{ScanBamParam,RangedData-method}
 \alias{ScanBamParam,GRanges-method}
 % helpers
