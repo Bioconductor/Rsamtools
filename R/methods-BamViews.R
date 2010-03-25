@@ -1,13 +1,45 @@
-BamViews <-
-    function(bamPaths=character(0),
-             bamIndicies=bamPaths,
-             bamSamples=new("DataFrame", nrows=length(bamPaths),
-                            rownames=make.unique(basename(bamPaths))),
-             bamRanges=RangedData(),
-             bamExperiment=list(), ...,
-             auto.range=FALSE)
+setMethod(BamViews, c(bamRanges="GRanges"), 
+          function(bamPaths=character(0),
+                   bamIndicies=bamPaths,
+                   bamSamples=new("DataFrame", nrows=length(bamPaths),
+                     rownames=make.unique(basename(bamPaths))),
+                   bamRanges,
+                   bamExperiment=list(), ...)
 {
-    if (length(bamPaths) != 0L && missing(bamRanges) && auto.range)
+    new("BamViews", ..., bamPaths=bamPaths, bamIndicies=bamIndicies,
+        bamSamples=bamSamples, bamRanges=bamRanges,
+        bamExperiment=bamExperiment)
+})
+
+setMethod(BamViews, c(bamRanges="RangedData"),
+          function(bamPaths=character(0),
+                   bamIndicies=bamPaths,
+                   bamSamples=new("DataFrame", nrows=length(bamPaths),
+                     rownames=make.unique(basename(bamPaths))),
+                   bamRanges,
+                   bamExperiment=list(), ...)
+{
+    bamRanges <- local({
+        gd <- GRanges(seqnames=space(bamRanges),
+                      IRanges(start(bamRanges), end(bamRanges)))
+        elementMetadata(gd) <- values(bamRanges)
+        gd
+    })
+    callGeneric(bamPaths=bamPaths, bamIndicies=bamIndicies,
+                bamSamples=bamSamples, bamRanges=bamRanges,
+                bamExperiment=bamExperiment, ...)
+})
+
+setMethod(BamViews, c(bamRanges="missing"), 
+          function(bamPaths=character(0),
+                   bamIndicies=bamPaths,
+                   bamSamples=new("DataFrame", nrows=length(bamPaths),
+                     rownames=make.unique(basename(bamPaths))),
+                   bamRanges,
+                   bamExperiment=list(), ...,
+                   auto.range=FALSE)
+{
+    if (length(bamPaths) != 0L && auto.range)
     {
         ## Guess ranges from BAM file headers
         pathsOk <- sapply(bamPaths, function(fl) {
@@ -25,16 +57,18 @@ BamViews <-
                 else
                     stop("Rsamtools internal: could not determine bamRanges")
             }, rngs)
-            bamRanges <-
-                RangedData(IRanges(1L, ends), space=names(ends))
+            bamRanges <- GRanges(names(ends), IRanges(1L, ends))
         } else {
             warning("some files do not exist; bamRanges not defined")
+            bamRanges <- GRanges()
         }
+    } else {
+        bamRanges <- GRanges()
     }
-    new("BamViews", ..., bamPaths=bamPaths, bamIndicies=bamIndicies,
+    callGeneric(bamPaths=bamPaths, bamIndicies=bamIndicies,
         bamSamples=bamSamples, bamRanges=bamRanges,
-        bamExperiment=bamExperiment)
-}
+        bamExperiment=bamExperiment, ...)
+})
 
 setMethod(.validity, "BamViews", function(object) {
     msg <- NULL
@@ -77,7 +111,7 @@ bamExperiment <-
     function(x) slot(x, "bamExperiment")
     
 setMethod(dim, "BamViews", function(x) {
-    c(nrow(bamRanges(x)), length(bamPaths(x)))
+    c(length(bamRanges(x)), length(bamPaths(x)))
 })
 
 setMethod(names, "BamViews", function(x) {
@@ -90,12 +124,12 @@ setReplaceMethod("names", "BamViews", function(x, value) {
 })
 
 setMethod(dimnames, "BamViews", function(x) {
-    list(rownames(bamRanges(x)),
+    list(names(bamRanges(x)),
          rownames(bamSamples(x)))
 })
 
 setReplaceMethod("dimnames", "BamViews", function(x, value) {
-    rownames(bamRanges(x)) <- value[[1]]
+    names(bamRanges(x)) <- value[[1]]
     rownames(bamSamples(x)) <- value[[2]]
     x
 })
@@ -196,7 +230,7 @@ setMethod(readBamGappedAlignments, "BamViews",
                                 ans.subtype=ans.subtype)
     idx <- structure(seq_len(ncol(file)), names=names(file))
     res <- .srapply(idx, fun, bamViews=file, ...,
-                    which=ranges(bamRanges(file)))
+                    which=bamRanges(file))
     if (length(res) != ncol(file))
         stop("'readBamGappedAlignments' failed on '",
              paste(setdiff(names(file), names(res)), collapse="' '"),

@@ -24,7 +24,7 @@ setClass("BamViews",
            bamPaths="character",
            bamIndicies="character",
            bamSamples="DataFrame",
-           bamRanges="RangedData",
+           bamRanges="GRanges",
            bamExperiment="list"),
          validity=.validity)
 

@@ -1,5 +1,5 @@
 .BamViews_ok <-
-    function(v, dim=c(0,0), bamRanges=RangedData(),
+    function(v, dim=c(0,0), bamRanges=GRanges(),
              bamSamples=DataFrame(row.names=character()),
              bamExperiment=list())
 {
@@ -15,9 +15,10 @@ test_BamViews_constructors <- function()
     .BamViews_ok(BamViews(), c(0, 0))
     ni <- 10L; nj <- 5L
     fls <- rep("foo", nj)
-    rd <- RangedData(RangesList(chr1=IRanges(1:5, 11:15),
-                                chr2=IRanges(101:105, 111:115)),
-                     Values=rev(seq_len(ni)))
+    rd <- GRanges(rep(c("chr1", "chr2"), each=5),
+                  IRanges(c(1:5, 101:105), c(11:15, 111:115)),
+                  Values=rev(seq_len(ni)))
+
     sd0 <- new("DataFrame", nrows=nj,
                rownames=make.unique(basename(fls)))
     sd1 <-DataFrame(Score=seq_len(nj),
@@ -34,14 +35,15 @@ test_BamViews_constructors <- function()
 
 test_BamViews_subset <- function()
 {
-    rl2 <- RangesList(chr1=IRanges(1:5, 11:15),
-                      chr2=IRanges(101:105, 111:115))
+    rl2 <- GRanges(rep(c("chr1", "chr2"), each=5),
+                   IRanges(c(1:5, 101:105), c(11:15, 111:115)))
     nj1 <- 4L
     fls1 <- rep("foo", nj1)
     sd1 <- DataFrame(Value=rev(seq_len(nj1)))
-    ni2 <- sum(sapply(rl2, length))
+    ni2 <- length(rl2)
 
-    rd2 <- RangedData(rl2, Count=rev(seq_len(ni2)))
+    rd2 <- rl2
+    elementMetadata(rd2)[["Count"]] <- rev(seq_len(ni2))
     ## rows
     v <- BamViews(bamPaths=fls1, bamRanges=rd2, bamSamples=sd1)
     .BamViews_ok(v, c(ni2, nj1), bamRanges=rd2, bamSamples=sd1)
@@ -122,13 +124,12 @@ test_BamViews_bamIndicies <- function()
     ## subsetting
     checkIdentical(fls[2], bamPaths(bv[,2]))
     checkIdentical(ifls[1], bamIndicies(bv[,1]))
-
 }
 
 test_BamViews_auto.range <- function()
 {
     fl <- tempfile()                    # does not exist
-    checkIdentical(RangedData(), bamRanges(BamViews(fl)))
+    checkIdentical(GRanges(), bamRanges(BamViews(fl)))
 
     bv <- msg <- NULL
     suppressWarnings({
@@ -138,17 +139,16 @@ test_BamViews_auto.range <- function()
             msg <<- conditionMessage(w)
         })
     })
-    checkIdentical(RangedData(), bamRanges(bv))
+    checkIdentical(GRanges(), bamRanges(bv))
     checkIdentical("some files do not exist; bamRanges not defined",
                    msg)
 
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
     bv <- BamViews(c(fl, fl), auto.range=FALSE)
-    checkIdentical(RangedData(), bamRanges(bv))
+    checkIdentical(GRanges(), bamRanges(bv))
 
     bv <- BamViews(c(fl, fl), auto.range=TRUE)
-    checkIdentical(RangedData(IRanges(1, c(1575, 1584)),
-                              space=c("seq1", "seq2")),
+    checkIdentical(GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584))),
                    bamRanges(bv))
 }
     

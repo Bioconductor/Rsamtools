@@ -24,6 +24,16 @@ setGeneric("indexBam",
 setGeneric("readPileup",
            function(file, ...) standardGeneric("readPileup"))
 
+setGeneric("BamViews",
+           function(bamPaths=character(0),
+                    bamIndicies=bamPaths,
+                    bamSamples=new("DataFrame", nrows=length(bamPaths),
+                      rownames=make.unique(basename(bamPaths))),
+                    bamRanges,
+                    bamExperiment=list(), ...)
+           standardGeneric("BamViews"),
+           signature="bamRanges")
+
 setGeneric("readBamGappedAlignments",
            function(file, index, ..., which, ans.subtype="Alignments0")
                standardGeneric("readBamGappedAlignments"),
