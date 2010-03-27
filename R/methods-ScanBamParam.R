@@ -3,9 +3,11 @@ setMethod(ScanBamParam, c(which="missing"),
                    reverseComplement=FALSE, tag=character(0),
                    what=scanBamWhat(), which)
 {
+    which <- IRangesList()
+    names(which) <- character()
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
         reverseComplement=reverseComplement, tag=tag, what=what,
-        which=IRangesList())
+        which=which)
 })
 
 setMethod(ScanBamParam, c(which="RangesList"),
@@ -71,12 +73,41 @@ setValidity("ScanBamParam", function(object) {
 })
 
 bamFlag <- function(object) slot(object, "flag")
+"bamFlag<-" <- function(object, value)
+{
+    slot(object, "flag") <- value
+    object
+}
 bamSimpleCigar <- function(object) slot(object, "simpleCigar")
+"bamSimpleCigar<-" <- function(object, value)
+{
+    slot(object, "simpleCigar") <- value
+    object
+}
 bamReverseComplement <-
     function(object) slot(object, "reverseComplement")
+"bamReverseComplement<-" <- function(object, value)
+{
+    slot(object, "reverseComplement") <- value
+}
 bamTag <- function(object) slot(object, "tag")
+"bamTag<-" <- function(object, value)
+{
+    slot(object, "tag") <- value
+    object
+}
 bamWhich <- function(object) slot(object, "which")
+"bamWhich<-" <- function(object, value)
+{
+    slot(object, "which") <- value
+    object
+}
 bamWhat <- function(object) slot(object, "what")
+"bamWhat<-" <- function(object, value)
+{
+    slot(object, "what") <- value
+    object
+}
 
 ## helpers 
 

@@ -6,13 +6,17 @@ setGeneric("ScanBamParam",
            signature="which")
 
 setGeneric("scanBam",
-           function(file, index=file, ...) standardGeneric("scanBam"))
+           function(file, index=file, ..., param=ScanBamParam())
+           standardGeneric("scanBam"),
+           signature="file")
 
 setGeneric("scanBamHeader",
            function(files, ...) standardGeneric("scanBamHeader"))
 
 setGeneric("countBam",
-           function(file, index=file, ...) standardGeneric("countBam"))
+           function(file, index=file, ..., param=ScanBamParam())
+           standardGeneric("countBam"),
+           signature="file")
 
 setGeneric("filterBam",
            function(file, destination, index=file, ...)
@@ -35,7 +39,7 @@ setGeneric("BamViews",
            signature="bamRanges")
 
 setGeneric("readBamGappedAlignments",
-           function(file, index, ..., which, ans.subtype="Alignments0")
-               standardGeneric("readBamGappedAlignments"),
+           function(file, index, ..., which)
+           standardGeneric("readBamGappedAlignments"),
            signature="file")
 

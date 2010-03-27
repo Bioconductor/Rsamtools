@@ -12,7 +12,7 @@
              paste(what[!what %in% names(tmpl)], collapse=", "))
     which <- bamWhich(param)
     on.exit(.Call(.scan_bam_cleanup))
-    if (!is.null(space(which)))
+    if (0L != length((space(which))))
         .Call(func, file, index, "rb",
               list(space(which), .uunlist(start(which)),
                    .uunlist(end(which))),

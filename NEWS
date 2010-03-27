@@ -16,6 +16,9 @@ NEW FEATURES
 
     o ScanBamParam() accepts 'tag' argument for parsing optional fields
 
+    o BamViews can be used with scanBam, countBam,
+    readBamGappedAlignments
+
 BUG FIXES
 
     o No changes classified as 'bug fixes' (package under active

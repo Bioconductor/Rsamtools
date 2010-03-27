@@ -64,46 +64,6 @@ test_BamViews_subset <- function()
                  bamSamples=sd1[j_idx,,drop=FALSE])
 }
 
-test_BamViews_subset_RangesList <- function()
-{
-    v <- BamViews()
-    msg <- NULL
-    checkException(tryCatch(v[RangesList(),], error=function(err) {
-        msg <<- conditionMessage(err)
-        stop(err)
-    }), silent=TRUE)
-    checkIdentical("'[,BamViews,RangesList-method' not yet supported", msg)
-##     rl0 <- RangesList()
-##     rl1 <- RangesList(chr1=IRanges(1:5, 11:15))
-##     rl2 <- RangesList(chr1=IRanges(1:5, 11:15),
-##                       chr2=IRanges(101:105, 111:115))
-##     nj <- 4L
-##     fls <- rep("foo", nj)
-##     sd0 <- DataFrame()
-##     sd1 <- DataFrame(Value=rev(seq_len(nj)))
-##     ni0 <- 0L
-##     ni1 <- sum(sapply(rl1, length))
-##     ni2 <- sum(sapply(rl2, length))
-
-##     v <- BamViews(bamPaths=fls, bamSamples=sd1)
-##     .BamViews_ok(v[rl0,], dim=c(ni0, nj), bamRanges=RangedData(),
-##                  bamSamples=sd1)
-##     .BamViews_ok(v[rl1,], dim=c(ni1, nj), bamRanges=RangedData(rl1),
-##                  bamSamples=sd1)
-##     .BamViews_ok(v[rl2,], dim=c(ni2, nj), bamRanges=RangedData(rl2),
-##                  bamSamples=sd1)
-
-##     rd1 <- RangedData(rl1, Values=seq_len(ni1))
-##     v <- BamViews(bamPaths=fls, bamSamples=sd1, bamRanges=rd1)
-##     .BamViews_ok(v[rl0,], dim=c(ni1, nj), bamRanges=rd1,
-##                  bamSamples=sd1)
-##     .BamViews_ok(v[rl1,], dim=c(ni1 * ni1, nj),
-##                  bamRanges=bamRanges(v)[rep(seq_len(ni1), each=ni1),],
-##                  bamSamples=sd1p)
-##     .BamViews_ok(v[rl2,], dim=c(ni1, nj), bamRanges=rd1,
-##                  bamSamples=sd1)
-}
-
 test_BamViews_bamIndicies <- function()
 {
     bv <- BamViews()
@@ -176,4 +136,57 @@ test_BamViews_readBamGappedAlignments <- function()
     tst <- sprintf("'readBamGappedAlignments' failed on '%s'",
                    names(bv)[3])
     checkIdentical(tst, msg)
+}
+
+.scanBam_ok <-
+    function(target, current)
+{
+    checkIdentical(length(target), length(current))
+    checkIdentical(class(target), class(current))
+    for (i in seq_along(target)) {
+        for (j in seq_along(target[[i]])) {
+            t <- target[[i]][[j]]
+            c <- current[[i]][[j]]
+            switch(as.vector(class(t)),
+                   "PhredQuality",
+                   "DNAStringSet"={
+                       checkIdentical(as.character(t), as.character(c))
+                   },
+                   checkIdentical(t, c))
+        }
+    }
+}
+
+test_BamViews_scanBam <- function()
+{
+    fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
+            file.path("cases", "ex1_shuf1000.bam"))
+    bv <- BamViews(fl)
+    res <- scanBam(bv)
+    for (i in seq_along(fl))
+        .scanBam_ok(scanBam(fl[[i]]), res[[i]])
+
+    param <- ScanBamParam(what="rname")
+    res <- scanBam(bv, param=param)
+    for (i in seq_along(fl))
+        .scanBam_ok(scanBam(fl[[i]], param=param), res[[i]])
+}
+
+test_BamViews_countBam <- function()
+{
+    fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
+            file.path("cases", "ex1_shuf1000.bam"))
+    bv <- BamViews(fl)
+    res <- countBam(bv)
+    for (i in seq_along(fl))
+        checkIdentical(countBam(fl[i]), res[[i]])
+
+    which <- IRangesList(seq1=IRanges(1, 1000),
+                         seq2=IRanges(1, 1000))
+    param <- ScanBamParam(which=which)
+    bamRanges <- GRanges(c("seq1", "seq2"), IRanges(c(1,1), 1000))
+    bv <- BamViews(fl, bamRanges=bamRanges)
+    res <- countBam(bv)
+    for (i in seq_along(fl))
+        checkIdentical(countBam(fl[i], param=param), res[[i]])
 }

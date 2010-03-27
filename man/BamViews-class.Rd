@@ -3,6 +3,9 @@
 \docType{class}
 \alias{BamViews-class}
 \alias{BamViews}
+\alias{BamViews,missing-method}
+\alias{BamViews,GRanges-method}
+\alias{BamViews,RangedData-method}
 % accessors
 \alias{bamPaths}
 \alias{bamIndicies}
@@ -22,8 +25,8 @@
 \alias{[,BamViews,missing,ANY-method}
 \alias{[,BamViews,ANY,ANY-method}
 \alias{[,BamViews,ANY,missing-method}
-\alias{[,BamViews,RangesList,ANY-method}
-\alias{[,BamViews,RangesList,missing-method}
+\alias{scanBam,BamViews-method}
+\alias{countBam,BamViews-method}
 \alias{readBamGappedAlignments,BamViews-method}
 \alias{show,BamViews-method}
 
@@ -43,8 +46,12 @@ BamViews(bamPaths=character(0),
          bamIndicies=bamPaths,
          bamSamples=new("DataFrame", nrows=length(bamPaths),
                         rownames=make.unique(basename(bamPaths))),
-         bamRanges = RangedData(), bamExperiment = list(),
-         ..., auto.range=FALSE)
+         bamRanges, bamExperiment = list(), ...)
+\S4method{BamViews}{missing}(bamPaths=character(0),
+         bamIndicies=bamPaths,
+         bamSamples=new("DataFrame", nrows=length(bamPaths),
+                        rownames=make.unique(basename(bamPaths))),
+         bamRanges, bamExperiment = list(), ..., auto.range=FALSE)
 ## Accessors
 bamPaths(x)
 bamSamples(x)
@@ -66,8 +73,9 @@ bamDirname(x, ...) <- value
 \S4method{[}{BamViews,missing,ANY}(x, i, j, \dots, drop=TRUE)
 
 ## Input
-\S4method{readBamGappedAlignments}{BamViews}(file, index, ..., which,
-                                               ans.subtype="Alignments0")
+\S4method{scanBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
+\S4method{countBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
+\S4method{readBamGappedAlignments}{BamViews}(file, index, ..., which)
 
 ## Show
 \S4method{show}{BamViews}(object)
@@ -85,8 +93,9 @@ bamDirname(x, ...) <- value
 	many rows as \code{length(bamPaths)}, containing sample information
 	associated with each path.}
 
-  \item{bamRanges}{A \code{\linkS4class{RangedData}} instance with
-	ranges defined on the spaces of the BAM files. Ranges are \emph{not}
+  \item{bamRanges}{A \code{\linkS4class{GRanges}},
+	\code{\linkS4class{RangedData}} or missing instance with ranges
+	defined on the spaces of the BAM files. Ranges are \emph{not}
 	validated against the BAM files.}
 
   \item{bamExperiment}{A list() containing additional information about
@@ -113,18 +122,18 @@ bamDirname(x, ...) <- value
   \item{drop}{A logical(1), \emph{ignored} by all \code{BamViews}
 	subsetting methods.}
 
-  %% readBamGappedAlignments
+  %% input
 
   \item{file}{An instance of \code{BamViews}.}
 
   \item{index}{A character vector of indicies, corresponding to the
      \code{bamPaths(file)}. }
 
+  \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
+     further influence scanning or counting.}
+
   \item{which}{An optional \code{\linkS4class{RangesList}} instance to
      further subset \code{file}.}
-
-  \item{ans.subtype}{See \code{?\link{readBamGappedAlignments}} for
-     a description of this argument.}
 
 }
 
@@ -212,6 +221,16 @@ bamDirname(x, ...) <- value
 	\item{"["}{Subset the object by \code{bamRanges} or
 	  \code{bamSamples}.}
 
+    \item{scanBam}{Visit each path in \code{bamPaths(file)}, returning
+      the result of \code{scanBam} applied to the specified
+      path. \code{bamRanges(file)} takes precedence over
+      \code{bamWhich(param)}.}
+
+    \item{countBam}{Visit each path in \code{bamPaths(file)}, returning
+      the result of \code{countBam} applied to the specified
+      path. \code{bamRanges(file)} takes precedence over
+      \code{bamWhich(param)}.}
+
     \item{readBamGappedAlignments}{Visit each path in \code{bamPaths(file)},
       returning the result of \code{readBamGappedAlignments} applied to the
       specified path. When \code{index} is missing, it is set equal to
@@ -252,6 +271,7 @@ bv <- BamViews(fls,
                auto.range=TRUE)
 aln <- readBamGappedAlignments(bv)
 aln
+aln[[1]]
 aln[colnames(bv)]
 elementMetadata(aln)
 }

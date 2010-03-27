@@ -15,7 +15,7 @@ setMethod(scanBam, "character",
     x <- .io_bam(.scan_bam, file, index, reverseComplement, tmpl,
                  param=param)
     which <- bamWhich(param)
-    if (!is.null(space(which)))
+    if (0L != length(space(which)))
         names(x) <-
             paste(space(which), ":", .uunlist(start(which)), "-",
                   .uunlist(end(which)), sep="")

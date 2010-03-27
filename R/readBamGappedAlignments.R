@@ -1,6 +1,7 @@
 setMethod(readBamGappedAlignments, "character",
-          function(file, index, ..., which, ans.subtype="Alignments0")
+          function(file, index, ..., which)
 {
+    ans.subtype="Alignments2"
     if (missing(index))
         index <- file
     if (missing(which))

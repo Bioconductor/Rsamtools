@@ -169,39 +169,6 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
                bamSamples=bamSamples(x)[j,,drop=FALSE])
 })
 
-.subset_RangedData <-
-    function(x, rangesList, ...)
-{
-    stop("'[,BamViews,RangesList-method' not yet supported")
-    ## FIXME: nrow(RangesList())==0 is a proxy for 'all ranges'
-    if (length(rangesList) == 0L)
-        bamRanges(x)
-    else if (nrow(bamRanges(x)) == 0L)
-        RangedData(rangesList)
-    else {
-        bamRanges(x)[bamRanges(x) %in% rangesList,]
-    }
-}
-
-setMethod("[", c("BamViews", "RangesList", "missing"),
-          function(x, i, j, ..., drop=TRUE)
-{
-    initialize(x, bamRanges=.subset_RangedData(x, i, ...))
-})
-
-setMethod("[", c("BamViews", "RangesList", "ANY"),
-          function(x, i, j, ..., drop=TRUE)
-{
-    if (is.character(j))
-        j <- match(j, colnames(x))
-    if (any(is.na(j)))
-        stop("subscript 'j' out of bounds")
-    initialize(x,
-               bamRanges=.subset_RangedData(x, i, ...),
-               bamPaths=bamPaths(x)[j],
-               bamSamples=bamSamples(x)[j,])
-})
-
 ## action
 
 ## FIXME: temporary alias for srapply
@@ -214,31 +181,66 @@ setMethod("[", c("BamViews", "RangesList", "ANY"),
     reduce(result)
 }
 
+.BamViews_which <- function(file, param, missing)
+{
+    grange <- bamRanges(file)
+    which <- split(ranges(grange), seqnames(grange))
+    if (!missing && !identical(which, bamWhich(param)))
+        warning("'bamRanges(file)' and 'bamWhich(param)' differ; using bamRanges(file)")
+    which
+}
+
+.BamViews_delegate <-
+    function(what, bamViews, fun, ...)
+{
+    idx <- structure(seq_len(ncol(bamViews)), names=names(bamViews))
+    result <- .srapply(idx, fun, bamViews, ...)
+    if (length(result) != ncol(bamViews)) {
+        stop(sprintf("'%s' failed on '%s'", what,
+                     paste(setdiff(names(bamViews), names(result)),
+                                   collapse="' '")))
+    }
+    names(result) <- names(bamViews)
+    do.call(new, list("SimpleList", listData=result,
+                      elementMetadata=bamSamples(bamViews)))
+}
+
+setMethod(scanBam, "BamViews",
+          function(file, index=file, ..., param=ScanBamParam())
+{
+    if (!missing(index))
+        warning("using bamIndicies(file) for 'index'")
+    bamWhich(param) <- .BamViews_which(file, param, missing(param))
+    fun <- function(i, bamViews, ..., verbose)
+        scanBam(file=bamPaths(bamViews)[i],
+                index=bamIndicies(bamViews)[i], ...)
+    .BamViews_delegate("scanBam", file, fun, ..., param=param)
+})
+
+setMethod(countBam, "BamViews",
+          function(file, index=file, ..., param=ScanBamParam())
+{
+    if (!missing(index))
+        warning("using bamIndicies(file) for 'index'")
+    bamWhich(param) <- .BamViews_which(file, param, missing(param))
+    fun <- function(i, bamViews, ..., verbose)
+        countBam(file=bamPaths(bamViews)[i],
+                 index=bamIndicies(bamViews)[i], ...)
+    .BamViews_delegate("countBam", file, fun, ..., param=param)
+})
+
 setMethod(readBamGappedAlignments, "BamViews",
-          function(file, index, ..., which=RangesList(),
-                   ans.subtype="Alignments0")
+          function(file, index, ..., which)
 {
     if (missing(index))
         index <- bamIndicies(file)
-    if (!missing(which))
-        file <- file[which,]
-
+    if (!missing(which) && !identical(bamRanges(file), which))
+        warning("'bamRanges(file)' and 'which' differ; using 'bamRanges(file)'")
     fun <- function(i, bamViews, ..., verbose)
         readBamGappedAlignments(file=bamPaths(bamViews)[i],
                                 index=bamIndicies(bamViews)[i],
-                                ...,
-                                ans.subtype=ans.subtype)
-    idx <- structure(seq_len(ncol(file)), names=names(file))
-    res <- .srapply(idx, fun, bamViews=file, ...,
-                    which=bamRanges(file))
-    if (length(res) != ncol(file))
-        stop("'readBamGappedAlignments' failed on '",
-             paste(setdiff(names(file), names(res)), collapse="' '"),
-             "'")
-
-    names(res) <- rownames(bamSamples(file))
-    do.call(new, list("SimpleList", listData=res,
-                      elementMetadata=bamSamples(file)))
+                                ..., which=bamRanges(bamViews))
+    .BamViews_delegate("readBamGappedAlignments", file, fun, ...)
 })
 
 ## show

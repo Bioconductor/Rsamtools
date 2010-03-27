@@ -11,7 +11,7 @@ Read a BAM file as a \link[GenomicRanges]{GappedAlignments} object.
 }
 
 \usage{
-readBamGappedAlignments(file, index, ..., which, ans.subtype="Alignments0")
+readBamGappedAlignments(file, index, ..., which)
 }
 
 \arguments{
@@ -27,9 +27,6 @@ readBamGappedAlignments(file, index, ..., which, ans.subtype="Alignments0")
     \code{\linkS4class{ScanBamParam}} to specify ranges from which
     alignments will be retrieved. Valid types are described on the
     \code{\linkS4class{ScanBamParam}} help page.}
-
-  \item{ans.subtype}{A (temporary) flag indicating the return type of
-    the function.}
 
 }
 

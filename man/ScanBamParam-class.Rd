@@ -11,12 +11,18 @@
 \alias{scanBamWhat}
 \alias{scanBamFlag}
 % accessors
-\alias{bamTag}
-\alias{bamWhat}
-\alias{bamWhich}
+\alias{bamFlag<-}
 \alias{bamFlag}
-\alias{bamSimpleCigar}
+\alias{bamReverseComplement<-}
 \alias{bamReverseComplement}
+\alias{bamSimpleCigar<-}
+\alias{bamSimpleCigar}
+\alias{bamTag<-}
+\alias{bamTag}
+\alias{bamWhat<-}
+\alias{bamWhat}
+\alias{bamWhich<-}
+\alias{bamWhich}
 % methods
 \alias{show,ScanBamParam-method}
 
@@ -45,12 +51,18 @@ scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA,
 scanBamWhat()
 
 # Accessors
-bamTag(object)
-bamWhat(object)
-bamWhich(object)
 bamFlag(object)
-bamSimpleCigar(object)
+bamFlag(object) <- value
 bamReverseComplement(object)
+bamReverseComplement(object) <- value
+bamSimpleCigar(object)
+bamSimpleCigar(object) <- value
+bamTag(object)
+bamTag(object) <- value
+bamWhat(object)
+bamWhat(object) <- value
+bamWhich(object)
+bamWhich(object) <- value
 
 \S4method{show}{ScanBamParam}(object)
 
@@ -139,8 +151,11 @@ bamReverseComplement(object)
 	duplicated (TRUE), or any (NA) reads should be
 	returned. 'Duplicated' reads may represent PCR or optical
 	duplicates.}
-
+  
   \item{object}{An instance of class \code{ScanBamParam}.}
+
+  \item{value}{An instance of the corresponding slot, to be assigned to
+    \code{object}.}
 
 }
 
@@ -192,24 +207,27 @@ bamReverseComplement(object)
   Accessors:
   \describe{
 
-    \item{bamTag}{Returns a \code{character} vector of tags to be
-      extracted.}
+    \item{bamTag, bamTag<-}{Returns or sets a \code{character} vector of
+      tags to be extracted.}
 
-	\item{bamWhat}{Returns a \code{character} vector of fields to be
-	  extracted.}
+	\item{bamWhat, bamWhat<-}{Returns or sets a \code{character} vector
+	  of fields to be extracted.}
 
-	\item{bamWhich}{Returns a \code{RangesList} of bounds on reads to
-	  be extracted. A length 0 \code{RangesList} represents all reads.}
+	\item{bamWhich, bamWhich<-}{Returns or sets a \code{RangesList} of
+	  bounds on reads to be extracted. A length 0 \code{RangesList}
+	  represents all reads.}
 
-	\item{bamFlag}{Returns an \code{integer(2)} representation of reads
-	  flagged to be kept or excluded.}
+	\item{bamFlag, bamFlag<-}{Returns or sets an \code{integer(2)}
+	  representation of reads flagged to be kept or excluded.}
 
-	\item{bamSimpleCigar}{Returns a \code{logical(1)} vector indicating
-	  whether reads without indels or clipping be kept.}
+	\item{bamSimpleCigar, bamSimpleCigar<-}{Returns or sets a
+	  \code{logical(1)} vector indicating whether reads without indels
+	  or clipping be kept.}
 
-	\item{bamReverseComplement}{Returns a \code{logical(1)} vector
-	  indicating whether reads on the minus strand will be returned with
-	  sequence reverse complemented and quality reversed.}
+	\item{bamReverseComplement, bamReverseComplement<-}{Returns or sets
+	  a \code{logical(1)} vector indicating whether reads on the minus
+	  strand will be returned with sequence reverse complemented and
+	  quality reversed.}
 
   }
 

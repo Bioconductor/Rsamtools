@@ -3,7 +3,7 @@ setMethod(countBam, "character",
 {
     x <- .io_bam(.count_bam, file, index, param=param)
     which <- bamWhich(param)
-    if (!is.null(space(which))) {
+    if (0L != length(space(which))) {
         data.frame(space=space(which), start=.uunlist(start(which)),
                    end=.uunlist(end(which)),
                    width=.uunlist(width(which)), file=basename(file),

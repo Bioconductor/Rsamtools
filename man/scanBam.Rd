@@ -24,11 +24,9 @@
 }
 \usage{
 
-scanBam(file, index=file, ...)
-\S4method{scanBam}{character}(file, index=file, ..., param=ScanBamParam())
+scanBam(file, index=file, ..., param=ScanBamParam())
 
-countBam(file, index=file, ...)
-\S4method{countBam}{character}(file, index=file, ..., param=ScanBamParam())
+countBam(file, index=file, ..., param=ScanBamParam())
 
 scanBamHeader(files, ...)
 \S4method{scanBamHeader}{character}(files, ...)
