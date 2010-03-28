@@ -4,10 +4,11 @@ importFrom(utils, normalizePath, read.table)
 
 import(IRanges)
 
-importFrom(GenomicRanges, strand)
+importFrom(GenomicRanges, GRanges)
 
-importClassesFrom(GenomicRanges, GappedAlignments, Alignments0,
-                  Alignments1, Alignments2)
+importMethodsFrom(GenomicRanges, seqnames, strand)
+
+importClassesFrom(GenomicRanges, GRanges, GappedAlignments)
 
 importClassesFrom(Biostrings, file, connection, DNAStringSet,
                   BStringSet, PhredQuality)
