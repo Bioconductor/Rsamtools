@@ -1,7 +1,6 @@
 setMethod(readBamGappedAlignments, "character",
           function(file, index, ..., which)
 {
-    ans.subtype="Alignments2"
     if (missing(index))
         index <- file
     if (missing(which))
@@ -15,11 +14,11 @@ setMethod(readBamGappedAlignments, "character",
     ## values are empty
     bam <- bam[sapply(bam, function(x) length(x$rname) != 0)]
     if (0L == length(bam))
-        return(get(ans.subtype)())
+        return(GappedAlignments())
     rname <- unlist(unname(lapply(bam, "[[", "rname")))
     strand <- unlist(unname(lapply(bam, "[[", "strand")))
     pos <- unlist(unname(lapply(bam, "[[", "pos")))
     cigar <- unlist(unname(lapply(bam, "[[", "cigar")))
     ## Calls the appropriate constructor.
-    get(ans.subtype)(rname=rname, strand=strand, pos=pos, cigar=cigar)
+    GappedAlignments(rname=rname, pos=pos, cigar=cigar, strand=strand)
 })

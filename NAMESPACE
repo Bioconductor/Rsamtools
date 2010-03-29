@@ -4,7 +4,7 @@ importFrom(utils, normalizePath, read.table)
 
 import(IRanges)
 
-importFrom(GenomicRanges, GRanges)
+importFrom(GenomicRanges, GRanges, GappedAlignments)
 
 importMethodsFrom(GenomicRanges, seqnames, strand)
 
