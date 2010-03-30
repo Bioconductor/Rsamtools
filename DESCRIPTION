@@ -1,7 +1,7 @@
 Package: Rsamtools
 Type: Package
 Title: Import aligned BAM file format sequences into R / Bioconductor
-Version: 0.1.51
+Version: 0.1.52
 Date: 2010-03-01
 Author: Martin Morgan, Herv\'e Pag\`es
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
@@ -14,6 +14,6 @@ LazyLoad: yes
 Depends: methods, IRanges (>= 1.5.56), GenomicRanges (>= 0.1.0),
 	Biostrings (>= 2.15.0)
 Imports: methods, utils, IRanges, GenomicRanges, Biostrings
-Enhances: ShortRead
+Suggests: ShortRead
 LinkingTo: Biostrings, IRanges
 biocViews: DataImport, Sequencing, HighThroughputSequencing
