@@ -69,8 +69,8 @@ explore \software{samtools} and related software efforts.
 
 \section{Input}
 
-The essential function provided by \Rsamtools{} is \bam{} input. This
-is accomplished with the \Rfunction{scanBam}
+The essential capability provided by \Rsamtools{} is \bam{}
+input. This is accomplished with the \Rfunction{scanBam}
 function. \Rfunction{scanBam} takes as input the name of the \bam{}
 file to be parsed.  In addition, the \Rfunarg{param} argument
 determines which genomic coordinates of the \bam{} file, and what
@@ -181,6 +181,49 @@ file.
 \software{samtools}, importing SNP, indel, or all variants into a
 \Rclass{RangedData} object.
 
+\subsection{Large bam files}
+
+\bam{} files can be large, containing more information on more genomic
+regions than are of immediate interest or than can fit in memory. The
+first strategy for dealing with this is to select, using the
+\Rfunarg{what} and \Rfunarg{where} arguments to
+\Rfunction{ScanBamParam}, just those portions of the \bam{} file that
+are essential to the current analysis, e.g., specifying
+\Rcode{what=c(`rname', 'qname', 'pos')} when wishing to calculate
+coverage of ungapped reads. 
+
+When selective input of \bam{} files is still too memory-intensive,
+a strategy might process the file in chunks, with each chunk
+distilled to the derived information of interest. Chromosomes will
+often be the natural chunk to process. For instance, here we write a
+summary function that expects a single (chromosome) sequence name,
+reads in specific information from the \bam{} file, and calculates
+coverage over that sequence.
+<<summaryFunction>>=
+summaryFunction <- 
+    function(seqname, bamFile, ...)
+{
+    param <- ScanBamParam(what=c('pos', 'qwidth'),
+                          which=GRanges(seqname, IRanges(1, 1e7)),
+                          flag=scanBamFlag(isUnmappedQuery=FALSE))
+    x <- scanBam(bamFile, ..., param=param)[[1]]
+    coverage(IRanges(x[["pos"]], width=x[["qwidth"]]))
+}
+@ 
+%% 
+This might be used as follows; it is an ideal candidate for evaluation
+in parallel, e.g., using the \Rpackage{multicore} package and
+\Rfunction{srapply} function in \Rpackage{ShortRead}.  
+<<summaryByChromosome>>=
+seqnames <- paste("seq", 1:2, sep="")
+cvg <- lapply(seqnames, summaryFunction, bamFile)
+names(cvg) <- seqnames
+cvg
+@ 
+%% 
+The result of the function (a coverage vector, in this case) will
+often be much smaller than the input.
+
 \section{Views}
 
 The functions described in the previous section import data in to
@@ -239,7 +282,7 @@ bamRanges <- transcripts(txdb)
 @ 
 %% 
 It might make sense to annotate this instance with information
-providing its provenence, e.g.,
+providing its provenance, e.g.,
 <<features-annotations,keep.source=TRUE>>=
 metadata(bamRanges) <- 
     list(description="KEGG/biomaRt caffeine metabolism transcripts",
@@ -272,7 +315,7 @@ urls0 <-
 %% 
 From these, we exclude directories without any files in them, select
 only the BAM index (extension \texttt{.bai}) files, and choose those
-files that exactly six \texttt{'.'} characters in tehir name (this
+files that exactly six \texttt{'.'} characters in their name (this
 corresponds to files
 <<bam-index,eval=FALSE>>=
 urls <- urls[sapply(urls0, length) != 0]
@@ -292,7 +335,7 @@ urls1 <-
                   function(x) x[grepl("SLX.maq.*2009_08.*bai$", x)]))
 slxMaq09.bai <- 
         mapply(paste, names(urls1), urls1, sep="", USE.NAMES=FALSE)
-slxMaq09 <- sub(".bai$", "", slxMaq09.bai)
+slxMaq09 <- sub(".bai$", "", slxMaq09.bai) #$
 @ 
 <<slxMaq09-readlines,echo=FALSE>>=
 slxMaq09 <- 
