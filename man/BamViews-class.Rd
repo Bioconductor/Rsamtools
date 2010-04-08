@@ -126,7 +126,7 @@ bamDirname(x, ...) <- value
 
   \item{file}{An instance of \code{BamViews}.}
 
-  \item{index}{A character vector of indicies, corresponding to the
+  \item{index}{A character vector of indices, corresponding to the
      \code{bamPaths(file)}. }
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
