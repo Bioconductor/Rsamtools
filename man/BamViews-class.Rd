@@ -153,7 +153,7 @@ bamDirname(x, ...) <- value
 	many rows as \code{length(bamPaths)}, containing sample information
 	associated with each path.}
 
-  \item{bamRanges}{A \code{\linkS4class{RangedData}} instance with
+  \item{bamRanges}{A \code{\linkS4class{GRanges}} instance with
 	ranges defined on the spaces of the BAM files. Ranges are \emph{not}
 	validated against the BAM files.}
 
@@ -190,11 +190,11 @@ bamDirname(x, ...) <- value
 	  with as many rows as \code{length(bamPaths)}, containing sample
 	  information associated with each path.}
 
-	\item{bamRanges}{Returns a \code{\linkS4class{RangedData}} instance
+	\item{bamRanges}{Returns a \code{\linkS4class{GRanges}} instance
 	  with ranges defined on the spaces of the BAM files. Ranges are
 	  \emph{not} validated against the BAM files.}
 
-	\item{bamRanges<-}{Assign a \code{\linkS4class{RangedData}} instance
+	\item{bamRanges<-}{Assign a \code{\linkS4class{GRanges}} instance
 	  with ranges defined on the spaces of the BAM files. Ranges are
 	  \emph{not} validated against the BAM files.}
 
@@ -257,9 +257,11 @@ bamDirname(x, ...) <- value
 
 fls <- list.files(system.file("extdata", package="Rsamtools"),
                   "\\\\.bam$", full=TRUE)
-rl <- RangesList(chr1=IRanges(seq(10000, 90000, 10000), width=500),
-                 chr2=IRanges(seq(100000, 900000, 100000), width=5000))
-v <- BamViews(fls, bamRanges=RangedData(rl, Count=seq_len(18L)))
+rngs <- GRanges(seqnames = Rle(c("chr1", "chr2"), c(9, 9)),
+                ranges = c(IRanges(seq(10000, 90000, 10000), width=500),
+                           IRanges(seq(100000, 900000, 100000), width=5000)),
+                Count = seq_len(18L))
+v <- BamViews(fls, bamRanges=rngs)
 v
 v[1:5,]
 bamRanges(v[c(1:5, 11:15),])

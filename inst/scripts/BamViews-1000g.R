@@ -67,7 +67,7 @@ rng <- with(tbl, {
 library(Rsamtools)
 library(multicore)
 bv <- BamViews(fls, sub(".bai", "", indexFiles),
-               bamRanges=RangedData(ranges(rng),
-                 space=seqnames(rng),
+               bamRanges=GRanges(seqnames=seqnames(rng),
+                 ranges=ranges(rng),
                  EntrezId=elementMetadata(rng)[["EntrezId"]]))
 gapped <- readBamGappedAlignments(bv[1:2,1:3])

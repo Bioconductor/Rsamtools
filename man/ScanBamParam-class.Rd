@@ -94,8 +94,8 @@ bamWhich(object) <- value
 	fields. Fields are described on the \code{\link{scanBam}} help
 	page.}
 
-  \item{which}{A \code{\linkS4class{RangesList}},
-	\code{\linkS4class{RangedData}}, \code{\linkS4class{GRanges}}, or
+  \item{which}{A \code{\linkS4class{GRanges}},
+    \code{\linkS4class{RangesList}}, \code{\linkS4class{RangedData}}, or
 	missing object, from which a \code{IRangesList} instance will be
 	constructed. Names of the \code{IRangesList} correspond to reference
 	sequences, and ranges to the regions on that reference sequence for
