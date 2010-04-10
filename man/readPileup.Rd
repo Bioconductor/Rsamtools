@@ -31,8 +31,7 @@ readPileup(file, ...)
 
 \value{
 
-  \code{readPileup} returns a
-  \code{\link[IRanges:RangedData-class]{RangedData}} object.
+  \code{readPileup} returns a \code{\link[GenomicRanges]{GRanges}} object.
   
   The value returned by \code{variant="SNP"} or \code{variant="all"}
   contains:
@@ -88,7 +87,7 @@ readPileup(file, ...)
 
 fl <- system.file("extdata", "pileup.txt", package="Rsamtools")
 (res <- readPileup(fl))
-xtabs(~referenceBase + consensusBase, res)[1:4,]
+xtabs(~referenceBase + consensusBase, elementMetadata(res))[DNA_BASES,]
 
 \dontrun{## uses a pipe, and arguments passed to read.table
 ## three successive piles of 100 records each

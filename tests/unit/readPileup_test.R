@@ -2,15 +2,14 @@ pileupFile <- system.file("extdata", "pileup.txt", package="Rsamtools")
 nostarsFile <- file.path("cases", "pileup-no-stars.txt")
 
 
-.check_SNP_pileup <-
-    function(tbl, rdf)
+.check_SNP_pileup <- function(tbl, rdf)
 {
-    checkIdentical(nrow(tbl), nrow(rdf))
-    checkIdentical(as.character(tbl[[1]]), space(rdf))
+    checkIdentical(nrow(tbl), length(rdf))
+    checkIdentical(as.character(tbl[[1]]), as.character(seqnames(rdf)))
     checkIdentical(tbl[[2]], start(rdf))
     for (i in 3:8)
         checkIdentical(as.character(tbl[[i]]),
-                       as.character(rdf[[i-2]]))
+                       as.character(elementMetadata(rdf)[[i-2]]))
 }
 
 test_readPileup <- function()
@@ -20,10 +19,10 @@ test_readPileup <- function()
 
     rdf <- readPileup(pileupFile, variant="indel")
     idx <- which(tbl[[3]]=="*")
-    checkIdentical(length(idx), nrow(rdf))
+    checkIdentical(length(idx), length(rdf))
 
     rdf <- readPileup(pileupFile, variant="SNP")
-    checkIdentical(nrow(tbl) - 2L * length(idx), nrow(rdf))
+    checkIdentical(nrow(tbl) - 2L * length(idx), length(rdf))
     .check_SNP_pileup(tbl[-c(idx, idx-1),], rdf)
 }
 
@@ -33,7 +32,6 @@ test_readPileup_nostars <- function()
     tbl <- read.table(nostarsFile)
     .check_SNP_pileup(tbl, rdf)
 
-
     rdf <- readPileup(nostarsFile, variant="indel")
-    checkIdentical(0L, nrow(rdf))
+    checkIdentical(0L, length(rdf))
 }

@@ -24,14 +24,14 @@
             idx <- c(idx, idx-1)
         dat <- dat[-idx,]
     }
-    RangedData(ranges=IRanges(start=dat[,2],end=dat[,2]),
-               referenceBase=factor(dat[,3], levels=DNA_ALPHABET),
-               consensusBase=factor(dat[,4], levels=DNA_ALPHABET),
-               consensusQuality=dat[,5],
-               snpQuality=dat[,6],
-               maxMappingQuality=dat[,7],
-               coverage=dat[,8],
-               space=dat[,1])
+    GRanges(seqnames=dat[,1],
+            ranges=IRanges(start=dat[,2],end=dat[,2]),
+            referenceBase=factor(dat[,3], levels=DNA_ALPHABET),
+            consensusBase=factor(dat[,4], levels=DNA_ALPHABET),
+            consensusQuality=dat[,5],
+            snpQuality=dat[,6],
+            maxMappingQuality=dat[,7],
+            coverage=dat[,8])
 }
 
 .readPileup_indel <-
@@ -53,19 +53,19 @@
         dat <- dat0 <- dat[FALSE,]
     }
 
-    RangedData(ranges=IRanges(start=dat0[,2],end=dat0[,2]),
-               referenceBase=factor(dat0[,3], levels=DNA_ALPHABET),
-               consensusBase=factor(dat0[,4]),
-               consensusQuality=dat0[,5],
-               snpQuality=dat0[,6],
-               maxMappingQuality=dat0[,7],
-               coverage=dat0[,8],
-               alleleOne=dat[,9],
-               alleleOneSupport=dat[,11],
-               alleleTwo=dat[,10],
-               alleleTwoSupport=dat[,12],
-               additionalIndels=dat[,13],
-               space=dat[,1])
+    GRanges(seqnames=dat[,1],
+            ranges=IRanges(start=dat0[,2],end=dat0[,2]),
+            referenceBase=factor(dat0[,3], levels=DNA_ALPHABET),
+            consensusBase=factor(dat0[,4]),
+            consensusQuality=dat0[,5],
+            snpQuality=dat0[,6],
+            maxMappingQuality=dat0[,7],
+            coverage=dat0[,8],
+            alleleOne=dat[,9],
+            alleleOneSupport=dat[,11],
+            alleleTwo=dat[,10],
+            alleleTwoSupport=dat[,12],
+            additionalIndels=dat[,13])
 }
 
 setMethod(readPileup, "connection",

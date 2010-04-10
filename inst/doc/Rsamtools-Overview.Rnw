@@ -179,7 +179,7 @@ file.
 
 \Rfunction{readPileup} reads a \texttt{pileup} file created by
 \software{samtools}, importing SNP, indel, or all variants into a
-\Rclass{RangedData} object.
+\Rclass{GRanges} object.
 
 \subsection{Large bam files}
 
