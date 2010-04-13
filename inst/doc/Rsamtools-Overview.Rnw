@@ -135,7 +135,7 @@ head(do.call("DataFrame", lst))
 The \bam{} file in the previous example includes an index, represented
 by a separate file with extension \texttt{.bai}:
 <<indexed-file>>=
-list.files(dirname(bamFile), pattern="ex1.bam*")
+list.files(dirname(bamFile), pattern="ex1.bam(.bai)?")
 @ 
 %% 
 Indexing provides two significant benefits. First, an index allows a
@@ -146,18 +146,28 @@ a \bam{} file can be derived from the index, so a portion of a remote
 \bam{} file can be retrieved with local access only to the index. For
 instance, provided an index file exists on the local computer, it is
 possible to retrieve a small portion of a \bam{} file residing on the
-1000 genomes http server. The url
+1000 genomes HTTP server. The url
 \url{ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/data/NA19240/alignment/NA19240.chrom6.SLX.maq.SRP000032.2009_07.bam}
-points to the bam file corresponding to individual NA19240 chromosome
-6 Solexa (lllumina) sequences aligned using MAQ. The remote file is
-very large (about 10 GB), but the corresponding index file is small
-(about 500kb). With \Rcode{na19240url} set to the above address, the
-following retrieves just those reads in the specified range
+points to the \bam{} file corresponding to individual NA19240
+chromosome~6 Solexa (Illumina) sequences aligned using MAQ. The remote
+file is very large (about 10 GB), but the corresponding index file is
+small (about 500 KB). With \Rcode{na19240url} set to the above
+address, the following retrieves just those reads in the specified
+range
 <<bam-remote,eval=FALSE>>=
 which <- RangesList("6"=IRanges(100000L, 110000L))
 param <- ScanBamParam(which=which)
 na19240bam <- scanBam(na19240url, param=param)
 @ 
+%% 
+Invoking \Rfunction{scanBam} without an index file, as above, first
+retrieves the index file from the remote location, and then queries
+the remote file using the index; for repeated queries, it is more
+efficient to retrieve the index file first (e.g., with
+\Rfunction{download.file}) and then use the local index as an argument
+to \Rfunction{scanBam}. Many \bam{} files were created in a way that
+causes \Rfunction{scanBam} to report that the ``EOF marker is
+absent''; this message can safely be ignored.
 
 \bam{} files may be read by functions in packages other than
 \Rsamtools{}. In \Rpackage{ShortRead}, \Rfunction{readAligned} invoked
@@ -186,18 +196,18 @@ file.
 \bam{} files can be large, containing more information on more genomic
 regions than are of immediate interest or than can fit in memory. The
 first strategy for dealing with this is to select, using the
-\Rfunarg{what} and \Rfunarg{where} arguments to
+\Rfunarg{what} and \Rfunarg{which} arguments to
 \Rfunction{ScanBamParam}, just those portions of the \bam{} file that
 are essential to the current analysis, e.g., specifying
 \Rcode{what=c(`rname', 'qname', 'pos')} when wishing to calculate
 coverage of ungapped reads. 
 
 When selective input of \bam{} files is still too memory-intensive,
-a strategy might process the file in chunks, with each chunk
+the file can be processed in chunks, with each chunk
 distilled to the derived information of interest. Chromosomes will
 often be the natural chunk to process. For instance, here we write a
-summary function that expects a single (chromosome) sequence name,
-reads in specific information from the \bam{} file, and calculates
+summary function that takes a single sequence name (chromosome) as
+input, reads in specific information from the \bam{} file, and calculates
 coverage over that sequence.
 <<summaryFunction>>=
 summaryFunction <- 
@@ -229,22 +239,179 @@ often be much smaller than the input.
 The functions described in the previous section import data in to
 \R{}. However, sequence data can be very large, and it does not always
 make sense to read the data in immediately. Instead, it can be useful
-to marshal \emph{references} to the data into a container, and then to
-act on components of the container.  The \Rclass{BamViews} class
-provides a mechanism for creating `views' into a set of \bam{}
-files. The view itself is light-weight, containing references to the
-relevant \bam{} files and metadata (e.g., the phenotypic samples
-corresponding to each \bam{} file) about the view.
+to marshal \emph{references} to the data into a container and then act
+on components of the container.  The \Rclass{BamViews} class provides
+a mechanism for creating `views' into a set of \bam{} files. The view
+itself is light-weight, containing references to the relevant \bam{}
+files and metadata about the view (e.g., the phenotypic samples
+corresponding to each \bam{} file).
 
 One way of understanding a \Rclass{BamViews} instance is as a
 rectangular data structure. The columns represent \bam{} files (e.g.,
 distinct samples). The rows represent ranges (i.e., genomic
-coordinates); for instance, a ChIP-seq experiment might identify a
-number of peaks of high read counts.  
+coordinates). For instance, a ChIP-seq experiment might identify a
+number of peaks of high read counts.
+
+\subsection{Assembling a \Rclass{BamViews} instance}
 
 To illustrate, suppose we have an interest in caffeine metabolism in
-humans. We'll proceed by identifying the ranges we are interested in,
-and then the bam files to be queried.
+humans. The `rows' contain coordinates of genomic regions associated
+with genes in a KEGG caffeine metabolism pathway. The `columns'
+represent individuals in the 1000 genomes project.  The details of
+creating a \Rclass{BamViews} object are described in the
+appendix. Here we retrieve archived versions of the genomic ranges we
+are interested in (\Robject{bamRanges}) and a vector of \bam{} file
+URLs (\Robject{slxMaq09}).
+<<BamViews-parts>>=
+library(GenomicFeatures)
+bamRanges <- local({
+    fl <- system.file("extdata", "CaffeineTxdb.sqlite", 
+                      package="Rsamtools")
+    transcripts(loadFeatures(fl))
+})
+slxMaq09 <- local({
+    fl <- system.file("extdata", "slxMaq09_urls.txt", 
+                      package="Rsamtools")
+    readLines(fl)
+})
+@ 
+%% 
+We now assemble the \Rclass{BamViews} instance from these objects; we
+also provide information to annotated the \bam{} files (with the
+\Rfunarg{bamSamples} function argument, which is a \Rclass{DataFrame}
+instance with each row corresponding to a \bam{} file) and the
+instance as a whole (with \Rfunarg{bamExperiment}, a simple named
+\Rclass{list} containing information structured as the user sees fit).
+<<BamViews-construct, keep.source=TRUE>>=
+bamExperiment <- 
+    list(description="Caffeine metabolism views on 1000 genomes samples",
+         created=date())
+bv <- BamViews(slxMaq09, bamRanges=bamRanges, 
+               bamExperiment=bamExperiment)
+metadata(bamSamples(bv)) <- 
+    list(description="Solexa/MAQ samples, August 2009",
+         created="Thu Mar 25 14:08:42 2010")
+@ 
+
+\subsection{Using \Rclass{BamViews} instances}
+
+The \Rclass{BamViews} object can be queried for its component parts, e.g.,
+<<BamViews-query>>=
+bamExperiment(bv)
+@ 
+%% 
+More usefully, Methods in \Rpackage{Rsamtools} are designed to work
+with \Rclass{BamViews} objects, retrieving data from all files in the
+view. These operations can take substantial time and require reliable
+network access.
+
+To illustrate, the following code (not evaluated when this vignette
+was created) downloads the index files associated with the
+\Robject{bv} object
+<<bamIndicies,eval=FALSE>>=
+bamIndexDir <- tempfile()
+indexFiles <- paste(bamPaths(bv), "bai", sep=".")
+dir.create(bamIndexDir)
+idxFiles <- mapply(download.file, indexFiles,
+                   file.path(bamIndexDir, basename(indexFiles)) ,
+                   MoreArgs=list(method="curl"))
+@ 
+%% 
+and then queries the 1000 genomes project for reads overlapping our
+transcripts; by loading the \Rpackage{multicore} package, we tell
+\Rsamtools{} to use as many cores as are available on our machine (the
+\Rpackage{multicore} package is not currently -- as of 25 March, 2010
+-- reliable on Windows computers)
+<<readBamGappedAlignments, eval=FALSE>>=
+library(multicore)
+olaps <- readBamGappedAlignments(bv)
+@ 
+%% 
+The resulting object is about 6 MB in size. To avoid having to
+download this data each time the vignette is run, we instead load it
+from disk
+%% 
+<<olaps>>=
+load(system.file("extdata", "olaps.Rda", package="Rsamtools"))
+olaps
+head(olaps[[1]])
+@ 
+%% 
+There are \Sexpr{length(olaps[[1]])} reads in
+\verb|\Sexpr{names(olaps)[[1]]}| overlapping at least one of our
+transcripts. It is easy to explore this object, for instance
+discovering the range of read widths in each individual.
+<<read-lengths>>=
+head(t(sapply(olaps, function(elt) range(qwidth(elt)))))
+@ 
+
+Suppose we were particularly interested in the first transcript, which
+has a transcript id
+\Sexpr{elementMetadata(bamRanges(bv))[["tx_name"]][1]}. Here we
+extract reads overlapping this transcript from each of our samples. As
+a consequence of the protocol used, reads aligning to either strand
+could be derived from this transcript. For this reason, we set the
+strand of our range of interest to \texttt{*}. We use the
+\Rfunction{endoapply} function, which is like \Rfunction{lapply} but
+returns an object of the same class (in this case,
+\Sexpr{as.vector(class(olaps))}) as its first argument.
+<<focal>>=
+rng <- bamRanges(bv)[1]
+strand(rng) <- "*"
+olap1 <- endoapply(olaps, function(elt, rng) {
+    m <- findOverlaps(elt, rng)
+    elt <- elt[sort(unique(queryHits(m)))]
+    rname(elt) <- Rle(factor(as.vector(rname(elt)))) # re-level
+    elt
+}, rng)
+olap1
+head(olap1[[24]])
+@ 
+%% 
+To carry the example a little further, we calculate coverage of each
+sample:
+<<olap-cvg, keep.source=TRUE>>=
+minw <- min(sapply(olap1, function(elt) min(start(elt))))
+maxw <- max(sapply(olap1, function(elt) max(end(elt))))
+cvg <- endoapply(olap1, coverage,
+                 shift=-start(ranges(bamRanges[1])),
+                 width=width(ranges(bamRanges[1])))
+cvg
+cvg[[1]]
+@ 
+%% 
+Since the example includes a single region of uniform width across all
+samples, we can easily create a coverage matrix with rows representing
+nucleotide and columns sample and, e.g., document variability between
+samples and nucleotides
+<<olap-cvg-as-m>>=
+m <- matrix(unlist(lapply(cvg, lapply, as.vector)),
+            ncol=length(cvg))
+summary(rowSums(m))
+summary(colSums(m))
+@ 
+
+\section{Directions}
+
+This vignette has summarized facilities in the \Rsamtools{}
+package. Important additional packages include \Rpackage{GenomeRanges}
+(for representing and manipulating gapped alignments),
+\Rpackage{ShortRead} for I/O and quality assessment of ungapped short
+read alignments, \Rpackage{Biostrings} and \Rpackage{BSgenome} for DNA
+sequence and whole-genome manipulation, \Rpackage{IRanges} for
+range-based manipulation, and \Rpackage{rtracklayer} for I/O related
+to the UCSC genome browser. Users might also find the interface to the
+integrative genome browser (IGV) in \Rpackage{SRAdb} useful for
+visualizing \bam{} files.
+
+<<sessionInfo>>=
+packageDescription("Rsamtools")
+sessionInfo()
+@ 
+
+\appendix
+
+\section{Assembling a \Rclass{BamViews} instance}
 
 \subsection{Genomic ranges of interest}
 
@@ -280,25 +447,17 @@ use those as the ranges for the \Rclass{BamViews}
 <<txdb-transcripts>>=
 bamRanges <- transcripts(txdb)
 @ 
-%% 
-It might make sense to annotate this instance with information
-providing its provenance, e.g.,
-<<features-annotations,keep.source=TRUE>>=
-metadata(bamRanges) <- 
-    list(description="KEGG/biomaRt caffeine metabolism transcripts",
-         created=date())
-@ 
 
 \subsection{BAM files}
 
-The following were performed at the time the vignette was written;
-location of on-line resources and particular the organization of the
-1000 genomes bam files may have changed.
+\emph{Note}: The following operations were performed at the time the
+vignette was written; location of on-line resources, in particular the
+organization of the 1000 genomes \bam{} files, may have changed.
 
-We're interested in collecting the URLs of a number of BAM files from
-the 1000 genomes project. Our first goal is to identify files that
-might make for an interesting comparison.  First, let's visit the 1000
-genomes ftp site and discover available files. We'll use the
+We are interested in collecting the URLs of a number of \bam{} files
+from the 1000 genomes project. Our first goal is to identify files
+that might make for an interesting comparison.  First, let's visit the
+1000 genomes FTP site and discover available files. We'll use the
 \Rpackage{RCurl} package to retrieve the names of all files in an
 appropriate directory
 <<bam-avail, keep.source=TRUE, eval=FALSE>>=
@@ -314,9 +473,8 @@ urls0 <-
 @ 
 %% 
 From these, we exclude directories without any files in them, select
-only the BAM index (extension \texttt{.bai}) files, and choose those
-files that exactly six \texttt{'.'} characters in their name (this
-corresponds to files
+only the \bam{} index (extension \texttt{.bai}) files, and choose those
+files that exactly six \texttt{'.'} characters in their name.
 <<bam-index,eval=FALSE>>=
 urls <- urls[sapply(urls0, length) != 0]
 fls0 <- unlist(unname(urls0))
@@ -337,10 +495,6 @@ slxMaq09.bai <-
         mapply(paste, names(urls1), urls1, sep="", USE.NAMES=FALSE)
 slxMaq09 <- sub(".bai$", "", slxMaq09.bai) #$
 @ 
-<<slxMaq09-readlines,echo=FALSE>>=
-slxMaq09 <- 
-    readLines(system.file("extdata", "slxMaq09_urls.txt", package="Rsamtools"))
-@ 
 
 As a final step to prepare for using a \Rclass{BamViews} file, we
 create local copies of the \emph{index} files. The index files are
@@ -352,108 +506,5 @@ idxFiles <- mapply(download.file, slxMaq09.bai,
                    file.path(bamIndexDir, basename(slxMaq09.bai)) ,
                    MoreArgs=list(method="curl"))
 @ 
-
-\subsection{Assembling and using a \Rclass{BamViews} instance}
-
-We assemble the \Rclass{BamViews} instance by providing the BAM file
-urls and genomic features of interest; we can also provide information
-to annotated the BAM files (with the argument \Rfunarg{bamSamples}
-function argument, which is a \Rclass{DataFrame} instance with each
-row corresponding to a BAM file) and the instance as a whole (with
-\Rfunarg{bamExperiment}, a simple \Rclass{list} containing information
-structured as the user sees fit).
-<<BamViews-construct, keep.source=TRUE>>=
-bamExperiment <- 
-    list(description="Caffeine metabolism views on 1000 genomes samples",
-         created=date())
-bv <- BamViews(slxMaq09, bamRanges=bamRanges, 
-               bamExperiment=bamExperiment)
-metadata(bamSamples(bv)) <- 
-    list(description="Solexa/MAQ samples, August 2009",
-         created="Thu Mar 25 14:08:42 2010")
-                               
-@ 
-The \Rclass{BamViews} object can be queried for its component parts, e.g.,
-<<BamViews-query>>=
-bamExperiment(bv)
-@ 
-
-Methods in \Rpackage{Rsamtools} are designed to work with
-\Rclass{BamViews} objects. For instance, here we query the 1000
-genomes project for reads overlapping our transcripts; by loading the
-\Rpackage{multicore} package, we tell \Rsamtools{} to use as many
-cores as are available on our machine (the \Rpackage{multicore}
-package is not currently -- as of 25 March, 2010 -- reliable on
-Windows computers)
-<<readBamGappedAlignments, eval=FALSE>>=
-library(multicore)
-olaps <- readBamGappedAlignments(bv)
-@ 
-%% 
-The resulting object is about 6 MB in size; here we load it from disk
-%% 
-<<olaps>>=
-load(system.file("extdata", "olaps.Rda", package="Rsamtools"))
-olaps
-head(olaps[[1]])
-@ 
-%% 
-There are \Sexpr{length(olaps[[1]])} reads in
-\verb|\Sexpr{names(olaps)[[1]]}| overlapping at least one of our
-transcripts. It is easy to explore this object, for instance
-discovering the range of read widths in each individual.
-<<read-lengths>>=
-head(t(sapply(olaps, function(elt) range(qwidth(elt)))))
-@ 
-
-Suppose we were particularly interested in the first transcript, which
-has a transcript id
-\Sexpr{elementMetadata(bamRanges(bv))[["tx_name"]][1]}. Here we
-extract reads overlapping this transcript from each of our samples. As
-a consequence of the protocol used, reads aligning to either strand
-could be derived from this transcript. For this reason, we set the
-strand of our range of interest to \texttt{*}. We use the
-\Rfunction{endoapply} function, which is like \Rfunction{lapply} but
-returns an object of the same class (in this case,
-\Sexpr{as.vector(class(olaps))}) as its first argument.
-<<focal>>=
-rng <- bamRanges(bv)[1]
-strand(rng) <- "*"
-olap1 <- endoapply(olaps, function(elt, rng) {
-    m <- findOverlaps(elt, rng)
-    elt[sort(unique(queryHits(m)))]
-}, rng)
-olap1
-head(olap1[[24]])
-@ 
-%% 
-To carry the example a little further, we calculate coverage of each
-sample:
-<<eval=FALSE, keep.source=TRUE>>=
-minw <- min(sapply(olap1, function(elt) min(start(elt))))
-maxw <- max(sapply(olap1, function(elt) max(end(elt))))
-cvg <- endoapply(olap1, coverage,
-                 shift=-start(ranges(bamRanges[1])),
-                 width=width(ranges(bamRanges[1])))
-@ 
-
-\section{Directions}
-
-This vignette has summarized facilities in the \Rsamtools{}
-package. Important additional packages include \Rpackage{GenomeRanges}
-(for representing and manipulating gapped alignments),
-\Rpackage{ShortRead} for I/O and quality assessment of ungapped short
-read alignments, \Rpackage{Biostrings} and \Rpackage{BSgenome} for DNA
-sequence and whole-genome manipulation, \Rpackage{IRanges} for
-range-based manipulation, and \Rpackage{rtracklayer} for I/O related
-to the UCSC genome browser. Users might also find the interface to the
-integrative genome browser (IGV) in \Rpackage{SRAdb} useful for
-visualizing \bam{} files.
-
-<<sessionInfo>>=
-packageDescription("Rsamtools")
-sessionInfo()
-@ 
-
 
 \end{document}
