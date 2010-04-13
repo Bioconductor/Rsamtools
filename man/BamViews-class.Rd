@@ -87,7 +87,7 @@ bamDirname(x, ...) <- value
   \item{bamPaths}{A character() vector of BAM path names.}
 
   \item{bamIndicies}{A character() vector of BAM index file path names,
-    \emph{without} the \sQuote{.bai} extenstion.}
+    \emph{without} the \sQuote{.bai} extension.}
 
   \item{bamSamples}{A \code{\linkS4class{DataFrame}} instance with as
 	many rows as \code{length(bamPaths)}, containing sample information
