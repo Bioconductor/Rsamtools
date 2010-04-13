@@ -359,9 +359,8 @@ returns an object of the same class (in this case,
 rng <- bamRanges(bv)[1]
 strand(rng) <- "*"
 olap1 <- endoapply(olaps, function(elt, rng) {
-    m <- findOverlaps(elt, rng)
-    elt <- elt[sort(unique(queryHits(m)))]
-    rname(elt) <- Rle(factor(as.vector(rname(elt)))) # re-level
+    elt <- subsetByOverlaps(elt, rng)
+    runValue(rname(elt)) <- runValue(rname(elt))[drop=TRUE] # re-level
     elt
 }, rng)
 olap1
@@ -492,7 +491,7 @@ urls1 <-
            lapply(urls, 
                   function(x) x[grepl("SLX.maq.*2009_08.*bai$", x)]))
 slxMaq09.bai <- 
-        mapply(paste, names(urls1), urls1, sep="", USE.NAMES=FALSE)
+   mapply(paste, names(urls1), urls1, sep="", USE.NAMES=FALSE)
 slxMaq09 <- sub(".bai$", "", slxMaq09.bai) #$
 @ 
 
