@@ -38,9 +38,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#ifdef _WIN32
-#include <winsock.h>
-#else
+#ifndef _WIN32
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -48,7 +46,7 @@
 
 #include "knetfile.h"
 
-/* In winsock.h, the type of a socket is SOCKET, which is: "typedef
+/* In winsock2.h, the type of a socket is SOCKET, which is: "typedef
  * u_int SOCKET". An invalid SOCKET is: "(SOCKET)(~0)", or signed
  * integer -1. In knetfile.c, I use "int" for socket type
  * throughout. This should be improved to avoid confusion.
@@ -84,7 +82,7 @@ static int socket_wait(int fd, int is_read)
 
 #ifndef _WIN32
 /* This function does not work with Windows due to the lack of
- * getaddrinfo() in winsock. It is addapted from an example in "Beej's
+ * getaddrinfo() in winsock2. It is addapted from an example in "Beej's
  * Guide to Network Programming" (http://beej.us/guide/bgnet/). */
 static int socket_connect(const char *host, const char *port)
 {
