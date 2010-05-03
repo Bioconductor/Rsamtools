@@ -122,7 +122,7 @@ scanBamFlag <-
               hasUnmappedMate=8L, isMinusStrand=16L, isMateMinusStrand=32L,
               isFirstMateRead=64L, isSecondMateRead=128L,
               isPrimaryRead=256L, isValidVendorRead=512L, isDuplicate=1024L)
-    args <- as.list(match.call())[-1]
+    args <- lapply(as.list(match.call())[-1], eval, parent.frame())
     if (any(sapply(args, length) > 1L))
         stop("all arguments must be logical(1)")
     if (length(args) > 0) {
