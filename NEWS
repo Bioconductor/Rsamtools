@@ -1,8 +1,12 @@
-*
-* Rsamtools 1.0.0 Series
-*
+CHANGES IN VERSION 1.2.0
+------------------------
+
+BUG FIXES
+
+    o Attempts to parse non-existent local files now generate an error
 
 CHANGES IN VERSION 1.0.0
+-----------------------
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
