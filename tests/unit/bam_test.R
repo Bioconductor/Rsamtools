@@ -86,12 +86,46 @@ test_scanBam_which <- function()
     checkIdentical(exp, names(res))
     for (i in seq_along(res)) .check1(res[[i]])
 
-    exp <- structure(c(612L, 1168L, 642L),
+    exp <- structure(c(612L, 1169L, 642L),
                      .Names = c("seq1:1000-2000", "seq2:100-1000",
                      "seq2:1000-2000"))
     checkIdentical(exp,
                    sapply(res, function(x) unique(sapply(x, length))))
 
+}
+
+test_scanBam_which_bounds <- function()
+{
+    ## 'which'
+    which <- RangesList(seq1=IRanges(1000, 2000),
+                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+    p1 <- ScanBamParam(which=which)
+    res <- scanBam(fl, param=p1)
+
+    checkIdentical("list", class(res))
+    exp <- c("seq1:1000-2000", "seq2:100-1000", "seq2:1000-2000")
+    checkIdentical(exp, names(res))
+    for (i in seq_along(res)) .check1(res[[i]])
+
+    exp <- structure(c(612L, 1169L, 642L),
+                     .Names = c("seq1:1000-2000", "seq2:100-1000",
+                     "seq2:1000-2000"))
+    checkIdentical(exp,
+                   sapply(res, function(x) unique(sapply(x, length))))
+
+    ## ranges correct?
+    for (i in c(1, 2, 10, 30, 34, 35, 36, 37, 460)) {
+        snp <- IRanges(i, i)
+        which <- GRanges("seq2", IRanges(1, 1000))
+        param <- ScanBamParam(which=which, what=c("pos", "qwidth"))
+        res <- with(scanBam(fl, param=param)[[1]], {
+            idx <- !is.na(pos)
+            IRanges(pos[idx], width=qwidth[idx])
+        })
+        exp <- sum(countOverlaps(res, snp))
+        param <- ScanBamParam(which=GRanges("seq2", snp))
+        try(checkIdentical(exp, countBam(fl, param=param)$records, msg=sprintf("i: %d\n", i)))
+    }
 }
 
 test_scanBam_what_overflow <- function()
@@ -175,7 +209,7 @@ test_scanBam_index <- function()
     checkIdentical(exp, names(res))
     for (i in seq_along(res)) .check1(res[[i]])
 
-    exp <- structure(c(612L, 1168L, 642L),
+    exp <- structure(c(612L, 1169L, 642L),
                      .Names = c("seq1:1000-2000", "seq2:100-1000",
                      "seq2:1000-2000"))
     checkIdentical(exp,
@@ -230,3 +264,4 @@ test_scanBam_tag <- function()
                      ""), class = "table")
     checkIdentical(exp, table(bam[["NM"]], useNA="always"))
 }
+

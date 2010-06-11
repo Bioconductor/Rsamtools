@@ -85,9 +85,11 @@ test_readAligned_bam_which <- function()
                 class(aln))
     checkTrue(validObject(aln))
 
-    checkEquals(2396L, length(aln))
+    res <- scanBam(fl, param=p1)
+    exp <- sum(sapply(res, function(elt) length(elt[["pos"]])))
+    checkEquals(exp, length(aln))
 
-    exp <- structure(c(4L, 24L, 2075L, 205L, 88L), .Dim = 5L,
+    exp <- structure(c(4L, 24L, 2076L, 205L, 88L), .Dim = 5L,
                      .Dimnames = structure(list( c("33", "34", "35",
                      "36", "40")), .Names = ""), class = "table")
     checkIdentical(exp, table(width(aln)))

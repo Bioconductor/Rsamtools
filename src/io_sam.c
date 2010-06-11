@@ -409,6 +409,8 @@ _scan_bam_fetch(_BAM_DATA *bd, const char *fname, const char *indexfname,
     
     for (int irange = 0; irange < LENGTH(space); ++irange) {
         const char* spc = translateChar(STRING_ELT(space, irange));
+        const int starti = 
+            start[irange] > 0 ? start[irange] - 1 : start[irange];
         for (tid = 0; tid < sfile->header->n_targets; ++tid) {
             if (strcmp(spc, sfile->header->target_name[tid]) == 0)
                 break;
@@ -427,7 +429,7 @@ _scan_bam_fetch(_BAM_DATA *bd, const char *fname, const char *indexfname,
         }
 
         bam_fetch(sfile->x.bam, bindex, tid, 
-                  start[irange], end[irange], bd, parse1);
+                  starti, end[irange], bd, parse1);
         bam_index_destroy(bindex);
         n_tot += bd->idx;
         bd->irange += 1;
