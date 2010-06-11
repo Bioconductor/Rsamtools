@@ -358,11 +358,7 @@ returns an object of the same class (in this case,
 <<focal>>=
 rng <- bamRanges(bv)[1]
 strand(rng) <- "*"
-olap1 <- endoapply(olaps, function(elt, rng) {
-    elt <- subsetByOverlaps(elt, rng)
-    runValue(rname(elt)) <- runValue(rname(elt))[drop=TRUE] # re-level
-    elt
-}, rng)
+olap1 <- endoapply(olaps, subsetByOverlaps, rng)
 olap1
 head(olap1[[24]])
 @ 
