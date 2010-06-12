@@ -13,6 +13,10 @@
 #define netread(fd, ptr, len) recv(fd, ptr, len, 0)
 #define netwrite(fd, ptr, len) send(fd, ptr, len, 0)
 #define netclose(fd) closesocket(fd)
+#if defined _FILE_OFFSET_BITS && _FILE_OFFSET_BITS == 64
+#define lseek lseek64
+#define off_t off64_t
+#endif
 #endif
 
 // FIXME: currently I/O is unbuffered

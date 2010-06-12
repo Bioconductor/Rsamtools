@@ -10,6 +10,5 @@ SAMTOOLS_OBJECTS = \
   sam.o bam_pileup.o faidx.o
 # these flags are for SAMTOOLS; -Dinline="" turns off inlining, which
 # is leads to undefined symbols for gcc -O0
-DFLAGS = -D_USE_KNETFILE 
+DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64
 PKG_CFLAGS += $(DFLAGS)
-

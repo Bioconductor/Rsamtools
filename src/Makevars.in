@@ -1,6 +1,5 @@
 PKG_LIBS+=@LIBS@
 include Makevars.common
-PKG_CFLAGS+=-D_FILE_OFFSET_BITS=64
 OBJECTS = $(PKG_OBJECTS) $(SAMTOOLS_OBJECTS:%=samtools/%)
 
 all: $(SHLIB)

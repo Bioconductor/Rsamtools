@@ -8,6 +8,8 @@ BUG FIXES
     o Reads whose last nucleotide overlaps the first of a range are
     now scanned / counted.
 
+    o scanning/counting reads late in large Windows files is fast
+
 CHANGES IN VERSION 1.0.0
 -----------------------
 
