@@ -98,8 +98,12 @@ static inline void insert_offset2(bam_lidx_t *index2, bam1_t *b, uint64_t offset
 		index2->offset = (uint64_t*)realloc(index2->offset, index2->m * 8);
 		memset(index2->offset + old_m, 0, 8 * (index2->m - old_m));
 	}
-	for (i = beg + 1; i <= end; ++i)
-		if (index2->offset[i] == 0) index2->offset[i] = offset;
+	if (beg == end) {
+		if (index2->offset[beg] == 0) index2->offset[beg] = offset;
+	} else {
+		for (i = beg; i <= end; ++i)
+			if (index2->offset[i] == 0) index2->offset[i] = offset;
+	}
 	index2->n = end + 1;
 }
 
@@ -128,6 +132,17 @@ static void merge_chunks(bam_index_t *idx)
 		} // ~for(k)
 	} // ~for(i)
 #endif // defined(BAM_TRUE_OFFSET) || defined(BAM_BGZF)
+}
+
+static void fill_missing(bam_index_t *idx)
+{
+	int i, j;
+	for (i = 0; i < idx->n; ++i) {
+		bam_lidx_t *idx2 = &idx->index2[i];
+		for (j = 1; j < idx2->n; ++j)
+			if (idx2->offset[j] == 0)
+				idx2->offset[j] = idx2->offset[j-1];
+	}
 }
 
 bam_index_t *bam_index_core(bamFile fp)
@@ -163,7 +178,7 @@ bam_index_t *bam_index_core(bamFile fp)
 					bam1_qname(b), last_coor, c->pos, c->tid+1);
 			exit(1);
 		}
-		if (b->core.tid >= 0 && b->core.bin < 4681) insert_offset2(&idx->index2[b->core.tid], b, last_off);
+		insert_offset2(&idx->index2[b->core.tid], b, last_off);
 		if (c->bin != last_bin) { // then possibly write the binning index
 			if (save_bin != 0xffffffffu) // save_bin==0xffffffffu only happens to the first record
 				insert_offset(idx->index[save_tid], save_bin, save_off, last_off);
@@ -182,6 +197,7 @@ bam_index_t *bam_index_core(bamFile fp)
 	}
 	if (save_tid >= 0) insert_offset(idx->index[save_tid], save_bin, save_off, bam_tell(fp));
 	merge_chunks(idx);
+	fill_missing(idx);
 	if (ret < -1) fprintf(stderr, "[bam_index_core] truncated file? Continue anyway. (%d)\n", ret);
 	free(b->data); free(b);
 	return idx;
@@ -476,8 +492,16 @@ static inline int is_overlap(uint32_t beg, uint32_t end, const bam1_t *b)
 	return (rend > beg && rbeg < end);
 }
 
+struct __bam_iterf_t {
+	int from_first; // read from the first record; no random access
+	int tid, beg, end, n_off, i, finished;
+	uint64_t curr_off;
+	const bam_index_t *idx;
+	pair64_t *off;
+};
+
 // bam_fetch helper function retrieves 
-pair64_t * get_chunk_coordinates(const bam_index_t *idx, int tid, int beg, int end, int* cnt_off)
+bam_iterf_t bam_iterf_query(const bam_index_t *idx, int tid, int beg, int end)
 {
 	uint16_t *bins;
 	int i, n_bins, n_off;
@@ -485,17 +509,34 @@ pair64_t * get_chunk_coordinates(const bam_index_t *idx, int tid, int beg, int e
 	khint_t k;
 	khash_t(i) *index;
 	uint64_t min_off;
+	bam_iterf_t iter = 0;
 
+	if (beg < 0) beg = 0;
+	if (end < beg) return 0;
+	// initialize iter
+	iter = calloc(1, sizeof(struct __bam_iterf_t));
+	iter->idx = idx; iter->tid = tid, iter->beg = beg, iter->end = end; iter->i = -1;
+	//
 	bins = (uint16_t*)calloc(MAX_BIN, 2);
 	n_bins = reg2bins(beg, end, bins);
 	index = idx->index[tid];
-	min_off = (beg>>BAM_LIDX_SHIFT >= idx->index2[tid].n)? 0 : idx->index2[tid].offset[beg>>BAM_LIDX_SHIFT];
+	if (idx->index2[tid].n > 0) {
+		min_off = (beg>>BAM_LIDX_SHIFT >= idx->index2[tid].n)? idx->index2[tid].offset[idx->index2[tid].n-1]
+			: idx->index2[tid].offset[beg>>BAM_LIDX_SHIFT];
+		if (min_off == 0) { // improvement for index files built by tabix prior to 0.1.4
+			int n = beg>>BAM_LIDX_SHIFT;
+			if (n > idx->index2[tid].n) n = idx->index2[tid].n;
+			for (i = n - 1; i >= 0; --i)
+				if (idx->index2[tid].offset[i] != 0) break;
+			if (i >= 0) min_off = idx->index2[tid].offset[i];
+		}
+	} else min_off = 0; // tabix 0.1.2 may produce such index files
 	for (i = n_off = 0; i < n_bins; ++i) {
 		if ((k = kh_get(i, index, bins[i])) != kh_end(index))
 			n_off += kh_value(index, k).n;
 	}
 	if (n_off == 0) {
-		free(bins); return 0;
+		free(bins); return iter;
 	}
 	off = (pair64_t*)calloc(n_off, 16);
 	for (i = n_off = 0; i < n_bins; ++i) {
@@ -534,41 +575,62 @@ pair64_t * get_chunk_coordinates(const bam_index_t *idx, int tid, int beg, int e
 		}
 		bam_destroy1(b);
 	}
-	*cnt_off = n_off;
+	iter->n_off = n_off; iter->off = off;
+	return iter;
+}
+
+pair64_t *get_chunk_coordinates(const bam_index_t *idx, int tid, int beg, int end, int *cnt_off)
+{ // for pysam compatibility
+	bam_iterf_t iter;
+	pair64_t *off;
+	iter = bam_iterf_query(idx, tid, beg, end);
+	off = iter->off; *cnt_off = iter->n_off;
+	free(iter);
 	return off;
+}
+
+void bam_iterf_destroy(bam_iterf_t iter)
+{
+	if (iter) { free(iter->off); free(iter); }
+}
+
+int bam_iterf_read(bamFile fp, bam_iterf_t iter, bam1_t *b)
+{
+	if (iter->finished) return -1;
+	if (iter->from_first) {
+		int ret = bam_read1(fp, b);
+		if (ret < 0) iter->finished = 1;
+		return ret;
+	}
+	if (iter->off == 0) return -1;
+	for (;;) {
+		int ret;
+		if (iter->curr_off == 0 || iter->curr_off >= iter->off[iter->i].v) { // then jump to the next chunk
+			if (iter->i == iter->n_off - 1) break; // no more chunks
+			if (iter->i >= 0) assert(iter->curr_off == iter->off[iter->i].v); // otherwise bug
+			if (iter->i < 0 || iter->off[iter->i].v != iter->off[iter->i+1].u) { // not adjacent chunks; then seek
+				bam_seek(fp, iter->off[iter->i+1].u, SEEK_SET);
+				iter->curr_off = bam_tell(fp);
+			}
+			++iter->i;
+		}
+		if ((ret = bam_read1(fp, b)) > 0) {
+			iter->curr_off = bam_tell(fp);
+			if (b->core.tid != iter->tid || b->core.pos >= iter->end) break; // no need to proceed
+			else if (is_overlap(iter->beg, iter->end, b)) return ret;
+		} else break; // end of file
+	}
+	iter->finished = 1;
+	return -1;
 }
 
 int bam_fetch(bamFile fp, const bam_index_t *idx, int tid, int beg, int end, void *data, bam_fetch_f func)
 {
-	int n_off;
-	pair64_t *off = get_chunk_coordinates(idx, tid, beg, end, &n_off);
-	if (off == 0) return 0;
-	{
-		// retrive alignments
-		uint64_t curr_off;
-		int i, ret, n_seeks;
-		n_seeks = 0; i = -1; curr_off = 0;
-		bam1_t *b = (bam1_t*)calloc(1, sizeof(bam1_t));
-		for (;;) {
-			if (curr_off == 0 || curr_off >= off[i].v) { // then jump to the next chunk
-				if (i == n_off - 1) break; // no more chunks
-				if (i >= 0) assert(curr_off == off[i].v); // otherwise bug
-				if (i < 0 || off[i].v != off[i+1].u) { // not adjacent chunks; then seek
-					bam_seek(fp, off[i+1].u, SEEK_SET);
-					curr_off = bam_tell(fp);
-					++n_seeks;
-				}
-				++i;
-			}
-			if ((ret = bam_read1(fp, b)) > 0) {
-				curr_off = bam_tell(fp);
-				if (b->core.tid != tid || b->core.pos >= end) break; // no need to proceed
-				else if (is_overlap(beg, end, b)) func(b, data);
-			} else break; // end of file
-		}
-//		fprintf(stderr, "[bam_fetch] # seek calls: %d\n", n_seeks);
-		bam_destroy1(b);
-	}
-	free(off);
+	bam_iterf_t iter;
+	bam1_t *b;
+	b = bam_init1();
+	iter = bam_iterf_query(idx, tid, beg, end);
+	while (bam_iterf_read(fp, iter, b) >= 0) func(b, data);
+	bam_destroy1(b);
 	return 0;
 }
