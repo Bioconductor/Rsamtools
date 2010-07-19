@@ -115,7 +115,7 @@ bamWhich(object) <- value
 	reference sequences and with a specified distance.}
 
   \item{isUnmappedQuery}{A logical(1) indicating whether unmapped
-  (FALSE), mapped (TRUE), or any (NA) read should be returned.}
+  (TRUE), mapped (FALSE), or any (NA) read should be returned.}
 
   \item{hasUnmappedMate}{A logical(1) indicating whether reads with
   mapped (FALSE), unmapped (TRUE), or any (NA) mate should be returned.}
