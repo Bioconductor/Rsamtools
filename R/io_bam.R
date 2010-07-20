@@ -19,7 +19,7 @@
     on.exit(.Call(.scan_bam_cleanup))
     if (0L != length((space(which))))
         .Call(func, file, index, "rb",
-              list(space(which), .uunlist(start(which)),
+              list(as.character(space(which)), .uunlist(start(which)),
                    .uunlist(end(which))),
               flag, simpleCigar, ...)
     else 

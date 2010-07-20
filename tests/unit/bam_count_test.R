@@ -19,7 +19,7 @@ test_countBam <- function()
     which <- RangesList(seq2=IRanges(c(100, 1000), c(1000, 2000)),
                         seq1=IRanges(1000, 2000))
     p2 <- ScanBamParam(which=which)
-    exp <- exp[c(2:3, 1),]
+    exp <- merge(as.data.frame(which), exp, sort=FALSE)
     rownames(exp) <- NULL
     checkIdentical(exp, countBam(fl, param=p2))
 }

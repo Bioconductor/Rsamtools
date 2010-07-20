@@ -190,7 +190,7 @@ typedef struct {
 	uint8_t *data;
 } bam1_t;
 
-typedef struct __bam_iterf_t *bam_iterf_t;
+typedef struct __bam_iter_t *bam_iter_t;
 
 #define bam1_strand(b) (((b)->core.flag&BAM_FREVERSE) != 0)
 #define bam1_mstrand(b) (((b)->core.flag&BAM_FMREVERSE) != 0)
@@ -329,6 +329,7 @@ extern "C" {
 	  be destroyed in the first place.
 	 */
 	int sam_header_parse(bam_header_t *h);
+	int32_t bam_get_tid(const bam_header_t *header, const char *seq_name);
 
 	/*!
 	  @abstract       Parse @RG lines a update a header struct
@@ -482,7 +483,7 @@ extern "C" {
 		uint32_t is_del:1, is_head:1, is_tail:1;
 	} bam_pileup1_t;
 
-	typedef int (*bam_plp_auto_f)(bam1_t *b, void *data);
+	typedef int (*bam_plp_auto_f)(void *data, bam1_t *b);
 
 	struct __bam_plp_t;
 	typedef struct __bam_plp_t *bam_plp_t;
@@ -594,9 +595,9 @@ extern "C" {
 	 */
 	int bam_fetch(bamFile fp, const bam_index_t *idx, int tid, int beg, int end, void *data, bam_fetch_f func);
 
-	bam_iterf_t bam_iterf_query(const bam_index_t *idx, int tid, int beg, int end);
-	int bam_iterf_read(bamFile fp, bam_iterf_t iter, bam1_t *b);
-	void bam_iterf_destroy(bam_iterf_t iter);
+	bam_iter_t bam_iter_query(const bam_index_t *idx, int tid, int beg, int end);
+	int bam_iter_read(bamFile fp, bam_iter_t iter, bam1_t *b);
+	void bam_iter_destroy(bam_iter_t iter);
 
 	/*!
 	  @abstract       Parse a region in the format: "chr2:100,000-200,000".

@@ -73,18 +73,28 @@ static inline int resolve_cigar(bam_pileup1_t *p, uint32_t pos)
 				p->qpos = y + (pos - x);
 				if (x == pos && is_restart) p->is_head = 1;
 				if (x + l - 1 == pos) { // come to the end of a match
-					if (k < c->n_cigar - 1) { // there are additional operation(s)
+					int has_next_match = 0;
+					unsigned i;
+					for (i = k + 1; i < c->n_cigar; ++i) {
+						uint32_t cigar = bam1_cigar(b)[i];
+						int opi = cigar&BAM_CIGAR_MASK;
+						if (opi == BAM_CMATCH) {
+							has_next_match = 1;
+							break;
+						} else if (opi == BAM_CSOFT_CLIP || opi == BAM_CREF_SKIP || opi == BAM_CHARD_CLIP) break;
+					}
+					if (!has_next_match) p->is_tail = 1;
+					if (k < c->n_cigar - 1 && has_next_match) { // there are additional operation(s)
 						uint32_t cigar = bam1_cigar(b)[k+1]; // next CIGAR
 						int op_next = cigar&BAM_CIGAR_MASK; // next CIGAR operation
 						if (op_next == BAM_CDEL) p->indel = -(int32_t)(cigar>>BAM_CIGAR_SHIFT); // del
 						else if (op_next == BAM_CINS) p->indel = cigar>>BAM_CIGAR_SHIFT; // ins
-						if (op_next == BAM_CDEL || op_next == BAM_CINS) {
-							if (k + 2 < c->n_cigar) op_next = bam1_cigar(b)[k+2]&BAM_CIGAR_MASK;
-							else p->is_tail = 1;
+						else if (op_next == BAM_CPAD && k + 2 < c->n_cigar) { // no working for adjacent padding
+							cigar = bam1_cigar(b)[k+2]; op_next = cigar&BAM_CIGAR_MASK;
+							if (op_next == BAM_CDEL) p->indel = -(int32_t)(cigar>>BAM_CIGAR_SHIFT); // del
+							else if (op_next == BAM_CINS) p->indel = cigar>>BAM_CIGAR_SHIFT; // ins
 						}
-						if (op_next == BAM_CSOFT_CLIP || op_next == BAM_CREF_SKIP || op_next == BAM_CHARD_CLIP)
-							p->is_tail = 1; // tail
-					} else p->is_tail = 1; // this is the last operation; set tail
+					}
 				}
 			}
 			x += l; y += l;
@@ -96,7 +106,8 @@ static inline int resolve_cigar(bam_pileup1_t *p, uint32_t pos)
 			x += l;
 		} else if (op == BAM_CREF_SKIP) x += l;
 		else if (op == BAM_CINS || op == BAM_CSOFT_CLIP) y += l;
-		is_restart = (op == BAM_CREF_SKIP || op == BAM_CSOFT_CLIP || op == BAM_CHARD_CLIP);
+		if (is_restart) is_restart ^= (op == BAM_CMATCH);
+		else is_restart ^= (op == BAM_CREF_SKIP || op == BAM_CSOFT_CLIP || op == BAM_CHARD_CLIP);
 		if (x > pos) {
 			if (op == BAM_CREF_SKIP) ret = 0; // then do not put it into pileup at all
 			break;
@@ -229,16 +240,19 @@ const bam_pileup1_t *bam_plp_auto(bam_plp_t iter, int *_tid, int *_pos, int *_n_
 {
 	const bam_pileup1_t *plp;
 	if (iter->func == 0 || iter->error) { *_n_plp = -1; return 0; }
-	if ((plp = bam_plp_next(iter, _n_plp, _tid, _pos)) != 0) return plp;
+	if ((plp = bam_plp_next(iter, _tid, _pos, _n_plp)) != 0) return plp;
 	else {
 		*_n_plp = 0;
-		while (iter->func(iter->b, iter->data) >= 0) {
+		if (iter->is_eof) return 0;
+		while (iter->func(iter->data, iter->b) >= 0) {
 			if (bam_plp_push(iter, iter->b) < 0) {
 				*_n_plp = -1;
 				return 0;
 			}
-			if ((plp = bam_plp_next(iter, _n_plp, _tid, _pos)) != 0) return plp;
+			if ((plp = bam_plp_next(iter, _tid, _pos, _n_plp)) != 0) return plp;
 		}
+		bam_plp_push(iter, 0);
+		if ((plp = bam_plp_next(iter, _tid, _pos, _n_plp)) != 0) return plp;
 		return 0;
 	}
 }
@@ -339,10 +353,13 @@ bam_mplp_t bam_mplp_init(int n, bam_plp_auto_f func, void **data)
 	iter->pos = calloc(n, 8);
 	iter->n_plp = calloc(n, sizeof(int));
 	iter->plp = calloc(n, sizeof(void*));
+	iter->iter = calloc(n, sizeof(void*));
 	iter->n = n;
 	iter->min = (uint64_t)-1;
-	for (i = 0; i < n; ++i)
+	for (i = 0; i < n; ++i) {
 		iter->iter[i] = bam_plp_init(func, data[i]);
+		iter->pos[i] = iter->min;
+	}
 	return iter;
 }
 
@@ -350,7 +367,7 @@ void bam_mplp_destroy(bam_mplp_t iter)
 {
 	int i;
 	for (i = 0; i < iter->n; ++i) bam_plp_destroy(iter->iter[i]);
-	free(iter->pos); free(iter->n_plp); free(iter->plp);
+	free(iter->iter); free(iter->pos); free(iter->n_plp); free(iter->plp);
 	free(iter);
 }
 
@@ -364,7 +381,7 @@ int bam_mplp_auto(bam_mplp_t iter, int *_tid, int *_pos, int *n_plp, const bam_p
 			iter->plp[i] = bam_plp_auto(iter->iter[i], &tid, &pos, &iter->n_plp[i]);
 			iter->pos[i] = (uint64_t)tid<<32 | pos;
 		}
-		if (iter->pos[i] < new_min) new_min = iter->pos[i];
+		if (iter->plp[i] && iter->pos[i] < new_min) new_min = iter->pos[i];
 	}
 	iter->min = new_min;
 	if (new_min == (uint64_t)-1) return 0;

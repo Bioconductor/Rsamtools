@@ -42,6 +42,8 @@
 // 1<<14 is the size of minimum bin.
 #define BAM_LIDX_SHIFT    14
 
+#define BAM_MAX_BIN 37450 // =(8^6-1)/7+1
+
 typedef struct {
 	uint64_t u, v;
 } pair64_t;
@@ -63,6 +65,7 @@ KHASH_MAP_INIT_INT(i, bam_binlist_t)
 
 struct __bam_index_t {
 	int32_t n;
+	uint64_t n_no_coor; // unmapped reads without coordinate
 	khash_t(i) **index;
 	bam_lidx_t *index2;
 };
@@ -117,7 +120,7 @@ static void merge_chunks(bam_index_t *idx)
 		index = idx->index[i];
 		for (k = kh_begin(index); k != kh_end(index); ++k) {
 			bam_binlist_t *p;
-			if (!kh_exist(index, k)) continue;
+			if (!kh_exist(index, k) || kh_key(index, k) == BAM_MAX_BIN) continue;
 			p = &kh_value(index, k);
 			m = 0;
 			for (l = 1; l < p->n; ++l) {
@@ -154,7 +157,7 @@ bam_index_t *bam_index_core(bamFile fp)
 	uint32_t last_bin, save_bin;
 	int32_t last_coor, last_tid, save_tid;
 	bam1_core_t *c;
-	uint64_t save_off, last_off;
+	uint64_t save_off, last_off, n_mapped, n_unmapped, off_beg, off_end, n_no_coor;
 
 	idx = (bam_index_t*)calloc(1, sizeof(bam_index_t));
 	b = (bam1_t*)calloc(1, sizeof(bam1_t));
@@ -169,7 +172,10 @@ bam_index_t *bam_index_core(bamFile fp)
 
 	save_bin = save_tid = last_tid = last_bin = 0xffffffffu;
 	save_off = last_off = bam_tell(fp); last_coor = 0xffffffffu;
+    n_mapped = n_unmapped = n_no_coor = off_end = 0;
+	off_beg = off_end = bam_tell(fp);
 	while ((ret = bam_read1(fp, b)) >= 0) {
+		if (c->tid < 0) ++n_no_coor;
 		if (last_tid != c->tid) { // change of chromosomes
 			last_tid = c->tid;
 			last_bin = 0xffffffffu;
@@ -178,10 +184,17 @@ bam_index_t *bam_index_core(bamFile fp)
 					bam1_qname(b), last_coor, c->pos, c->tid+1);
 			exit(1);
 		}
-		insert_offset2(&idx->index2[b->core.tid], b, last_off);
+		if (c->tid >= 0) insert_offset2(&idx->index2[b->core.tid], b, last_off);
 		if (c->bin != last_bin) { // then possibly write the binning index
 			if (save_bin != 0xffffffffu) // save_bin==0xffffffffu only happens to the first record
 				insert_offset(idx->index[save_tid], save_bin, save_off, last_off);
+			if (last_bin == 0xffffffffu && save_tid != 0xffffffffu) { // write the meta element
+				off_end = last_off;
+				insert_offset(idx->index[save_tid], BAM_MAX_BIN, off_beg, off_end);
+				insert_offset(idx->index[save_tid], BAM_MAX_BIN, n_mapped, n_unmapped);
+				n_mapped = n_unmapped = 0;
+				off_beg = off_end;
+			}
 			save_off = last_off;
 			save_bin = last_bin = c->bin;
 			save_tid = c->tid;
@@ -192,14 +205,23 @@ bam_index_t *bam_index_core(bamFile fp)
 					(unsigned long long)bam_tell(fp), (unsigned long long)last_off);
 			exit(1);
 		}
+		if (c->flag & BAM_FUNMAP) ++n_unmapped;
+		else ++n_mapped;
 		last_off = bam_tell(fp);
 		last_coor = b->core.pos;
 	}
-	if (save_tid >= 0) insert_offset(idx->index[save_tid], save_bin, save_off, bam_tell(fp));
+	if (save_tid >= 0) {
+		insert_offset(idx->index[save_tid], save_bin, save_off, bam_tell(fp));
+		insert_offset(idx->index[save_tid], BAM_MAX_BIN, off_beg, off_end);
+		insert_offset(idx->index[save_tid], BAM_MAX_BIN, n_mapped, n_unmapped);
+	}
 	merge_chunks(idx);
 	fill_missing(idx);
+	if (ret >= 0)
+		while ((ret = bam_read1(fp, b)) >= 0) ++n_no_coor;
 	if (ret < -1) fprintf(stderr, "[bam_index_core] truncated file? Continue anyway. (%d)\n", ret);
 	free(b->data); free(b);
+	idx->n_no_coor = n_no_coor;
 	return idx;
 }
 
@@ -277,6 +299,11 @@ void bam_index_save(const bam_index_t *idx, FILE *fp)
 				bam_swap_endian_8p(&index2->offset[x]);
 		} else fwrite(index2->offset, 8, index2->n, fp);
 	}
+	{ // write the number of reads coor-less records.
+		uint64_t x = idx->n_no_coor;
+		if (bam_is_be) bam_swap_endian_8p(&x);
+		fwrite(&x, 8, 1, fp);
+	}
 	fflush(fp);
 }
 
@@ -338,6 +365,8 @@ static bam_index_t *bam_index_load_core(FILE *fp)
 		if (bam_is_be)
 			for (j = 0; j < index2->n; ++j) bam_swap_endian_8p(&index2->offset[j]);
 	}
+	if (fread(&idx->n_no_coor, 8, 1, fp) == 0) idx->n_no_coor = 0;
+	if (bam_is_be) bam_swap_endian_8p(&idx->n_no_coor);
 	return idx;
 }
 
@@ -462,7 +491,7 @@ int bam_index_build(const char *fn)
 int bam_index(int argc, char *argv[])
 {
 	if (argc < 2) {
-		fprintf(stderr, "Usage: samtools index <in.bam> [<out.index>]\n");
+		fprintf(stderr, "Usage: samtools index <in.bam> [out.index]\n");
 		return 1;
 	}
 	if (argc >= 3) bam_index_build2(argv[1], argv[2]);
@@ -470,11 +499,43 @@ int bam_index(int argc, char *argv[])
 	return 0;
 }
 
-#define MAX_BIN 37450 // =(8^6-1)/7+1
+int bam_idxstats(int argc, char *argv[])
+{
+	bam_index_t *idx;
+	bam_header_t *header;
+	bamFile fp;
+	int i;
+	if (argc < 2) {
+		fprintf(stderr, "Usage: samtools idxstats <in.bam>\n");
+		return 1;
+	}
+	fp = bam_open(argv[1], "r");
+	if (fp == 0) { fprintf(stderr, "[%s] fail to open BAM.\n", __func__); return 1; }
+	header = bam_header_read(fp);
+	bam_close(fp);
+	idx = bam_index_load(argv[1]);
+	if (idx == 0) { fprintf(stderr, "[%s] fail to load the index.\n", __func__); return 1; }
+	for (i = 0; i < idx->n; ++i) {
+		khint_t k;
+		khash_t(i) *h = idx->index[i];
+		printf("%s\t%d", header->target_name[i], header->target_len[i]);
+		k = kh_get(i, h, BAM_MAX_BIN);
+		if (k != kh_end(h))
+			printf("\t%llu\t%llu", (long long)kh_val(h, k).list[1].u, (long long)kh_val(h, k).list[1].v);
+		else printf("\t0\t0");
+		putchar('\n');
+	}
+	printf("*\t0\t0\t%llu\n", (long long)idx->n_no_coor);
+	bam_header_destroy(header);
+	bam_index_destroy(idx);
+	return 0;
+}
 
-static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
+static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[BAM_MAX_BIN])
 {
 	int i = 0, k;
+	if (beg >= end) return 0;
+	if (end >= 1u<<29) end = 1u<<29;
 	--end;
 	list[i++] = 0;
 	for (k =    1 + (beg>>26); k <=    1 + (end>>26); ++k) list[i++] = k;
@@ -492,16 +553,15 @@ static inline int is_overlap(uint32_t beg, uint32_t end, const bam1_t *b)
 	return (rend > beg && rbeg < end);
 }
 
-struct __bam_iterf_t {
+struct __bam_iter_t {
 	int from_first; // read from the first record; no random access
 	int tid, beg, end, n_off, i, finished;
 	uint64_t curr_off;
-	const bam_index_t *idx;
 	pair64_t *off;
 };
 
 // bam_fetch helper function retrieves 
-bam_iterf_t bam_iterf_query(const bam_index_t *idx, int tid, int beg, int end)
+bam_iter_t bam_iter_query(const bam_index_t *idx, int tid, int beg, int end)
 {
 	uint16_t *bins;
 	int i, n_bins, n_off;
@@ -509,15 +569,15 @@ bam_iterf_t bam_iterf_query(const bam_index_t *idx, int tid, int beg, int end)
 	khint_t k;
 	khash_t(i) *index;
 	uint64_t min_off;
-	bam_iterf_t iter = 0;
+	bam_iter_t iter = 0;
 
 	if (beg < 0) beg = 0;
 	if (end < beg) return 0;
 	// initialize iter
-	iter = calloc(1, sizeof(struct __bam_iterf_t));
-	iter->idx = idx; iter->tid = tid, iter->beg = beg, iter->end = end; iter->i = -1;
+	iter = calloc(1, sizeof(struct __bam_iter_t));
+	iter->tid = tid, iter->beg = beg, iter->end = end; iter->i = -1;
 	//
-	bins = (uint16_t*)calloc(MAX_BIN, 2);
+	bins = (uint16_t*)calloc(BAM_MAX_BIN, 2);
 	n_bins = reg2bins(beg, end, bins);
 	index = idx->index[tid];
 	if (idx->index2[tid].n > 0) {
@@ -581,20 +641,20 @@ bam_iterf_t bam_iterf_query(const bam_index_t *idx, int tid, int beg, int end)
 
 pair64_t *get_chunk_coordinates(const bam_index_t *idx, int tid, int beg, int end, int *cnt_off)
 { // for pysam compatibility
-	bam_iterf_t iter;
+	bam_iter_t iter;
 	pair64_t *off;
-	iter = bam_iterf_query(idx, tid, beg, end);
+	iter = bam_iter_query(idx, tid, beg, end);
 	off = iter->off; *cnt_off = iter->n_off;
 	free(iter);
 	return off;
 }
 
-void bam_iterf_destroy(bam_iterf_t iter)
+void bam_iter_destroy(bam_iter_t iter)
 {
 	if (iter) { free(iter->off); free(iter); }
 }
 
-int bam_iterf_read(bamFile fp, bam_iterf_t iter, bam1_t *b)
+int bam_iter_read(bamFile fp, bam_iter_t iter, bam1_t *b)
 {
 	if (iter->finished) return -1;
 	if (iter->from_first) {
@@ -626,11 +686,11 @@ int bam_iterf_read(bamFile fp, bam_iterf_t iter, bam1_t *b)
 
 int bam_fetch(bamFile fp, const bam_index_t *idx, int tid, int beg, int end, void *data, bam_fetch_f func)
 {
-	bam_iterf_t iter;
+	bam_iter_t iter;
 	bam1_t *b;
 	b = bam_init1();
-	iter = bam_iterf_query(idx, tid, beg, end);
-	while (bam_iterf_read(fp, iter, b) >= 0) func(b, data);
+	iter = bam_iter_query(idx, tid, beg, end);
+	while (bam_iter_read(fp, iter, b) >= 0) func(b, data);
 	bam_destroy1(b);
 	return 0;
 }
