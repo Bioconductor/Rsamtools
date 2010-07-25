@@ -11,6 +11,8 @@
 \alias{indexBam,character-method}
 \alias{filterBam}
 \alias{filterBam,character-method}
+\alias{sortBam}
+\alias{sortBam,character-method}
 
 \title{
 
@@ -30,6 +32,9 @@ countBam(file, index=file, ..., param=ScanBamParam())
 
 scanBamHeader(files, ...)
 \S4method{scanBamHeader}{character}(files, ...)
+    
+sortBam(file, destination, ...)
+\S4method{sortBam}{character}(file, destination, ..., byQname=FALSE, maxMemory=512)
 
 indexBam(files, ...)
 \S4method{indexBam}{character}(files, ...)
@@ -42,20 +47,30 @@ filterBam(file, destination, index=file, ...)
 
 \arguments{
 
-  \item{file}{The character(1) file name of the `BAM' file to be processed.}
+  \item{file}{The character(1) file name of the `BAM' file to be
+    processed.}
 
-  \item{files}{The character() file names of the `BAM' file to be indexed.}
+  \item{files}{The character() file names of the `BAM' file to be
+    processed.}
 
   \item{index}{The character(1) name of the index file of the 'BAM' file
 	being processed; this is given \emph{without} the '.bai' extension.}
 
   \item{destination}{The character(1) file name of the location where
-    the filtered output file will be created.}
+    the sorted or filtered output file will be created. For
+    \code{sortBam} this is without the \dQuote{.bam} file suffix.}
 
   \item{\dots}{Additional arguments, passed to methods.}
 
   \item{indexDestination}{A logical(1) indicating whether the created
     destination file should also be indexed.}
+    
+  \item{byQname}{A logical(1) indicating whether the sorted destination
+    file should be sorted by Query-name (TRUE) or by mapping
+    position (FALSE).}
+    
+  \item{maxMemory}{A numerical(1) indicating the maximal amount of
+    memory (in MB) that the function is allowed to use.}
 
   \item{param}{An instance of \code{\linkS4class{ScanBamParam}}. This
 	influences what fields and which records are imported.}
@@ -76,6 +91,9 @@ filterBam(file, destination, index=file, ...)
   specification does not require that the content of the header be
   consistent with the content of the file, e.g., more targets may be
   present that are represented by reads in the file.
+  
+  The \code{sortBam} function sorts the BAM file given as its first
+  argument, analogous to the \dQuote{samtools sort} function.
 
   The \code{indexBam} function creates an index for each BAM file
   specified, analogous to the \sQuote{samtools index} function.
@@ -152,6 +170,8 @@ filterBam(file, destination, index=file, ...)
   list corresponding to tags (e.g., \sQuote{@SQ}) found in the header,
   and the associated tag values.
 
+  \code{sortBam} returns the file name of the sorted file.
+
   \code{indexBam} returns the file name of the index file created.
 
   \code{filterBam} returns the file name of the destination file
@@ -162,7 +182,10 @@ filterBam(file, destination, index=file, ...)
   \url{http://samtools.sourceforge.net/}
 }
 \author{
-  Martin Morgan
+
+  Martin Morgan <mtmorgan@fhcrc.org>.  Thomas Unterhiner
+  <thomas.unterthiner@students.jku.at> (\code{sortBam}).
+
 }
 
 \seealso{
@@ -197,6 +220,8 @@ res2 <- scanBam(fl, param=p2)
                 
 p3 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))
 length(scanBam(fl, param=p3)[[1]])
+
+sorted <- sortBam(fl, tempfile())
 
 }
 

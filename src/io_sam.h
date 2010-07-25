@@ -15,6 +15,7 @@ SEXP filter_bam(SEXP fname, SEXP index, SEXP mode,
 SEXP count_bam(SEXP fname, SEXP index, SEXP mode, 
 			   SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 SEXP index_bam(SEXP fname);
+SEXP sort_bam(SEXP fname, SEXP destinationPrefix, SEXP isByQname, SEXP maxMemory);
 void scan_bam_cleanup();		/* error handling only */
 
 #endif /* _IO_SAM_H_ */

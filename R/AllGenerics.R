@@ -17,13 +17,17 @@ setGeneric("countBam",
            function(file, index=file, ..., param=ScanBamParam())
            standardGeneric("countBam"),
            signature="file")
+           
+setGeneric("sortBam",
+           function(file, destination, ...)
+           standardGeneric("sortBam"))
+
+setGeneric("indexBam",
+           function(files, ...) standardGeneric("indexBam"))
 
 setGeneric("filterBam",
            function(file, destination, index=file, ...)
            standardGeneric("filterBam"))
-
-setGeneric("indexBam",
-           function(files, ...) standardGeneric("indexBam"))
 
 setGeneric("readPileup",
            function(file, ...) standardGeneric("readPileup"))

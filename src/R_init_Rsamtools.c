@@ -14,6 +14,7 @@ static const R_CallMethodDef callMethods[] = {
 	{".filter_bam", (DL_FUNC) & filter_bam, 8},
 	{".count_bam", (DL_FUNC) &count_bam, 6},
 	{".index_bam", (DL_FUNC) &index_bam, 1},
+	{".sort_bam", (DL_FUNC) &sort_bam, 4},
     {NULL, NULL, 0}
 };
 

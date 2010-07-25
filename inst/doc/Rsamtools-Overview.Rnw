@@ -183,9 +183,9 @@ Additional ways of interacting with \bam{} files include
 \Rfunction{countBam} (to count records matching \Rfunarg{param}).
 \Rfunction{filterBam} filters reads from the source file according to
 the criteria of the \Rclass{ScanBamParam} parameter, writing reads
-passing the filter to a new file.  The function \Rfunction{indexBam}
-creates an index file from a sorted \bam{}
-file. 
+passing the filter to a new file.  The function \Rfunction{sortBam}
+sorts a previously unsorted \bam{}, while The function
+\Rfunction{indexBam} creates an index file from a sorted \bam{} file.
 
 \Rfunction{readPileup} reads a \texttt{pileup} file created by
 \software{samtools}, importing SNP, indel, or all variants into a

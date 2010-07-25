@@ -3,7 +3,7 @@ PKG_OBJECTS = \
   Biostrings_stubs.o IRanges_stubs.o \
   R_init_Rsamtools.o 
 SAMTOOLS_OBJECTS = \
-  bam.o bam_import.o bam_index.o kstring.o bam_aux.o \
+  bam.o bam_import.o bam_sort.o bam_index.o kstring.o bam_aux.o \
   sam_header.o \
   bgzf.o razf.o \
   knetfile.o \

@@ -5,6 +5,11 @@
 #include "IRanges_interface.h"
 #include "Biostrings_interface.h"
 
+/* from samtoools/bam_sort.c */
+void 
+bam_sort_core(int is_by_qname, const char *fn, const char *prefix, 
+              size_t max_mem);
+
 typedef enum {
     OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR=1, 
     CIGAR_BUFFER_OVERFLOW_ERROR = 2
@@ -922,6 +927,30 @@ filter_bam(SEXP fname, SEXP index, SEXP mode,
     return result;
 }
 
+/* sort_bam */
+
+SEXP
+sort_bam(SEXP fname, SEXP destination, SEXP isByQname, SEXP maxMemory)
+{
+    if (!IS_CHARACTER(fname) || 1 != LENGTH(fname))
+        Rf_error("'fname' must be character(1)");
+    if (!IS_CHARACTER(destination) || 1 != LENGTH(destination))
+        Rf_error("'destination' must be character(1)");
+    if (!IS_LOGICAL(isByQname)  || LENGTH(isByQname) != 1)
+        Rf_error("'isByQname' must be logical(1)");
+    if (!IS_INTEGER(maxMemory) || LENGTH(maxMemory) != 1 || 
+        INTEGER(maxMemory)[0] < 1)
+        Rf_error("'maxMemory' must be a positive integer(1)");
+        
+    const char *fbam = translateChar(STRING_ELT(fname, 0));
+    const char *fout = translateChar(STRING_ELT(destination, 0));
+    int sortMode = asInteger(isByQname);
+    
+    size_t maxMem = (size_t) INTEGER(maxMemory)[0] * 1024 * 1024;
+    bam_sort_core(sortMode, fbam, fout, maxMem);
+    return destination;
+}	
+
 /* index_bam */
 
 SEXP
@@ -934,6 +963,6 @@ index_bam(SEXP fname)
     if (0 != status)
         Rf_error("failed to build index\n  file: %s", fbam);
     char *fidx = (char *) R_alloc(strlen(fbam) + 5, sizeof(char));
-    sprintf(fidx, "%s.bai", fidx);
+    sprintf(fidx, "%s.bai", fbam);
     return mkString(fidx);
 }
