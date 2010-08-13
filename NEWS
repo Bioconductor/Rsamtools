@@ -16,6 +16,8 @@ BUG FIXES
 
     o scanning / counting reads late in large Windows files is fast
 
+    o scanBam tag fields of type 'A' parsed correctly
+
 CHANGES IN VERSION 1.0.0
 -----------------------
 

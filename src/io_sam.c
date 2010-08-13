@@ -155,6 +155,7 @@ _tag_type_check(const char *tagname, SEXP tag, SEXPTYPE is)
 void
 _bamtags(const bam1_t *bam, _BAM_DATA *bd, SEXP tags)
 {
+    static char *buf_A;
     int idx = bd->idx;
     SEXP nms = GET_ATTR(tags, R_NamesSymbol);
     for (int i = 0; i < LENGTH(nms); ++i) {
@@ -180,6 +181,10 @@ _bamtags(const bam1_t *bam, _BAM_DATA *bd, SEXP tags)
                 tag = NEW_CHARACTER(n);
                 for (int j = 0; j < n; ++j)
                     SET_STRING_ELT(tag, j, NA_STRING);
+                if ('A' == aux[0]) {
+                    buf_A = R_alloc(2, sizeof(char));
+                    buf_A[1] = '\0';
+                }
                 break;
             case 'H':
                 tag = NEW_RAW(n);
@@ -205,9 +210,8 @@ _bamtags(const bam1_t *bam, _BAM_DATA *bd, SEXP tags)
             break;
         case 'A':
             _tag_type_check(tagname, tag, STRSXP);
-            char *v = " ";
-            v[0] = bam_aux2A(aux);
-            SET_STRING_ELT(tag, idx, mkChar(v));
+            sprintf(buf_A, "%c", bam_aux2A(aux));
+            SET_STRING_ELT(tag, idx, mkChar(buf_A));
             break;
         case 'Z':
             _tag_type_check(tagname, tag, STRSXP);
