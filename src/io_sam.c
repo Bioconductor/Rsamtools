@@ -654,6 +654,13 @@ _scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
 SEXP
 _as_XStringSet(SEXP lst, const char *baseclass)
 {
+    char classname[40];  /* longest string should be "DNAStringSet" */
+
+    if (snprintf(classname, sizeof(classname), "%sSet", baseclass)
+        >= sizeof(classname))
+        error("Rsamtools internal error in _as_XStringSet(): "
+              "'classname' buffer too small");
+
     SEXP seq = VECTOR_ELT(lst, 0);
     SEXP width = VECTOR_ELT(lst, 1);
 
@@ -661,8 +668,6 @@ _as_XStringSet(SEXP lst, const char *baseclass)
     char *str = (char *) RAW(seq);
     for (int i = 0; i < LENGTH(seq); ++i)       
         str[i] = encode(str[i]);
-    SEXP ptr = PROTECT(new_SharedVector("SharedRaw", seq));
-    SEXP xstring = PROTECT(new_XVector(baseclass, ptr, 0, LENGTH(seq)));
 
     SEXP start = PROTECT(NEW_INTEGER(LENGTH(width)));
     int s = 1;
@@ -672,8 +677,9 @@ _as_XStringSet(SEXP lst, const char *baseclass)
     }
     SEXP irange = 
         PROTECT(new_IRanges("IRanges", start, width, R_NilValue));
-    SEXP xstringset = PROTECT(new_XStringSet(NULL, xstring, irange));
-    UNPROTECT(5);
+    SEXP xstringset =
+	PROTECT(new_XRawList_from_tag(classname, baseclass, seq, irange));
+    UNPROTECT(3);
     return xstringset;
 }
 
