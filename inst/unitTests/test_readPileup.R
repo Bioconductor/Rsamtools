@@ -1,5 +1,5 @@
 pileupFile <- system.file("extdata", "pileup.txt", package="Rsamtools")
-src <- system.file("extdata", "cases", package="Rsamtools")
+src <- system.file("unitTests", "cases", package="Rsamtools")
 nostarsFile <- file.path(src, "pileup-no-stars.txt")
 
 

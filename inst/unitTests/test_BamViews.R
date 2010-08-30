@@ -115,7 +115,7 @@ test_BamViews_auto.range <- function()
 test_BamViews_readBamGappedAlignments <- function()
 {
     checkTrue(validObject(readBamGappedAlignments(BamViews())))
-    src <- system.file("extdata", "cases", package="Rsamtools")
+    src <- system.file("unitTests", "cases", package="Rsamtools")
     fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
             file.path(src, "ex1_shuf1000.bam"))
     bv <- BamViews(fl, auto.range=TRUE)
@@ -159,7 +159,7 @@ test_BamViews_readBamGappedAlignments <- function()
 
 test_BamViews_scanBam <- function()
 {
-    src <- system.file("extdata", "cases", package="Rsamtools")
+    src <- system.file("unitTests", "cases", package="Rsamtools")
     fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
             file.path(src, "ex1_shuf1000.bam"))
     bv <- BamViews(fl)
@@ -175,7 +175,7 @@ test_BamViews_scanBam <- function()
 
 test_BamViews_countBam <- function()
 {
-    src <- system.file("extdata", "cases", package="Rsamtools")
+    src <- system.file("unitTests", "cases", package="Rsamtools")
     fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
             file.path(src, "ex1_shuf1000.bam"))
     bv <- BamViews(fl)

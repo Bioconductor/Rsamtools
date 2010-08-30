@@ -1,6 +1,6 @@
 test_sortBam <- function() {
     fl0 <- system.file("extdata", "ex1.bam", package="Rsamtools")
-    src <- system.file("extdata", "cases", package="Rsamtools")
+    src <- system.file("unitTests", "cases", package="Rsamtools")
     fl <- file.path(src, "ex1_unsort.bam")
     sorted <- sortBam(fl, tempfile())
     exp <- scanBam(fl0)[[1]]

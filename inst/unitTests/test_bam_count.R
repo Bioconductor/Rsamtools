@@ -34,7 +34,7 @@ test_countBam_index <- function()
                  records=c(612L, 1169L, 642L),
                  nucleotides=c(21549L, 41235L, 22640L))
 
-    src <- system.file("extdata", "cases", package="Rsamtools")
+    src <- system.file("unitTests", "cases", package="Rsamtools")
     fl <- file.path(src, "ex1_noindex.bam")
     idx <- system.file("extdata", "ex1.bam", package="Rsamtools")
     checkIdentical(exp, countBam(fl, idx, param=p1))
