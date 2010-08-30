@@ -200,7 +200,8 @@ test_scanBam_index <- function()
     which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
     p1 <- ScanBamParam(which=which)
-    fl <- file.path("cases", "ex1_noindex.bam")
+    src <- system.file("extdata", "cases", package="Rsamtools")
+    fl <- file.path(src, "ex1_noindex.bam")
     idx <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
     res <- scanBam(fl, idx, param=p1)
@@ -254,7 +255,8 @@ test_scanBam_tag <- function()
 
     tag <- c("MF", "Aq", "NM", "UQ", "H0", "H1")
     param <- ScanBamParam(tag=tag)
-    fl <- file.path("cases", "ex1_shuf1000.bam")
+    src <- system.file("extdata", "cases", package="Rsamtools")
+    fl <- file.path(src, "ex1_shuf1000.bam")
     bam <- scanBam(fl, param=param)[[1]][["tag"]]
     checkIdentical(tag, names(bam))
     checkTrue(all(1000L == sapply(bam, length)))

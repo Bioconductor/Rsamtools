@@ -1,5 +1,6 @@
 pileupFile <- system.file("extdata", "pileup.txt", package="Rsamtools")
-nostarsFile <- file.path("cases", "pileup-no-stars.txt")
+src <- system.file("extdata", "cases", package="Rsamtools")
+nostarsFile <- file.path(src, "pileup-no-stars.txt")
 
 
 .check_SNP_pileup <- function(tbl, rdf)

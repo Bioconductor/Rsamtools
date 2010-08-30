@@ -115,9 +115,9 @@ test_BamViews_auto.range <- function()
 test_BamViews_readBamGappedAlignments <- function()
 {
     checkTrue(validObject(readBamGappedAlignments(BamViews())))
-
+    src <- system.file("extdata", "cases", package="Rsamtools")
     fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
-            file.path("cases", "ex1_shuf1000.bam"))
+            file.path(src, "ex1_shuf1000.bam"))
     bv <- BamViews(fl, auto.range=TRUE)
     rng <- bamRanges(bv)
     aln <- readBamGappedAlignments(bv)
@@ -159,8 +159,9 @@ test_BamViews_readBamGappedAlignments <- function()
 
 test_BamViews_scanBam <- function()
 {
+    src <- system.file("extdata", "cases", package="Rsamtools")
     fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
-            file.path("cases", "ex1_shuf1000.bam"))
+            file.path(src, "ex1_shuf1000.bam"))
     bv <- BamViews(fl)
     res <- scanBam(bv)
     for (i in seq_along(fl))
@@ -174,8 +175,9 @@ test_BamViews_scanBam <- function()
 
 test_BamViews_countBam <- function()
 {
+    src <- system.file("extdata", "cases", package="Rsamtools")
     fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
-            file.path("cases", "ex1_shuf1000.bam"))
+            file.path(src, "ex1_shuf1000.bam"))
     bv <- BamViews(fl)
     res <- countBam(bv)
     for (i in seq_along(fl))
