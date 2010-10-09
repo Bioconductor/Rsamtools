@@ -20,7 +20,7 @@
 \alias{names<-,BamViews-method}
 \alias{dim,BamViews-method}
 \alias{dimnames,BamViews-method}
-\alias{dimnames<-,BamViews-method}
+\alias{dimnames<-,BamViews,ANY-method}
 \alias{[,BamViews,ANY,missing-method}
 \alias{[,BamViews,missing,ANY-method}
 \alias{[,BamViews,ANY,ANY-method}
@@ -63,7 +63,7 @@ bamExperiment(x)
 \S4method{names}{BamViews}(x)
 \S4method{names}{BamViews}(x) <- value
 \S4method{dimnames}{BamViews}(x)
-\S4method{dimnames}{BamViews}(x) <- value
+\S4method{dimnames}{BamViews,ANY}(x) <- value
 
 bamDirname(x, ...) <- value
 
