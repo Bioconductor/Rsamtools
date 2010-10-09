@@ -5,6 +5,8 @@ NEW FEATURES
 
     o Update to samtools 0.1.8
 
+    o Update to samtools svn rev 750 (Mon, 27 Sep 2010)
+
     o sortBam sorts a BAM file
 
 BUG FIXES
