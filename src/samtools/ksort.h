@@ -256,7 +256,7 @@ typedef struct {
 		int i, j;														\
 		for (i = n; i > 1; --i) {										\
 			type_t tmp;													\
-			j = (int)(drand48() * i);									\
+			j = (int)(((float) rand()) / RAND_MAX * i);	\
 			tmp = a[j]; a[j] = a[i-1]; a[i-1] = tmp;					\
 		}																\
 	}
