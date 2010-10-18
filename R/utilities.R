@@ -5,7 +5,7 @@
     function(path)
 {
     idx <- !grepl("^(ftp)|(http)://", path)
-    path[idx] <- normalizePath(path.expand(path[idx]))
+    path[idx] <- normalizePath(path.expand(path[idx]), mustWork=FALSE)
     path
 }
 

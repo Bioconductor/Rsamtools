@@ -1,6 +1,6 @@
 useDynLib(Rsamtools, .registration=TRUE)
 
-importFrom(utils, normalizePath, read.table)
+importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
 import(IRanges)
 
