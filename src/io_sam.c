@@ -415,6 +415,13 @@ _scan_bam_fetch(_BAM_DATA *bd, const char *fname, const char *indexfname,
     int tid;
     samfile_t *sfile = bd->sfile;
     int n_tot = 0;
+
+    bam_index_t *bindex = _bam_tryindexload(indexfname);
+    if (bindex == 0) {
+	Rf_warning("failed to read BAM index\n  base file: %s", 
+		   fname);
+	return -1;
+    }
     
     for (int irange = 0; irange < LENGTH(space); ++irange) {
         const char* spc = translateChar(STRING_ELT(space, irange));
@@ -430,20 +437,14 @@ _scan_bam_fetch(_BAM_DATA *bd, const char *fname, const char *indexfname,
             return -1;
         }
 
-        bam_index_t *bindex = _bam_tryindexload(indexfname);
-        if (bindex == 0) {
-            Rf_warning("failed to read BAM index\n  base file: %s", 
-                       fname);
-            return -1;
-        }
-
         bam_fetch(sfile->x.bam, bindex, tid, 
                   starti, end[irange], bd, parse1);
-        bam_index_destroy(bindex);
         n_tot += bd->idx;
         bd->irange += 1;
         bd->idx = 0;
     }
+
+    bam_index_destroy(bindex);
     return n_tot;
 }
 

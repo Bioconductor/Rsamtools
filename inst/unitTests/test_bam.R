@@ -124,8 +124,23 @@ test_scanBam_which_bounds <- function()
         })
         exp <- sum(countOverlaps(res, snp))
         param <- ScanBamParam(which=GRanges("seq2", snp))
-        try(checkIdentical(exp, countBam(fl, param=param)$records, msg=sprintf("i: %d\n", i)))
+        try(checkIdentical(exp, countBam(fl, param=param)$records,
+                           msg=sprintf("i: %d\n", i)))
     }
+}
+
+test_scanBam_which_order <- function()
+{
+    which <- RangesList(seq2=IRanges(c(1000, 100), c(2000, 1000)),
+                        seq1=IRanges(1000, 2000))
+    p1 <- ScanBamParam(which=which, what="pos")
+    res <- scanBam(fl, param=p1)
+    checkIdentical("list", class(res))
+    exp <- structure(c(642L, 1169L, 612L),
+                     .Names = c( "seq2:1000-2000", "seq2:100-1000",
+                       "seq1:1000-2000"))
+    obs <- sapply(res, function(x) unique(sapply(x, length)))
+    checkIdentical(exp, obs)
 }
 
 test_scanBam_what_overflow <- function()
