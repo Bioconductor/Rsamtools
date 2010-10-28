@@ -459,8 +459,7 @@ _do_scan_bam(_BAM_DATA *bdata, SEXP bfile, SEXP index,
     } else {                    /* fetch */
         const char *fname = 
             translateChar(STRING_ELT(R_ExternalPtrProtected(bfile), 0));
-        const char *indexfname =
-            translateChar(STRING_ELT(index, 0));
+        const char *indexfname = translateChar(STRING_ELT(index, 0));
         status = _scan_bam_fetch(bdata, fname, indexfname,
                                  VECTOR_ELT(space, 0),
                                  INTEGER(VECTOR_ELT(space, 1)),
@@ -516,7 +515,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 
     SEXP s, r = VECTOR_ELT((SEXP) bd->extra, bd->irange);
     int idx = bd->idx, start, len;
-    Rboolean reverseComplement=bd->reverseComplement;
+    Rboolean reverseComplement = bd->reverseComplement;
     
     for (int i = 0; i < LENGTH(r); ++i) {
         if ((s = VECTOR_ELT(r, i)) == R_NilValue)
