@@ -1,8 +1,8 @@
 setMethod(BamViews, c(bamRanges="GRanges"), 
           function(bamPaths=character(0),
                    bamIndicies=bamPaths,
-                   bamSamples=new("DataFrame", nrows=length(bamPaths),
-                     rownames=make.unique(basename(bamPaths))),
+                   bamSamples=DataFrame(row.names=
+                     make.unique(basename(bamPaths))),
                    bamRanges,
                    bamExperiment=list(), ...)
 {
@@ -14,8 +14,8 @@ setMethod(BamViews, c(bamRanges="GRanges"),
 setMethod(BamViews, c(bamRanges="RangedData"),
           function(bamPaths=character(0),
                    bamIndicies=bamPaths,
-                   bamSamples=new("DataFrame", nrows=length(bamPaths),
-                     rownames=make.unique(basename(bamPaths))),
+                   bamSamples=DataFrame(row.names=
+                     make.unique(basename(bamPaths))),
                    bamRanges,
                    bamExperiment=list(), ...)
 {
@@ -33,8 +33,8 @@ setMethod(BamViews, c(bamRanges="RangedData"),
 setMethod(BamViews, c(bamRanges="missing"), 
           function(bamPaths=character(0),
                    bamIndicies=bamPaths,
-                   bamSamples=new("DataFrame", nrows=length(bamPaths),
-                     rownames=make.unique(basename(bamPaths))),
+                   bamSamples=DataFrame(row.names=
+                     make.unique(basename(bamPaths))),
                    bamRanges,
                    bamExperiment=list(), ...,
                    auto.range=FALSE)

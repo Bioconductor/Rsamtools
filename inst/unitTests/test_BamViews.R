@@ -19,8 +19,7 @@ test_BamViews_constructors <- function()
                   IRanges(c(1:5, 101:105), c(11:15, 111:115)),
                   Values=rev(seq_len(ni)))
 
-    sd0 <- new("DataFrame", nrows=nj,
-               rownames=make.unique(basename(fls)))
+    sd0 <- DataFrame(row.names=make.unique(basename(fls)))
     sd1 <-DataFrame(Score=seq_len(nj),
                      row.names=make.unique(basename(fls)))
 

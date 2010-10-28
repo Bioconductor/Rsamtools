@@ -35,8 +35,8 @@ setGeneric("readPileup",
 setGeneric("BamViews",
            function(bamPaths=character(0),
                     bamIndicies=bamPaths,
-                    bamSamples=new("DataFrame", nrows=length(bamPaths),
-                      rownames=make.unique(basename(bamPaths))),
+                    bamSamples=DataFrame(row.names=
+                      make.unique(basename(bamPaths))),
                     bamRanges,
                     bamExperiment=list(), ...)
            standardGeneric("BamViews"),

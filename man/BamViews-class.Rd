@@ -43,15 +43,13 @@
 
 ## Constructor
 BamViews(bamPaths=character(0),
-         bamIndicies=bamPaths,
-         bamSamples=new("DataFrame", nrows=length(bamPaths),
-                        rownames=make.unique(basename(bamPaths))),
-         bamRanges, bamExperiment = list(), ...)
+     bamIndicies=bamPaths,
+     bamSamples=DataFrame(row.names=make.unique(basename(bamPaths))),
+     bamRanges, bamExperiment = list(), ...)
 \S4method{BamViews}{missing}(bamPaths=character(0),
-         bamIndicies=bamPaths,
-         bamSamples=new("DataFrame", nrows=length(bamPaths),
-                        rownames=make.unique(basename(bamPaths))),
-         bamRanges, bamExperiment = list(), ..., auto.range=FALSE)
+     bamIndicies=bamPaths,
+     bamSamples=DataFrame(row.names=make.unique(basename(bamPaths))),
+     bamRanges, bamExperiment = list(), ..., auto.range=FALSE)
 ## Accessors
 bamPaths(x)
 bamSamples(x)
