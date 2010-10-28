@@ -10,7 +10,7 @@ Description: This package provides an interface to the 'samtools'
 URL: http://bioconductor.org/packages/release/bioc/html/Rsamtools.html
 License: Artistic-2.0
 LazyLoad: yes
-Depends: methods, IRanges (>= 1.7.23), GenomicRanges (>= 0.1.0),
+Depends: methods, IRanges (>= 1.9.4), GenomicRanges (>= 0.1.0),
 	Biostrings (>= 2.15.0)
 Imports: methods, utils, IRanges, GenomicRanges, Biostrings
 Suggests: ShortRead, GenomicFeatures, RUnit, KEGG.db
