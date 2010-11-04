@@ -126,6 +126,10 @@ scanBamFlag <-
     if (any(sapply(args, length) > 1L))
         stop("all arguments must be logical(1)")
     if (length(args) > 0) {
+        ## toggle meaning of isValidVendorRead
+        if ("isValidVendorRead" %in% names(args) &&
+            !is.na(args[["isValidVendorRead"]]))
+            args[["isValidVendorRead"]] <- !args[["isValidVendorRead"]]
         ## keep0: NA | FALSE --> drop !NA & TRUE
         idx <- names(args[sapply(args, function(x) !is.na(x) && x)])
         keep0 <- Reduce("+", flag[ !names(flag) %in% idx ], 0L)
