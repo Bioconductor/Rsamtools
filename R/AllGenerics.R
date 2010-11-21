@@ -46,4 +46,3 @@ setGeneric("readBamGappedAlignments",
            function(file, index, ..., which)
            standardGeneric("readBamGappedAlignments"),
            signature="file")
-

@@ -16,8 +16,10 @@ importClassesFrom(Biostrings, file, connection, DNAStringSet,
 importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet,
            PhredQuality)
 
-exportClasses(ScanBamParam, BamViews)
+exportClasses(ScanBamParam, BamViews, BamFile)
 
 exportPattern("^[^\\.]")
 
 exportMethods(length, names, "[", "[[", show)
+
+S3method(close, BamFile)

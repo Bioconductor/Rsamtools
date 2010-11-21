@@ -195,7 +195,7 @@ test_scanBam_badSpace <- function()
     flag <- list()
     tryCatch({
         withCallingHandlers(scanBam(fl, param=p1), warning=function(w) {
-            checkTrue(grepl("space: badsp", conditionMessage(w)))
+            checkTrue(grepl("space 'badspc'", conditionMessage(w)))
             flag[["warn"]] <<- TRUE
         })
     }, error=function(e) {

@@ -32,16 +32,16 @@ countBam(file, index=file, ..., param=ScanBamParam())
 
 scanBamHeader(files, ...)
 \S4method{scanBamHeader}{character}(files, ...)
+
+filterBam(file, destination, index=file, ...)
+\S4method{filterBam}{character}(file, destination, index=file, ...,
+    indexDestination=TRUE, param=ScanBamParam())
     
 sortBam(file, destination, ...)
 \S4method{sortBam}{character}(file, destination, ..., byQname=FALSE, maxMemory=512)
 
 indexBam(files, ...)
 \S4method{indexBam}{character}(files, ...)
-
-filterBam(file, destination, index=file, ...)
-\S4method{filterBam}{character}(file, destination, index=file, ...,
-    indexDestination=TRUE, param=ScanBamParam())
 
 }
 
@@ -82,27 +82,27 @@ filterBam(file, destination, index=file, ...)
   can be parsed using R's \code{\link{scan}} function, especially with
   arguments \code{what} to control the fields that are parsed.
 
-  The \code{countBam} function returns a count of records consistent
-  with \code{param}.
+  \code{countBam} returns a count of records consistent with
+  \code{param}.
 
-  The \code{scanBamHeader} function visits the header information in a
-  BAM file, returning for each file a list containing elements
-  \code{targets} and \code{text}, as described below. The SAM / BAM
-  specification does not require that the content of the header be
-  consistent with the content of the file, e.g., more targets may be
-  present that are represented by reads in the file.
+  \code{scanBamHeader} visits the header information in a BAM file,
+  returning for each file a list containing elements \code{targets} and
+  \code{text}, as described below. The SAM / BAM specification does not
+  require that the content of the header be consistent with the content
+  of the file, e.g., more targets may be present that are represented by
+  reads in the file.
+
+  \code{filterBam} parses records in \code{file} satisfying the
+  \code{bamWhich} of \code{param}, writing each record satisfying the
+  \code{bamFlag} and \code{bamSimpleCigar} criteria of \code{param} to
+  file \code{destination}. An index file is created on the destination
+  when \code{indexDestination=TRUE}.
   
-  The \code{sortBam} function sorts the BAM file given as its first
-  argument, analogous to the \dQuote{samtools sort} function.
+  \code{sortBam} sorts the BAM file given as its first argument,
+  analogous to the \dQuote{samtools sort} function.
 
-  The \code{indexBam} function creates an index for each BAM file
-  specified, analogous to the \sQuote{samtools index} function.
-
-  The \code{filterBam} function parses records in \code{file} satisfying
-  the \code{bamWhich} of \code{param}, writing each record satisfying
-  the \code{bamFlag} and \code{bamSimpleCigar} criteria of \code{param}
-  to file \code{destination}. An index file is created on the
-  destination when \code{indexDestination=TRUE}.
+  \code{indexBam} creates an index for each BAM file specified,
+  analogous to the \sQuote{samtools index} function.
   
   Details of the \code{ScanBamParam} class are provide on its help page;
   several salient points are reiterated here. \code{ScanBamParam} can

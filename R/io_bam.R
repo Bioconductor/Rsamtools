@@ -1,28 +1,29 @@
-.io_bam <-
-    function(func, file, index, ..., param)
+.io_bam_check_exists <-
+    function(file)
 {
     idx <- !grepl("^(ftp)|(http)://", file)
     if (!all(sapply(file[idx], file.exists))) {
         msg <- paste(sprintf("'%s'", file[idx]), collapse="\n  ")
         stop("'file' elements do not exist:\n  ", msg)
     }
-    file <- .normalizePath(file)
-    index <- .normalizePath(index)
+}
+
+.io_bam <-
+    function(func, file, ..., param)
+{
+    .io_bam_check_exists(bamPath(file))
     flag <- bamFlag(param)
     simpleCigar <- bamSimpleCigar(param)
-    what <- bamWhat(param)
-    tmpl <- .scanBamTemplate()
-    if (!all(what %in% names(tmpl)))
-        warning("'what' argument contains invalid names:\n  ",
-             paste(what[!what %in% names(tmpl)], collapse=", "))
     which <- bamWhich(param)
+    space <- 
+        if (0L != length((space(which))))
+            list(as.character(space(which)), .uunlist(start(which)),
+                 .uunlist(end(which)))
+        else NULL
     on.exit(.Call(.scan_bam_cleanup))
-    if (0L != length((space(which))))
-        .Call(func, file, index, "rb",
-              list(as.character(space(which)), .uunlist(start(which)),
-                   .uunlist(end(which))),
-              flag, simpleCigar, ...)
-    else 
-        .Call(func, file, index, "rb", NULL, flag,
-              simpleCigar, ...)
+    tryCatch({
+        .Call(func, .extptr(file), space, flag, simpleCigar, ...)
+    }, error=function(err) {
+        stop(conditionMessage(err), "\n  file: ", bamPath(file))
+    })
 }

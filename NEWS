@@ -1,6 +1,12 @@
 CHANGES IN VERSION 1.4.0
 ------------------------
 
+NEW FEATURES
+
+    o BamFile class allows bam files to be open across calls to
+    scanBam and friends. This can be helpful when wanting to avoid
+    repeated loading of the index, for instance.
+
 BUG FIXES
 
     o scanBamFlag isValidVendorRead had reversed TRUE/FALSE logic

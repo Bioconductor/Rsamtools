@@ -21,21 +21,25 @@
     }
 }
 
+.filterBam_preprocess <-
+    function(file, param)
+{
+    which <- .normalizeRangesList(bamWhich(param))
+    hnames <- names(scanBamHeader(file)[[1]][["length"]])
+    o <- order(match(names(which), hnames))
+    initialize(param, which=which[o])
+}
+
 setMethod(filterBam, "character",
           function(file, destination, index=file, ...,
                    indexDestination=TRUE, param=ScanBamParam())
 {
-    if (1 != length(file) || !is.character(file))
-        stop("'file' must be character(1)")
-    which <- .normalizeRangesList(bamWhich(param))
-    hnames <- names(readBamHeader(file)[[1]][["length"]])
-    o <- order(match(names(which), hnames))
-    param <- initialize(param, which=which[o])
-    destination <- .normalizePath(destination)
-    mode <- "wb"
-    fl <- .io_bam(.filter_bam, file, index, destination, mode,
-                  param=param)
-    if (indexDestination)
-        indexBam(fl)
-    fl
+    index <- 
+        if (missing(index) && 0L == length(bamWhich(param)))
+            character(0)
+        else .normalizePath(index)
+    bam <- openBam(.normalizePath(file), index, "rb")
+    on.exit(close(bam))
+    callGeneric(bam, destination, ...,
+                indexDestination=indexDestination, param=param)
 })
