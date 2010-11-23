@@ -3,10 +3,11 @@ fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
 test_BamFile_openclose <- function()
 {
+    .normalizePath <- Rsamtools:::.normalizePath
     bf <- openBam(fl)
     checkTrue(isOpen(bf))
-    checkIdentical(fl, bamPath(bf))
-    checkIdentical(fl, bamIndex(bf))
+    checkIdentical(.normalizePath(fl), bamPath(bf))
+    checkIdentical(.normalizePath(fl), bamIndex(bf))
     res <- close(bf)
     checkTrue(!isOpen(bf))
     checkException(close(bf), silent=TRUE)
