@@ -5,7 +5,7 @@ setMethod(readBamGappedAlignments, "character",
         index <- .normalizePath(file)
     if (missing(which))
         which <- RangesList()
-    bam <- openBam(file, index, "rb")
+    bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
     callGeneric(bam, character(), ..., which=which)
 })

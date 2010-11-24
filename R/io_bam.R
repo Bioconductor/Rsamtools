@@ -11,7 +11,7 @@
 .io_bam <-
     function(func, file, ..., param)
 {
-    .io_bam_check_exists(bamPath(file))
+    .io_bam_check_exists(path(file))
     flag <- bamFlag(param)
     simpleCigar <- bamSimpleCigar(param)
     which <- bamWhich(param)
@@ -24,6 +24,6 @@
     tryCatch({
         .Call(func, .extptr(file), space, flag, simpleCigar, ...)
     }, error=function(err) {
-        stop(conditionMessage(err), "\n  file: ", bamPath(file))
+        stop(conditionMessage(err), "\n  file: ", path(file))
     })
 }

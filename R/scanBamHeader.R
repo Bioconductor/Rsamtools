@@ -3,7 +3,7 @@ setMethod(scanBamHeader, "character",
 {
     files <- .normalizePath(files)
     lst <- lapply(files, function(file) {
-        bam <- openBam(file, character(0))
+        bam <- open(BamFile(file, character(0)))
         on.exit(close(bam))
         header <- scanBamHeader(bam, ...)
         text <- strsplit(header[["text"]], "\n")[[1]]

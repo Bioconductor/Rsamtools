@@ -46,3 +46,7 @@ setGeneric("readBamGappedAlignments",
            function(file, index, ..., which)
            standardGeneric("readBamGappedAlignments"),
            signature="file")
+
+## RsamtoolsFile
+
+setGeneric("isOpen")

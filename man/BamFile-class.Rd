@@ -3,14 +3,10 @@
 \docType{class}
 \alias{BamFile-class}
 % con/destructors
-\alias{openBam}
-\alias{openBam,character-method}
-\alias{openBam,BamFile-method}
+\alias{BamFile}
+\alias{open.BamFile}
 \alias{close.BamFile }
-\alias{show,BamFile-method}
 % accessors
-\alias{bamPath}
-\alias{bamIndex}
 \alias{isOpen,BamFile-method}
 % methods
 \alias{scanBamHeader,BamFile-method}
@@ -21,31 +17,30 @@
 \alias{sortBam,BamFile-method}
 \alias{readBamGappedAlignments,BamFile-method}
 
-\title{Maintain open BAM files across calls to methods}
+\title{Maintain open BAM files across method calls}
 
 \description{
 
-  Use \code{openBam()} to create a reference to a BAM file (and
-  optionally its index). The reference can avoid costly index loading
-  across calls.
+  Use \code{BamFile()} to create a reference to a BAM file (and
+  optionally its index). The reference remains open across calls to
+  methods, avoiding costly index re-loading.
 
 }
 
 \usage{
 
-## Opening / closing / showing
-openBam(bamPath, bamIndex=bamPath, ...)
-\S4method{openBam}{character}(bamPath, bamIndex=bamPath, ...)
-\S4method{openBam}{BamFile}(bamPath, bamIndex=bamPath, ...)
-\S3method{close}{BamFile}(con, ...)
-\S4method{show}{BamFile}(object)
+## Opening / closing
 
-## accessors
-bamPath(object)
-bamIndex(object)
+BamFile(file, index=file)
+\S3method{open}{BamFile}(con, ...)
+\S3method{close}{BamFile}(con, ...)
+
+## accessors; also path(), index()
+
 \S4method{isOpen}{BamFile}(con, rw="")
 
 ## actions
+
 \S4method{scanBamHeader}{BamFile}(files, ...)
 \S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
@@ -61,15 +56,13 @@ bamIndex(object)
 
   \item{...}{Additional arguments.}
 
-  \item{con, object, file, files}{An instance of \code{BamFile}.}
+  \item{con}{An instance of \code{BamFile}.}
 
-  \item{index}{A character vector of indices; ignored for all methods on
-    this page. }
+  \item{file, files}{A character vector of BAM file paths (for \code{BamFile})
+    or a \code{BamFile} instance (for other methdods).}
 
-  \item{bamPath}{The file name (local or remote) of the BAM file.}
-
-  \item{bamIndex}{The file name (local or remote) of the BAM index
-    file.}
+  \item{index}{A character vector of indices (for \code{BamFile});
+    ignored for all other methods on this page.}
 
   \item{destination}{character(1) file path to write filtered reads to.}
 
@@ -90,50 +83,38 @@ bamIndex(object)
 
 \section{Objects from the Class}{
 
-  Objects are created by calls of the form \code{openBam()}.
+  Objects are created by calls of the form \code{BamFile()}.
 
 }
 
 \section{Fields}{
 
-  The \code{BamFile} class is implemented as a S4-reference class. It
-  has the following fields:
+  The \code{BamFile} class inherits fields from the
+  \code{\linkS4class{RsamtoolsFile}} class.
 
-  \describe{
-
-    \item{.extptr}{An \code{externalptr} initialized to an internal
-      structure with opened bam file and bam index pointers.}
-
-    \item{bamPath}{A character(1) vector of the BAM file name.}
-
-    \item{bamIndex}{A character(1) vector of the BAM index file name.}
-
-  }
 }
 
 \section{Functions and methods}{
 
-  See 'Usage' for details on invocation.
-
   Opening / closing:
   \describe{
 
-    \item{openBam}{Opens the (local or remote) \code{bamPath} and
-      \code{bamIndex} (if \code{bamIndex} is not \code{character(0)}),
-      files.  Returns a \code{BamFile} object.}
+    \item{open.BamFile}{Opens the (local or remote) \code{path} and
+      \code{index} (if \code{bamIndex} is not \code{character(0)}),
+      files.  Returns a \code{BamFile} instance.}
 
-	\item{closeBam}{Close the \code{BamFile} \code{con}; returning
-	  (invisibly) the updated \code{BamFile}. The object may be
-	  re-opened with \code{openBam}.}
+    \item{close.BamFile}{Closes the \code{BamFile} \code{con}; returning
+	  (invisibly) the updated \code{BamFile}. The instance may be
+	  re-opened with \code{open.BamFile}.}
 
   }
 
-  Accessors:
+  Accessors: 
   \describe{
 
-    \item{bamPath}{Returns a character(1) vector of BAM path names.}
+    \item{path}{Returns a character(1) vector of BAM path names.}
 
-    \item{bamIndex}{Returns a character(1) vector of BAM index path
+    \item{index}{Returns a character(1) vector of BAM index path
       names.}
 
   }
@@ -141,26 +122,26 @@ bamIndex(object)
   Methods:
   \describe{
 
-    \item{scanBam}{Visit the path in \code{bamPath(file)}, returning the
+    \item{scanBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanBam}} applied to the specified path.}
 
-    \item{countBam}{Visit the path in \code{bamPath(file)}, returning
+    \item{countBam}{Visit the path in \code{path(file)}, returning
       the result of \code{\link{countBam}} applied to the specified
       path.}
 
-    \item{filterBam}{Visit the path in \code{bamPath(file)}, returning
+    \item{filterBam}{Visit the path in \code{path(file)}, returning
       the result of \code{\link{filterBam}} applied to the specified
       path.}
 
-    \item{indexBam}{Visit the path in \code{bamPath(file)}, returning
+    \item{indexBam}{Visit the path in \code{path(file)}, returning
       the result of \code{\link{indexBam}} applied to the specified
       path.}
 
-    \item{sortBam}{Visit the path in \code{bamPath(file)}, returning the
+    \item{sortBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{sortBam}} applied to the specified path.}
 
     \item{readBamGappedAlignments}{Visit the path in
-      \code{bamPath(file)}, returning the result of
+      \code{path(file)}, returning the result of
       \code{readBamGappedAlignments} applied to the specified path. See
       \code{\link{readBamGappedAlignments}}.}
 
@@ -174,7 +155,7 @@ bamIndex(object)
 \examples{
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-bf <- openBam(fl)        # implicit bamIndex
+bf <- open(BamFile(fl))        # implicit index
 bf
 identical(scanBam(bf), scanBam(fl))
 

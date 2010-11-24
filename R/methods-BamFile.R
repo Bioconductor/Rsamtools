@@ -1,52 +1,24 @@
-.BamFile <- setRefClass("BamFile",
-    fields=list(
-      .extptr="externalptr",
-      bamPath="character",
-      bamIndex="character"))
-
-setGeneric("isOpen")
-
-setGeneric("openBam",
-           function(bamPath, bamIndex=bamPath, ...)
-           standardGeneric("openBam"), signature="bamPath")
-
-.extptr <- function(object) object$.extptr
-
-bamPath <- function(object) object$bamPath
-
-bamIndex <- function(object) object$bamIndex
-
 setMethod(isOpen, "BamFile",
     function(con, rw="")
 {
     if (!missing(rw) && rw == "read")
         stop("'rw' must be 'read'")
-    .Call(.bamfile_isopen, con$.extptr)
+    .Call(.bamfile_isopen, .extptr(con))
 })
 
-.openBam <-
-    function(bamPath, bamIndex=bamPath)
+BamFile <-
+    function(file, index=file)
 {
-    .io_bam_check_exists(bamPath)
-    bamPath <- .normalizePath(bamPath)
-    bamIndex <- .normalizePath(bamIndex)
-    extptr <- .Call(.bamfile_open, bamPath, bamIndex, "rb")
-    .BamFile$new(.extptr=extptr, bamPath=bamPath,
-                 bamIndex=bamIndex)
+    .RsamtoolsFile(.BamFile, file, index)
 }
 
-setMethod(openBam, "character",
-          function(bamPath, bamIndex=bamPath, ...)
+open.BamFile <-
+    function(con, ...)
 {
-    .openBam(bamPath, bamIndex)
-})
-
-setMethod(openBam, "BamFile",
-          function(bamPath, bamIndex=bamPath, ...)
-{
-    bf <- bamPath                      # convenience
-    callGeneric(bamPath(bf), bamIndex(bf), ...)
-})
+    .io_bam_check_exists(path(con))
+    con$.extptr <- .Call(.bamfile_open, path(con), index(con), "rb")
+    invisible(con)
+}
 
 close.BamFile <-
     function(con, ...)
@@ -56,24 +28,6 @@ close.BamFile <-
     con$.extptr <- .Call(.bamfile_close, .extptr(con))
     invisible(con)
 }
-
-setMethod(show, "BamFile", function(object) {
-    .ppath <- function(tag, filepath)
-    {
-        wd <- options('width')[[1]] - nchar(tag) - 6
-        if (0L == length(filepath) || nchar(filepath) < wd)
-            return(sprintf("%s: %s\n", tag, filepath))
-        bname <- basename(filepath)
-        wd1 <- wd - nchar(bname)
-        dname <- substr(dirname(filepath), 1, wd1)
-        sprintf("%s: %s...%s%s\n",
-                tag, dname, .Platform$file.sep, bname)
-    }
-    cat("class:", class(object), "\n")
-    cat(.ppath("bamPath", bamPath(object)))
-    cat(.ppath("bamIndex", bamIndex(object)))
-    cat("isOpen:", isOpen(object), "\n")
-})
 
 ## scanBam, filterBam, countBam
 
@@ -93,7 +47,7 @@ setMethod(scanBam, "BamFile",
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, param=param,
-                 bamPath(file), bamIndex(file), "rb",
+                 path(file), index(file), "rb",
                  reverseComplement, tmpl)
     .scanBam_postprocess(x, param)
 })
@@ -126,13 +80,13 @@ setMethod(filterBam, "BamFile",
 })
 
 setMethod(indexBam, "BamFile", function(files, ...) {
-    callGeneric(bamPath(files), ...)
+    callGeneric(path(files), ...)
 })
 
 setMethod(sortBam, "BamFile",
     function(file, destination, ..., byQname=FALSE, maxMemory=512)
 {
-    callGeneric(bamPath(files), destination, ...,
+    callGeneric(path(files), destination, ...,
                 byQname=byQname, maxMemory=maxMemory)
 })
 

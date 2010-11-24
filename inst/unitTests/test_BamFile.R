@@ -4,16 +4,16 @@ fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 test_BamFile_openclose <- function()
 {
     .normalizePath <- Rsamtools:::.normalizePath
-    bf <- openBam(fl)
+    bf <- open(BamFile(fl))
     checkTrue(isOpen(bf))
-    checkIdentical(.normalizePath(fl), bamPath(bf))
-    checkIdentical(.normalizePath(fl), bamIndex(bf))
-    res <- close(bf)
+    checkIdentical(.normalizePath(fl), path(bf))
+    checkIdentical(.normalizePath(fl), index(bf))
+    close(bf)
     checkTrue(!isOpen(bf))
     checkException(close(bf), silent=TRUE)
-    bf <- openBam(bf)                   # open a closed BamFile
+    bf <- open(bf)                   # open a closed BamFile
     checkTrue(isOpen(bf))
-    bf1 <- openBam(bf)                  # open (clone?) an open BamFile
+    bf1 <- open(bf)                  # open (clone?) an open BamFile
     checkTrue(isOpen(bf1))
-    checkTrue(!identical(bf$.extptr, bf1$.extptr))
+    checkTrue(identical(bf$.extptr, bf1$.extptr))
 }

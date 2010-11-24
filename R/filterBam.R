@@ -38,7 +38,7 @@ setMethod(filterBam, "character",
         if (missing(index) && 0L == length(bamWhich(param)))
             character(0)
         else .normalizePath(index)
-    bam <- openBam(.normalizePath(file), index, "rb")
+    bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
     callGeneric(bam, destination, ...,
                 indexDestination=indexDestination, param=param)
