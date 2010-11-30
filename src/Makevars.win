@@ -1,7 +1,9 @@
 PKG_LIBS+=$(ZLIB_LIBS) -lws2_32
 PKG_CFLAGS+=-D_LARGEFILE64_SOURCE
 include Makevars.common
-OBJECTS = $(PKG_OBJECTS) $(SAMTOOLS_OBJECTS:%=samtools/%)
+OBJECTS = $(PKG_OBJECTS) \
+  $(SAMTOOLS_OBJECTS:%=samtools/%) \
+  $(BCFTOOLS_OBJECTS:%=bcftools/%)
 
 all: $(SHLIB)
 

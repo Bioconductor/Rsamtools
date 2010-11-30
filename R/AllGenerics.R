@@ -32,6 +32,22 @@ setGeneric("filterBam",
 setGeneric("readPileup",
            function(file, ...) standardGeneric("readPileup"))
 
+## bcf
+
+setGeneric("ScanBcfParam",
+           function(info=character(), geno=character(), trimEmpty=TRUE,
+                    which)
+           standardGeneric("ScanBcfParam"),
+           signature="which")
+
+setGeneric("isOpen")
+
+setGeneric("scanBcfHeader",
+           function(file, ...) standardGeneric("scanBcfHeader"))
+
+setGeneric("scanBcf",
+           function(file, ...) standardGeneric("scanBcf"))
+
 setGeneric("BamViews",
            function(bamPaths=character(0),
                     bamIndicies=bamPaths,

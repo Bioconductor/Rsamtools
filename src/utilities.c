@@ -72,3 +72,54 @@ _reverseComplement(unsigned char *buf, int len)
     for (int i = 0; i < len; ++i)
         buf[i] = map[(int) buf[i]];
 }
+
+/* scan-related */
+
+void
+_scan_checkext(SEXP ext, SEXP tag, const char *lbl)
+{
+    if (EXTPTRSXP != TYPEOF(ext) || 
+        tag != R_ExternalPtrTag(ext))
+        Rf_error("incorrect instance for '%s'", lbl);
+}
+
+void
+_scan_checknames(SEXP filename, SEXP indexname, SEXP filemode)
+{
+    if (!IS_CHARACTER(filename) || LENGTH(filename) > 1)
+        Rf_error("'filename' must be character(0) or character(1)");
+    if (!IS_CHARACTER(indexname) || LENGTH(indexname) > 1)
+        Rf_error("'indexname' must be character(0) or character(1)");
+    if (!IS_CHARACTER(filemode) || LENGTH(filemode) != 1)
+        Rf_error("'filemode' must be character(1)");
+}
+
+void
+_scan_checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
+{
+    const int MAX_CHRLEN = 1 << 29; /* See samtools/bam_index.c */
+    if (R_NilValue != space) {
+        if (!IS_VECTOR(space) || LENGTH(space) != 3)
+            Rf_error("'space' must be list(3) or NULL");
+        if (!IS_CHARACTER(VECTOR_ELT(space, 0)))
+            Rf_error("internal: 'space[1]' must be character()");
+        if (!IS_INTEGER(VECTOR_ELT(space, 1)))
+            Rf_error("internal: 'space[2]' must be integer()");
+        if (!IS_INTEGER(VECTOR_ELT(space, 2)))
+            Rf_error("internal: 'space[3]' must be integer()");
+        if ((LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 1))) ||
+            (LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 2))))
+            Rf_error("internal: 'space' elements must all be the same length");
+        const int *end = INTEGER(VECTOR_ELT(space, 2)),
+            nrange = LENGTH(VECTOR_ELT(space, 2));
+        for (int irange = 0; irange < nrange; ++irange)
+            if (end[irange] > MAX_CHRLEN)
+                Rf_error("'end' must be <= %d", MAX_CHRLEN);
+    }
+    if (R_NilValue != keepFlags)
+	if (!IS_INTEGER(keepFlags) || LENGTH(keepFlags) != 2)
+	    Rf_error("'keepFlags' must be integer(2) or NULL");
+    if (R_NilValue != isSimpleCigar)
+	if (!IS_LOGICAL(isSimpleCigar)  || LENGTH(isSimpleCigar) != 1)
+	    Rf_error("'isSimpleCigar' must be logical(1) or NULL");
+}

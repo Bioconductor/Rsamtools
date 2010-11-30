@@ -1,6 +1,8 @@
 PKG_LIBS+=@LIBS@
 include Makevars.common
-OBJECTS = $(PKG_OBJECTS) $(SAMTOOLS_OBJECTS:%=samtools/%)
+OBJECTS = $(PKG_OBJECTS) \
+  $(SAMTOOLS_OBJECTS:%=samtools/%) \
+  $(BCFTOOLS_OBJECTS:%=bcftools/%)
 
 all: $(SHLIB)
 

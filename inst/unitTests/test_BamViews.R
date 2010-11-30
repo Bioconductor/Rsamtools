@@ -147,8 +147,8 @@ test_BamViews_readBamGappedAlignments <- function()
             t <- target[[i]][[j]]
             c <- current[[i]][[j]]
             switch(as.vector(class(t)),
-                   "PhredQuality",
-                   "DNAStringSet"={
+                   PhredQuality=,
+                   DNAStringSet={
                        checkIdentical(as.character(t), as.character(c))
                    },
                    checkIdentical(t, c))

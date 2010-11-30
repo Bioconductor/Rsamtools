@@ -17,7 +17,7 @@
 \alias{sortBam,BamFile-method}
 \alias{readBamGappedAlignments,BamFile-method}
 
-\title{Maintain open BAM files across method calls}
+\title{Maintain SAM and BAM files}
 
 \description{
 

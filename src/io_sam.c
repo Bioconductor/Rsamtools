@@ -51,6 +51,21 @@ enum { CIGAR_SIMPLE = 1 };
 SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, 
 		SEXP isSimpleCigar);
 
+void
+_bam_check_template_list(SEXP template_list)
+{
+    if (!IS_LIST(template_list) || 
+        LENGTH(template_list) != N_TMPL_ELTS)
+        Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
+    SEXP names = GET_ATTR(template_list, R_NamesSymbol);
+    if (!IS_CHARACTER(names) || LENGTH(names) != N_TMPL_ELTS)
+        Rf_error("'names(template)' must be character(%d)", 
+                 N_TMPL_ELTS);
+    for (int i = 0; i < LENGTH(names); ++i)
+        if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
+            Rf_error("'template' names do not match scan_bam_template\n'");
+}
+
 _BAM_DATA *
 _Calloc_BAM_DATA(int blocksize, int buf_sz, int cigar_buf_sz)
 {
@@ -209,7 +224,7 @@ _bamtags(const bam1_t *bam, _BAM_DATA *bd, SEXP tags)
 SEXP
 _read_bam_header(SEXP ext)
 {
-    samfile_t *sfile = BFILE(ext)->file;
+    samfile_t *sfile = BAMFILE(ext)->file;
     bam_header_t *header = sfile->header;
     int n_elts = header->n_targets;
 
@@ -240,58 +255,13 @@ _read_bam_header(SEXP ext)
     return ans;
 }
 
-/* general functions */
-
-void
-_scan_check_params(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
-{
-    const int MAX_CHRLEN = 1 << 29; /* See samtools/bam_index.c */
-    if (R_NilValue != space) {
-        if (!IS_VECTOR(space) || LENGTH(space) != 3)
-            Rf_error("'space' must be list(3) or NULL");
-        if (!IS_CHARACTER(VECTOR_ELT(space, 0)))
-            Rf_error("internal: 'space[1]' must be character()");
-        if (!IS_INTEGER(VECTOR_ELT(space, 1)))
-            Rf_error("internal: 'space[2]' must be integer()");
-        if (!IS_INTEGER(VECTOR_ELT(space, 2)))
-            Rf_error("internal: 'space[3]' must be integer()");
-        if ((LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 1))) ||
-            (LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 2))))
-            Rf_error("internal: 'space' elements must all be the same length");
-        const int *end = INTEGER(VECTOR_ELT(space, 2)),
-            nrange = LENGTH(VECTOR_ELT(space, 2));
-        for (int irange = 0; irange < nrange; ++irange)
-            if (end[irange] > MAX_CHRLEN)
-                Rf_error("'end' must be <= %d", MAX_CHRLEN);
-    }
-    if (!IS_INTEGER(keepFlags) || LENGTH(keepFlags) != 2)
-        Rf_error("'keepFlags' must be integer(2)");
-    if (!IS_LOGICAL(isSimpleCigar)  || LENGTH(isSimpleCigar) != 1)
-        Rf_error("'isSimpleCigar' must be logical(1)");
-}
-
-void
-_scan_check_template_list(SEXP template_list)
-{
-    if (!IS_LIST(template_list) || 
-        LENGTH(template_list) != N_TMPL_ELTS)
-        Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
-    SEXP names = GET_ATTR(template_list, R_NamesSymbol);
-    if (!IS_CHARACTER(names) || LENGTH(names) != N_TMPL_ELTS)
-        Rf_error("'names(template)' must be character(%d)", 
-                 N_TMPL_ELTS);
-    for (int i = 0; i < LENGTH(names); ++i)
-        if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
-            Rf_error("'template' names do not match scan_bam_template\n'");
-}
-
 _BAM_DATA *
 _init_BAM_DATA(SEXP ext, SEXP flag, SEXP isSimpleCigar,
                Rboolean reverseComplement)
 {
     _BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 2048, 32768);
     bdata->parse_status = 0;
-    bdata->bfile = BFILE(ext);
+    bdata->bfile = BAMFILE(ext);
     bdata->nrec = bdata->idx = bdata->irange = 0; 
     bdata->keep_flag[0] = INTEGER(flag)[0];
     bdata->keep_flag[1] = INTEGER(flag)[1];
@@ -776,7 +746,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
     _BAM_DATA *bdata = 
         _init_BAM_DATA(bfile, keepFlags, isSimpleCigar, FALSE);
     /* FIXME: this just copies the header... */
-    bam_header_t *header = BFILE(bfile)->file->header;
+    bam_header_t *header = BAMFILE(bfile)->file->header;
     samfile_t *f_out = 
         _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),
                      CHAR(STRING_ELT(fout_mode, 0)), header);

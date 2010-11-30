@@ -6,4 +6,5 @@
     if (!identical(levels(strand()), .STRAND_LEVELS))
         stop("internal: 'levels(strand())' not consistent with Rsamtools")
     .Call(.bamfile_init)
+    .Call(.bcffile_init)
 }

@@ -1,5 +1,6 @@
 #include <R_ext/Rdynload.h>
 #include "bamfile.h"
+#include "bcffile.h"
 #include "io_sam.h"
 
 #ifdef _WIN32
@@ -21,6 +22,13 @@ static const R_CallMethodDef callMethods[] = {
     {".scan_bam_cleanup", (DL_FUNC) &scan_bam_cleanup, 0},
     {".index_bam", (DL_FUNC) &index_bam, 1},
     {".sort_bam", (DL_FUNC) &sort_bam, 4},
+    /* bcffile.c */
+    {".bcffile_init", (DL_FUNC) &bcffile_init, 0},
+    {".bcffile_open", (DL_FUNC) &bcffile_open, 3},
+    {".bcffile_close", (DL_FUNC) &bcffile_close, 1},
+    {".bcffile_isopen", (DL_FUNC) &bcffile_isopen, 1},
+    {".scan_bcf_header", (DL_FUNC) &scan_bcf_header, 1},
+    {".scan_bcf", (DL_FUNC) &scan_bcf, 3},
     {NULL, NULL, 0}
 };
 

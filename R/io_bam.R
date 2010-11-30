@@ -16,7 +16,7 @@
     simpleCigar <- bamSimpleCigar(param)
     which <- bamWhich(param)
     space <- 
-        if (0L != length((space(which))))
+        if (0L != length(space(which)))
             list(as.character(space(which)), .uunlist(start(which)),
                  .uunlist(end(which)))
         else NULL

@@ -28,10 +28,20 @@ setClass("BamViews",
            bamExperiment="list"),
          validity=.validity)
 
+setClass("ScanBcfParam",
+    representation=representation(
+      which="RangesList",
+      info="character",
+      geno="character",
+      trimEmpty="logical"),
+    prototype=prototype(
+      trimEmpty=TRUE))
+
 ## RsamtoolsFile
 .RsamtoolsFile_generator <- setRefClass("RsamtoolsFile",
     fields=list(.extptr="externalptr", path="character",
       index="character"))
 
 .BamFile <- setRefClass("BamFile", contains="RsamtoolsFile")
-.BcfFile <- setRefClass("BcfFile", contains="RsamtoolsFile")
+.BcfFile <- setRefClass("BcfFile", contains="RsamtoolsFile",
+   fields=list(mode="character"))

@@ -11,8 +11,7 @@ SEXP sort_bam(SEXP fname, SEXP destinationPrefix, SEXP isByQname,
 	      SEXP maxMemory);
 void scan_bam_cleanup();                /* error handling only */
 
-void _scan_check_params(SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
-void _scan_check_template_list(SEXP template_list);
+void _bam_check_template_list(SEXP template_list);
 SEXP _read_bam_header(SEXP ext);
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags,
 	       SEXP isSimpleCigar, 

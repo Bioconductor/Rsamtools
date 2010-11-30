@@ -8,6 +8,12 @@ void _as_factor(SEXP vect, const char **lvls, const int n_lvls);
 void _reverse(unsigned char *buf, int len);
 void _reverseComplement(unsigned char *buf, int len);
 
+/* scan-related */
+
+void _scan_checkext(SEXP ext, SEXP tag, const char *lbl);
+void _scan_checknames(SEXP filename, SEXP indexname, SEXP filemode);
+void _scan_checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
+
 /* call-building macros */
 
 #define NEW_CALL(S, T, NAME, ENV, N)            \

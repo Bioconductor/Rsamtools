@@ -1,5 +1,6 @@
 #include "bamfile.h"
 #include "io_sam.h"
+#include "utilities.h"
 
 static SEXP BAMFILE_TAG = NULL;
 
@@ -28,28 +29,9 @@ _bam_tryindexload(const char *indexname)
 }
 
 static void
-_bamfile_checkext(SEXP ext, const char *lbl)
-{
-    if (EXTPTRSXP != TYPEOF(ext) || 
-	BAMFILE_TAG != R_ExternalPtrTag(ext))
-	Rf_error("incorrect 'BamFile' for '%s'", lbl);
-}
-
-static void
-_bamfile_checknames(SEXP filename, SEXP indexname, SEXP filemode)
-{
-    if (!IS_CHARACTER(filename) || LENGTH(filename) > 1)
-        Rf_error("'filename' must be character(0) or character(1)");
-    if (!IS_CHARACTER(indexname) || LENGTH(indexname) > 1)
-        Rf_error("'indexname' must be character(0) or character(1)");
-    if (!IS_CHARACTER(filemode) || LENGTH(filemode) != 1)
-        Rf_error("'filemode' must be character(1)");
-}
-
-static void
 _bamfile_close(SEXP ext)
 {
-    _BAM_FILE *bfile = BFILE(ext);
+    _BAM_FILE *bfile = BAMFILE(ext);
     if (NULL != bfile->file)
 	samclose(bfile->file);
     if (NULL != bfile->index)
@@ -64,7 +46,7 @@ _bamfile_finalizer(SEXP ext)
     if (NULL == R_ExternalPtrAddr(ext))
         return;
     _bamfile_close(ext);
-    _BAM_FILE *bfile = BFILE(ext);
+    _BAM_FILE *bfile = BAMFILE(ext);
     Free(bfile);
     R_SetExternalPtrAddr(ext, NULL);
 }
@@ -79,7 +61,7 @@ bamfile_init()
 SEXP
 bamfile_open(SEXP filename, SEXP indexname, SEXP filemode)
 {
-    _bamfile_checknames(filename, indexname, filemode);
+    _scan_checknames(filename, indexname, filemode);
 
     _BAM_FILE *bfile = (_BAM_FILE *) Calloc(1, _BAM_FILE);
 
@@ -116,7 +98,7 @@ bamfile_open(SEXP filename, SEXP indexname, SEXP filemode)
 SEXP
 bamfile_close(SEXP ext)
 {
-    _bamfile_checkext(ext, "close");
+    _scan_checkext(ext, BAMFILE_TAG, "close");
     _bamfile_close(ext);
     return ext;
 }
@@ -125,10 +107,10 @@ SEXP
 bamfile_reopen(SEXP ext, SEXP filename, SEXP indexname, SEXP filemode)
 {
     /* open within existing externalptr */
-    _bamfile_checkext(ext, "reopen");
+    _scan_checkext(ext, BAMFILE_TAG, "reopen");
     _bamfile_close(ext);
 
-    _BAM_FILE *bfile = BFILE(ext);
+    _BAM_FILE *bfile = BAMFILE(ext);
     if (0 != Rf_length(filename)) {
 	const char *cname = translateChar(STRING_ELT(filename, 0));
 	const char *cmode = translateChar(STRING_ELT(filemode, 0));
@@ -146,11 +128,11 @@ SEXP
 bamfile_isopen(SEXP ext)
 {
     SEXP ans;
-    if (NULL == BFILE(ext))
+    if (NULL == BAMFILE(ext))
 	ans = ScalarLogical(FALSE);
     else {
-	_bamfile_checkext(ext, "isOpen");
-	if (NULL == BFILE(ext)->file)
+	_scan_checkext(ext, BAMFILE_TAG, "isOpen");
+	if (NULL == BAMFILE(ext)->file)
 	    ans = ScalarLogical(FALSE);
 	else
 	    ans = ScalarLogical(TRUE);
@@ -163,7 +145,7 @@ bamfile_isopen(SEXP ext)
 SEXP
 read_bamfile_header(SEXP ext)
 {
-    _bamfile_checkext(ext, "scanBam");
+    _scan_checkext(ext, BAMFILE_TAG, "scanBamHeader");
     _read_bam_header(ext);
 }
 
@@ -172,13 +154,13 @@ scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
 	     SEXP filename, SEXP indexname, SEXP filemode,
 	     SEXP reverseComplement, SEXP template_list)
 {
-    _bamfile_checknames(filename, indexname, filemode);
-    _bamfile_checkext(ext, "scanBam");
-    _scan_check_params(space, keepFlags, isSimpleCigar);
+    _scan_checknames(filename, indexname, filemode);
+    _scan_checkext(ext, BAMFILE_TAG, "scanBam");
+    _scan_checkparams(space, keepFlags, isSimpleCigar);
     if (!(IS_LOGICAL(reverseComplement) &&
           (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");
-    _scan_check_template_list(template_list);
+    _bam_check_template_list(template_list);
     return _scan_bam(ext, space, keepFlags, isSimpleCigar, 
 		     filename, indexname, filemode, 
 		     reverseComplement, template_list);
@@ -187,8 +169,8 @@ scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
 SEXP
 count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
-    _bamfile_checkext(ext, "countBam");
-    _scan_check_params(space, keepFlags, isSimpleCigar);
+    _scan_checkext(ext, BAMFILE_TAG, "countBam");
+    _scan_checkparams(space, keepFlags, isSimpleCigar);
     SEXP count = _count_bam(ext, space, keepFlags, isSimpleCigar);
     if (R_NilValue == count)
         Rf_error("'countBam' failed");
@@ -199,8 +181,8 @@ SEXP
 filter_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
 	       SEXP fout_name, SEXP fout_mode)
 {
-    _bamfile_checkext(ext, "filterBam");
-    _scan_check_params(space, keepFlags, isSimpleCigar);
+    _scan_checkext(ext, BAMFILE_TAG, "filterBam");
+    _scan_checkparams(space, keepFlags, isSimpleCigar);
     if (!IS_CHARACTER(fout_name) || 1 != LENGTH(fout_name))
         Rf_error("'fout_name' must be character(1)");
     if (!IS_CHARACTER(fout_mode) || 1 != LENGTH(fout_mode))

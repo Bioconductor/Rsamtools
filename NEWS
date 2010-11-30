@@ -7,6 +7,10 @@ NEW FEATURES
     scanBam and friends. This can be helpful when wanting to avoid
     repeated loading of the index, for instance.
 
+    o BcfFile, scanBcf, scanBcfHeader to parse bcftools' .vcf and .bcf
+    files. Note that this implements bcftools notions of vcf and bcf,
+    and are not fully compliant with vcf-4.0.
+
 BUG FIXES
 
     o scanBamFlag isValidVendorRead had reversed TRUE/FALSE logic

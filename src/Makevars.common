@@ -1,6 +1,7 @@
 PKG_OBJECTS = \
   bamfile.o io_sam.o utilities.o encode.o \
   Biostrings_stubs.o IRanges_stubs.o \
+  bcffile.o \
   R_init_Rsamtools.o 
 SAMTOOLS_OBJECTS = \
   bam.o bam_import.o bam_sort.o bam_index.o kstring.o bam_aux.o \
@@ -8,5 +9,8 @@ SAMTOOLS_OBJECTS = \
   bgzf.o razf.o \
   knetfile.o \
   sam.o bam_pileup.o faidx.o
+BCFTOOLS_OBJECTS = \
+  bcf.o vcf.o bcfutils.o prob1.o ld.o kfunc.o index.o fet.o \
+  bcf2qcall.o
 DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64
-PKG_CFLAGS += $(DFLAGS)
+PKG_CFLAGS += $(DFLAGS) -I./samtools
