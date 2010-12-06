@@ -109,7 +109,7 @@ bcffile_open(SEXP filename, SEXP indexname, SEXP filemode)
         if (NULL == bfile->index) {
             _bcf_close(bfile->file, FALSE);
             Free(bfile);
-            Rf_error("'open' BCF failed\n  indexname: %s\n", cindex);
+            Rf_error("'open' BCF index failed\n  indexname: %s\n", cindex);
         }
     }
 
