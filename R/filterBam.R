@@ -25,7 +25,7 @@
     function(file, param)
 {
     which <- .normalizeRangesList(bamWhich(param))
-    hnames <- names(scanBamHeader(file)[[1]][["length"]])
+    hnames <- names(scanBamHeader(file)[["targets"]])
     o <- order(match(names(which), hnames))
     initialize(param, which=which[o])
 }

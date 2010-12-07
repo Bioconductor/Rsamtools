@@ -34,7 +34,13 @@ close.BamFile <-
 setMethod(scanBamHeader, "BamFile",
           function(files, ...)
 {
-    .Call(.read_bamfile_header, .extptr(files))
+    header <- .Call(.read_bamfile_header, .extptr(files))
+    text <- strsplit(header[["text"]], "\n")[[1]]
+    tag <- sub("^(@[A-Z]{2}).*", "\\1", text)
+    text <- strsplit(sub("^@[A-Z]{2}\t(.*)", "\\1", text), "\t")
+    names(text) <- tag
+    header[["text"]] <- text
+    header
 })
 
 setMethod(scanBam, "BamFile",
@@ -69,8 +75,6 @@ setMethod(filterBam, "BamFile",
 {
     if (!isOpen(file))
         stop("BamFile not open")
-    if (!missing(index))
-        warning("'index' ignored for filterBam,BamFile-method")
     param <- .filterBam_preprocess(file, param)
     destination <- .normalizePath(destination)
     fl <- .io_bam(.filter_bamfile, file, param=param, destination, "wb")
