@@ -682,8 +682,13 @@ _count_bam1(const bam1_t *bam, void *data)
     if (FALSE == _bam_filter(bam, bd))
         return 0;
     SEXP cnt = (SEXP) (bd->extra);
+    int *n_nuc = INTEGER(VECTOR_ELT(cnt, 1)) + bd->irange;
+    if (*n_nuc > R_LEN_T_MAX - bam->core.l_qseq) {
+	_Free_BAM_DATA(bd);
+	Rf_error("too many records, use 'param=ScanBamParam(which=<...>)'");
+    }
     INTEGER(VECTOR_ELT(cnt, 0))[bd->irange] += 1;
-    INTEGER(VECTOR_ELT(cnt, 1))[bd->irange] += bam->core.l_qseq;
+    *n_nuc += bam->core.l_qseq;
     return 1;
 }
 
