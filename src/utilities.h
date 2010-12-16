@@ -1,6 +1,10 @@
 #ifndef _UTILITIES_H_
 #define _UTILITIES_H_
 
+/* capture samtools errors */
+extern void _samtools_exit(int status);
+extern int _samtools_fprintf (FILE *, const char *, ...);
+
 SEXP _get_namespace(const char *pkg);
 SEXP _get_strand_levels();
 void _as_factor_SEXP(SEXP vec, SEXP lvls);

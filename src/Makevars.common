@@ -12,5 +12,7 @@ SAMTOOLS_OBJECTS = \
 BCFTOOLS_OBJECTS = \
   bcf.o vcf.o bcfutils.o prob1.o ld.o kfunc.o index.o fet.o \
   bcf2qcall.o
-DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64
+DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
+  -Dfprintf=_samtools_fprintf \
+  -Dexit=_samtools_exit
 PKG_CFLAGS += $(DFLAGS) -I./samtools

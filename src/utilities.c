@@ -1,6 +1,27 @@
 #include <Rdefines.h>
 #include "utilities.h"
 
+void
+_samtools_exit(int status)
+{
+    Rf_error("internal: samtools invoked 'exit(%d)'; see warnings()", 
+	     status);
+}
+
+int
+_samtools_fprintf(FILE *file, const char *fmt, ...)
+{
+    static const int bufsize = 2048;
+    char *buf = (char *) R_alloc(bufsize, sizeof(char));
+    va_list argp;
+    int n;
+    va_start(argp, fmt);
+    n = vsnprintf(buf, bufsize, fmt, argp);
+    va_end(argp);
+    Rf_warning(buf);
+    return n;
+}
+
 SEXP
 _get_namespace(const char* pkg)
 {

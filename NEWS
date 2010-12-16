@@ -17,6 +17,9 @@ BUG FIXES
 
     o Attempts to read too many records caught more gracefully.
 
+    o samtools output to fprintf() or calls to exit() are handled more
+    gracefully
+
 CHANGES IN VERSION 1.2.0
 ------------------------
 
