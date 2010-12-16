@@ -146,7 +146,7 @@ SEXP
 read_bamfile_header(SEXP ext)
 {
     _scan_checkext(ext, BAMFILE_TAG, "scanBamHeader");
-    _read_bam_header(ext);
+    return _read_bam_header(ext);
 }
 
 SEXP
