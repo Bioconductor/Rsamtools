@@ -1,5 +1,5 @@
 PKG_OBJECTS = \
-  bamfile.o io_sam.o utilities.o encode.o \
+  bamfile.o io_sam.o as_bam.o utilities.o encode.o \
   Biostrings_stubs.o IRanges_stubs.o \
   bcffile.o \
   R_init_Rsamtools.o 

@@ -2,6 +2,7 @@
 #include "bamfile.h"
 #include "bcffile.h"
 #include "io_sam.h"
+#include "as_bam.h"
 
 #ifdef _WIN32
 #include "samtools/knetfile.h"
@@ -17,11 +18,13 @@ static const R_CallMethodDef callMethods[] = {
     {".scan_bamfile", (DL_FUNC) &scan_bamfile, 9},
     {".count_bamfile", (DL_FUNC) &count_bamfile, 4},
     {".filter_bamfile", (DL_FUNC) & filter_bamfile, 6},
+    /* as_bam.c */
+    {".as_bam", (DL_FUNC) &as_bam, 2},
     /* io_sam.c */
     {".scan_bam_template", (DL_FUNC) &scan_bam_template, 1},
     {".scan_bam_cleanup", (DL_FUNC) &scan_bam_cleanup, 0},
-    {".index_bam", (DL_FUNC) &index_bam, 1},
     {".sort_bam", (DL_FUNC) &sort_bam, 4},
+    {".index_bam", (DL_FUNC) &index_bam, 1},
     /* bcffile.c */
     {".bcffile_init", (DL_FUNC) &bcffile_init, 0},
     {".bcffile_open", (DL_FUNC) &bcffile_open, 3},

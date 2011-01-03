@@ -7,6 +7,8 @@
 \alias{countBam,character-method}
 \alias{scanBamHeader}
 \alias{scanBamHeader,character-method}
+\alias{asBam}
+\alias{asBam,character-method}
 \alias{indexBam}
 \alias{indexBam,character-method}
 \alias{filterBam}
@@ -33,6 +35,10 @@ countBam(file, index=file, ..., param=ScanBamParam())
 scanBamHeader(files, ...)
 \S4method{scanBamHeader}{character}(files, ...)
 
+asBam(file, destination, ...)
+\S4method{asBam}{character}(file, destination, ...,
+    overwrite=FALSE, indexDestination=TRUE)
+
 filterBam(file, destination, index=file, ...)
 \S4method{filterBam}{character}(file, destination, index=file, ...,
     indexDestination=TRUE, param=ScanBamParam())
@@ -47,20 +53,23 @@ indexBam(files, ...)
 
 \arguments{
 
-  \item{file}{The character(1) file name of the `BAM' file to be
-    processed.}
+  \item{file}{The character(1) file name of the `BAM' ('SAM' for
+    \code{asBam}) file to be processed.}
 
   \item{files}{The character() file names of the `BAM' file to be
     processed.}
 
   \item{index}{The character(1) name of the index file of the 'BAM' file
-	being processed; this is given \emph{without} the '.bai' extension.}
+    being processed; this is given \emph{without} the '.bai' extension.}
 
   \item{destination}{The character(1) file name of the location where
-    the sorted or filtered output file will be created. For
-    \code{sortBam} this is without the \dQuote{.bam} file suffix.}
+    the sorted or filtered output file will be created. For \code{asBam}
+    and \code{sortBam} this is without the \dQuote{.bam} file suffix.}
 
   \item{\dots}{Additional arguments, passed to methods.}
+
+  \item{overwrite}{A logical(1) indicating whether the destination
+    can be over-written if it already exists.}
 
   \item{indexDestination}{A logical(1) indicating whether the created
     destination file should also be indexed.}
@@ -91,6 +100,11 @@ indexBam(files, ...)
   require that the content of the header be consistent with the content
   of the file, e.g., more targets may be present that are represented by
   reads in the file.
+
+  \code{asBam} converts 'SAM' files to 'BAM' files, equivalent to the
+  \code{samtools view -Sb file > destination}. The 'BAM' file is sorted
+  and an index created on the destination (with extension '.bai') when
+  \code{indexDestination=TRUE}.
 
   \code{filterBam} parses records in \code{file} satisfying the
   \code{bamWhich} of \code{param}, writing each record satisfying the
@@ -169,6 +183,8 @@ indexBam(files, ...)
   lengths. The \code{text} element is itself a list with each element a
   list corresponding to tags (e.g., \sQuote{@SQ}) found in the header,
   and the associated tag values.
+
+  \code{asBam} returns the file name of the BAM file.
 
   \code{sortBam} returns the file name of the sorted file.
 

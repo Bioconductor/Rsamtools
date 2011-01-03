@@ -11,6 +11,8 @@ NEW FEATURES
     files. Note that this implements bcftools notions of vcf and bcf,
     and are not fully compliant with vcf-4.0.
 
+    o asBam converts SAM files to (indexed) BAM files
+
 BUG FIXES
 
     o scanBamFlag isValidVendorRead had reversed TRUE/FALSE logic

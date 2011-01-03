@@ -767,6 +767,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
     return status < 0 ? R_NilValue : fout_name;
 }
 
+
 /* sort_bam */
 
 SEXP

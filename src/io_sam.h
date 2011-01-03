@@ -3,12 +3,12 @@
 
 #include <Rinternals.h>
 
-/* io_sam.c */
 SEXP read_bam_header(SEXP fname, SEXP mode);
 SEXP scan_bam_template(SEXP tags);
-SEXP index_bam(SEXP fname);
+SEXP as_bam(SEXP fname, SEXP destination);
 SEXP sort_bam(SEXP fname, SEXP destinationPrefix, SEXP isByQname, 
 	      SEXP maxMemory);
+SEXP index_bam(SEXP fname);
 void scan_bam_cleanup();                /* error handling only */
 
 void _bam_check_template_list(SEXP template_list);
@@ -21,6 +21,5 @@ SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags,
 		SEXP isSimpleCigar);
 SEXP _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags, 
 		 SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode);
-
 
 #endif /* _IO_SAM_H_ */

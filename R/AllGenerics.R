@@ -18,6 +18,10 @@ setGeneric("countBam",
            standardGeneric("countBam"),
            signature="file")
            
+setGeneric("asBam",
+           function(file, destination, ...)
+           standardGeneric("asBam"))
+
 setGeneric("sortBam",
            function(file, destination, ...)
            standardGeneric("sortBam"))
