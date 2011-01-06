@@ -96,8 +96,10 @@ setMethod(sortBam, "BamFile",
 
 
 setMethod(readBamGappedAlignments, "BamFile",
-          function(file, index, ..., which=RangesList())
+          function(file, index, ..., which)
 {
+    if (missing(which))
+        which <- RangesList()
     param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE,
                             isDuplicate=FALSE),
                           what=c("rname", "strand", "pos", "cigar"),

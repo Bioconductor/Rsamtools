@@ -6,6 +6,18 @@ test_readBamGappedAlignments <- function()
     checkTrue(validObject(result))
 }
 
+test_readBamGappedAlignments_missing_which <- function()
+{
+    fl <- system.file("unitTests", "cases", "ex1_noindex.bam",
+                      package="Rsamtools")
+    result0 <- readBamGappedAlignments(fl)
+    checkTrue(validObject(result0))
+
+    bf <- open(BamFile(fl, character()))
+    result1 <- readBamGappedAlignments(bf)
+    checkIdentical(result1, result0)
+}
+
 test_readBamGappedAlignments_length0 <- function()
 {
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
