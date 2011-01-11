@@ -531,6 +531,8 @@ _scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
                 if (SEQ_IDX == i || QUAL_IDX == i) {
                     SEXP lst = PROTECT(NEW_LIST(2));
                     SET_TRUELENGTH(lst, 0); /* nucleotide count */
+                    if (0 > n_nucs || R_LEN_T_MAX < n_nucs)
+                        Rf_error("too many nucleotides, use 'param=ScanBamParam(which=<...>)'");
                     SET_VECTOR_ELT(lst, 0, NEW_RAW(n_nucs));
                     SET_VECTOR_ELT(lst, 1, NEW_INTEGER(n_read));
                     SET_VECTOR_ELT(tmpl, i, lst);
@@ -682,13 +684,8 @@ _count_bam1(const bam1_t *bam, void *data)
     if (FALSE == _bam_filter(bam, bd))
         return 0;
     SEXP cnt = (SEXP) (bd->extra);
-    int *n_nuc = INTEGER(VECTOR_ELT(cnt, 1)) + bd->irange;
-    if (*n_nuc > R_LEN_T_MAX - bam->core.l_qseq) {
-	_Free_BAM_DATA(bd);
-	Rf_error("too many records, use 'param=ScanBamParam(which=<...>)'");
-    }
     INTEGER(VECTOR_ELT(cnt, 0))[bd->irange] += 1;
-    *n_nuc += bam->core.l_qseq;
+    INTEGER(VECTOR_ELT(cnt, 1))[bd->irange] += bam->core.l_qseq;
     return 1;
 }
 
