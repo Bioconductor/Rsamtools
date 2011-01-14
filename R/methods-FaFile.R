@@ -76,7 +76,7 @@ setMethod(scanFa, c("FaFile", "GRanges"),
 {
     if (!isOpen(file))
         stop("'FaFile' not open")
-    lkup <- Biostrings:::DNA_STRING_CODEC@enc_lkup
+    lkup <- Biostrings:::get_xsbasetypes_conversion_lookup("B", "DNA")
     tryCatch({
         nms <- as.character(seqnames(param))
         dna <- .Call(.scan_fa, .extptr(file), nms, start(param),
