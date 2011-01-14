@@ -1,4 +1,5 @@
 PKG_OBJECTS = \
+  fafile.o \
   bamfile.o io_sam.o as_bam.o utilities.o encode.o \
   Biostrings_stubs.o IRanges_stubs.o \
   bcffile.o \

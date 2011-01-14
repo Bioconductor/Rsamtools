@@ -13,6 +13,9 @@ NEW FEATURES
 
     o asBam converts SAM files to (indexed) BAM files
 
+    o FaFile, indexFa, scanIndexFa, scanFa index and parse (indexed)
+    fasta files.
+
 BUG FIXES
 
     o scanBamFlag isValidVendorRead had reversed TRUE/FALSE logic

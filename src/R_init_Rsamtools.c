@@ -1,6 +1,7 @@
 #include <R_ext/Rdynload.h>
 #include "bamfile.h"
 #include "bcffile.h"
+#include "fafile.h"
 #include "io_sam.h"
 #include "as_bam.h"
 
@@ -32,6 +33,14 @@ static const R_CallMethodDef callMethods[] = {
     {".bcffile_isopen", (DL_FUNC) &bcffile_isopen, 1},
     {".scan_bcf_header", (DL_FUNC) &scan_bcf_header, 1},
     {".scan_bcf", (DL_FUNC) &scan_bcf, 3},
+    /* fafile.c */
+    {".fafile_init", (DL_FUNC) &fafile_init, 0},
+    {".fafile_open", (DL_FUNC) &fafile_open, 1},
+    {".fafile_close", (DL_FUNC) &fafile_close, 1},
+    {".fafile_isopen", (DL_FUNC) &fafile_isopen, 1},
+    {".index_fa", (DL_FUNC) &index_fa, 1},
+    {".n_fa", (DL_FUNC) &n_fa, 1},
+    {".scan_fa", (DL_FUNC) &scan_fa, 5},
     {NULL, NULL, 0}
 };
 

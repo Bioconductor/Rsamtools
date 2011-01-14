@@ -33,6 +33,19 @@ setGeneric("filterBam",
            function(file, destination, index=file, ...)
            standardGeneric("filterBam"))
 
+setGeneric("indexFa",
+           function(file, ...) standardGeneric("indexFa"))
+
+setGeneric("scanFaIndex",
+           function(file, ...) standardGeneric("scanFaIndex"))
+
+setGeneric("countFa",
+           function(file, ...) standardGeneric("countFa"))
+
+setGeneric("scanFa",
+           function(file, param=GRanges(), ...)
+           standardGeneric("scanFa"))
+
 setGeneric("readPileup",
            function(file, ...) standardGeneric("readPileup"))
 

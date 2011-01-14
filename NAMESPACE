@@ -13,8 +13,8 @@ importClassesFrom(GenomicRanges, GRanges, GappedAlignments)
 importClassesFrom(Biostrings, file, connection, DNAStringSet,
                   BStringSet, PhredQuality)
 
-importFrom(Biostrings, DNA_ALPHABET, DNAStringSet, BStringSet,
-           PhredQuality)
+importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
+           DNAStringSet, BStringSet, PhredQuality)
 
 exportClasses(ScanBamParam, BamViews, BamFile)
 

@@ -7,4 +7,5 @@
         stop("internal: 'levels(strand())' not consistent with Rsamtools")
     .Call(.bamfile_init)
     .Call(.bcffile_init)
+    .Call(.fafile_init)
 }
