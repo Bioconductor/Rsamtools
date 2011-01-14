@@ -12,18 +12,22 @@ int
 _samtools_fprintf(FILE *file, const char *fmt, ...)
 {
     static const int bufsize = 2048;
-    char *buf = (char *) R_alloc(bufsize, sizeof(char));
     va_list argp;
     int n;
-    
-    /* silence some messages */
-    if (0 == strncmp("[samopen] SAM header is present:", fmt, 32))
-	return 0;
 
-    va_start(argp, fmt);
-    n = vsnprintf(buf, bufsize, fmt, argp);
-    va_end(argp);
-    Rf_warning(buf);
+    if (stderr != file) {
+	va_start(argp, fmt);
+	n = vfprintf(file, fmt, argp);
+	va_end(argp);
+    } else {
+	/* silence some messages */
+	char *buf = (char *) R_alloc(bufsize, sizeof(char));
+	if (0 == strncmp("[samopen] SAM header is present:", fmt, 32))
+	    return 0;
+	n = vsnprintf(buf, bufsize, fmt, argp);
+	va_end(argp);
+	Rf_warning(buf);
+    }
     return n;
 }
 

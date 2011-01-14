@@ -12,7 +12,7 @@ bcfMode <- function(object) object$mode
 open.BcfFile <-
     function(con, ...)
 {
-    .io_bam_check_exists(path(con))
+    .io_check_exists(path(con))
     con$.extptr <- .Call(.bcffile_open, path(con), index(con), bcfMode(con))
     invisible(con)
 }

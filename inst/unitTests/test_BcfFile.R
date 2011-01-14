@@ -1,4 +1,3 @@
-library(Rsamtools); library(RUnit)
 fl <- system.file("extdata", "ex1.bcf", package="Rsamtools")
 
 test_BcfFile_openclose <- function()

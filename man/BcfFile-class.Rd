@@ -72,7 +72,7 @@ bcfMode(object)
 
 \section{Fields}{
 
-  The \code{BamFile} class inherits fields from the
+  The \code{BcfFile} class inherits fields from the
   \code{\linkS4class{RsamtoolsFile}} class.
 
 }
@@ -82,13 +82,13 @@ bcfMode(object)
   Opening / closing:
   \describe{
 
-    \item{open.BamFile}{Opens the (local or remote) \code{path} and
+    \item{open.BcfFile}{Opens the (local or remote) \code{path} and
       \code{index} (if \code{bamIndex} is not \code{character(0)}),
-      files.  Returns a \code{BamFile} instance.}
+      files.  Returns a \code{BcfFile} instance.}
 
-    \item{close.BamFile}{Closes the \code{BamFile} \code{con}; returning
-	  (invisibly) the updated \code{BamFile}. The instance may be
-	  re-opened with \code{open.BamFile}.}
+    \item{close.BcfFile}{Closes the \code{BcfFile} \code{con}; returning
+	  (invisibly) the updated \code{BcfFile}. The instance may be
+	  re-opened with \code{open.BcfFile}.}
 
   }
 

@@ -15,7 +15,7 @@ BamFile <-
 open.BamFile <-
     function(con, ...)
 {
-    .io_bam_check_exists(path(con))
+    .io_check_exists(path(con))
     con$.extptr <- .Call(.bamfile_open, path(con), index(con), "rb")
     invisible(con)
 }

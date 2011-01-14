@@ -127,14 +127,10 @@ bamfile_reopen(SEXP ext, SEXP filename, SEXP indexname, SEXP filemode)
 SEXP
 bamfile_isopen(SEXP ext)
 {
-    SEXP ans;
-    if (NULL == BAMFILE(ext))
-	ans = ScalarLogical(FALSE);
-    else {
+    SEXP ans = ScalarLogical(FALSE);
+    if (NULL != BAMFILE(ext)) {
 	_scan_checkext(ext, BAMFILE_TAG, "isOpen");
-	if (NULL == BAMFILE(ext)->file)
-	    ans = ScalarLogical(FALSE);
-	else
+	if (NULL != BAMFILE(ext)->file)
 	    ans = ScalarLogical(TRUE);
     }
     return ans;

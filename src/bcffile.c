@@ -131,15 +131,11 @@ bcffile_close(SEXP ext)
 SEXP
 bcffile_isopen(SEXP ext)
 {
-    SEXP ans;
-    if (NULL == BCFFILE(ext))
-        ans = ScalarLogical(FALSE);
-    else {
-        _scan_checkext(ext, BCFFILE_TAG, "isOpen");
-        if (NULL == BCFFILE(ext)->file)
-            ans = ScalarLogical(FALSE);
-        else
-            ans = ScalarLogical(TRUE);
+    SEXP ans = ScalarLogical(FALSE);
+    if (NULL != BCFFILE(ext)) {
+	_scan_checkext(ext, BCFFILE_TAG, "isOpen");
+	if (BCFFILE(ext)->file)
+	    ans = ScalarLogical(TRUE);
     }
     return ans;
 }
