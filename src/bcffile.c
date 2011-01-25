@@ -264,8 +264,9 @@ scan_bcf_header(SEXP ext)
     /* count header text lines */
     const char *c;
     int n_hdr = 0;
-    for (c = hdr->txt; *c != '\0'; ++c)
-        if (*c == '\n') ++n_hdr;
+    if (hdr->l_txt)
+	for (c = hdr->txt; *c != '\0'; ++c)
+	    if (*c == '\n') ++n_hdr;
     SET_VECTOR_ELT(ans, BCF_HDR_HEADER, NEW_STRING(n_hdr));
     
     int i;
@@ -276,12 +277,14 @@ scan_bcf_header(SEXP ext)
     for (i = 0; i < hdr->n_smpl; ++i)
         SET_STRING_ELT(x, i, mkChar(hdr->sns[i]));
     x = VECTOR_ELT(ans, BCF_HDR_HEADER);
-    char *txt = (char *) R_alloc(hdr->l_txt, sizeof(char));
-    strncpy(txt, hdr->txt, hdr->l_txt);
-    c = (const char *) strtok(txt, "\n");
-    for (i = 0; i < n_hdr; ++i) {
-        SET_STRING_ELT(x, i, mkChar(c));
-        c = (const char *) strtok(NULL, "\n");
+    if (hdr->l_txt) {
+	char *txt = (char *) R_alloc(hdr->l_txt, sizeof(char));
+	strncpy(txt, hdr->txt, hdr->l_txt);
+	c = (const char *) strtok(txt, "\n");
+	for (i = 0; i < n_hdr; ++i) {
+	    SET_STRING_ELT(x, i, mkChar(c));
+	    c = (const char *) strtok(NULL, "\n");
+	}
     }
 
     SEXP nm = NEW_CHARACTER(3);
