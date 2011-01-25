@@ -24,6 +24,7 @@ _samtools_fprintf(FILE *file, const char *fmt, ...)
 	char *buf = (char *) R_alloc(bufsize, sizeof(char));
 	if (0 == strncmp("[samopen] SAM header is present:", fmt, 32))
 	    return 0;
+	va_start(argp, fmt);
 	n = vsnprintf(buf, bufsize, fmt, argp);
 	va_end(argp);
 	Rf_warning(buf);
