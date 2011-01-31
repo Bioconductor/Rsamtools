@@ -4,8 +4,14 @@
 void
 _samtools_exit(int status)
 {
-    Rf_error("internal: samtools invoked 'exit(%d)'; see warnings()", 
+    Rf_error("internal: samtools invoked 'exit(%d)'; see warnings() and restart R", 
 	     status);
+}
+
+void
+_samtools_abort()
+{
+    Rf_error("internal: samtools invoked 'abort'; see warnings() and restart R");
 }
 
 int

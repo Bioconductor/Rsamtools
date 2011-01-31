@@ -15,5 +15,6 @@ BCFTOOLS_OBJECTS = \
   bcf2qcall.o
 DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
   -Dfprintf=_samtools_fprintf \
-  -Dexit=_samtools_exit
+  -Dexit=_samtools_exit \
+  -Dabort=_samtools_abort
 PKG_CFLAGS += $(DFLAGS) -I./samtools

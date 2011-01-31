@@ -2,6 +2,7 @@
 #define _UTILITIES_H_
 
 /* capture samtools errors */
+extern void _samtools_abort();
 extern void _samtools_exit(int status);
 extern int _samtools_fprintf (FILE *, const char *, ...);
 
