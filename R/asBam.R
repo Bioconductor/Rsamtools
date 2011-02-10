@@ -23,7 +23,7 @@ setMethod(asBam, "character",
             indexBam(destination)
         } else {
             destination <- d0
-            file.rename(ofl, destination)
+            .file.rename(ofl, destination)
         }
     }, error=function(err) {
         msg <- sprintf("'asBam' %s\n  SAM file: '%s'\n",
