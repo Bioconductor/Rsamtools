@@ -24,15 +24,8 @@
 {
     warn <- err <- NULL
     ok <- withCallingHandlers(tryCatch({
-        file.rename(from, to)
-    }, error=function(e) {
-        err <<- append(err, conditionMessage(e))
-        NULL
-    }), warning=function(w) {
-        warn <<- append(warn, conditionMessage(w))
-        invokeRestart("muffleWarning")
-    }) || withCallingHandlers(tryCatch({
-        file.copy(from, to) && file.remove(from)
+        file.rename(from, to) ||
+            (file.copy(from, to) && file.remove(from))
     }, error=function(e) {
         err <<- append(err, conditionMessage(e))
         NULL
@@ -44,6 +37,7 @@
         msg <- "file.rename or file.copy/file.remove failed:\n  from: %s\n  to: %s\n  message(s): %s"
         stop(sprintf(msg, from, to, paste(c(warn, err), collapse="\n      ")))
     }
+    ok
 }
 
 .uunlist <-
