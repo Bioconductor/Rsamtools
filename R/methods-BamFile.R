@@ -34,6 +34,8 @@ close.BamFile <-
 setMethod(scanBamHeader, "BamFile",
           function(files, ...)
 {
+    if (!isOpen(files))
+        stop("BamFile is not open")
     header <- .Call(.read_bamfile_header, .extptr(files))
     text <- strsplit(header[["text"]], "\n")[[1]]
     tag <- sub("^(@[A-Z]{2}).*", "\\1", text)
@@ -94,7 +96,6 @@ setMethod(sortBam, "BamFile",
                 byQname=byQname, maxMemory=maxMemory)
 })
 
-
 setMethod(readBamGappedAlignments, "BamFile",
           function(file, index, ..., which)
 {
@@ -114,6 +115,16 @@ setMethod(readBamGappedAlignments, "BamFile",
     strand <- unlist(unname(lapply(bam, "[[", "strand")))
     pos <- unlist(unname(lapply(bam, "[[", "pos")))
     cigar <- unlist(unname(lapply(bam, "[[", "cigar")))
-    ## Calls the appropriate constructor.
-    GappedAlignments(rname=rname, pos=pos, cigar=cigar, strand=strand)
+    seqlengths <- scanBamHeader(file)[["targets"]]
+    urname <- levels(rname)
+    if (!all(urname %in% names(seqlengths))) {
+        bad <- paste(urname[!urname %in% names(seqlengths)],
+                     collapse="' '")
+        msg <- sprintf("'rname' lengths not in BamFile header; seqlengths not used\n  file: %s\n  missing rname(s): '%s'",
+                       path(file), bad)
+        warning(msg)
+        GappedAlignments(rname, pos, cigar, strand)
+    } else {
+        GappedAlignments(rname, pos, cigar,strand, seqlengths)
+    }
 })

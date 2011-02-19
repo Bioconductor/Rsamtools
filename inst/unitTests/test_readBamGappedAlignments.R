@@ -4,6 +4,7 @@ test_readBamGappedAlignments <- function()
     which <- RangesList(seq1=IRanges(1, width=100))
     result <- readBamGappedAlignments(fl, which=which)
     checkTrue(validObject(result))
+    checkIdentical(c(seq1=1575L, seq2=1584L), seqlengths(result))
 }
 
 test_readBamGappedAlignments_missing_which <- function()
