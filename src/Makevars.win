@@ -1,11 +1,9 @@
-PKG_LIBS+=$(ZLIB_LIBS) -lws2_32
-PKG_CFLAGS+=-D_LARGEFILE64_SOURCE
 include Makevars.common
-OBJECTS = $(PKG_OBJECTS) \
-  $(SAMTOOLS_OBJECTS:%=samtools/%) \
-  $(BCFTOOLS_OBJECTS:%=bcftools/%)
 
-all: $(SHLIB)
+# order of -llib important -- bcf, bam before ws2_32
+PKG_CFLAGS+=-D_LARGEFILE64_SOURCE
+PKG_LIBS+=$(ZLIB_LIBS) -lws2_32
 
-clean:
-	rm -f $(OBJECTS)
+libbam.a: $(BAMOBJ)
+
+libbcf.a: $(BCFOBJ)

@@ -1,20 +1,39 @@
-PKG_OBJECTS = \
-  fafile.o \
-  bamfile.o io_sam.o as_bam.o utilities.o encode.o \
-  Biostrings_stubs.o IRanges_stubs.o \
-  bcffile.o \
-  R_init_Rsamtools.o 
-SAMTOOLS_OBJECTS = \
-  bam.o bam_import.o bam_sort.o bam_index.o kstring.o bam_aux.o \
-  sam_header.o \
-  bgzf.o razf.o \
-  knetfile.o \
-  sam.o bam_pileup.o faidx.o
-BCFTOOLS_OBJECTS = \
+KNETFILE_O = knetfile.o
+BAMOBJ_0 = \
+  bgzf.o kstring.o bam_aux.o bam.o bam_import.o sam.o bam_index.o	\
+  bam_pileup.o bam_lpileup.o bam_md.o glf.o razf.o faidx.o \
+  $(KNETFILE_O) bam_sort.o sam_header.o bam_reheader.o kprobaln.o
+BCFOBJ_0 = \
   bcf.o vcf.o bcfutils.o prob1.o ld.o kfunc.o index.o fet.o \
   bcf2qcall.o
+BAMOBJ=$(BAMOBJ_0:%=samtools/%)
+BCFOBJ=$(BCFOBJ_0:%=samtools/bcftools/%)
+
+PKG_OBJECTS = \
+  fafile.o bamfile.o io_sam.o as_bam.o utilities.o encode.o \
+  Biostrings_stubs.o IRanges_stubs.o bcffile.o \
+  R_init_Rsamtools.o 
+
 DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
   -Dfprintf=_samtools_fprintf \
   -Dexit=_samtools_exit \
   -Dabort=_samtools_abort
-PKG_CFLAGS += $(DFLAGS) -I./samtools
+
+PKG_CFLAGS += $(DFLAGS) -I./samtools -I./samtools/bcftools
+PKG_LIBS += -L. -lbam -lbcf
+
+all: $(SHLIB)
+
+$(SHLIB): libs
+
+libs: libbam.a libbcf.a
+	mkdir -p ../inst/include/samtools/bcftools
+	cp samtools/bam.h samtools/bgzf.h samtools/faidx.h \
+           samtools/knetfile.h ../inst/include/samtools/
+	cp samtools/bcftools/bcf.h ../inst/include/samtools/bcftools/
+	mkdir -p ../inst/usrlibs${R_ARCH}
+	cp libbam.a libbcf.a ../inst/usrlibs${R_ARCH}
+
+clean:
+	rm $(BAMOBJ) $(BCFOBJ) *.a *.o *.so *.dll
+

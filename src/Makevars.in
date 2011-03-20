@@ -1,10 +1,8 @@
-PKG_LIBS+=@LIBS@
 include Makevars.common
-OBJECTS = $(PKG_OBJECTS) \
-  $(SAMTOOLS_OBJECTS:%=samtools/%) \
-  $(BCFTOOLS_OBJECTS:%=bcftools/%)
+PKG_LIBS += @LIBS@
 
-all: $(SHLIB)
+libbam.a: $(BAMOBJ)
+	$(AR) -crus $@ $^
 
-clean: 
-	rm -f $(OBJECTS)
+libbcf.a: $(BCFOBJ)
+	$(AR) -crus $@ $^
