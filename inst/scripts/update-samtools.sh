@@ -13,7 +13,7 @@ svn info $repos > $dest/samtools-svninfo.txt
 rev=`sed -n 's/Revision: //p' < $dest/samtools-svninfo.txt`
 
 dest0="../src/samtools/"
-dest1="../src/bcftools/"
+dest1="../src/samtools/bcftools/"
 if test ! -d $dest0; then
 	echo "directory does not exist: '$dest0'"
 	exit 1
