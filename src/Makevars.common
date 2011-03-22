@@ -1,3 +1,4 @@
+PATCH_O = samtools_patch.o
 KNETFILE_O = knetfile.o
 BAMOBJ_0 = \
   bgzf.o kstring.o bam_aux.o bam.o bam_import.o sam.o bam_index.o	\
@@ -6,13 +7,13 @@ BAMOBJ_0 = \
 BCFOBJ_0 = \
   bcf.o vcf.o bcfutils.o prob1.o ld.o kfunc.o index.o fet.o \
   bcf2qcall.o
-BAMOBJ=$(BAMOBJ_0:%=samtools/%)
-BCFOBJ=$(BCFOBJ_0:%=samtools/bcftools/%)
+BAMOBJ=$(BAMOBJ_0:%=samtools/%) $(PATCH_O)
+BCFOBJ=$(BCFOBJ_0:%=samtools/bcftools/%) $(PATCH_O)
 
 PKG_OBJECTS = \
   fafile.o bamfile.o io_sam.o as_bam.o utilities.o encode.o \
   Biostrings_stubs.o IRanges_stubs.o bcffile.o \
-  R_init_Rsamtools.o 
+  R_init_Rsamtools.o
 
 DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
   -Dfprintf=_samtools_fprintf \
