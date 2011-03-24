@@ -28,11 +28,13 @@ all: $(SHLIB)
 $(SHLIB): libs
 
 libs: libbam.a libbcf.a
-	mkdir -p ../inst/include/samtools/bcftools
-	cp samtools/*.h ../inst/include/samtools/
-	cp samtools/bcftools/*h ../inst/include/samtools/bcftools/
-	mkdir -p ../inst/usrlib${R_ARCH}
-	cp libbam.a libbcf.a ../inst/usrlib${R_ARCH}
+	mkdir -p ${R_PACKAGE_DIR}/usretc${R_ARCH}
+	cp Rsamtools.mk ${R_PACKAGE_DIR}/usretc${R_ARCH}
+	mkdir -p ${R_PACKAGE_DIR}/include/samtools/bcftools
+	cp samtools/*.h ${R_PACKAGE_DIR}/include/samtools/
+	cp samtools/bcftools/*h ${R_PACKAGE_DIR}/include/samtools/bcftools/
+	mkdir -p ${R_PACKAGE_DIR}/usrlib${R_ARCH}
+	cp libbam.a libbcf.a ${R_PACKAGE_DIR}/usrlib${R_ARCH}
 
 clean:
 	rm $(BAMOBJ) $(BCFOBJ) *.a *.o *.so *.dll

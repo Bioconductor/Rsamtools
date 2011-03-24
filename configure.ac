@@ -16,4 +16,4 @@ AC_HEADER_STDBOOL
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
 
-AC_OUTPUT(src/Makevars)
+AC_OUTPUT(src/Makevars src/Rsamtools.mk)

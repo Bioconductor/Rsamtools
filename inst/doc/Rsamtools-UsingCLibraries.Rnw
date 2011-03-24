@@ -73,14 +73,17 @@ files as, for instance,
 The content of the include files can be found in the \Rsamtools{}
 source (under \verb|src/samtools|) or at their installed location.
 
-To link to the static libraries, evaluate commands like the following,
-e.g., in your package \verb|src/Makevars| file.
+Linking to the static libraries is accomplished by including the
+following code in \verb|src/Makevars|:
 \begin{verbatim}
-MYPKG_PATH=`echo 'cat(system.file("usrlib", \
-                      .Platform[["r_arch"]], \
-                      package="Rsamtools", mustWork=TRUE))' | \
-            ${R_HOME}/bin/R --vanilla --slave`
-PKG_LIBS=-L$(MYPKG_PATH) -lbam -lbcf
+SAMVARS=$(shell \
+  echo 'cat(system.file(sprintf("%s%s", "usretc", .Platform[["r_arch"]]),\
+              "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
+      "${R_HOME}/bin/R" --vanilla --slave)
+include $(SAMVARS)
 \end{verbatim}
+This updates the environment variables \verb|$PKG_CPPFLAGS| and
+\verb|$PKG_LIBS|; if your \verb|Makefile| modies these also, be sure
+to use syntax like \verb|PKG_LIBS+=-l...|.
 
 \end{document}
