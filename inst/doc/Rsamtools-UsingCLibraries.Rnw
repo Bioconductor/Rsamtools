@@ -77,7 +77,7 @@ Linking to the static libraries is accomplished by including the
 following code in \verb|src/Makevars|:
 \begin{verbatim}
 SAMVARS=$(shell \
-  echo 'cat(system.file("usretc", .Platform[["r_arch"]],
+  echo 'cat(system.file("usretc", .Platform[["r_arch"]], \
               "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
       "${R_HOME}/bin/R" --vanilla --slave)
 include $(SAMVARS)
