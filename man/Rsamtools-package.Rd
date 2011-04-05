@@ -2,6 +2,13 @@
 \Rdversion{1.1}
 \alias{Rsamtools-package}
 \alias{Rsamtools}
+\alias{bzfile-class}
+\alias{fifo-class}
+\alias{gzfile-class}
+\alias{pipe-class}
+\alias{unz-class}
+\alias{url-class}
+
 \docType{package}
 \title{
   'samtools' aligned sequence utilities interface
@@ -23,6 +30,13 @@ Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
 }
 \references{
   \url{http://samtools.sourceforge.net/}
+}
+\note{
+
+  This package documents the following classes for purely internal
+  reasons, see help pages in other packages: \code{bzfile}, \code{fifo},
+  \code{gzfile}, \code{pipe}, \code{unz}, \code{url}.
+
 }
 \keyword{ package }
 \examples{
