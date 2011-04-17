@@ -6,3 +6,6 @@ libbam.a: $(BAMOBJ)
 
 libbcf.a: $(BCFOBJ)
 	$(AR) -crus $@ $^
+
+libtabix.a: $(TABIXOBJ)
+	$(AR) -crus $@ $^

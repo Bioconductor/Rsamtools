@@ -7,3 +7,5 @@ PKG_LIBS+=$(ZLIB_LIBS) -lws2_32
 libbam.a: $(BAMOBJ)
 
 libbcf.a: $(BCFOBJ)
+
+libtabix.a: $(TABIXOBJ)

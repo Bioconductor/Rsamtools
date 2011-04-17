@@ -45,4 +45,5 @@ setClass("ScanBcfParam",
 .BamFile <- setRefClass("BamFile", contains="RsamtoolsFile")
 .BcfFile <- setRefClass("BcfFile", contains="RsamtoolsFile",
    fields=list(mode="character"))
+.TabixFile <- setRefClass("TabixFile", contains="RsamtoolsFile")
 .FaFile <- setRefClass("FaFile", contains="RsamtoolsFile")

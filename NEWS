@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.6.0
+------------------------
+
+NEW FEATURES
+
+    o TabixFile, indexTabix, scanTabix, yieldTabix index (sorted,
+    compressed) and parse tabix-indexed files
+
 CHANGES IN VERSION 1.4.0
 ------------------------
 

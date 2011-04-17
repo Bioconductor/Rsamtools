@@ -80,6 +80,18 @@ setGeneric("readBamGappedAlignments",
            standardGeneric("readBamGappedAlignments"),
            signature="file")
 
+## tabix
+
+setGeneric("indexTabix", function(file, ...)
+           standardGeneric("indexTabix"))
+
+setGeneric("scanTabix", function(file, ..., param)
+           standardGeneric("scanTabix"))
+
+setGeneric("yieldTabix", function(file, ..., yieldSize=1000000L)
+           standardGeneric("yieldTabix"),
+           signature="file")
+
 ## RsamtoolsFile
 
 setGeneric("isOpen")

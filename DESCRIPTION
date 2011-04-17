@@ -1,13 +1,13 @@
 Package: Rsamtools
 Type: Package
-Title: Import aligned BAM file format sequences into R / Bioconductor
-Version: 1.5.0
+Title: Binary alignment (BAM), variant call (BCF), or tabix file import
+Version: 1.5.1
 Author: Martin Morgan, Herv\'e Pag\`es
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
-Description: This package provides an interface to the 'samtools'
-  utilities (see 'LICENCE') for manipulating SAM (Sequence Alignment /
-  Map) format files. Facilities currently available include flexible
-  file input.
+Description: This package provides an interface to the 'samtools',
+  'bcftools', and 'tabix' utilities (see 'LICENCE') for manipulating
+  SAM (Sequence Alignment / Map), binary variant call (BCF) and
+  compressed indexed tab-delimited (tabix) files. 
 URL: http://bioconductor.org/packages/release/bioc/html/Rsamtools.html
 License: Artistic-2.0 + file LICENSE
 LazyLoad: yes

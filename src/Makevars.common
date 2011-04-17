@@ -9,6 +9,9 @@ BCFOBJ_0 = \
   bcf2qcall.o
 BAMOBJ=$(BAMOBJ_0:%=samtools/%) $(PATCH_O)
 BCFOBJ=$(BCFOBJ_0:%=samtools/bcftools/%) $(PATCH_O)
+TABIXOBJ = \
+  samtools/bgzf.o samtools/kstring.o samtools/knetfile.o \
+  tabix/index.o tabix/bedidx.o $(PATCH_O)
 
 PKG_OBJECTS = \
   fafile.o bamfile.o io_sam.o as_bam.o utilities.o encode.o \
@@ -20,22 +23,24 @@ DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
   -Dexit=_samtools_exit \
   -Dabort=_samtools_abort
 
-PKG_CFLAGS += $(DFLAGS) -I./samtools -I./samtools/bcftools
-PKG_LIBS += -L. -lbam -lbcf
+PKG_CFLAGS += $(DFLAGS) -I./samtools -I./samtools/bcftools -I./tabix
+PKG_LIBS += -L. -lbam -lbcf -ltabix
 
 all: $(SHLIB)
 
 $(SHLIB): libs
 
-libs: libbam.a libbcf.a
+libs: libbam.a libbcf.a libtabix.a
 	mkdir -p ${R_PACKAGE_DIR}/usretc${R_ARCH}
 	cp Rsamtools.mk ${R_PACKAGE_DIR}/usretc${R_ARCH}
 	mkdir -p ${R_PACKAGE_DIR}/include/samtools/bcftools
+	mkdir -p ${R_PACKAGE_DIR}/include/tabix
 	cp samtools/*.h ${R_PACKAGE_DIR}/include/samtools/
 	cp samtools/bcftools/*h ${R_PACKAGE_DIR}/include/samtools/bcftools/
+	cp tabix/*h ${R_PACKAGE_DIR}/include/tabix/
 	mkdir -p ${R_PACKAGE_DIR}/usrlib${R_ARCH}
-	cp libbam.a libbcf.a ${R_PACKAGE_DIR}/usrlib${R_ARCH}
+	cp libbam.a libbcf.a libtabix.a ${R_PACKAGE_DIR}/usrlib${R_ARCH}
 
 clean:
-	rm $(BAMOBJ) $(BCFOBJ) *.a *.o *.so *.dll
+	rm $(BAMOBJ) $(BCFOBJ) $(TABIXOBJ) *.a *.o *.so *.dll
 

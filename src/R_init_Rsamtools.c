@@ -2,6 +2,7 @@
 #include "bamfile.h"
 #include "bcffile.h"
 #include "fafile.h"
+#include "tabixfile.h"
 #include "io_sam.h"
 #include "as_bam.h"
 
@@ -41,6 +42,14 @@ static const R_CallMethodDef callMethods[] = {
     {".index_fa", (DL_FUNC) &index_fa, 1},
     {".n_fa", (DL_FUNC) &n_fa, 1},
     {".scan_fa", (DL_FUNC) &scan_fa, 5},
+    /* tabixfile */
+    {".tabixfile_init", (DL_FUNC)  &tabixfile_init, 0},
+    {".tabixfile_open", (DL_FUNC) &tabixfile_open, 2},
+    {".tabixfile_close", (DL_FUNC) &tabixfile_close, 1},
+    {".tabixfile_isopen", (DL_FUNC) &tabixfile_isopen, 1},
+    {".index_tabix", (DL_FUNC) &index_tabix, 8},
+    {".scan_tabix", (DL_FUNC) &scan_tabix, 3},
+    {".yield_tabix", (DL_FUNC) &yield_tabix, 2},
     {NULL, NULL, 0}
 };
 
