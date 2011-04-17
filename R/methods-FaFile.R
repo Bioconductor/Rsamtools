@@ -32,7 +32,7 @@ close.FaFile <-
 setMethod(isOpen, "FaFile",
     function(con, rw="")
 {
-    if (!missing(rw) && rw == "read")
+    if (!missing(rw) && rw != "read")
         stop("'rw' must be 'read'")
     tryCatch({
         .Call(.fafile_isopen, .extptr(con))

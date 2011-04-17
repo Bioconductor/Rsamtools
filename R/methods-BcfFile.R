@@ -29,7 +29,7 @@ close.BcfFile <-
 setMethod(isOpen, "BcfFile",
     function(con, rw="")
 {
-    if (!missing(rw) && rw == "read")
+    if (!missing(rw) && rw != "read")
         stop("'rw' must be 'read'")
     .Call(.bcffile_isopen, .extptr(con))
 })

@@ -1,7 +1,7 @@
 setMethod(isOpen, "BamFile",
     function(con, rw="")
 {
-    if (!missing(rw) && rw == "read")
+    if (!missing(rw) && rw != "read")
         stop("'rw' must be 'read'")
     .Call(.bamfile_isopen, .extptr(con))
 })
