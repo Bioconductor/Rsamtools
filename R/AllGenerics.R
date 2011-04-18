@@ -82,9 +82,6 @@ setGeneric("readBamGappedAlignments",
 
 ## tabix
 
-setGeneric("indexTabix", function(file, ...)
-           standardGeneric("indexTabix"))
-
 setGeneric("scanTabix", function(file, ..., param)
            standardGeneric("scanTabix"))
 

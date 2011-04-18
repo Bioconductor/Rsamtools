@@ -47,6 +47,7 @@ static const R_CallMethodDef callMethods[] = {
     {".tabixfile_open", (DL_FUNC) &tabixfile_open, 2},
     {".tabixfile_close", (DL_FUNC) &tabixfile_close, 1},
     {".tabixfile_isopen", (DL_FUNC) &tabixfile_isopen, 1},
+    {".bgzip_tabix", (DL_FUNC) &bgzip_tabix, 3},
     {".index_tabix", (DL_FUNC) &index_tabix, 8},
     {".scan_tabix", (DL_FUNC) &scan_tabix, 3},
     {".yield_tabix", (DL_FUNC) &yield_tabix, 2},

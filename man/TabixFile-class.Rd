@@ -9,7 +9,6 @@
 % accessors
 \alias{isOpen,TabixFile-method}
 % methods
-\alias{indexTabix,TabixFile-method}
 \alias{scanTabix,TabixFile,RangesList-method}
 \alias{scanTabix,TabixFile,RangedData-method}
 \alias{scanTabix,TabixFile,GRanges-method}

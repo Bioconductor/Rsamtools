@@ -1,3 +1,4 @@
+#include <errno.h>
 #include "tabixfile.h"
 #include "utilities.h"
 
@@ -76,6 +77,53 @@ tabixfile_isopen(SEXP ext)
 	    ans = ScalarLogical(TRUE);
     }
     return ans;
+}
+
+SEXP
+bgzip_tabix(SEXP infname, SEXP outfname, SEXP overwrite)
+{
+    static const int BUF_SIZE = 64 * 1024;
+    void *buffer;
+    int infd, oflag, outfd, cnt;
+    BGZF *outp;
+
+    if (!IS_CHARACTER(infname) || 1L != Rf_length(infname))
+	Rf_error("'fromFname' must be character(1)");
+    if (!IS_CHARACTER(outfname) || 1L != Rf_length(outfname))
+	Rf_error("'toFname' must be character(1)");
+    if (!IS_LOGICAL(overwrite) || 1L != Rf_length(overwrite))
+	Rf_error("'overwrite' must be logical(1)");
+
+    infd = open(translateChar(STRING_ELT(infname, 0)), 
+		O_RDONLY);
+    if (0 > infd) 
+	Rf_error("opening 'fromFname': %s", strerror(errno));
+
+    oflag = O_WRONLY | O_CREAT | O_TRUNC;
+    if (!LOGICAL(overwrite)[0])
+	oflag |= O_EXCL;
+    outfd = open(translateChar(STRING_ELT(outfname, 0)), oflag, 0666);
+    if (0 > outfd)
+	Rf_error("opening 'toFname': %s", strerror(errno));
+
+    outp = bgzf_fdopen(outfd, "w");
+    if (NULL == outp)
+	Rf_error("opening output 'toFname'");
+
+    buffer = R_alloc(BUF_SIZE, sizeof(void *));
+    while (0 < (cnt = read(infd, buffer, BUF_SIZE)))
+	if (0 > bgzf_write(outp, buffer, cnt))
+	    Rf_error("writing compressed output");
+    if (0 > cnt)
+	Rf_error("reading compressed output: %s", strerror(errno));
+
+    if (0 > bgzf_close(outp))
+	Rf_error("closing compressed output");
+    if (-1L == close(infd))
+	Rf_error("closing input after compression: %s",
+		 strerror(errno));
+
+    return outfname;
 }
 
 SEXP
@@ -159,7 +207,7 @@ scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
 	int tid;
 	const char *s = CHAR(STRING_ELT(spc, ispc));
 	if (0 > (tid = ti_get_tid(tabix->idx, s)))
-	    Rf_error("'space=%s' not present in tabix index", s);
+	    Rf_error("'%s' not present in tabix index", s);
 	ti_iter_t iter = 
 	    ti_iter_query(tabix->idx, tid, start[ispc], end[ispc]);
 

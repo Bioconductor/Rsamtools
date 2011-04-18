@@ -16,6 +16,7 @@ SEXP tabixfile_open(SEXP filename, SEXP indexname);
 SEXP tabixfile_close(SEXP ext);
 SEXP tabixfile_isopen(SEXP ext);
 
+SEXP bgzip_tabix(SEXP infname, SEXP outfname, SEXP overwrite);
 SEXP index_tabix(SEXP filename, SEXP format,
 		 SEXP seq, SEXP begin, SEXP end,
 		 SEXP skip, SEXP comment, SEXP zeroBased);

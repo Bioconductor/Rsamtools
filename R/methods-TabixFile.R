@@ -30,25 +30,30 @@ setMethod(isOpen, "TabixFile",
     .Call(.tabixfile_isopen, .extptr(con))
 })
 
-setMethod(indexTabix, "TabixFile",
+bgzipTabix <-
+    function(fromFname, toFname = paste(fromFname, "gz", sep="."),
+             overwrite=FALSE)
+{
+    .Call(.bgzip_tabix, fromFname, toFname, overwrite)
+}
+
+indexTabix <- 
     function(file,
              format=c("gff", "bed", "sam", "vcf", "vcf4", "psltbl"),
              seq=integer(), begin=integer(), end=integer(),
              skip=0L, comment="#", zeroBased=FALSE, ...)
 {
-    stop("not yet implemented")
     tryCatch({
         format <- 
             if (!missing(format)) match.arg(format)
             else character()
-        file$index <-
-            .Call(.index_tabix, path(file), format,
-                  seq, begin, end, skip, comment, zeroBased)
+        idx <- .Call(.index_tabix, file, format,
+                     seq, begin, end, skip, comment, zeroBased)
+        sprintf("%s.tbi", file)
     }, error=function(err) {
-        stop(conditionMessage(err), "\n  file: ", path(file))
+        stop(conditionMessage(err), "\n  file: ", file)
     })
-    file
-})
+}
 
 ## FIXME: sequence names
 
