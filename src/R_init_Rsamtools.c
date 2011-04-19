@@ -54,7 +54,7 @@ static const R_CallMethodDef callMethods[] = {
     {".scan_tabix", (DL_FUNC) &scan_tabix, 3},
     {".yield_tabix", (DL_FUNC) &yield_tabix, 2},
     /* mpileup */
-    {".mpileup_bam", (DL_FUNC) &mpileup_bam, 3},
+    {".mpileup_bam", (DL_FUNC) &mpileup_bam, 4},
     {NULL, NULL, 0}
 };
 
@@ -64,8 +64,8 @@ R_init_Rsamtools(DllInfo *info)
 #ifdef _WIN32
     int status = knet_win32_init();
     if (status != 0)
-      Rf_error("internal: failed to initialize Winsock; error %d",
-               status);
+	Rf_error("internal: failed to initialize Winsock; error %d",
+		 status);
 #endif
     R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 }

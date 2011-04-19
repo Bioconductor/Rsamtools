@@ -38,7 +38,7 @@ setMethod(.asSpace, "GRanges", function(x) {
 })
 
 .mpileupBam <-
-    function(files, ..., param=MpileupParam())
+    function(files, callback=identity, ..., param=MpileupParam())
 {
     tryCatch({
         files <- lapply(files, .extptr)
@@ -46,16 +46,16 @@ setMethod(.asSpace, "GRanges", function(x) {
         space <-
             if (0L != length(param[["which"]])) .asSpace(param[["which"]])
             else NULL
-        .Call(.mpileup_bam, files, space, param)
+        .Call(.mpileup_bam, files, space, param, callback)
     }, error=function(err) {
         stop("mpileupBam: ", conditionMessage(err), call.=FALSE)
     })
 }
 
-setGeneric("mpileupBam",
-    function(file, index=file, ..., param=MpileupParam())
-        standardGeneric("mpileupBam"),
-    signature="file")
+## setGeneric("mpileupBam",
+##     function(file, index=file, ..., param=MpileupParam())
+##         standardGeneric("mpileupBam"),
+##     signature="file")
 
 
 ## Usage:   samtools mpileup [options] in1.bam [in2.bam [...]]

@@ -3,7 +3,7 @@
 
 #include <Rdefines.h>
 
-SEXP
-mpileup_bam(SEXP files, SEXP space, SEXP param);
+SEXP mpileup_bam(SEXP files, SEXP space, SEXP param, 
+		 SEXP callback);
 
 #endif
