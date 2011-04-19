@@ -1,4 +1,4 @@
-MpileupParam <-
+.MpileupParam <-
     function(## limit how reads counted
              ceilingMapQuality=60L,
              minBaseQuality=13L,
@@ -38,7 +38,7 @@ setMethod(.asSpace, "GRanges", function(x) {
 })
 
 .mpileupBam <-
-    function(files, callback=identity, ..., param=MpileupParam())
+    function(files, callback=identity, ..., param)
 {
     tryCatch({
         files <- lapply(files, .extptr)

@@ -1,6 +1,7 @@
 if (FALSE) {
     library(Rsamtools); library(RUnit)
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+    MpileupParam <- Rsamtools:::.MpileupParam
     mpileupBam <- Rsamtools:::.mpileupBam
 
     param <- MpileupParam(which=GRanges("seq1", IRanges(1000,2000)))
