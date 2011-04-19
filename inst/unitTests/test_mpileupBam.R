@@ -4,7 +4,6 @@ if (FALSE) {
     MpileupParam <- Rsamtools:::.MpileupParam
     mpileupBam <- Rsamtools:::.mpileupBam
 
-    param <- MpileupParam(which=GRanges("seq1", IRanges(1000,2000)))
     fls <- list(open(BamFile(fl)), open(BamFile(fl)))
 
     callback <-
@@ -24,5 +23,10 @@ if (FALSE) {
             })
         }
 
+    param <- MpileupParam(which=GRanges("seq1", IRanges(1000,2000)))
+    res <- mpileupBam(fls, callback, param=param)
+
+    param <- MpileupParam(flag=scanBamFlag(isProperPair=TRUE),
+                          which=GRanges("seq1", IRanges(1000, 2000)))
     res <- mpileupBam(fls, callback, param=param)
 }

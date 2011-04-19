@@ -7,7 +7,12 @@
 typedef struct {
     bamFile fp;
     bam_iter_t iter;
-}  MPLP_DATA_T;
+} MPLP_DATA_T;
+
+typedef struct {
+    int min_base_quality, min_map_quality, max_depth;
+    uint32_t keep_flag[2];
+} MPLP_FILTER_T;
 
 SEXP
 _get_lst_elt(SEXP lst, const char *name, const char *lst_name)
@@ -54,22 +59,31 @@ _mplp_read_bam(void *data, bam1_t *b)
 }
 
 void
-_mpileup_bam1(const int n, const int start, const int end, 
-	      const int max_depth, bam_plp_auto_f fun, void **data,
-	      int *seq)
+_mpileup_bam1(const int n, const int start, const int end,
+	      MPLP_FILTER_T *filter,
+	      bam_plp_auto_f fun, void **data, int *seq)
 {
     int *n_plp = Calloc(n, int), i, j, tid, pos;
     const bam_pileup1_t **plp = Calloc(n, const bam_pileup1_t *);
     bam_mplp_t iter = bam_mplp_init(n, fun, data);
-    bam_mplp_set_maxcnt(iter, max_depth);
+    bam_mplp_set_maxcnt(iter, filter->max_depth);
     while (bam_mplp_auto(iter, &tid, &pos, n_plp, plp) > 0) {
 	if (pos < start || pos >= end) continue;
 	for (i = 0; i < n; ++i) { /* each file */
-	    int *s0 = seq +
-		(i * (end - start + 1) + (pos - start)) * 16;
+	    int *s0 =
+		seq + (i * (end - start + 1) + (pos - start)) * 16;
 	    for (j = 0; j < n_plp[i]; ++j) { /* each read */
-		/* query individual pileup, e.g., ...*/
 		const bam_pileup1_t *p = plp[i] + j;
+		/* filter */
+		if (filter->min_map_quality > p->b->core.qual ||
+		    filter->min_base_quality > bam1_qual(p->b)[p->qpos])
+		    continue;
+		uint32_t test_flag = 
+		    (filter->keep_flag[0] & ~p->b->core.flag) |
+		    (filter->keep_flag[1] & p->b->core.flag);
+		if (~test_flag & 2047u)
+		    continue;
+		/* query, e.g., ...*/
 		const int s = bam1_seqi(bam1_seq(p->b), p->qpos);
 		s0[s] += 1;
 	    }
@@ -94,11 +108,20 @@ mpileup_bam(SEXP files, SEXP space, SEXP param,
     if (!Rf_isFunction(callback) || 1L != Rf_length(FORMALS(callback)))
 	Rf_error("'callback' mst be a function of 1 argument");
     SEXP call = PROTECT(Rf_lang2(callback, R_NilValue));
-    /* FIXME: check param */
 
     /* param */
-    const int max_depth =
+    /* FIXME: check param */
+    MPLP_FILTER_T filter;
+    filter.keep_flag[0] =
+	INTEGER(_get_lst_elt(param, "flag", "param"))[0];
+    filter.keep_flag[1] =
+	INTEGER(_get_lst_elt(param, "flag", "param"))[1];
+    filter.max_depth =
 	INTEGER(_get_lst_elt(param, "maxDepth", "param"))[0];
+    filter.min_base_quality =
+	INTEGER(_get_lst_elt(param, "minBaseQuality", "param"))[0];
+    filter.min_map_quality =
+	INTEGER(_get_lst_elt(param, "minMapQuality", "param"))[0];
 
     /* data -- validate */
     MPLP_DATA_T **data =
@@ -147,7 +170,7 @@ mpileup_bam(SEXP files, SEXP space, SEXP param,
 		data[j]->iter =
 		    bam_iter_query(bfile->index, tid, start[i], end[i]);
 	    }
-	    _mpileup_bam1(n, start[i], end[i], max_depth, 
+	    _mpileup_bam1(n, start[i], end[i], &filter,
 			  _mplp_read_bam, (void **) data, 
 			  INTEGER(VECTOR_ELT(res1, 0)));
 	    for (j = 0; j < n; ++j)

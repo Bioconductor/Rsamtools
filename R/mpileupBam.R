@@ -1,8 +1,9 @@
 .MpileupParam <-
     function(## limit how reads counted
-             ceilingMapQuality=60L,
+             ## ceilingMapQuality=60L,
+             flag=scanBamFlag(),
              minBaseQuality=13L,
-             minMQ=0L,
+             minMapQuality=0L,
              maxDepth=250L,
              maxIndelSampleDepth=250L,
              minIndelReadCount=1L,
