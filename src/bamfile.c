@@ -4,6 +4,12 @@
 
 static SEXP BAMFILE_TAG = NULL;
 
+void
+_check_isbamfile(SEXP ext, const char *lbl)
+{
+    _scan_checkext(ext, BAMFILE_TAG, lbl);
+}
+
 samfile_t *
 _bam_tryopen(const char *filename, const char *filemode, void *aux)
 {

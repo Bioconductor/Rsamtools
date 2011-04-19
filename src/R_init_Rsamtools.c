@@ -5,6 +5,7 @@
 #include "tabixfile.h"
 #include "io_sam.h"
 #include "as_bam.h"
+#include "mpileupbam.h"
 
 #ifdef _WIN32
 #include "samtools/knetfile.h"
@@ -52,6 +53,8 @@ static const R_CallMethodDef callMethods[] = {
     {".seqnames_tabix", (DL_FUNC) &seqnames_tabix, 1},
     {".scan_tabix", (DL_FUNC) &scan_tabix, 3},
     {".yield_tabix", (DL_FUNC) &yield_tabix, 2},
+    /* mpileup */
+    {".mpileup_bam", (DL_FUNC) &mpileup_bam, 3},
     {NULL, NULL, 0}
 };
 
