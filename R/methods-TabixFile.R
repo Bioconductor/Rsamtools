@@ -55,7 +55,21 @@ indexTabix <-
     })
 }
 
-## FIXME: sequence names
+.seqnamesTabix <-
+    function(file, ...)
+{
+    if (!isOpen(file)) {
+        open(file)
+        on.exit(close(file))
+    }
+    .Call(.seqnames_tabix, .extptr(file))
+}
+
+setMethod(seqnamesTabix, "TabixFile", .seqnamesTabix)
+
+setMethod(seqnamesTabix, "character", function(file, ...) {
+    .seqnamesTabix(TabixFile(file))
+})
 
 .tabix_scan <-
     function(file, ..., space, start, end)

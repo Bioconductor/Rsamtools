@@ -9,6 +9,7 @@
 % accessors
 \alias{isOpen,TabixFile-method}
 % methods
+\alias{seqnamesTabix,TabixFile-method}
 \alias{scanTabix,TabixFile,RangesList-method}
 \alias{scanTabix,TabixFile,RangedData-method}
 \alias{scanTabix,TabixFile,GRanges-method}
@@ -38,6 +39,7 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
 
 ## actions
 
+\S4method{seqnamesTabix}{TabixFile}(file, ...)
 \S4method{scanTabix}{TabixFile,RangesList}(file, ..., param)
 \S4method{scanTabix}{TabixFile,RangedData}(file, ..., param)
 \S4method{scanTabix}{TabixFile,GRanges}(file, ..., param)
@@ -50,8 +52,9 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
 
   \item{con}{An instance of \code{TabixFile}.}
 
-  \item{file}{For TabixFile(), A character(1) vector to the tabix file path;
-    can be remote (http://, ftp://). For others, a TabixFile instance.}
+  \item{file}{For TabixFile(), A character(1) vector to the tabix file
+    path; can be remote (http://, ftp://). For others, a
+    \code{TabixFile} instance.}
 
   \item{index}{A character(1) vector of the tabix file index.}
 
@@ -106,8 +109,10 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
   Methods:
   \describe{
 
-    \item{scanTabix}{Visit the path in \code{path(file)}, returning the
+    \item{seqnamesTabix}{Visit the path in \code{path(file)}, returning
+      the sequence names present in the file.}
 
+    \item{scanTabix}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanTabix}} applied to the specified path.}
 
     \item{show}{Compactly display the object.}
@@ -120,18 +125,18 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
 \examples{
 
 fl <- system.file("extdata", "example.gtf.gz", package="Rsamtools")
-tab <- TabixFile(fl)
+tbx <- TabixFile(fl)
 
 param <- GRanges(c("chr1", "chr2"), IRanges(c(1, 1), width=100000))
-res <- scanTabix(tab, param=param)
+res <- scanTabix(tbx, param=param)
 names(res)
 res[["chr1:1-100000"]][1:2]
 
 ## parse 100 records at a time
-tab <- open(TabixFile(fl))
-while(length(res <- yieldTabix(tab, yieldSize=100L)))
+tbx <- open(TabixFile(fl))
+while(length(res <- yieldTabix(tbx, yieldSize=100L)))
    cat("records read:", length(res), "\n")
-close(tab)
+close(tbx)
 
 }
 

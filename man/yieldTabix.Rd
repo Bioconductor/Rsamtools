@@ -5,8 +5,7 @@
 
 \title{
 
-  Yield records from a stream of records contained in a file or other
-  object.
+  Yield records from a stream of records contained in a tabix file.
 
 }
 \description{

@@ -173,6 +173,26 @@ index_tabix(SEXP filename, SEXP format,
     return filename;
 }
 
+SEXP
+seqnames_tabix(SEXP ext)
+{
+    _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
+    tabix_t *tabix = TABIXFILE(ext)->tabix;
+    if (0 != ti_lazy_index_load(tabix))
+	Rf_error("'seqnamesTabix' failed to load index");
+
+    int n;
+    const char **seqnames = ti_seqname(tabix->idx, &n);
+    if (n < 0)
+	Rf_error("'seqnamesTabix' found <0 (!) seqnames");
+    SEXP result = PROTECT(NEW_CHARACTER(n));
+    for (int i = 0; i < n; ++i)
+	SET_STRING_ELT(result, i, mkChar(seqnames[i]));
+    free(seqnames);
+    UNPROTECT(1);
+    return result;
+}
+
 SEXP 
 scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
 {
