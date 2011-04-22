@@ -85,6 +85,9 @@ setGeneric("readBamGappedAlignments",
 setGeneric("seqnamesTabix", function(file, ...)
            standardGeneric("seqnamesTabix"))
 
+setGeneric("headerTabix", function(file, ...)
+           standardGeneric("headerTabix"))
+
 setGeneric("scanTabix", function(file, ..., param)
            standardGeneric("scanTabix"))
 

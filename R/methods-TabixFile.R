@@ -40,7 +40,7 @@ bgzipTabix <-
 indexTabix <- 
     function(file,
              format=c("gff", "bed", "sam", "vcf", "vcf4", "psltbl"),
-             seq=integer(), begin=integer(), end=integer(),
+             seq=integer(), start=integer(), end=integer(),
              skip=0L, comment="#", zeroBased=FALSE, ...)
 {
     tryCatch({
@@ -48,21 +48,33 @@ indexTabix <-
             if (!missing(format)) match.arg(format)
             else character()
         idx <- .Call(.index_tabix, file, format,
-                     seq, begin, end, skip, comment, zeroBased)
+                     seq, start, end, skip, comment, zeroBased)
         sprintf("%s.tbi", file)
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", file)
     })
 }
 
-.seqnamesTabix <-
+.headerTabix <-
     function(file, ...)
 {
     if (!isOpen(file)) {
         open(file)
         on.exit(close(file))
     }
-    .Call(.seqnames_tabix, .extptr(file))
+    .Call(.header_tabix, .extptr(file))
+}
+
+setMethod(headerTabix, "TabixFile", .headerTabix)
+
+setMethod(headerTabix, "character", function(file, ...) {
+    .headerTabix(TabixFile(file))
+})
+
+.seqnamesTabix <-
+    function(file, ...)
+{
+    .headerTabix(file, ...)[["seqnames"]]
 }
 
 setMethod(seqnamesTabix, "TabixFile", .seqnamesTabix)

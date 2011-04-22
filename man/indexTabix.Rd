@@ -21,7 +21,7 @@
 bgzipTabix(fromFname, toFname, overwrite = FALSE)
 indexTabix(file,
            format=c("gff", "bed", "sam", "vcf", "vcf4", "psltbl"),
-           seq=integer(), begin=integer(), end=integer(),
+           seq=integer(), start=integer(), end=integer(),
            skip=0L, comment="#", zeroBased=FALSE, ...)
 
 }
@@ -48,8 +48,8 @@ indexTabix(file,
     column in which the \sQuote{sequence} identifier (e.g., chrq) is to
     be found.}
 
-  \item{begin}{If \code{format} is missing, \code{begin} indicates the
-    column containing the beginning coordinate of the feature to be
+  \item{start}{If \code{format} is missing, \code{start} indicates the
+    column containing the start coordinate of the feature to be
     indexed.}
 
   \item{end}{If \code{format} is missing, \code{end} indicates the

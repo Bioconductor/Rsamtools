@@ -174,21 +174,55 @@ index_tabix(SEXP filename, SEXP format,
 }
 
 SEXP
-seqnames_tabix(SEXP ext)
+header_tabix(SEXP ext)
 {
     _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
     tabix_t *tabix = TABIXFILE(ext)->tabix;
     if (0 != ti_lazy_index_load(tabix))
 	Rf_error("'seqnamesTabix' failed to load index");
 
+    SEXP result = PROTECT(NEW_LIST(4)), tmp, nms;
+    nms = NEW_CHARACTER(Rf_length(result));
+    Rf_namesgets(result, nms);
+    SET_STRING_ELT(nms, 0, mkChar("seqnames"));
+    SET_STRING_ELT(nms, 1, mkChar("indexColumns"));
+    SET_STRING_ELT(nms, 2, mkChar("skip"));
+    SET_STRING_ELT(nms, 3, mkChar("comment"));
+
+    /* seqnames */
     int n;
     const char **seqnames = ti_seqname(tabix->idx, &n);
     if (n < 0)
 	Rf_error("'seqnamesTabix' found <0 (!) seqnames");
-    SEXP result = PROTECT(NEW_CHARACTER(n));
+    tmp = NEW_CHARACTER(n);
+    SET_VECTOR_ELT(result, 0, tmp);
     for (int i = 0; i < n; ++i)
-	SET_STRING_ELT(result, i, mkChar(seqnames[i]));
+	SET_STRING_ELT(tmp, i, mkChar(seqnames[i]));
     free(seqnames);
+
+    const ti_conf_t *conf = ti_get_conf(tabix->idx);
+
+    /* indexColumns */
+    tmp = NEW_INTEGER(3);
+    SET_VECTOR_ELT(result, 1, tmp);
+    INTEGER(tmp)[0] = conf->sc;
+    INTEGER(tmp)[1] = conf->bc;
+    INTEGER(tmp)[2] = conf->ec;
+    nms = NEW_CHARACTER(3);
+    Rf_namesgets(tmp, nms);
+    SET_STRING_ELT(nms, 0, mkChar("seq"));
+    SET_STRING_ELT(nms, 1, mkChar("start"));
+    SET_STRING_ELT(nms, 2, mkChar("end"));
+
+    /* skip */
+    SET_VECTOR_ELT(result, 2, ScalarInteger(conf->line_skip));
+
+    /* comment */
+    char comment[2];
+    comment[0] = (char) conf->meta_char;
+    comment[1] = '\0';
+    SET_VECTOR_ELT(result, 3, ScalarString(mkChar(comment)));
+
     UNPROTECT(1);
     return result;
 }

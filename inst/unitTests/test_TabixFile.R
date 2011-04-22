@@ -45,3 +45,15 @@ test_TabixFile_yield <- function()
         it <- append(it, length(res))
     checkIdentical(c(100L, 100L, 37L), it)
 }
+
+test_TabixFile_header <- function()
+{
+    hdr <- headerTabix(fl)
+    checkIdentical(c("chr1", "chr2"), hdr$seqnames)
+    checkIdentical(c(1L, 4L, 5L), unname(hdr$indexColumns))
+    checkIdentical(0L, hdr$skip)
+    checkIdentical("#", hdr$comment)
+
+    checkIdentical(hdr$seqnames, seqnamesTabix(fl))
+}
+

@@ -10,6 +10,7 @@
 \alias{isOpen,TabixFile-method}
 % methods
 \alias{seqnamesTabix,TabixFile-method}
+\alias{headerTabix,TabixFile-method}
 \alias{scanTabix,TabixFile,RangesList-method}
 \alias{scanTabix,TabixFile,RangedData-method}
 \alias{scanTabix,TabixFile,GRanges-method}
@@ -40,6 +41,7 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
 ## actions
 
 \S4method{seqnamesTabix}{TabixFile}(file, ...)
+\S4method{headerTabix}{TabixFile}(file, ...)
 \S4method{scanTabix}{TabixFile,RangesList}(file, ..., param)
 \S4method{scanTabix}{TabixFile,RangedData}(file, ..., param)
 \S4method{scanTabix}{TabixFile,GRanges}(file, ..., param)
@@ -111,6 +113,11 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
 
     \item{seqnamesTabix}{Visit the path in \code{path(file)}, returning
       the sequence names present in the file.}
+
+    \item{headerTabix}{Visit the path in \code{path(file)}, returning
+      the sequence names, column indicies used to sort the file, the
+      number of lines skipped while indexing, and the comment
+      character used while indexing.}
 
     \item{scanTabix}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanTabix}} applied to the specified path.}
