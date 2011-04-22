@@ -10,7 +10,7 @@ typedef struct {
 } MPLP_DATA_T;
 
 typedef struct {
-    int min_base_quality, min_map_quality, max_depth;
+    int min_base_quality, min_map_quality, min_depth, max_depth;
     uint32_t keep_flag[2];
 } MPLP_FILTER_T;
 
@@ -59,17 +59,23 @@ _mplp_read_bam(void *data, bam1_t *b)
 }
 
 void
-_mpileup_bam1(const int n, const int start, const int end,
+_mpileup_bam1(const int n_files, const int start, const int end,
 	      MPLP_FILTER_T *filter,
 	      bam_plp_auto_f fun, void **data, int *seq)
 {
-    int *n_plp = Calloc(n, int), i, j, tid, pos;
-    const bam_pileup1_t **plp = Calloc(n, const bam_pileup1_t *);
-    bam_mplp_t iter = bam_mplp_init(n, fun, data);
+    int *n_plp = Calloc(n_files, int), i, j, tid, pos;
+    const bam_pileup1_t **plp = Calloc(n_files, const bam_pileup1_t *);
+    bam_mplp_t iter = bam_mplp_init(n_files, fun, data);
     bam_mplp_set_maxcnt(iter, filter->max_depth);
     while (bam_mplp_auto(iter, &tid, &pos, n_plp, plp) > 0) {
-	if (pos < start || pos >= end) continue;
-	for (i = 0; i < n; ++i) { /* each file */
+	if (pos < start || pos >= end) 
+	    continue;
+	int cvg_depth = 0L;
+	for (i = 0; i < n_files; ++i)
+	    cvg_depth += n_plp[i];
+	if (filter->min_depth > cvg_depth)
+	    continue;
+	for (i = 0; i < n_files; ++i) {
 	    int *s0 =
 		seq + (i * (end - start + 1) + (pos - start)) * 16;
 	    for (j = 0; j < n_plp[i]; ++j) { /* each read */
@@ -116,6 +122,8 @@ mpileup_bam(SEXP files, SEXP space, SEXP param,
 	INTEGER(_get_lst_elt(param, "flag", "param"))[0];
     filter.keep_flag[1] =
 	INTEGER(_get_lst_elt(param, "flag", "param"))[1];
+    filter.min_depth =
+	INTEGER(_get_lst_elt(param, "minDepth", "param"))[0];
     filter.max_depth =
 	INTEGER(_get_lst_elt(param, "maxDepth", "param"))[0];
     filter.min_base_quality =

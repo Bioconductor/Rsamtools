@@ -27,6 +27,7 @@ if (FALSE) {
     res <- mpileupBam(fls, callback, param=param)
 
     param <- MpileupParam(flag=scanBamFlag(isProperPair=TRUE),
+                          minDepth=20L,
                           which=GRanges("seq1", IRanges(1000, 2000)))
     res <- mpileupBam(fls, callback, param=param)
 }

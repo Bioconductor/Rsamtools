@@ -4,6 +4,7 @@
              flag=scanBamFlag(),
              minBaseQuality=13L,
              minMapQuality=0L,
+             minDepth=0L,
              maxDepth=250L,
              maxIndelSampleDepth=250L,
              minIndelReadCount=1L,
