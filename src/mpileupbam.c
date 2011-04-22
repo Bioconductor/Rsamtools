@@ -195,7 +195,7 @@ mpileup_bam(SEXP files, SEXP space, SEXP param,
     }
 
     /* result */
-    SEXP result;
+    SEXP result = R_NilValue;
     if (R_NilValue == space) {	/* all */
 	/* FIXME: allocate seq, but this is too big! */
 	/* _mpileup_bam1(n, -1, -1, max_depth,  */
