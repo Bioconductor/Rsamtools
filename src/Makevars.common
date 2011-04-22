@@ -23,8 +23,12 @@ DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
   -Dexit=_samtools_exit \
   -Dabort=_samtools_abort
 
-PKG_CFLAGS += $(DFLAGS) -I./samtools -I./samtools/bcftools -I./tabix
-PKG_LIBS += -L. -lbam -lbcf -ltabix
+PKG_CFLAGS += \
+  $(SHLIB_OPENMP_CFLAGS) \
+  $(DFLAGS) -I./samtools -I./samtools/bcftools -I./tabix
+PKG_LIBS += \
+  $(SHLIB_OPENMP_CFLAGS) \
+  -L. -lbam -lbcf -ltabix
 
 all: $(SHLIB)
 

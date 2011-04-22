@@ -1,4 +1,4 @@
-if (FALSE) {
+if (interactive()) {
     library(Rsamtools); library(RUnit)
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
     MpileupParam <- Rsamtools:::.MpileupParam
@@ -30,4 +30,16 @@ if (FALSE) {
                           minDepth=20L,
                           which=GRanges("seq1", IRanges(1000, 2000)))
     res <- mpileupBam(fls, callback, param=param)
+
+    ## a bigger example
+    fls0 <-
+        list.files("/home/mtmorgan/a/bioC/Courses/Seattle-Dec-2010/content/SeattleIntro2010/NagalakshmiEtAl/aln",
+                   pattern=".*sorted.bam$", full=TRUE)
+
+    fls <- lapply(fls0, function(fl) open(BamFile(fl)))
+    scanBamHeader(fls[[1]])[["targets"]]
+    irng <- successiveIRanges(rep(10000, 20), from=10000)
+    param <- MpileupParam(which=GRanges("chrI", irng))
+    res <- mpileupBam(fls, function(x) 0, param=param)
 }
+
