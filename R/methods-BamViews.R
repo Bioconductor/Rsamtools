@@ -230,7 +230,7 @@ setMethod(countBam, "BamViews",
 })
 
 setMethod(readBamGappedAlignments, "BamViews",
-          function(file, index, ..., which)
+          function(file, index=file, ..., which)
 {
     if (missing(index))
         index <- bamIndicies(file)

@@ -6,6 +6,11 @@ NEW FEATURES
     o TabixFile, indexTabix, scanTabix, yieldTabix index (sorted,
     compressed) and parse tabix-indexed files
 
+BUG FIXES
+
+    o scanBam (and readBamGappedAlignments) called with an invalid or
+    character(0) index no longer segfaults.
+
 CHANGES IN VERSION 1.4.0
 ------------------------
 

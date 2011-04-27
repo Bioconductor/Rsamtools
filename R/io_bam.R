@@ -14,6 +14,7 @@
     tryCatch({
         .Call(func, .extptr(file), space, flag, simpleCigar, ...)
     }, error=function(err) {
-        stop(conditionMessage(err), "\n  file: ", path(file))
+        stop(conditionMessage(err), "\n  file: ", path(file),
+             "\n  index: ", index(file))
     })
 }

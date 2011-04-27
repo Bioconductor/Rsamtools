@@ -76,7 +76,7 @@ setGeneric("BamViews",
            signature="bamRanges")
 
 setGeneric("readBamGappedAlignments",
-           function(file, index, ..., which)
+           function(file, index=file, ..., which)
            standardGeneric("readBamGappedAlignments"),
            signature="file")
 

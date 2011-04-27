@@ -11,7 +11,7 @@ Read a BAM file as a \link[GenomicRanges]{GappedAlignments} object.
 }
 
 \usage{
-readBamGappedAlignments(file, index, ..., which)
+readBamGappedAlignments(file, index=file, ..., which)
 }
 
 \arguments{

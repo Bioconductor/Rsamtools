@@ -9,7 +9,8 @@ setMethod(isOpen, "BamFile",
 BamFile <-
     function(file, index=file)
 {
-    .RsamtoolsFile(.BamFile, file, index)
+    .RsamtoolsFile(.BamFile, .normalizePath(file),
+                   .normalizePath(index))
 }
 
 open.BamFile <-
@@ -52,6 +53,11 @@ setMethod(scanBam, "BamFile",
         stop("BamFile not open")
     if (!missing(index))
         warning("'index' ignored for scanBam,BamFile-method")
+    if (!is(param, "ScanBamParam")) {
+        msg <- sprintf("'%s' must be a '%s'; was '%s'",
+                       "param", "ScanBamParam", class(param))
+        stop(msg)
+    }
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, param=param,
@@ -97,7 +103,7 @@ setMethod(sortBam, "BamFile",
 })
 
 setMethod(readBamGappedAlignments, "BamFile",
-          function(file, index, ..., which)
+          function(file, index=file, ..., which)
 {
     if (missing(which))
         which <- RangesList()

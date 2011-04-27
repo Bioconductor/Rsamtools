@@ -219,6 +219,8 @@ test_scanBam_index <- function()
     fl <- file.path(src, "ex1_noindex.bam")
     idx <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
+    checkException(scanBam(fl, character(), param=p1), silent=TRUE)
+
     res <- scanBam(fl, idx, param=p1)
     checkIdentical("list", class(res))
     exp <- c("seq1:1000-2000", "seq2:100-1000", "seq2:1000-2000")

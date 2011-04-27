@@ -360,10 +360,14 @@ _do_scan_bam(_BAM_DATA *bdata, SEXP space, _PARSE1_FUNC parse1)
 
     if (R_NilValue == space)	/* everything */
         status = _scan_bam_all(bdata, parse1);
-    else                    /* fetch */
+    else {                   /* fetch */
+	if (NULL == bdata->bfile->index)
+	    Rf_error("valid 'index' file required");
         status = _scan_bam_fetch(bdata, VECTOR_ELT(space, 0),
 				 INTEGER(VECTOR_ELT(space, 1)),
 				 INTEGER(VECTOR_ELT(space, 2)), parse1);
+    }
+
     return status;
 }
 

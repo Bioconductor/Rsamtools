@@ -48,7 +48,7 @@ BamFile(file, index=file)
     indexDestination=TRUE, param=ScanBamParam())
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
-\S4method{readBamGappedAlignments}{BamFile}(file, index, ..., which)
+\S4method{readBamGappedAlignments}{BamFile}(file, index=file, ..., which)
 
 }
 

@@ -1,12 +1,10 @@
 setMethod(readBamGappedAlignments, "character",
-          function(file, index, ..., which)
+          function(file, index=file, ..., which)
 {
-    if (missing(index)) {
-        tmp <- paste(.normalizePath(file), "bai", sep=".")
-        index <- if (file.exists(tmp)) file else character(0)
-    }
     if (missing(which))
         which <- RangesList()
+    if (missing(index) && 0L == length(which))
+        index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
     callGeneric(bam, character(), ..., which=which)
