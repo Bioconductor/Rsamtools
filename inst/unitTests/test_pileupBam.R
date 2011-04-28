@@ -1,8 +1,8 @@
 if (interactive()) {
     library(Rsamtools); library(RUnit)
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-    MpileupParam <- Rsamtools:::.MpileupParam
-    mpileupBam <- Rsamtools:::.mpileupBam
+    PileupParam <- Rsamtools:::.PileupParam
+    pileupBam <- Rsamtools:::.pileupBam
 
     fls <- list(open(BamFile(fl)), open(BamFile(fl)))
 
@@ -23,13 +23,13 @@ if (interactive()) {
             })
         }
 
-    param <- MpileupParam(which=GRanges("seq1", IRanges(1000,2000)))
-    res <- mpileupBam(fls, callback, param=param)
+    param <- PileupParam(which=GRanges("seq1", IRanges(1000,2000)))
+    res <- pileupBam(fls, callback, param=param)
 
-    param <- MpileupParam(flag=scanBamFlag(isProperPair=TRUE),
+    param <- PileupParam(flag=scanBamFlag(isProperPair=TRUE),
                           minDepth=20L,
                           which=GRanges("seq1", IRanges(1000, 2000)))
-    res <- mpileupBam(fls, callback, param=param)
+    res <- pileupBam(fls, callback, param=param)
 
     ## a bigger example
     fls0 <-
@@ -39,7 +39,7 @@ if (interactive()) {
     fls <- lapply(fls0, function(fl) open(BamFile(fl)))
     scanBamHeader(fls[[1]])[["targets"]]
     irng <- successiveIRanges(rep(10000, 20), from=10000)
-    param <- MpileupParam(which=GRanges("chrI", irng))
-    res <- mpileupBam(fls, function(x) 0, param=param)
+    param <- PileupParam(which=GRanges("chrI", irng))
+    res <- pileupBam(fls, function(x) 0, param=param)
 }
 

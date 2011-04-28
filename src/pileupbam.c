@@ -1,6 +1,6 @@
 #include "samtools/bam.h"
 #include "samtools/khash.h"
-#include "mpileupbam.h"
+#include "pileupbam.h"
 #include "bamfile.h"
 #include "utilities.h"
 
@@ -94,7 +94,7 @@ _mplp_teardown(MPLP_PARAM_T *mparam)
 }
 
 void
-_mpileup_bam1(const MPLP_PARAM_T *mparam, int *seq)
+_pileup_bam1(const MPLP_PARAM_T *mparam, int *seq)
 {
     MPLP_FILE_T **mfile = mparam->mfile;
     const int n_files = mparam->n_files;
@@ -152,7 +152,7 @@ _mpileup_bam1(const MPLP_PARAM_T *mparam, int *seq)
 }
 
 SEXP
-mpileup_bam(SEXP files, SEXP space, SEXP param, 
+pileup_bam(SEXP files, SEXP space, SEXP param, 
 	    SEXP callback)
 {
     if (!IS_LIST(files))
@@ -162,7 +162,7 @@ mpileup_bam(SEXP files, SEXP space, SEXP param,
     MPLP_PARAM_T mparam;
     mparam.n_files = Rf_length(files);
     for (i = 0; i < mparam.n_files; ++i)
-	_check_isbamfile(VECTOR_ELT(files, i), "mpileup");
+	_check_isbamfile(VECTOR_ELT(files, i), "pileup");
     _scan_checkparams(space, R_NilValue, R_NilValue);
     if (!Rf_isFunction(callback) || 1L != Rf_length(FORMALS(callback)))
 	Rf_error("'callback' mst be a function of 1 argument");
@@ -198,7 +198,7 @@ mpileup_bam(SEXP files, SEXP space, SEXP param,
     SEXP result = R_NilValue;
     if (R_NilValue == space) {	/* all */
 	/* FIXME: allocate seq, but this is too big! */
-	/* _mpileup_bam1(n, -1, -1, max_depth,  */
+	/* _pileup_bam1(n, -1, -1, max_depth,  */
 	/* 	      _mplp_read_bam, (void **) mfile,  */
 	/* 	      seq); */
     } else {			/* some */
@@ -222,7 +222,7 @@ mpileup_bam(SEXP files, SEXP space, SEXP param,
 		SET_VECTOR_ELT(resi[ i % 2 ], 0, tmp);
 		itmp = INTEGER(tmp);
 		/* first space. No parallelism here; eval on master */
-		_mpileup_bam1(&mparam, itmp);
+		_pileup_bam1(&mparam, itmp);
 	    }
 #pragma omp barrier
 
@@ -237,7 +237,7 @@ mpileup_bam(SEXP files, SEXP space, SEXP param,
 
 #pragma omp single nowait
 		{		/* next space */
-		    _mpileup_bam1(&mparam, itmp);
+		    _pileup_bam1(&mparam, itmp);
 		}
 #pragma omp master
 		{
