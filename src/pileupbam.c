@@ -21,8 +21,9 @@ typedef struct {
     const bam_pileup1_t **plp;
     bam_mplp_t iter;
     /* query */
-    const char *chr;
-    int start, end;
+    int n_spc, i_spc;
+    const char **chr;
+    int *start, *end;
     /* filter */
     int min_base_quality, min_map_quality, min_depth, max_depth;
     uint32_t keep_flag[2];
@@ -76,31 +77,33 @@ _mplp_read_bam(void *data, bam1_t *b)
 }
 
 SEXP
-_mplp_setup_R(SEXP space, const int i, MPLP_PARAM_T *mparam)
+_mplp_setup_R(MPLP_PARAM_T *mparam)
 {
-    const int 
-        start = INTEGER(VECTOR_ELT(space, 1))[i],
-        end = INTEGER(VECTOR_ELT(space, 2))[i];
-
-    mparam->chr = CHAR(STRING_ELT(VECTOR_ELT(space, 0), i));
-    mparam->start = start;
-    mparam->end = end;
-
+    const int i_spc = mparam->i_spc;
     /* R */
-    SEXP alloc = PROTECT(NEW_LIST(2)), opos, oseq;
+    SEXP alloc = PROTECT(NEW_LIST(3)), nms = PROTECT(NEW_CHARACTER(3)), 
+	opos, oseq;
+    
+    SET_STRING_ELT(nms, 0, mkChar("seqnames"));
+    SET_STRING_ELT(nms, 1, mkChar("pos"));
+    SET_STRING_ELT(nms, 2, mkChar("seq"));
+    Rf_setAttrib(alloc, R_NamesSymbol, nms);
 
     if (YIELDBY_RANGE == mparam->yieldBy)
-        mparam->yieldSize = mparam->end - mparam->start + 1;
+        mparam->yieldSize = 
+	    mparam->end[i_spc] - mparam->start[i_spc] + 1;
 
+    /* elt 0: seqnames; handled by caller */
     opos = NEW_INTEGER(mparam->yieldSize);
-    SET_VECTOR_ELT(alloc, 0, opos);
     memset(INTEGER(opos), 0, sizeof(int) * Rf_length(opos));
+    SET_VECTOR_ELT(alloc, 1, opos);
+
     oseq = Rf_alloc3DArray(INTSXP, 16, mparam->n_files,
                            mparam->yieldSize);
     memset(INTEGER(oseq), 0, sizeof(int) * Rf_length(oseq));
-    SET_VECTOR_ELT(alloc, 1, oseq);
+    SET_VECTOR_ELT(alloc, 2, oseq);
 
-    UNPROTECT(1);
+    UNPROTECT(2);
 
     return alloc;
 }
@@ -109,27 +112,26 @@ void
 _mplp_setup_bam(MPLP_PARAM_T *mparam)
 {
     MPLP_FILE_T **mfile = mparam->mfile;
-    int j;
+    int i_spc = mparam->i_spc, n_files = mparam->n_files;
+    const char *chr = mparam->chr[i_spc];
 
-    for (j = 0; j < mparam->n_files; ++j) {
+    for (int j = 0; j < n_files; ++j) {
         /* set iterator, get pileup */
-        int32_t tid = bam_get_tid(mfile[j]->bfile->file->header, 
-				  mparam->chr);
+        int32_t tid = bam_get_tid(mfile[j]->bfile->file->header, chr);
         if (tid < 0)
-            Rf_error("'%s' not in bam file %d", 
-		     mparam->chr, j + 1);
+            Rf_error("'%s' not in bam file %d", chr, j + 1);
         mfile[j]->iter =
             bam_iter_query(mfile[j]->bfile->index, tid, 
-			   mparam->start, mparam->end);
+			   mparam->start[i_spc], 
+			   mparam->end[i_spc]);
     }
     mparam->iter =
-        bam_mplp_init(mparam->n_files, _mplp_read_bam, 
-		      (void **) mfile);
+        bam_mplp_init(n_files, _mplp_read_bam, (void **) mfile);
     bam_mplp_set_maxcnt(mparam->iter, mparam->max_depth);
 }
 
 void
-_mplp_teardown(MPLP_PARAM_T *mparam)
+_mplp_teardown_bam(MPLP_PARAM_T *mparam)
 {
     int j;
 
@@ -142,7 +144,10 @@ int
 _pileup_bam1(const MPLP_PARAM_T *mparam, int *opos, int *oseq)
 {
     const int n_files = mparam->n_files;
-    int i, j, start = mparam->start, end = mparam->end;
+    int i_spc = mparam->i_spc;
+    int i, j, 
+	start = mparam->start[i_spc], 
+	end = mparam->end[i_spc];
     const bam_pileup1_t **plp = mparam->plp;
     int *n_plp = mparam->n_plp, pos;
     int32_t tid;
@@ -150,8 +155,8 @@ _pileup_bam1(const MPLP_PARAM_T *mparam, int *opos, int *oseq)
     bam_mplp_t iter = mparam->iter;
 
     int idx = 0;
-    while (0 < bam_mplp_auto(iter, &tid, &pos, n_plp, plp) &&
-           mparam->yieldSize > idx) 
+    while (mparam->yieldSize > idx &&
+	   0 < bam_mplp_auto(iter, &tid, &pos, n_plp, plp))
     {
         if (pos < start || pos >= end) {
             if (mparam->yieldAll) 
@@ -192,21 +197,20 @@ _pileup_bam1(const MPLP_PARAM_T *mparam, int *opos, int *oseq)
 }
 
 SEXP
-_pileup_call1(SEXP result_i, int *nrec, int i, SEXP call)
+_pileup_call1(SEXP r, int n, SEXP call)
 {
-    int n = nrec[i % 2];
-    SEXP r = VECTOR_ELT(result_i, i % 2), s, t, dim;
+    SEXP s, t, dim;
 
-    if (Rf_length(VECTOR_ELT(r, 0)) != n) {
-        s = VECTOR_ELT(r, 0);   /* pos */
-        SET_VECTOR_ELT(r, 0, Rf_lengthgets(s, n));
+    if (Rf_length(VECTOR_ELT(r, 1)) != n) {
+        s = VECTOR_ELT(r, 1);   /* pos */
+        SET_VECTOR_ELT(r, 1, Rf_lengthgets(s, n));
 
-        s = VECTOR_ELT(r, 1);  /* seq array -- 16 x n_files x n */
+        s = VECTOR_ELT(r, 2);  /* seq array -- 16 x n_files x n */
         dim = Rf_getAttrib(s, R_DimSymbol);
         t = PROTECT(Rf_lengthgets(s, INTEGER(dim)[0] * INTEGER(dim)[1] * n));
         INTEGER(dim)[2] = n;
         Rf_setAttrib(t, R_DimSymbol, dim);
-        SET_VECTOR_ELT(r, 1, t);
+        SET_VECTOR_ELT(r, 2, t);
         UNPROTECT(1);
     }
 
@@ -215,60 +219,95 @@ _pileup_call1(SEXP result_i, int *nrec, int i, SEXP call)
 }
 
 SEXP
-_pileup_yieldby_range(SEXP space, MPLP_PARAM_T *mparam, SEXP call)
+_seq_rle(int *cnt, const char **chr, int n)
 {
-    const int nspc = Rf_length(VECTOR_ELT(space, 0));
-    SEXP result, result_i, tmp;
-    int *opos, *oseq, n_rec[2];
+    int i = 0, j;
+    SEXP s, t;
 
-    result = PROTECT(NEW_LIST(nspc));
+    for (j = 1; j < n; ++j) {
+	if (0 != strcmp(chr[j], chr[j-1])) {
+	    i += 1;
+	    chr[i] = chr[j];
+	    cnt[i] = cnt[j] - cnt[i-1];
+	} 
+    }
+    n = i + 1;
+
+    s = PROTECT(NEW_INTEGER(n));
+    t = NEW_CHARACTER(n);
+    Rf_setAttrib(s, R_NamesSymbol, t);
+
+    for (i = 0; i < n; ++i) {
+	INTEGER(s)[i] = cnt[i];
+	SET_STRING_ELT(t, i, mkChar(chr[i]));
+    }
+
+    UNPROTECT(1);
+    return s;
+}
+
+SEXP
+_pileup_yieldby_range(MPLP_PARAM_T *mparam, SEXP call)
+{
+    const int n_spc = mparam->n_spc;
+    SEXP result, result_i, res, tmp;
+    int *opos, *oseq, i_spc = 0, n_rec[2];
+
+    result = PROTECT(NEW_LIST(n_spc));
     result_i = PROTECT(NEW_LIST(2));
 
-    int ispc = 0;
-
-    tmp = _mplp_setup_R(space, ispc, mparam);
-    SET_VECTOR_ELT(result_i, ispc % 2, tmp);
-    opos = INTEGER(VECTOR_ELT(tmp, 0));
-    oseq = INTEGER(VECTOR_ELT(tmp, 1));
+    mparam->i_spc = i_spc;
+    tmp = _mplp_setup_R(mparam);
+    SET_VECTOR_ELT(result_i, i_spc % 2, tmp);
+    opos = INTEGER(VECTOR_ELT(tmp, 1));
+    oseq = INTEGER(VECTOR_ELT(tmp, 2));
 
     _mplp_setup_bam(mparam);
-    n_rec[ispc % 2] = _pileup_bam1(mparam, opos, oseq);
-    _mplp_teardown(mparam);
+    n_rec[i_spc % 2] = _pileup_bam1(mparam, opos, oseq);
+    _mplp_teardown_bam(mparam);
 
     /* R code needs to be evalauted by the master thread; master
      * has no implicit barrier. */
-#pragma omp parallel num_threads(2) private(ispc)
+#pragma omp parallel num_threads(2) private(i_spc)
     {
-	for (ispc = 1; ispc < nspc; ++ispc)
+	for (i_spc = 1; i_spc < n_spc; ++i_spc)
 	{
 #pragma omp master
 	    {
-		tmp = _mplp_setup_R(space, ispc, mparam);
-                SET_VECTOR_ELT(result_i, ispc % 2, tmp);
-                opos = INTEGER(VECTOR_ELT(tmp, 0));
-                oseq = INTEGER(VECTOR_ELT(tmp, 1));
+		mparam->i_spc = i_spc;
+		tmp = _mplp_setup_R(mparam);
+                SET_VECTOR_ELT(result_i, i_spc % 2, tmp);
+                opos = INTEGER(VECTOR_ELT(tmp, 1));
+                oseq = INTEGER(VECTOR_ELT(tmp, 2));
 	    }
 #pragma omp barrier
 
 #pragma omp master
             {
-                tmp = _pileup_call1(result_i, n_rec, ispc - 1, call);
-                SET_VECTOR_ELT(result, ispc - 1, tmp);
+		res = VECTOR_ELT(result_i, (i_spc - 1) % 2);
+		tmp = _seq_rle(&n_rec[(i_spc - 1) % 2], 
+			       mparam->chr + mparam->i_spc - 1, 1);
+		SET_VECTOR_ELT(res, 0, tmp);
+		res = _pileup_call1(res, n_rec[(i_spc - 1) % 2], call);
+                SET_VECTOR_ELT(result, i_spc - 1, res);
             }
 
 #pragma omp single nowait
             {           /* next space */
 		_mplp_setup_bam(mparam);
-                n_rec[ispc % 2] = _pileup_bam1(mparam, opos, oseq);
-                _mplp_teardown(mparam);
+                n_rec[i_spc % 2] = _pileup_bam1(mparam, opos, oseq);
+                _mplp_teardown_bam(mparam);
             }
-
         }
     }
 
     /* process final space */
-    tmp = _pileup_call1(result_i, n_rec, nspc - 1, call);
-    SET_VECTOR_ELT(result, nspc - 1, tmp);
+    res = VECTOR_ELT(result_i, (n_spc - 1) % 2);
+    tmp = _seq_rle(&n_rec[(n_spc - 1) % 2], 
+		   mparam->chr + mparam->n_spc - 1, 1);
+    SET_VECTOR_ELT(res, 0, tmp);
+    res = _pileup_call1(res, n_rec[(n_spc - 1) % 2], call);
+    SET_VECTOR_ELT(result, n_spc - 1, res);
 
     UNPROTECT(2);               /* result, result_i */
 
@@ -276,14 +315,82 @@ _pileup_yieldby_range(SEXP space, MPLP_PARAM_T *mparam, SEXP call)
 }
 
 SEXP
-_pileup_yieldby_position(SEXP space, MPLP_PARAM_T *param, SEXP call)
+_pileup_yieldby_position(MPLP_PARAM_T *mparam, SEXP call)
 {
-    return R_NilValue;
+    const int GROW_BY_ELTS = 10;
+    const int n_spc = mparam->n_spc;
+    const int yieldSize = mparam->yieldSize;
+
+    SEXP result, result_i, tmp;
+    PROTECT_INDEX pidx;
+    int *opos, *oseq, i_yld = 0, i_result = 0;
+
+    int *cnt = (int *) R_alloc(sizeof(int), n_spc),
+	start_spc = 0;
+    memset(cnt, 0, sizeof(int) * n_spc);
+    
+    PROTECT_WITH_INDEX(result = NEW_LIST(0), &pidx);
+
+    mparam->i_spc = 0;
+    _mplp_setup_bam(mparam);
+
+    while (mparam->i_spc < n_spc) {
+	if (0 == i_yld) {	/* new result */
+	    if (Rf_length(result) == i_result) { /* more space for results */
+		int len = Rf_length(result) + GROW_BY_ELTS;
+		result = Rf_lengthgets(result, len);
+		REPROTECT(result, pidx);
+	    }
+	    start_spc = mparam->i_spc;
+	    cnt[start_spc] = 0;
+	    result_i = _mplp_setup_R(mparam);
+	    SET_VECTOR_ELT(result, i_result, result_i);
+	    opos = INTEGER(VECTOR_ELT(result_i, 1));
+	    oseq = INTEGER(VECTOR_ELT(result_i, 2));
+	}
+
+	i_yld += _pileup_bam1(mparam, opos + i_yld, oseq + i_yld);
+
+	if (i_yld == yieldSize) { /* yield */
+	    cnt[mparam->i_spc] += i_yld;
+	    tmp = _seq_rle(cnt + start_spc, mparam->chr + start_spc,
+			   mparam->i_spc - start_spc + 1);
+	    SET_VECTOR_ELT(result_i, 0, tmp);
+	    result_i = _pileup_call1(result_i, i_yld, call);
+
+	    SET_VECTOR_ELT(result, i_result++, result_i);
+	    mparam->yieldSize = yieldSize;
+	    i_yld = 0;
+	} else {		/* next space */
+	    cnt[mparam->i_spc] += i_yld;
+	    mparam->i_spc += 1;
+	    if (mparam->i_spc < mparam->n_spc) {
+		mparam->yieldSize -= i_yld;
+		_mplp_teardown_bam(mparam);
+		_mplp_setup_bam(mparam);
+	    }
+	}
+    }
+
+    if (i_yld != 0) {		/* final yield */
+	tmp = _seq_rle(cnt + start_spc, mparam->chr + start_spc,
+		       mparam->n_spc - start_spc);
+	SET_VECTOR_ELT(result_i, 0, tmp);
+	result_i = _pileup_call1(result_i, i_yld, call);
+	SET_VECTOR_ELT(result, i_result++, result_i);
+	mparam->yieldSize = yieldSize;
+    }
+    _mplp_teardown_bam(mparam);
+
+    result = Rf_lengthgets(result, i_result);
+    UNPROTECT(1);
+
+    return result;
 }
 
 SEXP
 pileup_bam(SEXP files, SEXP space, SEXP param, 
-            SEXP callback)
+	   SEXP callback)
 {
     if (!IS_LIST(files))
         Rf_error("'files' must be list() of BamFiles");
@@ -299,6 +406,14 @@ pileup_bam(SEXP files, SEXP space, SEXP param,
     SEXP call = PROTECT(Rf_lang2(callback, R_NilValue));
 
     /* param */
+    mparam.n_spc = Rf_length(VECTOR_ELT(space, 0));
+    mparam.chr = 
+	(const char **) R_alloc(sizeof(const char *), mparam.n_spc);
+    for (i = 0; i < mparam.n_spc; ++i)
+	mparam.chr[i] = CHAR(STRING_ELT(VECTOR_ELT(space, 0), i));
+    mparam.start = INTEGER(VECTOR_ELT(space, 1));
+    mparam.end = INTEGER(VECTOR_ELT(space, 2));
+
     mparam.keep_flag[0] =
         INTEGER(_get_lst_elt(param, "flag", "param"))[0];
     mparam.keep_flag[1] =
@@ -344,9 +459,9 @@ pileup_bam(SEXP files, SEXP space, SEXP param,
         /*            seq); */
     } else {                    /* some */
         if (YIELDBY_RANGE == mparam.yieldBy)
-            result = _pileup_yieldby_range(space, &mparam, call);
+            result = _pileup_yieldby_range(&mparam, call);
         else
-            result = _pileup_yieldby_position(space, &mparam, call);
+            result = _pileup_yieldby_position(&mparam, call);
     }
 
     Free(mparam.plp);

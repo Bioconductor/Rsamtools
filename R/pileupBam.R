@@ -26,15 +26,16 @@ setMethod(.asSpace, "GRanges", function(x) {
 })
 
 .pileupBam <-
-    function(files, callback=identity, ..., param)
+    function(files, FUN=identity, ..., param)
 {
+    FUN <- match.fun(FUN)
     tryCatch({
         files <- lapply(files, .extptr)
         param <- as.list(param)
         space <-
             if (0L != length(param[["which"]])) .asSpace(param[["which"]])
             else NULL
-        .Call(.pileup_bam, files, space, param, callback)
+        .Call(.pileup_bam, files, space, param, FUN)
     }, error=function(err) {
         stop("pileupBam: ", conditionMessage(err), call.=FALSE)
     })
