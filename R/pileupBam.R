@@ -4,8 +4,14 @@
              minMapQuality=0L,
              minDepth=0L,
              maxDepth=250L,
+             yieldSize=1L,
+             yieldBy=c("range", "position"),
+             yieldAll=FALSE,
              which=GRanges())
 {
+    yieldBy <- match.arg(yieldBy)
+    if ("range" == yieldBy && yieldSize != 1)
+        stop("'yieldSize' must equal 1 when 'yieldBy=\"range\"'")
     as.list(environment())
 }
 

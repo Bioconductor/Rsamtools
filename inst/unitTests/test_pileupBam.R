@@ -1,28 +1,28 @@
-if (interactive()) {
-    library(Rsamtools); library(RUnit)
-    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-    PileupParam <- Rsamtools:::.PileupParam
-    pileupBam <- Rsamtools:::.pileupBam
+library(Rsamtools); library(RUnit)
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+PileupParam <- Rsamtools:::.PileupParam
+pileupBam <- Rsamtools:::.pileupBam
 
+if (interactive()) {
     fls <- list(open(BamFile(fl)), open(BamFile(fl)))
 
     callback <-
         function(x)
         {
-            ## x is a list(base_calls, quality)
-            ## base_calls is a base x cycle x file array
+            ## x is a list(pos, base_calls, quality)
+            ## pos is integer() of length equal to positions passing filter
+            ## base_calls is a base x file x cycle array
             ## quality (will be) a quality x cycle x file array
             ## e.g., reduce to per-cycle information content
-            apply(x[[1]], 3, function(y) {
+            list(x[[1]], apply(x[[2]], 2, function(y) {
                 y <- y[c(1, 2, 4, 8) + 1,]      # A, C, G, T
                 y <- y + 1L                     # continuity
                 cvg <- colSums(y)
                 p <- y / cvg[col(y)]
                 h <- -colSums(p * log(p))
                 ifelse(cvg == 4L, NA, h)
-            })
+            }))
         }
-
     param <- PileupParam(which=GRanges("seq1", IRanges(1000,2000)))
     res <- pileupBam(fls, callback, param=param)
 
@@ -38,8 +38,9 @@ if (interactive()) {
 
     fls <- lapply(fls0, function(fl) open(BamFile(fl)))
     scanBamHeader(fls[[1]])[["targets"]]
-    irng <- successiveIRanges(rep(10000, 20), from=10000)
-    param <- PileupParam(which=GRanges("chrI", irng))
-    res <- pileupBam(fls, function(x) 0, param=param)
+    irng <- successiveIRanges(rep(200000, 5), from=1)
+    param <- PileupParam(which=GRanges("chrIV", irng),
+                         minDepth=40L)
+    res <- pileupBam(fls, function(x) length(x[[1]]), param=param)
 }
 
