@@ -21,7 +21,8 @@
 .pileupBam(files, FUN=identity, ..., param)
 .PileupParam(flag=scanBamFlag(), minBaseQuality=13L,
     minMapQuality=0L, minDepth=0L, maxDepth=250L, yieldSize=1L,
-    yieldBy=c("range", "position"), yieldAll=FALSE, which=GRanges())
+    yieldBy=c("range", "position"), yieldAll=FALSE,
+    which=GRanges(), what=c("seq", "qual"))
 }
 
 \arguments{
@@ -32,18 +33,19 @@
     each yield (see \code{yieldSize}, \code{yieldBy},
     \code{yieldAll}). The argument \code{x} is a \code{list}, with
     elements describing the current pile-up. The elements of the list
-    include:
+    are determined by the argument \code{what}, and include:
 
     \describe{
 
-      \item{seqnames:}{A named \code{integer()} representing the
-	seqnames corresponding to each position reported in the pile-up.
-	This is a run-length encoding, where the names of the elements
-	represent the seqnames, and the values the number of successive
-	positions corresponding to that seqname.}
+      \item{seqnames:}{(Always returned) A named \code{integer()}
+	representing the seqnames corresponding to each position
+	reported in the pile-up.  This is a run-length encoding, where
+	the names of the elements represent the seqnames, and the values
+	the number of successive positions corresponding to that
+	seqname.}
 
-      \item{pos:}{A \code{integer()} representing the genomic coordinate
-	of each pile-up position.}
+      \item{pos:}{Always returned) A \code{integer()} representing the
+	genomic coordinate of each pile-up position.}
 
       \item{seq:}{An \code{array} of dimensions nucleotide x file x
 	position.
@@ -104,6 +106,9 @@
   \item{which}{A \code{GRanges} or \code{RangesList} instance
     restricting pileup calculations to the corresponding genomic
     locations.}
+
+  \item{what}{A \code{character()} instance indicating what values are
+    to be returned. One or more of \code{c("seq", "qual")}.}
 
 }
 

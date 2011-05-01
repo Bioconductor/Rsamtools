@@ -26,6 +26,9 @@ test_pileupBam_byPosition <- function()
     exp <- list(structure(c(569L, 567L), .Names = c("seq1", "seq2")))
     checkIdentical(exp, res)
 
+    res <- pileupBam(fls, function(x) sum(x$seq[,1,]), param=param)
+    checkIdentical(list(41070L), res)
+
     param <-
         PileupParam(which=which, yieldSize=500L, yieldBy="position")
     res <- pileupBam(fls, fun, param=param)
@@ -33,4 +36,42 @@ test_pileupBam_byPosition <- function()
                 structure(c(69L, 431L), .Names = c("seq1", "seq2")),
                 structure(136L, .Names = "seq2"))
     checkIdentical(exp, res)
+
+    res <- pileupBam(fls, function(x) sum(x$seq[,1,]), param=param)
+    checkIdentical(list(18136L, 20067L, 2867L), res)
 }
+
+test_pileupBam_what <- function() {
+    fls <- list(open(BamFile(fl)), open(BamFile(fl)))
+    which <- GRanges("seq1", IRanges(1000, 1999))
+
+    param <- PileupParam(which=which, yieldAll=TRUE)
+    obs <- pileupBam(fls, function(x) sapply(x, length), param=param)[[1]]
+    exp <- c(seqnames=1L, pos=1000L, seq=32000L, qual=512000L)
+    checkIdentical(obs, exp)
+
+    param <- PileupParam(which=which, yieldAll=TRUE, what=character())
+    obs <- pileupBam(fls, function(x) sapply(x, length), param=param)[[1]]
+    checkIdentical(obs, exp[1:2])
+
+    param <- PileupParam(which=which, yieldAll=TRUE, what="seq")
+    obs <- pileupBam(fls, function(x) sapply(x, length), param=param)[[1]]
+    checkIdentical(obs, exp[1:3])
+
+    param <- PileupParam(which=which, yieldAll=TRUE, what="qual")
+    obs <- pileupBam(fls, function(x) sapply(x, length), param=param)[[1]]
+    checkIdentical(obs, exp[c(1:2, 4)])
+}
+
+test_pileupBam_memoryleak_warning <- function() {
+    ## failing to complete an iterator causes a warning; this is
+    ## corrected in C code
+    opts <- options(warn=2)
+    on.exit(options(opts))
+    fls <- list(open(BamFile(fl)), open(BamFile(fl)))
+    param <- PileupParam(which=GRanges("seq1", IRanges(1000, 1499)),
+                         yieldAll=TRUE)
+    obs <- pileupBam(fls, function(x) NULL, param=param)
+    checkIdentical(list(NULL), obs)
+}
+    

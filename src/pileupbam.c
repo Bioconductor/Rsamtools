@@ -8,6 +8,10 @@ typedef enum {
     YIELDBY_RANGE=0, YIELDBY_POSITION
 } YIELDBY;
 
+typedef enum {
+    WHAT_SEQ = 1, WHAT_QUAL = 2
+} WHAT;
+
 typedef struct {
     _BAM_FILE *bfile;
     bamFile fp;
@@ -16,7 +20,7 @@ typedef struct {
 
 typedef struct {
     int i_yld;
-    int *pos, *seq;
+    int *pos, *seq, *qual;
 } MPLP_RESULT_T;
 
 typedef struct {
@@ -26,7 +30,7 @@ typedef struct {
     const bam_pileup1_t **plp;
     bam_mplp_t iter;
     /* query */
-    int n_spc, i_spc;
+    int i_spc, n_spc;
     const char **chr;
     int *start, *end;
     /* filter */
@@ -35,6 +39,8 @@ typedef struct {
     /* yield */
     int yieldSize, yieldAll;
     YIELDBY yieldBy;
+    /* what */
+    WHAT what;
 } MPLP_PARAM_T;
 
 static SEXP
@@ -84,31 +90,43 @@ _mplp_read_bam(void *data, bam1_t *b)
 static SEXP
 _mplp_setup_R(const MPLP_PARAM_T *mparam, MPLP_RESULT_T *result)
 {
-    SEXP alloc = PROTECT(NEW_LIST(3)), 
-	nms = PROTECT(NEW_CHARACTER(3)), 
-	opos, oseq;
+    SEXP alloc = PROTECT(NEW_LIST(4)), 
+	nms = PROTECT(NEW_CHARACTER(4)), 
+	opos, oseq, oqual;
     
     SET_STRING_ELT(nms, 0, mkChar("seqnames"));
     SET_STRING_ELT(nms, 1, mkChar("pos"));
     SET_STRING_ELT(nms, 2, mkChar("seq"));
+    SET_STRING_ELT(nms, 3, mkChar("qual"));
     Rf_setAttrib(alloc, R_NamesSymbol, nms);
+
+    result->i_yld = 0;
 
     /* elt 0: seqnames; handled by caller */
     opos = NEW_INTEGER(mparam->yieldSize);
     memset(INTEGER(opos), 0, sizeof(int) * Rf_length(opos));
     SET_VECTOR_ELT(alloc, 1, opos);
-
-    oseq = Rf_alloc3DArray(INTSXP, 16, mparam->n_files,
-                           mparam->yieldSize);
-    memset(INTEGER(oseq), 0, sizeof(int) * Rf_length(oseq));
-    SET_VECTOR_ELT(alloc, 2, oseq);
-
-    result->i_yld = 0;
     result->pos = INTEGER(opos);
-    result->seq = INTEGER(oseq);
+
+    if (mparam->what & WHAT_SEQ) {
+	oseq = Rf_alloc3DArray(INTSXP, 16, mparam->n_files,
+			       mparam->yieldSize);
+	memset(INTEGER(oseq), 0, sizeof(int) * Rf_length(oseq));
+	SET_VECTOR_ELT(alloc, 2, oseq);
+	result->seq = INTEGER(oseq);
+    } else 
+	SET_VECTOR_ELT(alloc, 2, R_NilValue);
+
+    if (mparam->what & WHAT_QUAL) {
+	oqual = Rf_alloc3DArray(INTSXP, 256, mparam->n_files,
+				mparam->yieldSize);
+	memset(INTEGER(oqual), 0, sizeof(int) * Rf_length(oqual));
+	SET_VECTOR_ELT(alloc, 3, oqual);
+	result->qual = INTEGER(oqual);
+    } else 
+	SET_VECTOR_ELT(alloc, 3, R_NilValue);
 
     UNPROTECT(2);
-
     return alloc;
 }
 
@@ -139,6 +157,15 @@ _mplp_teardown_bam(MPLP_PARAM_T *mparam)
 {
     int j;
 
+    /* need to run off end of iteration to avoid memory leak */
+    int *n_plp = mparam->n_plp;
+    const bam_pileup1_t **plp = mparam->plp;
+    bam_mplp_t iter = mparam->iter;
+    int pos;
+    int32_t tid;
+    while (0 < bam_mplp_auto(iter, &tid, &pos, n_plp, plp))
+	;
+
     bam_mplp_destroy(mparam->iter);
     for (j = 0; j < mparam->n_files; ++j)
         bam_iter_destroy(mparam->mfile[j]->iter);
@@ -148,21 +175,22 @@ static int
 _pileup_bam1(const MPLP_PARAM_T *mparam, MPLP_RESULT_T *result)
 {
     const int n_files = mparam->n_files;
-    int i_spc = mparam->i_spc;
-    int i, j, 
+    int i_spc = mparam->i_spc,
 	start = mparam->start[i_spc], 
-	end = mparam->end[i_spc];
+	end = mparam->end[i_spc],
+	*n_plp = mparam->n_plp,
+	pos, i, j, idx = 0;
 
-    int *opos = result->pos + result->i_yld,
-	*oseq = result->seq + result->i_yld;
+    int	*opos = result->pos + result->i_yld,
+	*oseq = result->seq + 16 * n_files * result->i_yld,
+	*oqual = result->qual + 256 * n_files * result->i_yld;
     
     const bam_pileup1_t **plp = mparam->plp;
-    int *n_plp = mparam->n_plp, pos;
     int32_t tid;
-
     bam_mplp_t iter = mparam->iter;
 
-    int idx = 0;
+    int *s0, *q0;
+
     while (mparam->yieldSize > idx &&
 	   0 < bam_mplp_auto(iter, &tid, &pos, n_plp, plp))
     {
@@ -179,13 +207,19 @@ _pileup_bam1(const MPLP_PARAM_T *mparam, MPLP_RESULT_T *result)
                 idx += 1;
             continue;
         }
-        int *s0 = oseq + 16 * n_files * idx;
+
+	if (mparam->what & WHAT_SEQ)
+	    s0 = oseq + 16 * n_files * idx;
+	if (mparam->what & WHAT_QUAL)
+	    q0 = oqual + 256 * n_files * idx;
+
         for (i = 0; i < n_files; ++i) {
             for (j = 0; j < n_plp[i]; ++j) { /* each read */
                 const bam_pileup1_t *p = plp[i] + j;
                 /* filter */
+		const uint8_t q = bam1_qual(p->b)[p->qpos];
                 if (mparam->min_map_quality > p->b->core.qual ||
-                    mparam->min_base_quality > bam1_qual(p->b)[p->qpos])
+                    mparam->min_base_quality > q)
                     continue;
                 uint32_t test_flag = 
                     (mparam->keep_flag[0] & ~p->b->core.flag) |
@@ -193,8 +227,12 @@ _pileup_bam1(const MPLP_PARAM_T *mparam, MPLP_RESULT_T *result)
                 if (~test_flag & 2047u)
                     continue;
                 /* query, e.g., ...*/
-                const int s = bam1_seqi(bam1_seq(p->b), p->qpos);
-                s0[16 * i + s] += 1;
+		if (mparam->what & WHAT_SEQ) {
+		    const int s = bam1_seqi(bam1_seq(p->b), p->qpos);
+		    s0[16 * i + s] += 1;
+		}
+		if (mparam->what & WHAT_QUAL)
+		    q0[256 * i + q] += 1;
             }
         }
         opos[idx] = pos;
@@ -206,24 +244,42 @@ _pileup_bam1(const MPLP_PARAM_T *mparam, MPLP_RESULT_T *result)
 }
 
 static SEXP
+_resize_3D_dim3(SEXP s, int n)
+{
+    SEXP t, dim;
+    dim = Rf_getAttrib(s, R_DimSymbol);
+    t = PROTECT(Rf_lengthgets(s, INTEGER(dim)[0] * INTEGER(dim)[1] * n));
+    INTEGER(dim)[2] = n;
+    Rf_setAttrib(t, R_DimSymbol, dim);
+    UNPROTECT(1);
+    return t;
+}
+
+static SEXP
 _pileup_call1(SEXP r, int n, SEXP call)
 {
-    SEXP s, t, dim;
+    SEXP s, nm = Rf_getAttrib(r, R_NamesSymbol);
+    int i = 2;
 
-    if (Rf_length(VECTOR_ELT(r, 1)) != n) {
-        s = VECTOR_ELT(r, 1);   /* pos */
-        SET_VECTOR_ELT(r, 1, Rf_lengthgets(s, n));
+    s = VECTOR_ELT(r, 1);   /* pos */
+    SET_VECTOR_ELT(r, 1, Rf_lengthgets(s, n));
 
-        s = VECTOR_ELT(r, 2);  /* seq array -- 16 x n_files x n */
-        dim = Rf_getAttrib(s, R_DimSymbol);
-        t = PROTECT(Rf_lengthgets(s, INTEGER(dim)[0] * INTEGER(dim)[1] * n));
-        INTEGER(dim)[2] = n;
-        Rf_setAttrib(t, R_DimSymbol, dim);
-        SET_VECTOR_ELT(r, 2, t);
-        UNPROTECT(1);
+    s = VECTOR_ELT(r, 2);  /* seq array -- 16 x n_files x n */
+    if (R_NilValue != s) {
+	SET_VECTOR_ELT(r, i, _resize_3D_dim3(s, n));
+	SET_STRING_ELT(nm, i, STRING_ELT(nm, 2));
+	++i;
     }
 
-    SETCADR(call, r);
+    s = VECTOR_ELT(r, 3);  /* qual array -- 256 x n_files x n */
+    if (R_NilValue != s) {
+	SET_VECTOR_ELT(r, i, _resize_3D_dim3(s, n));
+	SET_STRING_ELT(nm, i, STRING_ELT(nm, 3));
+	++i;
+    }
+
+    r = Rf_lengthgets(r, i);
+    SETCADR(call, r);		/* let's say this doesn't allocate */
     return Rf_eval(call, R_GlobalEnv);
 }
 
@@ -297,7 +353,11 @@ _pileup_yieldby_range(MPLP_PARAM_T *mparam, SEXP call)
 		rle = _seq_rle(&n_rec[(i_spc - 1) % 2], 
 			       mparam->chr + mparam->i_spc - 1, 1);
 		SET_VECTOR_ELT(res, 0, rle);
-		res = _pileup_call1(res, n_rec[(i_spc - 1) % 2], call);
+
+		if (mparam->yieldAll)
+		    res = _pileup_call1(res, mparam->yieldSize, call);
+		else
+		    res = _pileup_call1(res, n_rec[(i_spc - 1) % 2], call);
                 SET_VECTOR_ELT(result, i_spc - 1, res);
             }
 
@@ -315,7 +375,10 @@ _pileup_yieldby_range(MPLP_PARAM_T *mparam, SEXP call)
     rle = _seq_rle(&n_rec[(n_spc - 1) % 2], 
 		   mparam->chr + mparam->n_spc - 1, 1);
     SET_VECTOR_ELT(res, 0, rle);
-    res = _pileup_call1(res, n_rec[(n_spc - 1) % 2], call);
+    if (mparam->yieldAll)
+	res = _pileup_call1(res, mparam->yieldSize, call);
+    else
+	res = _pileup_call1(res, n_rec[(n_spc - 1) % 2], call);
     SET_VECTOR_ELT(result, n_spc - 1, res);
 
     UNPROTECT(2);               /* result, result_i */
@@ -443,6 +506,13 @@ pileup_bam(SEXP files, SEXP space, SEXP param,
         0 == strcmp(yieldBy, "range") ? YIELDBY_RANGE : YIELDBY_POSITION;
     mparam.yieldAll =
         LOGICAL(_get_lst_elt(param, "yieldAll", "param"))[0];
+
+    int  *what = LOGICAL(_get_lst_elt(param, "what", "param"));
+    mparam.what = 0;
+    if (what[0])
+	mparam.what |= WHAT_SEQ;
+    if (what[1])
+	mparam.what |= WHAT_QUAL;
 
     /* data -- validate */
     mparam.mfile =

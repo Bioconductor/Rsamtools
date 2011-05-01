@@ -7,7 +7,8 @@
              yieldSize=1L,
              yieldBy=c("range", "position"),
              yieldAll=FALSE,
-             which=GRanges())
+             which=GRanges(),
+             what=c("seq", "qual"))
 {
     yieldBy <- match.arg(yieldBy)
     if ("range" == yieldBy && yieldSize != 1)
@@ -35,6 +36,8 @@ setMethod(.asSpace, "GRanges", function(x) {
         space <-
             if (0L != length(param[["which"]])) .asSpace(param[["which"]])
             else NULL
+        what <- logical(2);
+        param[["what"]] <- c("seq", "qual") %in% param[["what"]]
         .Call(.pileup_bam, files, space, param, FUN)
     }, error=function(err) {
         stop("pileupBam: ", conditionMessage(err), call.=FALSE)
