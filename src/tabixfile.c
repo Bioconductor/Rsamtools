@@ -174,6 +174,37 @@ index_tabix(SEXP filename, SEXP format,
 }
 
 SEXP
+_header_lines(tabix_t *tabix, const ti_conf_t *conf)
+{
+    const int GROW_BY = 100;
+    SEXP lns;
+    int i_lns = 0, pidx;
+
+    ti_iter_t iter = ti_query(tabix, NULL, 0, 0);
+    const char *s;
+    int len;
+
+    if (NULL == iter)
+	Rf_error("failed to obtain tabix iterator");
+
+    PROTECT_WITH_INDEX(lns = NEW_CHARACTER(0), &pidx);
+    while (NULL != (s = ti_read(tabix, iter, &len))) {
+	if ((int)(*s) != conf->meta_char) break;
+	if (0 == (i_lns % GROW_BY)) {
+	    lns = Rf_lengthgets(lns, Rf_length(lns) + GROW_BY);
+	    REPROTECT(lns, pidx);
+	}
+	SET_STRING_ELT(lns, i_lns++, mkChar(s));
+    }
+    ti_iter_destroy(iter);
+
+    lns = Rf_lengthgets(lns, i_lns);
+    UNPROTECT(1);
+
+    return lns;
+}
+
+SEXP
 header_tabix(SEXP ext)
 {
     _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
@@ -181,13 +212,14 @@ header_tabix(SEXP ext)
     if (0 != ti_lazy_index_load(tabix))
 	Rf_error("'seqnamesTabix' failed to load index");
 
-    SEXP result = PROTECT(NEW_LIST(4)), tmp, nms;
+    SEXP result = PROTECT(NEW_LIST(5)), tmp, nms;
     nms = NEW_CHARACTER(Rf_length(result));
     Rf_namesgets(result, nms);
     SET_STRING_ELT(nms, 0, mkChar("seqnames"));
     SET_STRING_ELT(nms, 1, mkChar("indexColumns"));
     SET_STRING_ELT(nms, 2, mkChar("skip"));
     SET_STRING_ELT(nms, 3, mkChar("comment"));
+    SET_STRING_ELT(nms, 4, mkChar("header"));
 
     /* seqnames */
     int n;
@@ -223,6 +255,9 @@ header_tabix(SEXP ext)
     comment[1] = '\0';
     SET_VECTOR_ELT(result, 3, ScalarString(mkChar(comment)));
 
+    /* header lines */
+    SET_VECTOR_ELT(result, 4, _header_lines(tabix, conf));
+    
     UNPROTECT(1);
     return result;
 }

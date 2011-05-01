@@ -116,8 +116,9 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
 
     \item{headerTabix}{Visit the path in \code{path(file)}, returning
       the sequence names, column indicies used to sort the file, the
-      number of lines skipped while indexing, and the comment
-      character used while indexing.}
+      number of lines skipped while indexing, the comment character used
+      while indexing, and the header (preceeded by comment character, at
+      start of file) lines.}
 
     \item{scanTabix}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanTabix}} applied to the specified path.}
