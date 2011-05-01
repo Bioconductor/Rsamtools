@@ -123,6 +123,10 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
     \item{scanTabix}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanTabix}} applied to the specified path.}
 
+    \item{indexTabix}{This method operates on file paths, rather than
+      \code{TabixFile} objects, to index tab-separated files. See
+      \code{\link{indexTabix}}.}
+
     \item{show}{Compactly display the object.}
 
   }
