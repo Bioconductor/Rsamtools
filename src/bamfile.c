@@ -25,7 +25,7 @@ _bam_tryopen(const char *filename, const char *filemode, void *aux)
     return sfile;
 }
 
-bam_index_t *
+static bam_index_t *
 _bam_tryindexload(const char *indexname)
 {
     bam_index_t *index = bam_index_load(indexname);

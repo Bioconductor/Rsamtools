@@ -15,6 +15,11 @@ typedef struct {
 } MPLP_FILE_T;
 
 typedef struct {
+    int i_yld;
+    int *pos, *seq;
+} MPLP_RESULT_T;
+
+typedef struct {
     /* samtools mpileup */
     int n_files, *n_plp;
     MPLP_FILE_T **mfile;
@@ -32,7 +37,7 @@ typedef struct {
     YIELDBY yieldBy;
 } MPLP_PARAM_T;
 
-SEXP
+static SEXP
 _get_lst_elt(SEXP lst, const char *name, const char *lst_name)
 {
     SEXP nms = GET_NAMES(lst);
@@ -51,7 +56,7 @@ _get_lst_elt(SEXP lst, const char *name, const char *lst_name)
 /* from bam_aux.c; should really be exported part of library? */
 KHASH_MAP_INIT_STR(s, int)
 
-void
+static void
 _bam_init_header_hash(bam_header_t *header)
 {
     if (header->hash == 0) {
@@ -76,22 +81,17 @@ _mplp_read_bam(void *data, bam1_t *b)
         bam_read1(mdata->fp, b);
 }
 
-SEXP
-_mplp_setup_R(MPLP_PARAM_T *mparam)
+static SEXP
+_mplp_setup_R(const MPLP_PARAM_T *mparam, MPLP_RESULT_T *result)
 {
-    const int i_spc = mparam->i_spc;
-    /* R */
-    SEXP alloc = PROTECT(NEW_LIST(3)), nms = PROTECT(NEW_CHARACTER(3)), 
+    SEXP alloc = PROTECT(NEW_LIST(3)), 
+	nms = PROTECT(NEW_CHARACTER(3)), 
 	opos, oseq;
     
     SET_STRING_ELT(nms, 0, mkChar("seqnames"));
     SET_STRING_ELT(nms, 1, mkChar("pos"));
     SET_STRING_ELT(nms, 2, mkChar("seq"));
     Rf_setAttrib(alloc, R_NamesSymbol, nms);
-
-    if (YIELDBY_RANGE == mparam->yieldBy)
-        mparam->yieldSize = 
-	    mparam->end[i_spc] - mparam->start[i_spc] + 1;
 
     /* elt 0: seqnames; handled by caller */
     opos = NEW_INTEGER(mparam->yieldSize);
@@ -103,12 +103,16 @@ _mplp_setup_R(MPLP_PARAM_T *mparam)
     memset(INTEGER(oseq), 0, sizeof(int) * Rf_length(oseq));
     SET_VECTOR_ELT(alloc, 2, oseq);
 
+    result->i_yld = 0;
+    result->pos = INTEGER(opos);
+    result->seq = INTEGER(oseq);
+
     UNPROTECT(2);
 
     return alloc;
 }
 
-void
+static void
 _mplp_setup_bam(MPLP_PARAM_T *mparam)
 {
     MPLP_FILE_T **mfile = mparam->mfile;
@@ -130,7 +134,7 @@ _mplp_setup_bam(MPLP_PARAM_T *mparam)
     bam_mplp_set_maxcnt(mparam->iter, mparam->max_depth);
 }
 
-void
+static void
 _mplp_teardown_bam(MPLP_PARAM_T *mparam)
 {
     int j;
@@ -140,14 +144,18 @@ _mplp_teardown_bam(MPLP_PARAM_T *mparam)
         bam_iter_destroy(mparam->mfile[j]->iter);
 }
 
-int
-_pileup_bam1(const MPLP_PARAM_T *mparam, int *opos, int *oseq)
+static int
+_pileup_bam1(const MPLP_PARAM_T *mparam, MPLP_RESULT_T *result)
 {
     const int n_files = mparam->n_files;
     int i_spc = mparam->i_spc;
     int i, j, 
 	start = mparam->start[i_spc], 
 	end = mparam->end[i_spc];
+
+    int *opos = result->pos + result->i_yld,
+	*oseq = result->seq + result->i_yld;
+    
     const bam_pileup1_t **plp = mparam->plp;
     int *n_plp = mparam->n_plp, pos;
     int32_t tid;
@@ -192,11 +200,12 @@ _pileup_bam1(const MPLP_PARAM_T *mparam, int *opos, int *oseq)
         opos[idx] = pos;
         idx += 1;
     }
-    
+
+    result->i_yld += idx;
     return idx;
 }
 
-SEXP
+static SEXP
 _pileup_call1(SEXP r, int n, SEXP call)
 {
     SEXP s, t, dim;
@@ -218,7 +227,7 @@ _pileup_call1(SEXP r, int n, SEXP call)
     return Rf_eval(call, R_GlobalEnv);
 }
 
-SEXP
+static SEXP
 _seq_rle(int *cnt, const char **chr, int n)
 {
     int i = 0, j;
@@ -246,24 +255,24 @@ _seq_rle(int *cnt, const char **chr, int n)
     return s;
 }
 
-SEXP
+static SEXP
 _pileup_yieldby_range(MPLP_PARAM_T *mparam, SEXP call)
 {
     const int n_spc = mparam->n_spc;
-    SEXP result, result_i, res, tmp;
-    int *opos, *oseq, i_spc = 0, n_rec[2];
+    MPLP_RESULT_T mresult;
+    SEXP result, result_i, res, rle;
+    int i_spc = 0, n_rec[2];
 
     result = PROTECT(NEW_LIST(n_spc));
     result_i = PROTECT(NEW_LIST(2));
 
     mparam->i_spc = i_spc;
-    tmp = _mplp_setup_R(mparam);
-    SET_VECTOR_ELT(result_i, i_spc % 2, tmp);
-    opos = INTEGER(VECTOR_ELT(tmp, 1));
-    oseq = INTEGER(VECTOR_ELT(tmp, 2));
+    mparam->yieldSize = mparam->end[i_spc] - mparam->start[i_spc] + 1;
+    res = _mplp_setup_R(mparam, &mresult);
+    SET_VECTOR_ELT(result_i, i_spc % 2, res);
 
     _mplp_setup_bam(mparam);
-    n_rec[i_spc % 2] = _pileup_bam1(mparam, opos, oseq);
+    n_rec[i_spc % 2] = _pileup_bam1(mparam, &mresult);
     _mplp_teardown_bam(mparam);
 
     /* R code needs to be evalauted by the master thread; master
@@ -275,19 +284,19 @@ _pileup_yieldby_range(MPLP_PARAM_T *mparam, SEXP call)
 #pragma omp master
 	    {
 		mparam->i_spc = i_spc;
-		tmp = _mplp_setup_R(mparam);
-                SET_VECTOR_ELT(result_i, i_spc % 2, tmp);
-                opos = INTEGER(VECTOR_ELT(tmp, 1));
-                oseq = INTEGER(VECTOR_ELT(tmp, 2));
+		mparam->yieldSize = 
+		    mparam->end[i_spc] - mparam->start[i_spc] + 1;
+		res = _mplp_setup_R(mparam, &mresult);
+                SET_VECTOR_ELT(result_i, i_spc % 2, res);
 	    }
 #pragma omp barrier
 
 #pragma omp master
             {
 		res = VECTOR_ELT(result_i, (i_spc - 1) % 2);
-		tmp = _seq_rle(&n_rec[(i_spc - 1) % 2], 
+		rle = _seq_rle(&n_rec[(i_spc - 1) % 2], 
 			       mparam->chr + mparam->i_spc - 1, 1);
-		SET_VECTOR_ELT(res, 0, tmp);
+		SET_VECTOR_ELT(res, 0, rle);
 		res = _pileup_call1(res, n_rec[(i_spc - 1) % 2], call);
                 SET_VECTOR_ELT(result, i_spc - 1, res);
             }
@@ -295,7 +304,7 @@ _pileup_yieldby_range(MPLP_PARAM_T *mparam, SEXP call)
 #pragma omp single nowait
             {           /* next space */
 		_mplp_setup_bam(mparam);
-                n_rec[i_spc % 2] = _pileup_bam1(mparam, opos, oseq);
+                n_rec[i_spc % 2] = _pileup_bam1(mparam, &mresult);
                 _mplp_teardown_bam(mparam);
             }
         }
@@ -303,9 +312,9 @@ _pileup_yieldby_range(MPLP_PARAM_T *mparam, SEXP call)
 
     /* process final space */
     res = VECTOR_ELT(result_i, (n_spc - 1) % 2);
-    tmp = _seq_rle(&n_rec[(n_spc - 1) % 2], 
+    rle = _seq_rle(&n_rec[(n_spc - 1) % 2], 
 		   mparam->chr + mparam->n_spc - 1, 1);
-    SET_VECTOR_ELT(res, 0, tmp);
+    SET_VECTOR_ELT(res, 0, rle);
     res = _pileup_call1(res, n_rec[(n_spc - 1) % 2], call);
     SET_VECTOR_ELT(result, n_spc - 1, res);
 
@@ -314,21 +323,21 @@ _pileup_yieldby_range(MPLP_PARAM_T *mparam, SEXP call)
     return result;
 }
 
-SEXP
+static SEXP
 _pileup_yieldby_position(MPLP_PARAM_T *mparam, SEXP call)
 {
     const int GROW_BY_ELTS = 10;
     const int n_spc = mparam->n_spc;
     const int yieldSize = mparam->yieldSize;
 
-    SEXP result, result_i, tmp;
+    SEXP result, result_i, rle;
     PROTECT_INDEX pidx;
-    int *opos, *oseq, i_yld = 0, i_result = 0;
+    MPLP_RESULT_T mresult;
 
-    int *cnt = (int *) R_alloc(sizeof(int), n_spc),
-	start_spc = 0;
+    int *cnt, start_spc = 0, i_yld = 0, i_result = 0;
+
+    cnt = (int *) R_alloc(sizeof(int), n_spc);
     memset(cnt, 0, sizeof(int) * n_spc);
-    
     PROTECT_WITH_INDEX(result = NEW_LIST(0), &pidx);
 
     mparam->i_spc = 0;
@@ -336,33 +345,32 @@ _pileup_yieldby_position(MPLP_PARAM_T *mparam, SEXP call)
 
     while (mparam->i_spc < n_spc) {
 	if (0 == i_yld) {	/* new result */
+
 	    if (Rf_length(result) == i_result) { /* more space for results */
 		int len = Rf_length(result) + GROW_BY_ELTS;
 		result = Rf_lengthgets(result, len);
 		REPROTECT(result, pidx);
 	    }
+
 	    start_spc = mparam->i_spc;
 	    cnt[start_spc] = 0;
-	    result_i = _mplp_setup_R(mparam);
+	    result_i = _mplp_setup_R(mparam, &mresult);
 	    SET_VECTOR_ELT(result, i_result, result_i);
-	    opos = INTEGER(VECTOR_ELT(result_i, 1));
-	    oseq = INTEGER(VECTOR_ELT(result_i, 2));
 	}
 
-	i_yld += _pileup_bam1(mparam, opos + i_yld, oseq + i_yld);
+	i_yld += _pileup_bam1(mparam, &mresult);
+	cnt[mparam->i_spc] += i_yld;
 
 	if (i_yld == yieldSize) { /* yield */
-	    cnt[mparam->i_spc] += i_yld;
-	    tmp = _seq_rle(cnt + start_spc, mparam->chr + start_spc,
+	    rle = _seq_rle(cnt + start_spc, mparam->chr + start_spc,
 			   mparam->i_spc - start_spc + 1);
-	    SET_VECTOR_ELT(result_i, 0, tmp);
+	    SET_VECTOR_ELT(result_i, 0, rle);
 	    result_i = _pileup_call1(result_i, i_yld, call);
-
 	    SET_VECTOR_ELT(result, i_result++, result_i);
 	    mparam->yieldSize = yieldSize;
 	    i_yld = 0;
+
 	} else {		/* next space */
-	    cnt[mparam->i_spc] += i_yld;
 	    mparam->i_spc += 1;
 	    if (mparam->i_spc < mparam->n_spc) {
 		mparam->yieldSize -= i_yld;
@@ -373,9 +381,9 @@ _pileup_yieldby_position(MPLP_PARAM_T *mparam, SEXP call)
     }
 
     if (i_yld != 0) {		/* final yield */
-	tmp = _seq_rle(cnt + start_spc, mparam->chr + start_spc,
+	rle = _seq_rle(cnt + start_spc, mparam->chr + start_spc,
 		       mparam->n_spc - start_spc);
-	SET_VECTOR_ELT(result_i, 0, tmp);
+	SET_VECTOR_ELT(result_i, 0, rle);
 	result_i = _pileup_call1(result_i, i_yld, call);
 	SET_VECTOR_ELT(result, i_result++, result_i);
 	mparam->yieldSize = yieldSize;

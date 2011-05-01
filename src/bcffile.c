@@ -11,9 +11,11 @@ struct typemap {
     int len;
 };
 
-enum { BCF_HDR_REF = 0, BCF_HDR_SAMPLE, BCF_HDR_HEADER, BCF_HDR_LAST };
+enum { 
+    BCF_HDR_REF = 0, BCF_HDR_SAMPLE, BCF_HDR_HEADER, BCF_HDR_LAST
+};
 
-const char * BCF_HDR_NM[] = { "Reference", "Sample", "Header" };
+static const char * BCF_HDR_NM[] = { "Reference", "Sample", "Header" };
 
 enum {
     BCF_TID = 0, BCF_POS, BCF_ID, BCF_REF, BCF_ALT, BCF_QUAL,
@@ -29,19 +31,19 @@ enum {
 static SEXP BCFFILE_TAG = NULL;
 static const int BCF_BUFSIZE_GROW = 100000; /* initial # records */
 
-bcf_t *
+static bcf_t *
 _bcf_tryopen(const char *fname, const char *mode)
 {
     return vcf_open(fname, mode);
 }
 
-bcf_idx_t *
+static bcf_idx_t *
 _bcf_idx_load(const char *fname)
 {
     return bcf_idx_load(fname);
 }
 
-void
+static void
 _bcf_close(bcf_t *bcf, Rboolean errmsg)
 {
     int err = vcf_close(bcf);
@@ -141,7 +143,7 @@ bcffile_isopen(SEXP ext)
 }
 
 /* implementation */
-int
+static int
 _bcf_ans_grow(SEXP ans, R_len_t sz, int n_smpl)
 {
     R_len_t n = sz;
@@ -181,7 +183,7 @@ _bcf_ans_grow(SEXP ans, R_len_t sz, int n_smpl)
     return n;
 }
 
-void
+static void
 _bcf_gi2sxp(SEXP geno, const int i_rec, const bcf_hdr_t *h, bcf1_t *b)
 {
     SEXP nm = GET_NAMES(geno);

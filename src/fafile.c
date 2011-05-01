@@ -5,13 +5,13 @@
 
 static SEXP FAFILE_TAG = NULL;
 
-faidx_t *
+static faidx_t *
 _fa_tryopen(const char *fname)
 {
     return fai_load(fname);
 }
 
-void
+static void
 _fa_close(faidx_t *fai)
 {
     fai_destroy(fai);
