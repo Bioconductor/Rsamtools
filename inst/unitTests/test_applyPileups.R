@@ -76,3 +76,8 @@ test_applyPileups_memoryleak_warning <- function() {
     obs <- applyPileups(fls, function(x) NULL, param=param)
     checkIdentical(list(NULL), obs)
 }
+
+test_applyPileups_NULL_space <- function() {
+    checkException(applyPileups(PileupFiles(fl), identity),
+                   silent=TRUE)
+}
