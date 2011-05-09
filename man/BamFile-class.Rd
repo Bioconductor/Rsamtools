@@ -16,6 +16,7 @@
 \alias{indexBam,BamFile-method}
 \alias{sortBam,BamFile-method}
 \alias{readBamGappedAlignments,BamFile-method}
+\alias{readBamGappedReads,BamFile-method}
 
 \title{Maintain SAM and BAM files}
 
@@ -49,6 +50,7 @@ BamFile(file, index=file)
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
 \S4method{readBamGappedAlignments}{BamFile}(file, index=file, ..., which)
+\S4method{readBamGappedReads}{BamFile}(file, index=file, ..., which)
 
 }
 
@@ -140,10 +142,11 @@ BamFile(file, index=file)
     \item{sortBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{sortBam}} applied to the specified path.}
 
-    \item{readBamGappedAlignments}{Visit the path in
-      \code{path(file)}, returning the result of
-      \code{readBamGappedAlignments} applied to the specified path. See
-      \code{\link{readBamGappedAlignments}}.}
+    \item{readBamGappedAlignments, readBamGappedReads}{Visit
+      the path in \code{path(file)}, returning the result of
+      \code{readBamGappedAlignments} or \code{readBamGappedReads}
+      applied to the specified path.
+      See \code{\link{readBamGappedAlignments}}.}
 
     \item{show}{Compactly display the object.}
 

@@ -3,15 +3,19 @@
 
 \alias{readBamGappedAlignments}
 \alias{readBamGappedAlignments,character-method}
+\alias{readBamGappedReads}
+\alias{readBamGappedReads,character-method}
 
-\title{GappedAlignments objects}
+\title{Reading GappedAlignments or GappedReads objects from a BAM file}
 
 \description{
-Read a BAM file as a \link[GenomicRanges]{GappedAlignments} object.
+Read a BAM file as a \link[GenomicRanges]{GappedAlignments}
+or \link[ShortRead]{GappedReads} object.
 }
 
 \usage{
 readBamGappedAlignments(file, index=file, ..., which)
+readBamGappedReads(file, index=file, ..., which)
 }
 
 \arguments{
@@ -35,6 +39,9 @@ readBamGappedAlignments(file, index=file, ..., which)
   See \code{?\link[GenomicRanges]{GappedAlignments-class}} for a
   description of \link[GenomicRanges]{GappedAlignments} objects.
 
+  See \code{?\link[ShortRead]{GappedReads-class}} for a
+  description of \link[ShortRead]{GappedReads} objects.
+
   See \code{?\link{scanBam}} for a description of the arguments. Unlike
   SAM/BAM records, we don't support unaligned queries so we discard
   those records.
@@ -45,13 +52,16 @@ readBamGappedAlignments(file, index=file, ..., which)
 
 \seealso{
   \link[GenomicRanges]{GappedAlignments-class},
+  \link[ShortRead]{GappedReads-class},
   \code{\link{scanBam}}
 }
 
 \examples{
-aln1_file <- system.file("extdata", "ex1.bam", package="Rsamtools")
-aln1 <- readBamGappedAlignments(aln1_file)
-aln1
+ex1_bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
+galn1 <- readBamGappedAlignments(ex1_bamfile)
+galn1
+greads1 <- readBamGappedReads(ex1_bamfile)
+greads1
 }
 
 \keyword{methods}

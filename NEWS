@@ -6,6 +6,8 @@ NEW FEATURES
     o TabixFile, indexTabix, scanTabix, yieldTabix index (sorted,
     compressed) and parse tabix-indexed files
 
+    o readBamGappedReads()
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or
