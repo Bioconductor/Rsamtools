@@ -37,7 +37,21 @@ setClass("ScanBcfParam",
     prototype=prototype(
       trimEmpty=TRUE))
 
-## RsamtoolsFile
+setClass("PileupParam",
+    representation=representation(
+      flag="integer",
+      minBaseQuality="integer",
+      minMapQuality="integer",
+      minDepth="integer",
+      maxDepth="integer",
+      yieldSize="integer",
+      yieldBy="character",
+      yieldAll="logical",
+      which="GRanges",
+      what="character"),
+    validity=.validity)
+
+## RsamtoolsFile(s)
 .RsamtoolsFile_generator <- setRefClass("RsamtoolsFile",
     fields=list(.extptr="externalptr", path="character",
       index="character"))
@@ -47,3 +61,6 @@ setClass("ScanBcfParam",
    fields=list(mode="character"))
 .TabixFile <- setRefClass("TabixFile", contains="RsamtoolsFile")
 .FaFile <- setRefClass("FaFile", contains="RsamtoolsFile")
+
+.PileupFiles <- setRefClass("PileupFiles",
+     fields=list(files="list", param="PileupParam"))

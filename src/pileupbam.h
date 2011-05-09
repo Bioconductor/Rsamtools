@@ -3,7 +3,7 @@
 
 #include <Rdefines.h>
 
-SEXP pileup_bam(SEXP files, SEXP space, SEXP param, 
-		 SEXP callback);
+SEXP apply_pileups(SEXP files, SEXP space, SEXP param, 
+		   SEXP callback);
 
 #endif

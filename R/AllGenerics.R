@@ -95,6 +95,17 @@ setGeneric("yieldTabix", function(file, ..., yieldSize=1000000L)
            standardGeneric("yieldTabix"),
            signature="file")
 
-## RsamtoolsFile
+## pileup
+
+setGeneric(".asSpace", function(x) standardGeneric(".asSpace"))
+
+setGeneric("PileupFiles", function(..., param=PileupParam())
+           standardGeneric("PileupFiles"), signature="...")
+
+setGeneric("applyPileups", function(files, FUN, ..., param)
+           standardGeneric("applyPileups"),
+           signature=c("files", "param"))
+
+## RsamtoolsFile(s)
 
 setGeneric("isOpen")

@@ -1,7 +1,7 @@
-\name{pileupBam}
+\name{applyPileups}
 \Rdversion{1.1}
-\alias{.PileupParam}
-\alias{.pileupBam}
+\alias{applyPileups}
+% \alias{yieldBam}
 
 \title{
 
@@ -10,19 +10,12 @@
 }
 \description{
 
-  \code{pileupBam} scans one or more BAM files, returning
+  \code{applyPileups} scans one or more BAM files, returning
   position-specific sequence and quality summaries.
-
-  \code{PileupParam} creates parameters to influence pile-up
-  attributes.
 
 }
 \usage{
-.pileupBam(files, FUN=identity, ..., param)
-.PileupParam(flag=scanBamFlag(), minBaseQuality=13L,
-    minMapQuality=0L, minDepth=0L, maxDepth=250L, yieldSize=1L,
-    yieldBy=c("range", "position"), yieldAll=FALSE,
-    which=GRanges(), what=c("seq", "qual"))
+applyPileups(files, FUN, ..., param)
 }
 
 \arguments{
@@ -72,51 +65,13 @@
   \item{param}{An instance of the object returned by
     \code{PileupParam}.}
 
-  \item{flag}{An instance of the object returned by
-    \code{\link{scanBamFlag}}, restricting various aspects of reads to
-    be included or excluded.}
-
-  \item{minBaseQuality}{The minimum read base quality below which the
-    base is ignored when summarizing pileup information.}
-
-  \item{minMapQuality}{The minimum mapping quality below which the
-    entire read is ignored.}
-
-  \item{minDepth}{The minimum depth of the pile-up below which the
-    position is ignored.}
-
-  \item{maxDepth}{The maximum depth of reads considered at any position;
-    this can be used to limit memory consumption.}
-
-  \item{yieldSize}{The number of records to include in each call to
-    \code{FUN}.}
-
-  \item{yieldBy}{How records are to be counted. By range (in which case
-    \code{yieldSize} must equal 1) means that \code{FUN} is invoked once
-    for each range in \code{which}. By position means that \code{FUN} is
-    invoked whenever pile-ups have been accumulated for \code{yieldSize}
-    positions, regardless of ranges in \code{which}.}
-
-  \item{yieldAll}{Whether to report all positions
-    (\code{yieldAll=TRUE}), or just those passing the filtering criteria
-    of \code{flag}, \code{minBaseQuality}, etc. When
-    \code{yieldAll=TRUE}, positions not passing filter criteria have
-    \sQuote{0} entries in \code{seq} or \code{qual}.}
-
-  \item{which}{A \code{GRanges} or \code{RangesList} instance
-    restricting pileup calculations to the corresponding genomic
-    locations.}
-
-  \item{what}{A \code{character()} instance indicating what values are
-    to be returned. One or more of \code{c("seq", "qual")}.}
-
 }
 
 \value{
 
-  \code{pileupBam} returns a \code{list} equal in length to the number
-  of times \code{FUN} has been called, with each element containing the
-  result of \code{FUN}.
+  \code{applyPileups} returns a \code{list} equal in length to the
+  number of times \code{FUN} has been called, with each element
+  containing the result of \code{FUN}.
 
   \code{PileupParam} returns an object describing the parameters.
 
@@ -127,14 +82,13 @@
 \author{
   Martin Morgan
 }
+\seealso{\code{\link{PileupParam}}.}
 
 \examples{
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-PileupParam <- Rsamtools:::.PileupParam
-pileupBam <- Rsamtools:::.pileupBam
 
-fls <- list(open(BamFile(fl)), open(BamFile(fl)))
+fls <- PileupFiles(fl, fl)
 
 calcInfo <-
     function(x)
@@ -152,16 +106,20 @@ calcInfo <-
 }
 which <- GRanges(c("seq1", "seq2"), IRanges(c(1000, 1000), 2000))
 param <- PileupParam(which=which)
-res <- pileupBam(fls, calcInfo, param=param)
+res <- applyPileups(fls, calcInfo, param=param)
 str(res)
 head(res[[1]][["pos"]])		# positions matching param
 head(res[[1]][["seq"]])		# inforamtion in each file
 
+## 'param' as part of 'files'
+fls1 <- PileupFiles(fl, fl, param=param)
+res1 <- applyPileups(fls1, calcInfo)
+identical(res, res1)
+
 ## yield by position, across ranges
-param <- PileupParam(which=which, yieldSize=2000L, yieldBy="position")
-res <- pileupBam(fls, calcInfo, param=param)
-str(res)
-res[[1]][["seqnames"]]
+param <- PileupParam(which=which, yieldSize=500L, yieldBy="position")
+res <- applyPileups(fls, calcInfo, param=param)
+sapply(res, "[[", "seqnames")
 
 }
 
