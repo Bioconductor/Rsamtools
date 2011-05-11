@@ -76,12 +76,11 @@ applyPileups(files, FUN, ..., param)
   \code{PileupParam} returns an object describing the parameters.
 
 }
-\references{
-  \url{http://samtools.sourceforge.net/}
-}
-\author{
-  Martin Morgan
-}
+
+\references{\url{http://samtools.sourceforge.net/}}
+
+\author{Martin Morgan}
+
 \seealso{\code{\link{PileupParam}}.}
 
 \examples{

@@ -5,7 +5,7 @@
 % con/destructors
 \alias{PileupFiles}
 \alias{PileupFiles,character-method}
-\alias{PileupFiles,BamFile-method}
+\alias{PileupFiles,list-method}
 \alias{open.PileupFiles}
 \alias{close.PileupFiles }
 % accessors
@@ -29,9 +29,9 @@
 \usage{
 
 ## Constructors
-PileupFiles(..., param=PileupParam())
-\S4method{PileupFiles}{character}(..., param=PileupParam())
-\S4method{PileupFiles}{BamFile}(..., param=PileupParam())
+PileupFiles(files, ..., param=PileupParam())
+\S4method{PileupFiles}{character}(files, ..., param=PileupParam())
+\S4method{PileupFiles}{list}(files, ..., param=PileupParam())
 
 ## opening / closing
 \S3method{open}{PileupFiles}(con, ...)
@@ -53,17 +53,18 @@ plpParam(object)
 
 \arguments{
 
-  \item{\ldots}{For \code{PileupFiles}, a \code{character()}, or one or
-    more \code{BamFile} instances representing files to be included in
-    the pileup. Using \code{BamFile} allows indicies to be specified
-    when these are in non-standard format. All elements of \code{\ldots}
-    must be the same type.
+  \item{files}{For \code{PileupFiles}, a \code{character()} or
+    \code{list} of \code{BamFile} instances representing files to be
+    included in the pileup. Using a \code{list} of \code{BamFile} allows
+    indicies to be specified when these are in non-standard format. All
+    elements of \code{\ldots} must be the same type.
 
-    For \code{applyPileups}, additional arguments that are currently
-    ignored.
-  }
+    For \code{applyPileups,PileupFiles-method}, a \code{PileupFiles}
+    instance.}
 
-  \item{con, files, object}{An instance of \code{PileupFiles}.}
+  \item{\ldots}{Additional arguments, currently ignored.}
+
+  \item{con, object}{An instance of \code{PileupFiles}.}
 
   \item{FUN}{A function of one argument; see \code{\link{applyPileups}}.}
 
@@ -71,7 +72,8 @@ plpParam(object)
     to select which records to include in the pileup, and which summary
     information to return.}
 
-  \item{rw}{character() indicating mode of file; not used for \code{TabixFile}.}
+  \item{rw}{character() indicating mode of file; not used for
+    \code{TabixFile}.}
 
 }
 
@@ -105,9 +107,9 @@ plpParam(object)
       instance. Returns a \code{PileupFiles} instance.}
 
     \item{close.PileupFiles}{Closes each file in the \code{PileupFiles}
-	  instance; returning (invisibly) the updated
-	  \code{PileupFiles}. The instance may be re-opened with
-	  \code{open.PileupFiles}.}
+      instance; returning (invisibly) the updated
+      \code{PileupFiles}. The instance may be re-opened with
+      \code{open.PileupFiles}.}
 
   }
 
@@ -136,6 +138,7 @@ plpParam(object)
   }
 
 }
+
 \author{Martin Morgan}
 
 \examples{

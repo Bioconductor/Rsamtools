@@ -7,18 +7,18 @@ setMethod(.validity, "PileupFiles", function(object) {
 })
 
 setMethod(PileupFiles, "character",
-    function(..., param=PileupParam())
+    function(files, ..., param=PileupParam())
 {
-    fls <- lapply(..1, function(x) open(BamFile(x)))
+    fls <- lapply(files, function(x) open(BamFile(x)))
     res <- .PileupFiles$new(files=fls, param=param)
     validObject(res)
     res
 })
 
-setMethod(PileupFiles, "BamFile",
-    function(..., param=PileupParam())
+setMethod(PileupFiles, "list",
+    function(files, ..., param=PileupParam())
 {
-    fls <- lapply(list(...), function(x) {
+    fls <- lapply(files, function(x) {
         if (!isOpen(x)) open(x) else x
     })
     .PileupFiles$new(files=fls, param=param)
