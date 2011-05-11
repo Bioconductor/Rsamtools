@@ -3,7 +3,7 @@ fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
 test_applyPileups_byRange <- function()
 {
-    fls <- PileupFiles(fl, fl)
+    fls <- PileupFiles(c(fl, fl))
     fun <- function(x) x[["seqnames"]]
     which <- GRanges(c("seq1", "seq2"), IRanges(c(1000, 1000), 2000))
     param <- PileupParam(which=which)
@@ -12,14 +12,14 @@ test_applyPileups_byRange <- function()
                 structure(568L, .Names = "seq2"))
     checkIdentical(exp, res)
 
-    fls <- PileupFiles(fl, fl, param=param)
+    fls <- PileupFiles(c(fl, fl), param=param)
     res <- applyPileups(fls, fun)
     checkIdentical(exp, res)
 }
 
 test_applyPileups_byPosition <- function()
 {
-    fls <- PileupFiles(fl, fl)
+    fls <- PileupFiles(c(fl, fl))
     fun <- function(x) x[["seqnames"]]
     which <- GRanges(c("seq1", "seq2"), IRanges(c(1000, 1000), 2000))
     param <-
@@ -44,7 +44,7 @@ test_applyPileups_byPosition <- function()
 }
 
 test_applyPileups_what <- function() {
-    fls <- PileupFiles(fl, fl)
+    fls <- PileupFiles(c(fl, fl))
     which <- GRanges("seq1", IRanges(1000, 1999))
 
     param <- PileupParam(which=which, yieldAll=TRUE)
@@ -70,7 +70,7 @@ test_applyPileups_memoryleak_warning <- function() {
     ## corrected in C code
     opts <- options(warn=2)
     on.exit(options(opts))
-    fls <- PileupFiles(fl, fl)
+    fls <- PileupFiles(c(fl, fl))
     param <- PileupParam(which=GRanges("seq1", IRanges(1000, 1499)),
                          yieldAll=TRUE)
     obs <- applyPileups(fls, function(x) NULL, param=param)

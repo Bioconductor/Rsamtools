@@ -53,11 +53,11 @@ plpParam(object)
 
 \arguments{
 
-  \item{\ldots}{For \code{PileupFiles}, one or more \code{character} or
-    \code{BamFile} instances representing files to be included in the
-    pileup. Using \code{BamFile} allows indicies to be specified when
-    these are in non-standard format. All elements of \code{\ldots} must
-    be the same type.
+  \item{\ldots}{For \code{PileupFiles}, a \code{character()}, or one or
+    more \code{BamFile} instances representing files to be included in
+    the pileup. Using \code{BamFile} allows indicies to be specified
+    when these are in non-standard format. All elements of \code{\ldots}
+    must be the same type.
 
     For \code{applyPileups}, additional arguments that are currently
     ignored.

@@ -88,7 +88,7 @@ applyPileups(files, FUN, ..., param)
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
-fls <- PileupFiles(fl, fl)
+fls <- PileupFiles(c(fl, fl))
 
 calcInfo <-
     function(x)
@@ -112,7 +112,7 @@ head(res[[1]][["pos"]])		# positions matching param
 head(res[[1]][["seq"]])		# inforamtion in each file
 
 ## 'param' as part of 'files'
-fls1 <- PileupFiles(fl, fl, param=param)
+fls1 <- PileupFiles(c(fl, fl), param=param)
 res1 <- applyPileups(fls1, calcInfo)
 identical(res, res1)
 

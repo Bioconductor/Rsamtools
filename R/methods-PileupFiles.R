@@ -9,7 +9,7 @@ setMethod(.validity, "PileupFiles", function(object) {
 setMethod(PileupFiles, "character",
     function(..., param=PileupParam())
 {
-    fls <- lapply(list(...), function(x) open(BamFile(x)))
+    fls <- lapply(..1, function(x) open(BamFile(x)))
     res <- .PileupFiles$new(files=fls, param=param)
     validObject(res)
     res
@@ -78,7 +78,8 @@ setMethod(applyPileups, c("PileupFiles", "missing"),
 
 setMethod(show, "PileupFiles", function(object) {
     cat("class:", class(object), "\n")
-    fls <- sapply(object$files, function(x) basename(path(x)))
-    cat(sprintf("plpFiles: '%s'\n", paste(fls, collapse="' '")))
+    fls <- sapply(plpFiles(object), function(x) basename(path(x)))
+    txt <- paste(selectSome(fls, 3L), collapse=", ")
+    cat(sprintf("plpFiles: %s (%d total)\n", txt, length(fls)))
     cat("plpParam: class", class(object$param), "\n")
 })
