@@ -180,6 +180,7 @@ bam_plp_t bam_plp_init(bam_plp_auto_f func, void *data)
 
 void bam_plp_destroy(bam_plp_t iter)
 {
+	bam_plp_reset(iter);
 	mp_free(iter->mp, iter->dummy);
 	mp_free(iter->mp, iter->head);
 	if (iter->mp->cnt != 0)

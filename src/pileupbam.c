@@ -275,14 +275,6 @@ _mplp_teardown_bam(PILEUP_ITER_T *iter)
 {
     int j;
 
-    /* need to run off end of iteration to avoid memory leak */
-    int *n_plp = iter->n_plp;
-    const bam_pileup1_t **plp = iter->plp;
-    int pos;
-    int32_t tid;
-    while (0 < bam_mplp_auto(iter->mplp_iter, &tid, &pos, n_plp, plp))
-        ;
-
     bam_mplp_destroy(iter->mplp_iter);
     for (j = 0; j < iter->n_files; ++j)
         bam_iter_destroy(iter->mfile[j]->iter);
