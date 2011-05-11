@@ -8,6 +8,9 @@ NEW FEATURES
 
     o readBamGappedReads()
 
+    o PileupFiles, PileupParam, applyPileup for visiting several BAM
+    files and calculating pile-ups on each.
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or

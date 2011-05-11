@@ -7,7 +7,7 @@
 \alias{PileupFiles,character-method}
 \alias{PileupFiles,list-method}
 \alias{open.PileupFiles}
-\alias{close.PileupFiles }
+\alias{close.PileupFiles}
 % accessors
 \alias{isOpen,PileupFiles-method}
 \alias{plpFiles}
