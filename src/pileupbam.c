@@ -206,6 +206,9 @@ static SEXP
 _mplp_setup_R(const PILEUP_PARAM_T *param, const SPACE_T *spc,
               PILEUP_RESULT_T *result)
 {
+#ifdef PILEUPBAM_DEBUG
+    REprintf("_mplp_setup_R\n");
+#endif
     SEXP alloc = PROTECT(NEW_LIST(4)),
         nms = PROTECT(NEW_CHARACTER(4)),
         opos, oseq, oqual;
@@ -255,6 +258,9 @@ static void
 _mplp_setup_bam(const PILEUP_PARAM_T *param,
                 const SPACE_T *spc, PILEUP_ITER_T *plp_iter)
 {
+#ifdef PILEUPBAM_DEBUG
+    REprintf("_mplp_setup_bam\n");
+#endif
     BAM_ITER_T **mfile = plp_iter->mfile;
 
     for (int j = 0; j < plp_iter->n_files; ++j) {
@@ -273,6 +279,9 @@ _mplp_setup_bam(const PILEUP_PARAM_T *param,
 static void
 _mplp_teardown_bam(PILEUP_ITER_T *iter)
 {
+#ifdef PILEUPBAM_DEBUG
+    REprintf("_mplp_teardown_bam\n");
+#endif
     int j;
 
     bam_mplp_destroy(iter->mplp_iter);
@@ -284,6 +293,9 @@ static int
 _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
              PILEUP_ITER_T *plp_iter, PILEUP_RESULT_T *result)
 {
+#ifdef PILEUPBAM_DEBUG
+    REprintf("_pileup_bam1\n");
+#endif
     const int n_files = plp_iter->n_files,
         start = spc->start, end = spc->end;
     int *n_plp = plp_iter->n_plp,
@@ -368,6 +380,9 @@ _resize_3D_dim3(SEXP s, int n)
 static SEXP
 _resize(SEXP r, int n)
 {
+#ifdef PILEUPBAM_DEBUG
+    REprintf("_resize\n");
+#endif
     SEXP s, nm = Rf_getAttrib(r, R_NamesSymbol);
     int i = 2;
 
@@ -433,6 +448,9 @@ _yieldall_number(SEXP r, SPACE_T *spc)
 static SEXP
 _pileup_call1(SEXP r, SEXP call)
 {
+#ifdef PILEUPBAM_DEBUG
+    REprintf("_pileup_call1\n");
+#endif
     SETCADR(call, r);           /* let's say this doesn't allocate */
     return Rf_eval(call, R_GlobalEnv);
 }
@@ -442,6 +460,9 @@ _pileup_yield1_byrange(PILEUP_PARAM_T *param,
                        SPACE_ITER_T *spc_iter,
                        PILEUP_ITER_T *plp_iter, SEXP call)
 {
+#ifdef PILEUPBAM_DEBUG
+    REprintf("_pileup_yield1_byrange\n");
+#endif
     SPACE_T *spc;
     PILEUP_RESULT_T plp_result;
     SEXP res = R_NilValue, rle;
@@ -499,6 +520,9 @@ _pileup_yield1_byposition(PILEUP_PARAM_T *param,
                           SPACE_ITER_T *spc_iter,
                           PILEUP_ITER_T *plp_iter)
 {
+#ifdef PILEUPBAM_DEBUG
+    REprintf("_pileup_yield1_byposition\n");
+#endif
     const int
         yieldSize = param->yieldSize,
         n_spc = spc_iter->n_spc;
