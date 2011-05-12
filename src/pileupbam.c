@@ -18,6 +18,7 @@ typedef struct {
     bam_iter_t iter;
     /* read filter params */
     int min_map_quality;
+    uint32_t keep_flag[2];
 } BAM_ITER_T;
 
 typedef struct {
@@ -75,7 +76,7 @@ _bam_header_hash_init(bam_header_t *header)
 /* PILEUP_ITER_T */
 
 static PILEUP_ITER_T *
-_pileup_iter_init(SEXP files, int min_map_quality)
+_pileup_iter_init(SEXP files, PILEUP_PARAM_T *param)
 {
     int i;
     PILEUP_ITER_T *iter = Calloc(1, PILEUP_ITER_T);
@@ -86,7 +87,9 @@ _pileup_iter_init(SEXP files, int min_map_quality)
         iter->mfile[i] = iter->mfile[0] + i;
         iter->mfile[i]->bfile = BAMFILE(VECTOR_ELT(files, i));
         iter->mfile[i]->fp = iter->mfile[i]->bfile->file->x.bam;
-        iter->mfile[i]->min_map_quality = min_map_quality;
+        iter->mfile[i]->min_map_quality = param->min_map_quality;
+        iter->mfile[i]->keep_flag[0] = param->keep_flag[0];
+        iter->mfile[i]->keep_flag[1] = param->keep_flag[1];
         /* header hash destroyed when file closed */
         _bam_header_hash_init(iter->mfile[i]->bfile->file->header);
     }
@@ -199,9 +202,9 @@ _lst_elt(SEXP lst, const char *name, const char *lst_name)
 static int
 _mplp_read_bam(void *data, bam1_t *b)
 {
-    /* task: read one alignemnt */
     BAM_ITER_T *mdata = (BAM_ITER_T *) data;
-    int skip = FALSE, result;
+    uint32_t test_flag;
+    int skip, result;
 
     do {
         result = mdata->iter ?
@@ -211,7 +214,11 @@ _mplp_read_bam(void *data, bam1_t *b)
             break;
 
         skip = FALSE;
-        if (b->core.tid < 0 || (b->core.flag & BAM_FUNMAP))
+        test_flag = (mdata->keep_flag[0] & ~b->core.flag) |
+            (mdata->keep_flag[1] & b->core.flag);
+        if (~test_flag & 2047u)
+            skip = TRUE;
+        else if (b->core.tid < 0 || (b->core.flag & BAM_FUNMAP))
             skip = TRUE;
         else if (b->core.qual < mdata->min_map_quality)
             skip = TRUE;
@@ -356,16 +363,11 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
                 const bam_pileup1_t *p = plp[i] + j;
                 /* filter */
                 const uint8_t q = bam1_qual(p->b)[p->qpos];
-                if (param->min_map_quality > p->b->core.qual ||
-                    param->min_base_quality > q)
-                    continue;
-                uint32_t test_flag =
-                    (param->keep_flag[0] & ~p->b->core.flag) |
-                    (param->keep_flag[1] & p->b->core.flag);
-                if (~test_flag & 2047u)
+                if (param->min_base_quality > q)
                     continue;
                 /* query, e.g., ...*/
                 if (param->what & WHAT_SEQ) {
+                    /* FIXME: A, C, G, T, N only */
                     const int s = bam1_seqi(bam1_seq(p->b), p->qpos);
                     s0[16 * i + s] += 1;
                 }
@@ -691,7 +693,7 @@ apply_pileups(SEXP files, SEXP space, SEXP param, SEXP callback)
         p.what |= WHAT_QUAL;
 
     /* data -- validate */
-    plp_iter = _pileup_iter_init(files, p.min_map_quality);
+    plp_iter = _pileup_iter_init(files, &p);
 
     /* result */
     result = R_NilValue;
