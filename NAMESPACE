@@ -23,3 +23,13 @@ exportPattern("^[^\\.]")
 exportMethods(length, names, "[", "[[", show)
 
 S3method(close, BamFile)
+S3method(close, BcfFile)
+S3method(close, FaFile)
+S3method(close, PileupFiles)
+S3method(close, TabixFile)
+
+S3method(open, BamFile)
+S3method(open, BcfFile)
+S3method(open, FaFile)
+S3method(open, PileupFiles)
+S3method(open, TabixFile)
