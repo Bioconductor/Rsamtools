@@ -16,6 +16,8 @@ typedef struct {
     _BAM_FILE *bfile;
     bamFile fp;
     bam_iter_t iter;
+    /* read filter params */
+    int min_map_quality;
 } BAM_ITER_T;
 
 typedef struct {
@@ -56,9 +58,9 @@ typedef struct {
 KHASH_MAP_INIT_STR(s, int)
 
 static void
-_bam_init_header_hash(bam_header_t *header)
+_bam_header_hash_init(bam_header_t *header)
 {
-    if (header->hash == 0) {
+    if (0 == header->hash) {
         int ret, i;
         khiter_t iter;
         khash_t(s) *h;
@@ -73,20 +75,20 @@ _bam_init_header_hash(bam_header_t *header)
 /* PILEUP_ITER_T */
 
 static PILEUP_ITER_T *
-_pileup_iter_init(SEXP files)
+_pileup_iter_init(SEXP files, int min_map_quality)
 {
     int i;
     PILEUP_ITER_T *iter = Calloc(1, PILEUP_ITER_T);
     iter->n_files = Rf_length(files);;
-    iter->mfile =
-        (BAM_ITER_T **) R_alloc(sizeof(BAM_ITER_T *), iter->n_files);
+    iter->mfile = Calloc(iter->n_files, BAM_ITER_T *);
+    iter->mfile[0] = Calloc(iter->n_files, BAM_ITER_T);
     for (i = 0; i < iter->n_files; ++i) {
-        iter->mfile[i] =
-            (BAM_ITER_T *) R_alloc(sizeof(BAM_ITER_T), 1L);
+        iter->mfile[i] = iter->mfile[0] + i;
         iter->mfile[i]->bfile = BAMFILE(VECTOR_ELT(files, i));
         iter->mfile[i]->fp = iter->mfile[i]->bfile->file->x.bam;
-        /* FIXME: the header hash should be destroyed */
-        _bam_init_header_hash(iter->mfile[i]->bfile->file->header);
+        iter->mfile[i]->min_map_quality = min_map_quality;
+        /* header hash destroyed when file closed */
+        _bam_header_hash_init(iter->mfile[i]->bfile->file->header);
     }
 
     iter->plp = Calloc(iter->n_files, const bam_pileup1_t *);
@@ -100,6 +102,8 @@ _pileup_iter_destroy(PILEUP_ITER_T *iter)
 {
     Free(iter->plp);
     Free(iter->n_plp);
+    Free(iter->mfile[0]);
+    Free(iter->mfile);
     Free(iter);
     return NULL;
 }
@@ -177,7 +181,7 @@ _space_iter_destroy(SPACE_ITER_T *iter)
 /*  */
 
 static SEXP
-_get_lst_elt(SEXP lst, const char *name, const char *lst_name)
+_lst_elt(SEXP lst, const char *name, const char *lst_name)
 {
     SEXP nms = GET_NAMES(lst);
     SEXP elt_nm = PROTECT(mkChar(name));
@@ -197,9 +201,22 @@ _mplp_read_bam(void *data, bam1_t *b)
 {
     /* task: read one alignemnt */
     BAM_ITER_T *mdata = (BAM_ITER_T *) data;
-    return mdata->iter ?
-        bam_iter_read(mdata->fp, mdata->iter, b) :
-        bam_read1(mdata->fp, b);
+    int skip = FALSE, result;
+
+    do {
+        result = mdata->iter ?
+            bam_iter_read(mdata->fp, mdata->iter, b) :
+            bam_read1(mdata->fp, b);
+        if (0 == result)
+            break;
+
+        skip = FALSE;
+        if (b->core.tid < 0 || (b->core.flag & BAM_FUNMAP))
+            skip = TRUE;
+        else if (b->core.qual < mdata->min_map_quality)
+            skip = TRUE;
+    } while (skip);
+    return result;
 }
 
 static SEXP
@@ -645,28 +662,28 @@ apply_pileups(SEXP files, SEXP space, SEXP param, SEXP callback)
     spc_iter = _space_iter_init(space);
 
     p.keep_flag[0] =
-        INTEGER(_get_lst_elt(param, "flag", "param"))[0];
+        INTEGER(_lst_elt(param, "flag", "param"))[0];
     p.keep_flag[1] =
-        INTEGER(_get_lst_elt(param, "flag", "param"))[1];
+        INTEGER(_lst_elt(param, "flag", "param"))[1];
     p.min_depth =
-        INTEGER(_get_lst_elt(param, "minDepth", "param"))[0];
+        INTEGER(_lst_elt(param, "minDepth", "param"))[0];
     p.max_depth =
-        INTEGER(_get_lst_elt(param, "maxDepth", "param"))[0];
+        INTEGER(_lst_elt(param, "maxDepth", "param"))[0];
     p.min_base_quality =
-        INTEGER(_get_lst_elt(param, "minBaseQuality", "param"))[0];
+        INTEGER(_lst_elt(param, "minBaseQuality", "param"))[0];
     p.min_map_quality =
-        INTEGER(_get_lst_elt(param, "minMapQuality", "param"))[0];
+        INTEGER(_lst_elt(param, "minMapQuality", "param"))[0];
 
     p.yieldSize =
-        INTEGER(_get_lst_elt(param, "yieldSize", "param"))[0];
+        INTEGER(_lst_elt(param, "yieldSize", "param"))[0];
     const char *yieldBy =
-        CHAR(STRING_ELT(_get_lst_elt(param, "yieldBy", "param"), 0));
+        CHAR(STRING_ELT(_lst_elt(param, "yieldBy", "param"), 0));
     p.yieldBy =
         0 == strcmp(yieldBy, "range") ? YIELDBY_RANGE : YIELDBY_POSITION;
     p.yieldAll =
-        LOGICAL(_get_lst_elt(param, "yieldAll", "param"))[0];
+        LOGICAL(_lst_elt(param, "yieldAll", "param"))[0];
 
-    int  *what = LOGICAL(_get_lst_elt(param, "what", "param"));
+    int  *what = LOGICAL(_lst_elt(param, "what", "param"));
     p.what = 0;
     if (what[0])
         p.what |= WHAT_SEQ;
@@ -674,7 +691,7 @@ apply_pileups(SEXP files, SEXP space, SEXP param, SEXP callback)
         p.what |= WHAT_QUAL;
 
     /* data -- validate */
-    plp_iter = _pileup_iter_init(files);
+    plp_iter = _pileup_iter_init(files, p.min_map_quality);
 
     /* result */
     result = R_NilValue;
