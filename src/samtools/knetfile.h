@@ -19,6 +19,7 @@
 #endif
 #endif
 
+
 // FIXME: currently I/O is unbuffered
 
 #define KNF_TYPE_LOCAL 1

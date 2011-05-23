@@ -10,7 +10,7 @@
 KSTREAM_INIT(gzFile, gzread, 16384)
 
 #define MC_MAX_EM_ITER 16
-#define MC_EM_EPS 1e-4
+#define MC_EM_EPS 1e-5
 #define MC_DEF_INDEL 0.15
 
 unsigned char seq_nt4_table[256] = {
@@ -40,6 +40,7 @@ struct __bcf_p1aux_t {
 	double *z, *zswap; // aux for afs
 	double *z1, *z2, *phi1, *phi2; // only calculated when n1 is set
 	double **hg; // hypergeometric distribution
+	double *lf; // log factorial
 	double t, t1, t2;
 	double *afs, *afs1; // afs: accumulative AFS; afs1: site posterior distribution
 	const uint8_t *PL; // point to PL
@@ -154,8 +155,10 @@ bcf_p1aux_t *bcf_p1_init(int n, uint8_t *ploidy)
 	ma->z2 = calloc(ma->M + 1, sizeof(double));
 	ma->afs = calloc(ma->M + 1, sizeof(double));
 	ma->afs1 = calloc(ma->M + 1, sizeof(double));
+	ma->lf = calloc(ma->M + 1, sizeof(double));
 	for (i = 0; i < 256; ++i)
 		ma->q2p[i] = pow(10., -i / 10.);
+	for (i = 0; i <= ma->M; ++i) ma->lf[i] = lgamma(i + 1);
 	bcf_p1_init_prior(ma, MC_PTYPE_FULL, 1e-3); // the simplest prior
 	return ma;
 }
@@ -175,6 +178,7 @@ void bcf_p1_destroy(bcf_p1aux_t *ma)
 {
 	if (ma) {
 		int k;
+		free(ma->lf);
 		if (ma->hg && ma->n1 > 0) {
 			for (k = 0; k <= 2*ma->n1; ++k) free(ma->hg[k]);
 			free(ma->hg);
@@ -207,21 +211,6 @@ static int cal_pdg(const bcf1_t *b, bcf_p1aux_t *ma)
 	for (i = b->n_alleles - 1; i >= 0; --i)
 		if ((p[i]&0xf) == 0) break;
 	return i;
-}
-// f0 is the reference allele frequency
-static double mc_freq_iter(double f0, const bcf_p1aux_t *ma)
-{
-	double f, f3[3];
-	int i;
-	f3[0] = (1.-f0)*(1.-f0); f3[1] = 2.*f0*(1.-f0); f3[2] = f0*f0;
-	for (i = 0, f = 0.; i < ma->n; ++i) {
-		double *pdg;
-		pdg = ma->pdg + i * 3;
-		f += (pdg[1] * f3[1] + 2. * pdg[2] * f3[2])
-			/ (pdg[0] * f3[0] + pdg[1] * f3[1] + pdg[2] * f3[2]);
-	}
-	f /= ma->n * 2.;
-	return f;
 }
 
 int bcf_p1_call_gt(const bcf_p1aux_t *ma, double f0, int k)
@@ -367,9 +356,10 @@ static inline double chi2_test(int a, int b, int c, int d)
 }
 
 // chi2=(a+b+c+d)(ad-bc)^2/[(a+b)(c+d)(a+c)(b+d)]
-static inline double contrast2_aux(const bcf_p1aux_t *p1, double sum, int n1, int n2, int k1, int k2, double x[3])
+static inline double contrast2_aux(const bcf_p1aux_t *p1, double sum, int k1, int k2, double x[3])
 {
 	double p = p1->phi[k1+k2] * p1->z1[k1] * p1->z2[k2] / sum * p1->hg[k1][k2];
+	int n1 = p1->n1, n2 = p1->n - p1->n1;
 	if (p < CONTRAST_TINY) return -1;
 	if (.5*k1/n1 < .5*k2/n2) x[1] += p;
 	else if (.5*k1/n1 > .5*k2/n2) x[2] += p;
@@ -397,12 +387,12 @@ static double contrast2(bcf_p1aux_t *p1, double ret[3])
 				p1->hg[k1][k2] = exp(lgamma(k1+k2+1) + lgamma(p1->M-k1-k2+1) - (lgamma(k1+1) + lgamma(k2+1) + lgamma(2*n1-k1+1) + lgamma(2*n2-k2+1) + tmp));
 		}
 	}
-	{ // compute sum1 and sum2
+	{ // compute
 		long double suml = 0;
 		for (k = 0; k <= p1->M; ++k) suml += p1->phi[k] * p1->z[k];
 		sum = suml;
 	}
-	{ // get the mean k1 and k2
+	{ // get the max k1 and k2
 		double max;
 		int max_k;
 		for (k = 0, max = 0, max_k = -1; k <= 2*n1; ++k) {
@@ -418,15 +408,15 @@ static double contrast2(bcf_p1aux_t *p1, double ret[3])
 	}
 	{ // We can do the following with one nested loop, but that is an O(N^2) thing. The following code block is much faster for large N.
 		double x[3], y;
-		long double z = 0.;
-		x[0] = x[1] = x[2] = 0;
+		long double z = 0., L[2];
+		x[0] = x[1] = x[2] = 0; L[0] = L[1] = 0;
 		for (k1 = k10; k1 >= 0; --k1) {
 			for (k2 = k20; k2 >= 0; --k2) {
-				if ((y = contrast2_aux(p1, sum, n1, n2, k1, k2, x)) < 0) break;
+				if ((y = contrast2_aux(p1, sum, k1, k2, x)) < 0) break;
 				else z += y;
 			}
 			for (k2 = k20 + 1; k2 <= 2*n2; ++k2) {
-				if ((y = contrast2_aux(p1, sum, n1, n2, k1, k2, x)) < 0) break;
+				if ((y = contrast2_aux(p1, sum, k1, k2, x)) < 0) break;
 				else z += y;
 			}
 		}
@@ -434,20 +424,22 @@ static double contrast2(bcf_p1aux_t *p1, double ret[3])
 		x[0] = x[1] = x[2] = 0;
 		for (k1 = k10 + 1; k1 <= 2*n1; ++k1) {
 			for (k2 = k20; k2 >= 0; --k2) {
-				if ((y = contrast2_aux(p1, sum, n1, n2, k1, k2, x)) < 0) break;
+				if ((y = contrast2_aux(p1, sum, k1, k2, x)) < 0) break;
 				else z += y;
 			}
 			for (k2 = k20 + 1; k2 <= 2*n2; ++k2) {
-				if ((y = contrast2_aux(p1, sum, n1, n2, k1, k2, x)) < 0) break;
+				if ((y = contrast2_aux(p1, sum, k1, k2, x)) < 0) break;
 				else z += y;
 			}
 		}
 		ret[0] += x[0]; ret[1] += x[1]; ret[2] += x[2];
-		if (ret[0] + ret[1] + ret[2] < 0.99) { // in case of bad things happened
-			ret[0] = ret[1] = ret[2] = 0;
+		if (ret[0] + ret[1] + ret[2] < 0.95) { // in case of bad things happened
+			ret[0] = ret[1] = ret[2] = 0; L[0] = L[1] = 0;
 			for (k1 = 0, z = 0.; k1 <= 2*n1; ++k1)
 				for (k2 = 0; k2 <= 2*n2; ++k2)
-					if ((y = contrast2_aux(p1, sum, n1, n2, k1, k2, ret)) >= 0) z += y;
+					if ((y = contrast2_aux(p1, sum, k1, k2, ret)) >= 0) z += y;
+			if (ret[0] + ret[1] + ret[2] < 0.95) // It seems that this may be caused by floating point errors. I do not really understand why...
+				z = 1.0, ret[0] = ret[1] = ret[2] = 1./3;
 		}
 		return (double)z;
 	}
@@ -482,7 +474,7 @@ static double mc_cal_afs(bcf_p1aux_t *ma, double *p_ref_folded, double *p_var_fo
 	return sum / ma->M;
 }
 
-int bcf_p1_cal(const bcf1_t *b, bcf_p1aux_t *ma, bcf_p1rst_t *rst)
+int bcf_p1_cal(const bcf1_t *b, int do_contrast, bcf_p1aux_t *ma, bcf_p1rst_t *rst)
 {
 	int i, k;
 	long double sum = 0.;
@@ -496,6 +488,7 @@ int bcf_p1_cal(const bcf1_t *b, bcf_p1aux_t *ma, bcf_p1rst_t *rst)
 			break;
 		}
 	}
+	if (i == b->n_gi) return -1; // no PL
 	if (b->n_alleles < 2) return -1; // FIXME: find a better solution
 	// 
 	rst->rank0 = cal_pdg(b, ma);
@@ -513,14 +506,6 @@ int bcf_p1_cal(const bcf1_t *b, bcf_p1aux_t *ma, bcf_p1rst_t *rst)
 		rst->f_flat += k * p;
 	}
 	rst->f_flat /= ma->M;
-	{ // calculate f_em
-		double flast = rst->f_flat;
-		for (i = 0; i < MC_MAX_EM_ITER; ++i) {
-			rst->f_em = mc_freq_iter(flast, ma);
-			if (fabs(rst->f_em - flast) < MC_EM_EPS) break;
-			flast = rst->f_em;
-		}
-	}
 	{ // estimate equal-tail credible interval (95% level)
 		int l, h;
 		double p;
@@ -534,9 +519,8 @@ int bcf_p1_cal(const bcf1_t *b, bcf_p1aux_t *ma, bcf_p1rst_t *rst)
 		h = i;
 		rst->cil = (double)(ma->M - h) / ma->M; rst->cih = (double)(ma->M - l) / ma->M;
 	}
-	rst->g[0] = rst->g[1] = rst->g[2] = -1.;
 	rst->cmp[0] = rst->cmp[1] = rst->cmp[2] = rst->p_chi2 = -1.0;
-	if (rst->p_var > 0.1) // skip contrast2() if the locus is a strong non-variant
+	if (do_contrast && rst->p_var > 0.5) // skip contrast2() if the locus is a strong non-variant
 		rst->p_chi2 = contrast2(ma, rst->cmp);
 	return 0;
 }
