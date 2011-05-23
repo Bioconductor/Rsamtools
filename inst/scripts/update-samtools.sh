@@ -1,6 +1,7 @@
 #! /bin/sh
 
-repos="https://samtools.svn.sourceforge.net/svnroot/samtools/trunk/samtools/"
+repos0="https://samtools.svn.sourceforge.net/svnroot/samtools/trunk/samtools/"
+repos1="https://samtools.svn.sourceforge.net/svnroot/samtools/trunk/tabix"
 wd=`pwd`
 
 dest="../inst/extdata"
@@ -9,12 +10,11 @@ if test ! -d $dest; then
 	exit 1
 fi
 
-svn info $repos > $dest/samtools-svninfo.txt
+svn info $repos0 > $dest/samtools-svninfo.txt
 rev=`sed -n 's/Revision: //p' < $dest/samtools-svninfo.txt`
 
 dest0="../src/samtools/"
 dest1="../src/samtools/bcftools/"
-dest2="../src/tabix/"
 if test ! -d $dest0; then
 	echo "directory does not exist: '$dest0'"
 	exit 1
@@ -28,7 +28,7 @@ if test ! -d $dest2; then
 	exit 1
 fi
 unpack=`mktemp -d -u` ## unsafe: get but don't create temp dir name
-svn export -r $rev $repos $unpack
+svn export -r $rev $repos0 $unpack
 for f in `ls $dest0`; do
 	echo "updating file $f"
 	cp $unpack/$f $dest0/$f
@@ -37,9 +37,13 @@ for f in `ls $dest1`; do
 	echo "updating file $f"
 	cp $unpack/bcftools/$f $dest1/$f
 done
+
+dest2="../src/tabix/"
+unpack1=`mktemp -d -u` ## unsafe: get but don't create temp dir name
+svn export $repos1 $unpack1
 for f in `ls $dest2`; do
 	echo "updating file $f"
-	cp $unpack/tabix/$f $dest2/$f
+	cp $unpack1/$f $dest2/$f
 done
 rm -rf $unpack
 
