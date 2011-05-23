@@ -93,7 +93,7 @@ calcInfo <-
     function(x)
 {
     ## information at each pile-up position
-    x[[3]] <- apply(x[[3]], 2, function(y) {
+    info <- apply(x[["seq"]], 2, function(y) {
         y <- y[c(1, 2, 4, 8) + 1,]      # A, C, G, T
         y <- y + 1L                     # continuity
         cvg <- colSums(y)
@@ -101,14 +101,14 @@ calcInfo <-
         h <- -colSums(p * log(p))
         ifelse(cvg == 4L, NA, h)
     })
-    x
+    list(seqnames=x[["seqnames"]], pos=x[["pos"]], info=info)
 }
 which <- GRanges(c("seq1", "seq2"), IRanges(c(1000, 1000), 2000))
-param <- PileupParam(which=which)
+param <- PileupParam(which=which, what="seq")
 res <- applyPileups(fls, calcInfo, param=param)
 str(res)
 head(res[[1]][["pos"]])		# positions matching param
-head(res[[1]][["seq"]])		# inforamtion in each file
+head(res[[1]][["info"]])		# inforamtion in each file
 
 ## 'param' as part of 'files'
 fls1 <- PileupFiles(c(fl, fl), param=param)
@@ -116,7 +116,8 @@ res1 <- applyPileups(fls1, calcInfo)
 identical(res, res1)
 
 ## yield by position, across ranges
-param <- PileupParam(which=which, yieldSize=500L, yieldBy="position")
+param <- PileupParam(which=which, yieldSize=500L, yieldBy="position",
+                     what="seq")
 res <- applyPileups(fls, calcInfo, param=param)
 sapply(res, "[[", "seqnames")
 
