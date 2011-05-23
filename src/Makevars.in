@@ -1,5 +1,8 @@
 include Makevars.common
+
 PKG_LIBS += @LIBS@
+
+libs0: libbam.a libbcf.a libtabix.a
 
 libbam.a: $(BAMOBJ)
 	$(AR) -crus $@ $^
