@@ -11,6 +11,8 @@ NEW FEATURES
     o PileupFiles, PileupParam, applyPileup for visiting several BAM
     files and calculating pile-ups on each.
 
+    o Provide a zlib for Windows, as R does not currently do this
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or
