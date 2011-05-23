@@ -1,0 +1,8 @@
+        ChangeLog file for zlib
+
+Changes in 1.2.5.1 (23 May 2011)
+	- remove unnecessary files
+	- rename dll zlib1rsamtools.dll
+	- adjust prefix to bioc_
+	- map export symbols to bioc_ in win32/zlib.def
+	- manually PREFIX in make file for GCC version switch

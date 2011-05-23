@@ -1,0 +1,74 @@
+LIBRARY
+; zlib data compression library
+
+EXPORTS
+; basic functions
+    bioc_zlibVersion
+    bioc_deflate
+    bioc_deflateEnd
+    bioc_inflate
+    bioc_inflateEnd
+; advanced functions
+    bioc_deflateSetDictionary
+    bioc_deflateCopy
+    bioc_deflateReset
+    bioc_deflateParams
+    bioc_deflateTune
+    bioc_deflateBound
+    bioc_deflatePrime
+    bioc_deflateSetHeader
+    bioc_inflateSetDictionary
+    bioc_inflateSync
+    bioc_inflateCopy
+    bioc_inflateReset
+    bioc_inflateReset2
+    bioc_inflatePrime
+    bioc_inflateMark
+    bioc_inflateGetHeader
+    bioc_inflateBack
+    bioc_inflateBackEnd
+    bioc_zlibCompileFlags
+; utility functions
+    bioc_compress
+    bioc_compress2
+    bioc_compressBound
+    bioc_uncompress
+    bioc_gzopen
+    bioc_gzdopen
+    bioc_gzbuffer
+    bioc_gzsetparams
+    bioc_gzread
+    bioc_gzwrite
+    bioc_gzprintf
+    bioc_gzputs
+    bioc_gzgets
+    bioc_gzputc
+    bioc_gzgetc
+    bioc_gzungetc
+    bioc_gzflush
+    bioc_gzseek
+    bioc_gzrewind
+    bioc_gztell
+    bioc_gzoffset
+    bioc_gzeof
+    bioc_gzdirect
+    bioc_gzclose
+    bioc_gzclose_r
+    bioc_gzclose_w
+    bioc_gzerror
+    bioc_gzclearerr
+; checksum functions
+    bioc_adler32
+    bioc_crc32
+    bioc_adler32_combine
+    bioc_crc32_combine
+; various hacks, don't look :)
+    bioc_deflateInit_
+    bioc_deflateInit2_
+    bioc_inflateInit_
+    bioc_inflateInit2_
+    bioc_inflateBackInit_
+    bioc_zError
+    bioc_inflateSyncPoint
+    bioc_get_crc_table
+    bioc_inflateUndermine

@@ -34,7 +34,7 @@ all: $(SHLIB)
 
 $(SHLIB): libs
 
-libs: libbam.a libbcf.a libtabix.a
+libs: libs0
 	mkdir -p ${R_PACKAGE_DIR}/usretc${R_ARCH}
 	cp Rsamtools.mk ${R_PACKAGE_DIR}/usretc${R_ARCH}
 	mkdir -p ${R_PACKAGE_DIR}/include/samtools/bcftools
