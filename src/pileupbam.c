@@ -227,6 +227,35 @@ _mplp_read_bam(void *data, bam1_t *b)
 }
 
 static SEXP
+_seq_rle(int *cnt, const char **chr, int n)
+{
+    int i = 0, j;
+    SEXP s, t;
+
+    for (j = 1; j < n; ++j) {
+        if (0 != strcmp(chr[j], chr[j-1])) {
+            i += 1;
+            chr[i] = chr[j];
+            cnt[i] = cnt[j] - cnt[i-1];
+        }
+    }
+    if (n)
+        n = i + 1;
+
+    s = PROTECT(NEW_INTEGER(n));
+    t = NEW_CHARACTER(n);
+    Rf_setAttrib(s, R_NamesSymbol, t);
+
+    for (i = 0; i < n; ++i) {
+        INTEGER(s)[i] = cnt[i];
+        SET_STRING_ELT(t, i, mkChar(chr[i]));
+    }
+
+    UNPROTECT(1);
+    return s;
+}
+
+static SEXP
 _mplp_setup_R(const PILEUP_PARAM_T *param, const SPACE_T *spc,
               PILEUP_RESULT_T *result)
 {
@@ -246,7 +275,8 @@ _mplp_setup_R(const PILEUP_PARAM_T *param, const SPACE_T *spc,
 
     result->i_yld = 0;
 
-    /* elt 0: seqnames; handled by caller */
+    SET_VECTOR_ELT(alloc, 0, _seq_rle(NULL, NULL, 0));
+
     opos = NEW_INTEGER(param->yieldSize);
     if (param->yieldAll)
         for (i = 0; i < param->yieldSize; ++i)
@@ -423,34 +453,6 @@ _resize(SEXP r, int n)
     }
 
     return Rf_lengthgets(r, i);
-}
-
-static SEXP
-_seq_rle(int *cnt, const char **chr, int n)
-{
-    int i = 0, j;
-    SEXP s, t;
-
-    for (j = 1; j < n; ++j) {
-        if (0 != strcmp(chr[j], chr[j-1])) {
-            i += 1;
-            chr[i] = chr[j];
-            cnt[i] = cnt[j] - cnt[i-1];
-        }
-    }
-    n = i + 1;
-
-    s = PROTECT(NEW_INTEGER(n));
-    t = NEW_CHARACTER(n);
-    Rf_setAttrib(s, R_NamesSymbol, t);
-
-    for (i = 0; i < n; ++i) {
-        INTEGER(s)[i] = cnt[i];
-        SET_STRING_ELT(t, i, mkChar(chr[i]));
-    }
-
-    UNPROTECT(1);
-    return s;
 }
 
 static void
