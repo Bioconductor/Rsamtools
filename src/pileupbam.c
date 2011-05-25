@@ -237,7 +237,8 @@ _seq_rle(int *cnt, const char **chr, int n)
             i += 1;
             chr[i] = chr[j];
             cnt[i] = cnt[j] - cnt[i-1];
-        }
+        } else
+            cnt[i] += cnt[j] - cnt[j - 1];
     }
     if (n)
         n = i + 1;
@@ -265,7 +266,6 @@ _mplp_setup_R(const PILEUP_PARAM_T *param, const SPACE_T *spc,
     SEXP alloc = PROTECT(NEW_LIST(4)),
         nms = PROTECT(NEW_CHARACTER(4)),
         opos, oseq, oqual;
-    int i;
 
     SET_STRING_ELT(nms, 0, mkChar("seqnames"));
     SET_STRING_ELT(nms, 1, mkChar("pos"));
@@ -278,11 +278,7 @@ _mplp_setup_R(const PILEUP_PARAM_T *param, const SPACE_T *spc,
     SET_VECTOR_ELT(alloc, 0, _seq_rle(NULL, NULL, 0));
 
     opos = NEW_INTEGER(param->yieldSize);
-    if (param->yieldAll)
-        for (i = 0; i < param->yieldSize; ++i)
-            INTEGER(opos)[i] = spc->start + i;
-    else
-        memset(INTEGER(opos), 0, sizeof(int) * Rf_length(opos));
+    memset(INTEGER(opos), 0, sizeof(int) * Rf_length(opos));
     SET_VECTOR_ELT(alloc, 1, opos);
     result->pos = INTEGER(opos);
 
@@ -365,6 +361,10 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
 
     int *s0, *q0;
 
+    if (param->yieldAll)
+        for (i = 0; i < param->yieldSize && i < end - start + 1; ++i)
+            opos[i] = start + i;
+
     while (param->yieldSize > idx &&
            0 < bam_mplp_auto(mplp_iter, &tid, &pos, n_plp, plp))
     {
@@ -405,10 +405,9 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
                     q0[256 * i + q] += 1;
             }
         }
-        if (!param->yieldAll) {
+        if (!param->yieldAll)
             opos[idx] = pos;
-            idx += 1;
-        }
+        idx += 1;
     }
     result->i_yld += idx;
     return idx;
@@ -455,17 +454,6 @@ _resize(SEXP r, int n)
     return Rf_lengthgets(r, i);
 }
 
-static void
-_yieldall_number(SEXP r, SPACE_T *spc)
-{
-    int i;
-    SEXP pos = VECTOR_ELT(r, 1);
-    if (Rf_length(pos) != spc->end - spc->start + 1)
-        Rf_error("internal: 'pos' and 'spc' lengths differ");
-    for (i = 0; i < spc->end - spc->start + 1; ++i)
-        INTEGER(pos)[i] = spc->start + i;
-}
-
 static SEXP
 _pileup_call1(SEXP r, SEXP call)
 {
@@ -503,8 +491,6 @@ _pileup_yield1_byrange(PILEUP_PARAM_T *param,
         rle = _seq_rle(&n_rec, &spc->chr, 1);
         SET_VECTOR_ELT(res, 0, rle);
 
-        if (param->yieldAll)
-            _yieldall_number(res, spc);
         res = _resize(res, n_rec);
 
         UNPROTECT(1);
@@ -572,10 +558,11 @@ _pileup_yield1_byposition(PILEUP_PARAM_T *param,
     {
         n_rec = _pileup_bam1(param, spc, plp_iter, &plp_result);
         if (param->yieldAll) {
-            n_rec = param->yieldSize;
-            param->yieldSize = 0;
-        } else
-            param->yieldSize -= n_rec;
+            const int spc_width = spc->end - spc->start + 1L;
+            n_rec = spc_width < param->yieldSize ?
+                spc_width : param->yieldSize;
+        }
+        param->yieldSize -= n_rec;
         i_yld += n_rec;
         cnt[spc->i_spc] = i_yld;
 

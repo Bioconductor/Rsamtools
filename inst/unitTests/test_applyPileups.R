@@ -17,6 +17,20 @@ test_applyPileups_byRange <- function()
     checkIdentical(exp, res)
 }
 
+test_applyPileups_byRange_yieldAll <- function()
+{
+    fls <- PileupFiles(c(fl, fl))
+    which <- GRanges(c("seq1", "seq2"),
+                     IRanges(c(1000, 1000), c(2000, 1500)))
+    param <- PileupParam(which=which, yieldAll=TRUE)
+    res <- applyPileups(fls, function(x) x$seqnames, param=param)
+    exp <- list(structure(1001L, .Names = "seq1"),
+                structure(501L, .Names = "seq2"))
+    checkIdentical(exp, res)
+    res <- applyPileups(fls, function(x) x$pos, param=param)
+    checkIdentical(list(1000:2000, 1000:1500), res)
+}
+
 test_applyPileups_byPosition <- function()
 {
     fls <- PileupFiles(c(fl, fl))
@@ -76,6 +90,21 @@ test_applypileups_byPosition_yieldAll <- function() {
     res <- applyPileups(fls, fun, param=param)
     checkIdentical(1L, length(res))
     checkIdentical(unlist(res0), unlist(res))
+
+    param <- PileupParam(which=GRanges("seq1",
+                           IRanges(seq(10, 110, by=10), width=1), "+"),
+                         yieldBy="position", yieldAll=TRUE, yieldSize=5)
+    seqnames <- applyPileups(fls, function(x) x$seqnames, param=param)
+    exp <- list(structure(5L, .Names = "seq1"),
+                structure(5L, .Names = "seq1"),
+                structure(1L, .Names = "seq1"))
+    checkIdentical(exp, seqnames)
+    pos <- applyPileups(fls, function(x) x$pos, param=param)
+    checkIdentical(c(5L, 5L, 1L), sapply(pos, length))
+    checkIdentical(seq(10L, 110L, 10L), unlist(pos))
+    fun <- function(x) as.vector(colSums(x$seq[,1,,drop=FALSE]))
+    seq <- applyPileups(fls, fun, param=param)
+    checkIdentical(list(c(4, 8, 13, 12, 10), c(13, 15, 17, 9, 3), 5), seq)
 }
 
 test_applyPileups_what <- function() {
