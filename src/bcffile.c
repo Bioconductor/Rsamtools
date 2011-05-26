@@ -5,6 +5,8 @@
 #include "bcffile.h"
 #include "utilities.h"
 
+#define smkChar(x) ((x) ? mkChar(x) : R_NaString)
+
 struct typemap {
     uint32_t *id;
     int *type, *mult;
@@ -323,19 +325,19 @@ scan_bcf_range(bcf_t *bcf, bcf_hdr_t *hdr, SEXP ans,
             Rf_error("bcf_scan: failed to increase size; out of memory?");
         if (hdr->ns)
             SET_STRING_ELT(VECTOR_ELT(ans, BCF_TID), n, 
-                           mkChar(hdr->ns[bcf1->tid]));
+                           smkChar(hdr->ns[bcf1->tid]));
         else {
             snprintf(buf, TID_BUFSZ, "%d", bcf1->tid);
-            SET_STRING_ELT(VECTOR_ELT(ans, BCF_TID), n, mkChar(buf));
+            SET_STRING_ELT(VECTOR_ELT(ans, BCF_TID), n, smkChar(buf));
         }
         INTEGER(VECTOR_ELT(ans, BCF_POS))[n] = bcf1->pos + 1;
         REAL(VECTOR_ELT(ans, BCF_QUAL))[n] = bcf1->qual;
-        SET_STRING_ELT(VECTOR_ELT(ans, BCF_ID), n, mkChar(bcf1->str));
-        SET_STRING_ELT(VECTOR_ELT(ans, BCF_REF), n, mkChar(bcf1->ref));
-        SET_STRING_ELT(VECTOR_ELT(ans, BCF_ALT), n, mkChar(bcf1->alt));
-        SET_STRING_ELT(VECTOR_ELT(ans, BCF_FLT), n, mkChar(bcf1->flt));
-        SET_STRING_ELT(VECTOR_ELT(ans, BCF_INFO), n, mkChar(bcf1->info));
-        SET_STRING_ELT(VECTOR_ELT(ans, BCF_FMT), n, mkChar(bcf1->fmt));
+        SET_STRING_ELT(VECTOR_ELT(ans, BCF_ID), n, smkChar(bcf1->str));
+        SET_STRING_ELT(VECTOR_ELT(ans, BCF_REF), n, smkChar(bcf1->ref));
+        SET_STRING_ELT(VECTOR_ELT(ans, BCF_ALT), n, smkChar(bcf1->alt));
+        SET_STRING_ELT(VECTOR_ELT(ans, BCF_FLT), n, smkChar(bcf1->flt));
+        SET_STRING_ELT(VECTOR_ELT(ans, BCF_INFO), n, smkChar(bcf1->info));
+        SET_STRING_ELT(VECTOR_ELT(ans, BCF_FMT), n, smkChar(bcf1->fmt));
         _bcf_gi2sxp(VECTOR_ELT(ans, BCF_GENO), n, hdr, bcf1);
         ++n;
     }
