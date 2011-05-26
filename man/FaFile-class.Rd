@@ -2,8 +2,10 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{FaFile-class}
+\alias{FaFileList-class}
 % con/destructors
 \alias{FaFile}
+\alias{FaFileList}
 \alias{open.FaFile}
 \alias{close.FaFile }
 % accessors
@@ -23,13 +25,20 @@
   file. The reference remains open across calls to methods, avoiding
   costly index re-loading.
 
+  \code{FaFileList()} provides a convenient way of managing a list of
+  \code{FaFile} instances.
+
 }
 
 \usage{
 
-## Opening / closing
+## Constructors
 
 FaFile(file, ...)
+FaFileList(...)
+
+## Opening / closing
+
 \S3method{open}{FaFile}(con, ...)
 \S3method{close}{FaFile}(con, ...)
 
@@ -56,7 +65,9 @@ FaFile(file, ...)
   \item{param}{An optional \code{\linkS4class{GRanges}} instance to
     select reads (and sub-sequences) for input.}
 
-  \item{...}{Additional arguments, currently unused.}
+  \item{...}{Additional arguments. For \code{FaFileList}, this can
+    either be a single character vector of paths to BAM files, or
+    several instances of \code{FaFile} objects.}
 
   \item{rw}{Mode of file; ignored.}
 
@@ -76,6 +87,9 @@ FaFile(file, ...)
 }
 
 \section{Functions and methods}{
+
+  \code{FaFileList} inherits methods from
+  \code{\link{RsamtoolsFileList}} and \code{\link{SimpleList}}.
 
   Opening / closing:
   \describe{

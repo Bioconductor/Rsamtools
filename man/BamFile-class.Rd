@@ -2,8 +2,10 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{BamFile-class}
+\alias{BamFileList-class}
 % con/destructors
 \alias{BamFile}
+\alias{BamFileList}
 \alias{open.BamFile}
 \alias{close.BamFile }
 % accessors
@@ -26,13 +28,20 @@
   optionally its index). The reference remains open across calls to
   methods, avoiding costly index re-loading.
 
+  \code{BamFileList()} provides a convenient way of managing a list of
+  \code{BamFile} instances.
+
 }
 
 \usage{
 
-## Opening / closing
+## Constructors
 
 BamFile(file, index=file)
+BamFileList(...)
+
+## Opening / closing
+
 \S3method{open}{BamFile}(con, ...)
 \S3method{close}{BamFile}(con, ...)
 
@@ -56,7 +65,9 @@ BamFile(file, index=file)
 
 \arguments{
 
-  \item{...}{Additional arguments.}
+  \item{...}{Additional arguments. For \code{BamFileList}, this can
+    either be a single character vector of paths to BAM files, or
+    several instances of \code{BamFile} objects.}
 
   \item{con}{An instance of \code{BamFile}.}
 
@@ -97,6 +108,9 @@ BamFile(file, index=file)
 }
 
 \section{Functions and methods}{
+
+  \code{BamFileList} inherits methods from
+  \code{\link{RsamtoolsFileList}} and \code{\link{SimpleList}}.
 
   Opening / closing:
   \describe{

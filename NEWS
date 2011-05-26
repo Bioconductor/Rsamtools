@@ -13,6 +13,9 @@ NEW FEATURES
 
     o Provide a zlib for Windows, as R does not currently do this
 
+    o BamFileList, BcfFileList, TabixFileList, FaFileList clases
+    extend IRanges::SimpleList, for managings lists of file references 
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or

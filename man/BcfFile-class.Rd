@@ -2,8 +2,10 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{BcfFile-class}
+\alias{BcfFileList-class}
 % con/destructors
 \alias{BcfFile}
+\alias{BcfFileList}
 \alias{open.BcfFile}
 \alias{close.BcfFile }
 % accessors
@@ -21,14 +23,21 @@
   its index) or VCF file. The reference remains open across calls to
   methods, avoiding costly index re-loading.
 
+  \code{BcfFileList()} provides a convenient way of managing a list of
+  \code{BcfFile} instances.
+
 }
 
 \usage{
 
-## Opening / closing
+## Constructors
 
 BcfFile(file, index = file,
         mode=ifelse(grepl("\\\\.bcf$", file), "rb", "r"))
+BcfFileList(...)
+
+## Opening / closing
+
 \S3method{open}{BcfFile}(con, ...)
 \S3method{close}{BcfFile}(con, ...)
 
@@ -58,7 +67,9 @@ bcfMode(object)
   \item{param}{An optional \code{\linkS4class{ScanBcfParam}} instance to
      further influence scanning.}
 
-  \item{...}{Additional arguments, currently unused.}
+  \item{...}{Additional arguments. For \code{BcfFileList}, this can
+    either be a single character vector of paths to VCF / BCF files, or
+    several instances of \code{BcfFile} objects.}
 
   \item{rw}{Mode of file; ignored.}
 
@@ -78,6 +89,9 @@ bcfMode(object)
 }
 
 \section{Functions and methods}{
+
+  \code{BcfFileList} inherits methods from
+  \code{\link{RsamtoolsFileList}} and \code{\link{SimpleList}}.
 
   Opening / closing:
   \describe{

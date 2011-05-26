@@ -169,4 +169,3 @@ setMethod(readBamGappedReads, "BamFile",
         GappedReads(rname, pos, cigar, strand, qseq, seqlengths)
     }
 })
-

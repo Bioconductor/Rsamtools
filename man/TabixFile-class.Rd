@@ -2,8 +2,10 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{TabixFile-class}
+\alias{TabixFileList-class}
 % con/destructors
 \alias{TabixFile}
+\alias{TabixFileList}
 \alias{open.TabixFile}
 \alias{close.TabixFile }
 % accessors
@@ -24,13 +26,20 @@
   index). Once opened, the reference remains open across calls to
   methods, avoiding costly index re-loading.
 
+  \code{TabixFileList()} provides a convenient way of managing a list of
+  \code{TabixFile} instances.
+
 }
 
 \usage{
 
-## Opening / closing
+## Constructors
 
 TabixFile(file, index = paste(file, "tbi", sep="."), ...)
+TabixFileList(...)
+
+## Opening / closing
+
 \S3method{open}{TabixFile}(con, ...)
 \S3method{close}{TabixFile}(con, ...)
 
@@ -66,7 +75,9 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
   \item{yieldSize}{integer(1) indicating the maximum number of records
     to retreieve.}
 
-  \item{...}{Additional arguments, currently unused.}
+  \item{...}{Additional arguments. For \code{TabixFileList}, this can
+    either be a single character vector of paths to tabix files, or
+    several instances of \code{TabixFile} objects.}
 
   \item{rw}{character() indicating mode of file; not used for \code{TabixFile}.}
 
@@ -86,6 +97,9 @@ TabixFile(file, index = paste(file, "tbi", sep="."), ...)
 }
 
 \section{Functions and methods}{
+
+  \code{TabixFileList} inherits methods from
+  \code{\link{RsamtoolsFileList}} and \code{\link{SimpleList}}.
 
   Opening / closing:
   \describe{
