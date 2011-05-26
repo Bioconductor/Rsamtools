@@ -16,7 +16,7 @@
 \title{Parameters for scanning VCF / BCF files}
 \description{
 
-  Use \code{ScanBcfParam()} to create a paraemter object influencing the
+  Use \code{ScanBcfParam()} to create a parameter object influencing the
   \sQuote{INFO} and \sQuote{GENO} fields parsed, and which recrods are
   imported from a BCF file. Use of \code{which} requires that a BCF
   index file (\code{<filename>.bci}) exists.
