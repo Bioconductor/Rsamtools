@@ -49,10 +49,14 @@ setMethod(isOpen, "BcfFile",
     rex <- "^([[:alpha:]]+)=<(.*)>"
     lines <- grep(rex, h, value=TRUE)
     tags <- sub(rex, "\\1", lines)
-    vals <- strsplit(sub(rex, "\\2", lines), "[=,]")
-    tbls <- tapply(vals, tags, function(elt) {
-        keys <- lapply(elt, "[", c(TRUE, FALSE))
-        vals0 <- lapply(elt, "[", c(FALSE, TRUE))
+
+    keyval0 <- sub(rex, "\\2", lines)
+    keyval1 <- strsplit(keyval0, ",(?=[[:alpha:]]+=)", perl=TRUE)
+    keyval <- lapply(keyval1, strsplit, "(?<=[[:alpha:]])=", perl=TRUE)
+
+    tbls <- tapply(keyval, tags, function(elt) {
+        keys <- lapply(elt, sapply, "[[", 1)
+        vals0 <- lapply(elt, sapply, "[[", 2)
         vals <- Map("names<-", vals0, keys)
         cols <- unique(unlist(keys))
         entries <- Map(function(k) as.vector(sapply(vals, "[", k)),

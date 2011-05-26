@@ -38,6 +38,13 @@ test_BcfFile_scanBcfHeader <- function()
     bf <- BcfFile(fl, character(0))
     .chk(scanBcfHeader(bf))
     checkTrue(!isOpen(bf))
+
+    header <-
+        structure(list(Reference = character(0), Sample =
+                       character(0), Header =
+                       "##FORMAT=<ID=GD,Number=1,Type=Float,Description=\"alleles [0,2]\">"),
+                       .Names = c("Reference", "Sample", "Header"))
+    checkTrue(validObject(Rsamtools:::.bcfHeaderAsSimpleList(header)))
 }
 
 test_BcfFile_scan_noindex <- function()

@@ -21,6 +21,8 @@ BUG FIXES
     o scanBam (and readBamGappedAlignments) called with an invalid or
     character(0) index no longer segfaults.
 
+    o scanBcfHeader parses values with embedded commas or =
+
 CHANGES IN VERSION 1.4.0
 ------------------------
 
