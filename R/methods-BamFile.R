@@ -141,10 +141,10 @@ setMethod(readBamGappedReads, "BamFile",
     require(ShortRead)  # for the GappedReads() constructor
     if (missing(which))
         which <- RangesList()
-    param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE,
-                                           isDuplicate=FALSE),
-                          what=c("rname", "strand", "pos", "cigar", "seq"),
-                          which=which)
+    param <- ScanBamParam(
+                 flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE),
+                 what=c("rname", "strand", "pos", "cigar", "qname", "seq"),
+                 which=which)
     bam <- scanBam(file, param=param)
     ## unlist(list(factor())) returns integer(0), so exit early if all
     ## values are empty
@@ -155,6 +155,7 @@ setMethod(readBamGappedReads, "BamFile",
     strand <- unlist(unname(lapply(bam, "[[", "strand")))
     pos <- unlist(unname(lapply(bam, "[[", "pos")))
     cigar <- unlist(unname(lapply(bam, "[[", "cigar")))
+    qname <- BStringSet(do.call(c, unname(lapply(bam, "[[", "qname"))))
     qseq <- do.call(c, unname(lapply(bam, "[[", "seq")))
     seqlengths <- scanBamHeader(file)[["targets"]]
     urname <- levels(rname)
@@ -164,8 +165,8 @@ setMethod(readBamGappedReads, "BamFile",
         msg <- sprintf("'rname' lengths not in BamFile header; seqlengths not used\n  file: %s\n  missing rname(s): '%s'",
                        path(file), bad)
         warning(msg)
-        GappedReads(rname, pos, cigar, strand, qseq)
+        GappedReads(rname, pos, cigar, strand, qname, qseq)
     } else {
-        GappedReads(rname, pos, cigar, strand, qseq, seqlengths)
+        GappedReads(rname, pos, cigar, strand, qname, qseq, seqlengths)
     }
 })
