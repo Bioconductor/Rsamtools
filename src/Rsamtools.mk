@@ -1,3 +1,4 @@
+# over-written except for Windows
 SAMTOOLS_PATH=\
     $(shell echo 'cat(system.file("usrlib", .Platform[["r_arch"]],\
                          package="Rsamtools", mustWork=TRUE))' |\
