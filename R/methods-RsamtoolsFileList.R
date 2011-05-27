@@ -28,6 +28,7 @@ open.RsamtoolsFileList <-
 {
     for (f in as.list(con))
         open(f, ...)
+    con
 }
 
 close.RsamtoolsFileList <-
@@ -35,6 +36,7 @@ close.RsamtoolsFileList <-
 {
     for (f in as.list(con))
         close(f, ...)
+    con
 }
 
 ## implementations
