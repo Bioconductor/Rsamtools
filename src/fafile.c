@@ -37,14 +37,14 @@ _fafile_finalizer(SEXP ext)
     R_SetExternalPtrAddr(ext, NULL);
 }
 
-SEXP 
+SEXP
 fafile_init()
 {
     FAFILE_TAG = install("FaFile");
     return R_NilValue;
 }
 
-SEXP 
+SEXP
 fafile_open(SEXP filename)
 {
     if (!IS_CHARACTER(filename) || 1 != Rf_length(filename))
@@ -66,7 +66,7 @@ fafile_open(SEXP filename)
     return ext;
 }
 
-SEXP 
+SEXP
 fafile_close(SEXP ext)
 {
     _scan_checkext(ext, FAFILE_TAG, "close");
@@ -74,7 +74,7 @@ fafile_close(SEXP ext)
     return ext;
 }
 
-SEXP 
+SEXP
 fafile_isopen(SEXP ext)
 {
     SEXP ans = ScalarLogical(FALSE);
@@ -86,12 +86,12 @@ fafile_isopen(SEXP ext)
     return ans;
 }
 
-SEXP 
+SEXP
 index_fa(SEXP filename)
 {
     if (!IS_CHARACTER(filename) || 1 != Rf_length(filename))
         Rf_error("'filename' must be character(1)");
-    
+
     const char *cfile = translateChar(STRING_ELT(filename, 0));
     int err = fai_build(cfile);
     if (-1 == err)
@@ -110,7 +110,7 @@ n_fa(SEXP ext)
     return ScalarInteger(faidx_fetch_nseq(fai));
 }
 
-SEXP 
+SEXP
 scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
 {
     _scan_checkext(ext, FAFILE_TAG, "isOpen");
@@ -132,15 +132,17 @@ scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
     int *startp = INTEGER(start), *endp = INTEGER(end);
     for (int i = 0; i < n; ++i) {
 	int len;
-	char *seqp = 
+	char *seqp =
 	    faidx_fetch_seq(fai, (char *) CHAR(STRING_ELT(seq, i)),
 			    startp[i] - 1, endp[i] - 1, &len);
 	if (NULL == seqp)
-	    Rf_error(" record %d failed", i + 1);
+	    Rf_error(" record %d (%s:%d-%d) failed", i + 1,
+                     (char *) CHAR(STRING_ELT(seq, i)),
+                     startp[i], endp[i]);
 	append_string_to_CharAEAE(&dna, seqp);
 	free(seqp);
     }
 
-    return new_XRawList_from_CharAEAE("DNAStringSet", "DNAString", 
+    return new_XRawList_from_CharAEAE("DNAStringSet", "DNAString",
 				      &dna, lkup);
 }

@@ -23,6 +23,9 @@ BUG FIXES
 
     o scanBcfHeader parses values with embedded commas or =
 
+    o scanFa returns correct sequences when file is compressed and
+    file positions not accessed sequentially
+
 CHANGES IN VERSION 1.4.0
 ------------------------
 
