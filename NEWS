@@ -16,6 +16,8 @@ NEW FEATURES
     o BamFileList, BcfFileList, TabixFileList, FaFileList clases
     extend IRanges::SimpleList, for managings lists of file references 
 
+    o razfFa creates random access compressed fasta files.
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or
@@ -23,8 +25,8 @@ BUG FIXES
 
     o scanBcfHeader parses values with embedded commas or =
 
-    o scanFa returns correct sequences when file is compressed and
-    file positions not accessed sequentially
+    o scanFa fails, rather than returns incorrect sequences, when file
+    is compressed and file positions are not accessed sequentially
 
 CHANGES IN VERSION 1.4.0
 ------------------------

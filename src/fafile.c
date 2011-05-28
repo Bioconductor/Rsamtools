@@ -2,6 +2,7 @@
 #include "IRanges_interface.h"
 #include "fafile.h"
 #include "utilities.h"
+#include "razf.h"
 
 static SEXP FAFILE_TAG = NULL;
 
@@ -85,6 +86,47 @@ fafile_isopen(SEXP ext)
     }
     return ans;
 }
+
+
+/* razf */
+
+const int WINDOW_SIZE = 4096;
+
+SEXP
+razf_fa(SEXP file, SEXP dest)
+{
+    int c, fin;
+    RAZF *rz;
+    void *buffer;
+
+    if (!IS_CHARACTER(file) || 1 != Rf_length(file))
+        Rf_error("'file' must be character(1)");
+    if (!IS_CHARACTER(dest) || 1 != Rf_length(dest))
+        Rf_error("'dest' must be character(1))");
+
+    const char
+        *fname_file = translateChar(STRING_ELT(file, 0)),
+        *fname_to = translateChar(STRING_ELT(dest, 0));
+
+    if (0 > (fin = open(fname_file, O_RDONLY)))
+        Rf_error("failed to open input file:\n  '%s'",
+                 fname_file);
+    if (0 > (rz = razf_open(fname_to, "w"))) {
+        close(fin);
+        Rf_error("failed to open output file:\n  '%s'",
+                 fname_to);
+    }
+
+    buffer = R_alloc(WINDOW_SIZE, sizeof (const int));
+    while (0 < (c = read(fin, buffer, WINDOW_SIZE)))
+        razf_write(rz, buffer, c);
+    razf_close(rz);
+    close(fin);
+
+    return dest;
+}
+
+/* fa */
 
 SEXP
 index_fa(SEXP filename)

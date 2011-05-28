@@ -16,6 +16,8 @@ SEXP fafile_close(SEXP ext);
 /* SEXP fafile_reopen(SEXP ext, SEXP filename, SEXP indexname); */
 SEXP fafile_isopen(SEXP ext);
 
+SEXP razf_fa(SEXP from, SEXP dest);
+
 SEXP index_fa(SEXP filename);
 SEXP n_fa(SEXP ext);
 SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup);

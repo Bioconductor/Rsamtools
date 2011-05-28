@@ -40,6 +40,7 @@ static const R_CallMethodDef callMethods[] = {
     {".fafile_open", (DL_FUNC) &fafile_open, 1},
     {".fafile_close", (DL_FUNC) &fafile_close, 1},
     {".fafile_isopen", (DL_FUNC) &fafile_isopen, 1},
+    {".razf_fa", (DL_FUNC) &razf_fa, 2},
     {".index_fa", (DL_FUNC) &index_fa, 1},
     {".n_fa", (DL_FUNC) &n_fa, 1},
     {".scan_fa", (DL_FUNC) &scan_fa, 5},
