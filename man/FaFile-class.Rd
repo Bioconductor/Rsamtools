@@ -15,7 +15,11 @@
 \alias{scanFaIndex,FaFile-method}
 \alias{countFa,FaFile-method}
 \alias{scanFa,FaFile,GRanges-method}
+\alias{scanFa,FaFile,RangesList-method}
+\alias{scanFa,FaFile,RangedData-method}
 \alias{scanFa,FaFile,missing-method}
+\alias{getSeq,FaFile-method}
+\alias{getSeq,FaFileList-method}
 
 \title{Manipulate indexed fasta files.}
 
@@ -49,21 +53,33 @@ FaFileList(...)
 ## actions
 
 \S4method{indexFa}{FaFile}(file, ...)
+
 \S4method{scanFaIndex}{FaFile}(file, ...)
+
 \S4method{countFa}{FaFile}(file, ...)
-\S4method{scanFa}{FaFile,GRanges}(file, param=GRanges(), ...)
-\S4method{scanFa}{FaFile,missing}(file, param=GRanges(), ...)
+
+\S4method{scanFa}{FaFile,GRanges}(file, param, ...)
+\S4method{scanFa}{FaFile,RangesList}(file, param, ...)
+\S4method{scanFa}{FaFile,RangedData}(file, param, ...)
+\S4method{scanFa}{FaFile,missing}(file, param, ...)
+
+\S4method{getSeq}{FaFile}(x, param, ...)
+\S4method{getSeq}{FaFileList}(x, param, ...)
 }
 
 \arguments{
 
-  \item{con}{An instance of \code{FaFile}.}
+  \item{con, x}{An instance of \code{FaFile} or (for \code{getSeq})
+    \code{FaFileList}.}
 
   \item{file}{A character(1) vector of the fasta file path (for
-    \code{FaFile}), or an instance of class \code{FaFile}.}
+    \code{FaFile}), or an instance of class \code{FaFile} or
+    \code{FaFileList} (for \code{getSeq}).}
 
-  \item{param}{An optional \code{\linkS4class{GRanges}} instance to
-    select reads (and sub-sequences) for input.}
+  \item{param}{An optional \code{\linkS4class{GRanges}},
+    \code{\linkS4class{RangesList}}, or \code{\linkS4class{RangedData}}
+    instance to select reads (and sub-sequences) for input. See Methods,
+    below.}
 
   \item{...}{Additional arguments. For \code{FaFileList}, this can
     either be a single character vector of paths to BAM files, or
@@ -131,8 +147,23 @@ FaFileList(...)
       \code{end{param}} define the (1-based) region of the sequence to
       return. Values of \code{end(param)} greater than the width of the
       sequence are set to the width of the sequence. When \code{param}
-      is missing, all records are selected. When \code{param} is
-      \code{GRanges()}, no records are selected.}
+      is missing, all records are selected. When \code{length(param)==0}
+      no records are selected.}
+
+    \item{getSeq}{Returns the sequences indicated by \code{param} from
+      the indexed fasta file(s) of \code{file}.
+
+      For the \code{FaFile} method, the return type is a
+      \code{DNAStringSet}. The \code{getSeq,FaFile} and
+      \code{scanFa,FaFile,GRanges} methods differ in that \code{getSeq}
+      will reverse complement sequences selected from the minus strand.
+
+      For the \code{FaFileList} method, the \code{param} argument must
+      be a \code{GRangesList} of the same length as \code{file},
+      creating a one-to-one mapping between the ith element of
+      \code{file} and the ith element of \code{param}; the return type
+      is a \code{SimpleList} of \code{DNAStringSet} instances, with
+      elements of the list in the same order as the input elements.}
 
     \item{show}{Compactly display the object.}
 

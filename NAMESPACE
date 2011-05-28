@@ -14,13 +14,14 @@ importClassesFrom(Biostrings, file, connection, DNAStringSet,
                   BStringSet, PhredQuality)
 
 importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
-           DNAStringSet, BStringSet, PhredQuality)
+           DNAStringSet, BStringSet, PhredQuality,
+           getSeq)
 
 exportClasses(ScanBamParam, BamViews, BamFile)
 
 exportPattern("^[^\\.]")
 
-exportMethods(length, names, "[", "[[", show)
+exportMethods(length, names, "[", "[[", show, getSeq)
 
 S3method(close, BamFile)
 S3method(close, BcfFile)

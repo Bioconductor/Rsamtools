@@ -43,8 +43,7 @@ setGeneric("countFa",
            function(file, ...) standardGeneric("countFa"))
 
 setGeneric("scanFa",
-           function(file, param=GRanges(), ...)
-           standardGeneric("scanFa"))
+           function(file, param, ...) standardGeneric("scanFa"))
 
 setGeneric("readPileup",
            function(file, ...) standardGeneric("readPileup"))

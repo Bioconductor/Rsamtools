@@ -9,6 +9,8 @@
 \alias{countFa,character-method}
 \alias{scanFa}
 \alias{scanFa,character,GRanges-method}
+\alias{scanFa,character,RangesList-method}
+\alias{scanFa,character,RangedData-method}
 \alias{scanFa,character,missing-method}
 
 \title{
@@ -32,9 +34,11 @@ scanFaIndex(file, ...)
 countFa(file, ...)
 \S4method{countFa}{character}(file, ...)
 
-scanFa(file, param=GRanges(), ...)
-\S4method{scanFa}{character,GRanges}(file, param=GRanges(), ...)
-\S4method{scanFa}{character,missing}(file, param=GRanges(), ...)
+scanFa(file, param, ...)
+\S4method{scanFa}{character,GRanges}(file, param, ...)
+\S4method{scanFa}{character,RangesList}(file, param, ...)
+\S4method{scanFa}{character,RangedData}(file, param, ...)
+\S4method{scanFa}{character,missing}(file, param, ...)
 
 }
 
@@ -42,8 +46,9 @@ scanFa(file, param=GRanges(), ...)
 
   \item{file}{A character(1) vector containing the fasta file path.}
 
-  \item{param}{An optional \code{\linkS4class{GRanges}} instance to
-    select reads (and sub-sequences) for input.}
+  \item{param}{An optional \code{\linkS4class{GRanges}},
+    \code{\linkS4class{RangesList}}, or \code{\linkS4class{RangedData}}
+    instance to select reads (and sub-sequences) for input.}
 
   \item{...}{Additional arguments, currently unused.}
 

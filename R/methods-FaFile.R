@@ -71,29 +71,65 @@ setMethod(countFa, "FaFile",
     })
 })
 
-setMethod(scanFa, c("FaFile", "GRanges"),
-    function(file, param=GRanges(), ...)
+.scanFa <-
+    function(file, param, ...)
 {
     if (!isOpen(file))
         stop("'FaFile' not open")
     lkup <- Biostrings:::get_xsbasetypes_conversion_lookup("B", "DNA")
     tryCatch({
-        nms <- as.character(seqnames(param))
-        dna <- .Call(.scan_fa, .extptr(file), nms, start(param),
-                     end(param), lkup)
-        names(dna) <- nms
+        spc <- .asSpace(param)
+        dna <- .Call(.scan_fa, .extptr(file),
+                     spc[[1]], spc[[2]], spc[[3]], lkup)
+        names(dna) <- spc[[1]]
         dna
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(file))
     })
-})
+}
+
+setMethod(scanFa, c("FaFile", "GRanges"), .scanFa)
+
+setMethod(scanFa, c("FaFile", "RangesList"), .scanFa)
+
+setMethod(scanFa, c("FaFile", "RangedData"), .scanFa)
 
 setMethod(scanFa, c("FaFile", "missing"),
-    function(file, param=GRanges(), ...)
+    function(file, param, ...)
 {
     if (!isOpen(file))
         stop("'FaFile' not open")
     read.DNAStringSet(path(file))
+})
+
+setMethod(getSeq, "FaFile",
+    function(x, param, ...)
+{
+    if (missing(param)) {
+        scanFa(x, ...)
+    } else {
+        dna <- scanFa(x, param, ...)
+        if (is(param, "GRanges")) {
+            idx <- as.logical(strand(param) == "-")
+            if (any(idx))
+                dna[idx] <- reverseComplement(dna[idx])
+        }
+        dna
+    }
+})
+
+setMethod(getSeq, "FaFileList",
+    function(x, param, ...)
+{
+    if (!is(param, "GRangesList"))
+        stop("'param' must be 'GRangesList' when 'x' is 'FaFileList'")
+    if (length(x) != length(param))
+        stop("'x' and 'param' must have equal length")
+
+    lst <- lapply(seq_len(length(x)), function(i, x, param, ...) {
+        getSeq(x[[i]], param[[i]], ...)
+    }, x, param, ...)
+    do.call(SimpleList, lst)
 })
 
 ## character wrappers
@@ -108,7 +144,19 @@ setMethod(countFa, "character",
     function(file, ...) countFa(open(FaFile(file))))
 
 setMethod(scanFa, c("character", "GRanges"),
-    function(file, param=GRanges(), ...)
+    function(file, param, ...)
+{
+    scanFa(open(FaFile(file)), param, ...)
+})
+
+setMethod(scanFa, c("character", "RangesList"),
+    function(file, param, ...)
+{
+    scanFa(open(FaFile(file)), param, ...)
+})
+
+setMethod(scanFa, c("character", "RangedData"),
+    function(file, param, ...)
 {
     scanFa(open(FaFile(file)), param, ...)
 })

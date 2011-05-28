@@ -59,6 +59,9 @@ setMethod(.asSpace, "RangesList", function(x) {
     list(as.character(space(x)), .uunlist(start(x)), .uunlist(end(x)))
 })
 
+setMethod(.asSpace, "RangedData", function(x) .asSpace(ranges(x)))
+
 setMethod(.asSpace, "GRanges", function(x) {
     list(as.character(seqnames(x)), start(x), end(x))
 })
+

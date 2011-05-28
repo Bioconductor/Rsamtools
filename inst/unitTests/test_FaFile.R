@@ -41,4 +41,42 @@ test_FaFile_scanFa <- function()
     ## scanFa,*,missing-methods
     checkTrue(validObject(scanFa(fa)))
     checkTrue(validObject(scanFa(fl)))
+
+    ## GRanges
+    exp0 <- subseq(scanFa(fa)[c(1, 3)], 5, 9)
+    gr <- GRanges(c("pattern01", "pattern03"), IRanges(5, width=5))
+    checkIdentical(as.character(exp0), as.character(scanFa(fa, gr)))
+    checkIdentical(as.character(DNAStringSet()),
+                   unname(as.character(scanFa(fa, GRanges()))))
+
+    ## scanFa ignores strand
+    strand(gr) <- c("-", "+")
+    checkIdentical(as.character(exp0), as.character(scanFa(fa, gr)))
+
+    ## RangedData, RangesList
+    rd <- as(gr, "RangedData")
+    checkIdentical(as.character(exp0), as.character(scanFa(fa, rd)))
+    rl <- as(gr, "RangesList")
+    checkIdentical(as.character(exp0), as.character(scanFa(fa, rd)))
+}
+
+test_FaFile_getSeq <- function()
+{
+    fa <- open(FaFile(fl))
+    exp0 <- subseq(scanFa(fa)[c(1, 3)], 5, 9)
+
+    gr <- GRanges(c("pattern01", "pattern03"), IRanges(5, width=5))
+    checkIdentical(as.character(exp0), as.character(getSeq(fa, gr)))
+
+    ## '-' strand is reverse complement
+    strand(gr) <- c("-", "+")
+    exp <- exp0
+    exp[1] <- reverseComplement(exp[1])
+    checkIdentical(as.character(exp), as.character(getSeq(fa, gr)))
+
+    ## RangedData, RangesList
+    rd <- as(gr, "RangedData")
+    checkIdentical(as.character(exp0), as.character(getSeq(fa, rd)))
+    rl <- as(gr, "RangesList")
+    checkIdentical(as.character(exp0), as.character(getSeq(fa, rd)))
 }
