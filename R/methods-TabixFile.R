@@ -30,13 +30,6 @@ setMethod(isOpen, "TabixFile",
     .Call(.tabixfile_isopen, .extptr(con))
 })
 
-bgzipTabix <-
-    function(fromFname, toFname = paste(fromFname, "gz", sep="."),
-             overwrite=FALSE)
-{
-    .Call(.bgzip_tabix, fromFname, toFname, overwrite)
-}
-
 indexTabix <- 
     function(file,
              format=c("gff", "bed", "sam", "vcf", "vcf4", "psltbl"),

@@ -29,18 +29,6 @@ close.FaFile <-
     invisible(con)
 }
 
-razfFa <-
-    function(file, dest = sprintf("%s.rz", file), overwrite=FALSE)
-{
-    file <- .normalizePath(file)
-    dest <- .normalizePath(dest)
-    if (!is.character(dest) || 1L != length(dest))
-        stop("'dest' must be character(1)")
-    if (!overwrite && file.exists(dest))
-        stop("'dest' exists:\n  dest:", dest)
-    .Call(.razf_fa, file, dest)
-}
-
 setMethod(isOpen, "FaFile",
     function(con, rw="")
 {

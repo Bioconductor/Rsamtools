@@ -1,4 +1,3 @@
-#include <errno.h>
 #include "tabixfile.h"
 #include "utilities.h"
 
@@ -34,7 +33,7 @@ tabixfile_init()
     return R_NilValue;
 }
 
-SEXP 
+SEXP
 tabixfile_open(SEXP filename, SEXP indexname)
 {
     if (!IS_CHARACTER(filename) || 1L != Rf_length(filename))
@@ -51,7 +50,7 @@ tabixfile_open(SEXP filename, SEXP indexname)
     }
     tfile->iter = NULL;
 
-    SEXP ext = 
+    SEXP ext =
 	PROTECT(R_MakeExternalPtr(tfile, TABIXFILE_TAG, filename));
     R_RegisterCFinalizerEx(ext, _tabixfile_finalizer, TRUE);
     UNPROTECT(1);
@@ -59,7 +58,7 @@ tabixfile_open(SEXP filename, SEXP indexname)
     return ext;
 }
 
-SEXP 
+SEXP
 tabixfile_close(SEXP ext)
 {
     _scan_checkext(ext, TABIXFILE_TAG, "close");
@@ -67,7 +66,7 @@ tabixfile_close(SEXP ext)
     return(ext);
 }
 
-SEXP 
+SEXP
 tabixfile_isopen(SEXP ext)
 {
     SEXP ans = ScalarLogical(FALSE);
@@ -80,54 +79,7 @@ tabixfile_isopen(SEXP ext)
 }
 
 SEXP
-bgzip_tabix(SEXP infname, SEXP outfname, SEXP overwrite)
-{
-    static const int BUF_SIZE = 64 * 1024;
-    void *buffer;
-    int infd, oflag, outfd, cnt;
-    BGZF *outp;
-
-    if (!IS_CHARACTER(infname) || 1L != Rf_length(infname))
-	Rf_error("'fromFname' must be character(1)");
-    if (!IS_CHARACTER(outfname) || 1L != Rf_length(outfname))
-	Rf_error("'toFname' must be character(1)");
-    if (!IS_LOGICAL(overwrite) || 1L != Rf_length(overwrite))
-	Rf_error("'overwrite' must be logical(1)");
-
-    infd = open(translateChar(STRING_ELT(infname, 0)), 
-		O_RDONLY);
-    if (0 > infd) 
-	Rf_error("opening 'fromFname': %s", strerror(errno));
-
-    oflag = O_WRONLY | O_CREAT | O_TRUNC;
-    if (!LOGICAL(overwrite)[0])
-	oflag |= O_EXCL;
-    outfd = open(translateChar(STRING_ELT(outfname, 0)), oflag, 0666);
-    if (0 > outfd)
-	Rf_error("opening 'toFname': %s", strerror(errno));
-
-    outp = bgzf_fdopen(outfd, "w");
-    if (NULL == outp)
-	Rf_error("opening output 'toFname'");
-
-    buffer = R_alloc(BUF_SIZE, sizeof(void *));
-    while (0 < (cnt = read(infd, buffer, BUF_SIZE)))
-	if (0 > bgzf_write(outp, buffer, cnt))
-	    Rf_error("writing compressed output");
-    if (0 > cnt)
-	Rf_error("reading compressed output: %s", strerror(errno));
-
-    if (0 > bgzf_close(outp))
-	Rf_error("closing compressed output");
-    if (-1L == close(infd))
-	Rf_error("closing input after compression: %s",
-		 strerror(errno));
-
-    return outfname;
-}
-
-SEXP
-index_tabix(SEXP filename, SEXP format, 
+index_tabix(SEXP filename, SEXP format,
 	    SEXP seq, SEXP begin, SEXP end,
 	    SEXP skip, SEXP comment, SEXP zeroBased)
 {
@@ -140,7 +92,7 @@ index_tabix(SEXP filename, SEXP format,
 	if (strcmp(txt, "gff") == 0) conf = ti_conf_gff;
 	else if (strcmp(txt, "bed") == 0) conf = ti_conf_bed;
 	else if (strcmp(txt, "sam") == 0) conf = ti_conf_sam;
-	else if (strcmp(txt, "vcf") == 0 || 
+	else if (strcmp(txt, "vcf") == 0 ||
 		 strcmp(txt, "vcf4") == 0) conf = ti_conf_vcf;
 	else if (strcmp(txt, "psltbl") == 0) conf = ti_conf_psltbl;
 	else
@@ -156,14 +108,14 @@ index_tabix(SEXP filename, SEXP format,
 	    Rf_error("'end' must be integer(1)");
 	conf.ec = INTEGER(end)[0];
     }
-    
+
     if (IS_INTEGER(skip) && 1L == Rf_length(skip))
 	conf.line_skip = INTEGER(skip)[0];
     if  (IS_CHARACTER(comment) && 1L == Rf_length(comment))
 	conf.meta_char = CHAR(STRING_ELT(comment, 0))[0];
     if (IS_LOGICAL(zeroBased) && 1L == Rf_length(zeroBased))
 	conf.preset |= TI_FLAG_UCSC;
-    
+
     int res = ti_index_build(translateChar(STRING_ELT(filename, 0)),
 			     &conf);
 
@@ -257,12 +209,12 @@ header_tabix(SEXP ext)
 
     /* header lines */
     SET_VECTOR_ELT(result, 4, _header_lines(tabix, conf));
-    
+
     UNPROTECT(1);
     return result;
 }
 
-SEXP 
+SEXP
 scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
 {
     const double REC_SCALE = 1.4; /* scaling factor when pre-allocated
@@ -275,13 +227,13 @@ scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
     tabix_t *tabix = TABIXFILE(ext)->tabix;
     if (0 != ti_lazy_index_load(tabix))
 	Rf_error("'scanTabix' failed to load index");
-    
+
     SEXP spc = VECTOR_ELT(space, 0);
     const int
 	*start = INTEGER(VECTOR_ELT(space, 1)),
 	*end = INTEGER(VECTOR_ELT(space, 2)),
 	nspc = Rf_length(spc);
-    
+
 
     SEXP result = PROTECT(NEW_LIST(nspc));
 
@@ -297,7 +249,7 @@ scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
 	const char *s = CHAR(STRING_ELT(spc, ispc));
 	if (0 > (tid = ti_get_tid(tabix->idx, s)))
 	    Rf_error("'%s' not present in tabix index", s);
-	ti_iter_t iter = 
+	ti_iter_t iter =
 	    ti_iter_query(tabix->idx, tid, start[ispc], end[ispc]);
 
 	int linelen;
@@ -330,7 +282,7 @@ scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
     return result;
 }
 
-SEXP 
+SEXP
 yield_tabix(SEXP ext, SEXP yieldSize)
 {
     if (!IS_INTEGER(yieldSize) || 1L != Rf_length(yieldSize))

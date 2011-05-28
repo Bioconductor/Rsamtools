@@ -1,7 +1,6 @@
 \name{FaInput}
 \Rdversion{1.1}
 
-\alias{razfFa}
 \alias{indexFa}
 \alias{indexFa,character-method}
 \alias{scanFaIndex}
@@ -24,8 +23,6 @@
 }
 \usage{
 
-razfFa(file, dest=sprintf("\%s.rz", file), overwrite=FALSE)
-
 indexFa(file, ...)
 \S4method{indexFa}{character}(file, ...)
 
@@ -45,12 +42,6 @@ scanFa(file, param=GRanges(), ...)
 
   \item{file}{A character(1) vector containing the fasta file path.}
 
-  \item{dest}{A character(1) vector containing the compressed file
-    path.}
-
-  \item{overwrite}{A logical(1) indicating whether an existing
-    compressed file will be overwritten.}
-
   \item{param}{An optional \code{\linkS4class{GRanges}} instance to
     select reads (and sub-sequences) for input.}
 
@@ -59,10 +50,6 @@ scanFa(file, param=GRanges(), ...)
 }
 
 \value{
-
-  \code{razfFa} visits the path in \code{file} and creates a compressed
-  file suitable for random access by \code{scanFa}. The default output
-  file is at the same location but with extension \sQuote{.rz}.
 
   \code{indexFa} visits the path in \code{file} and create an index file
   at the same location but with extension \sQuote{.fai}).

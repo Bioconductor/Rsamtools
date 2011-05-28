@@ -1,7 +1,6 @@
 \name{indexTabix}
 \Rdversion{1.1}
 
-\alias{bgzipTabix}
 \alias{indexTabix}
 
 \title{
@@ -11,14 +10,12 @@
 }
 \description{
   
-  Compress (with \code{bgzipTabix}) any file with samtools' bgzip
-  compression, and index (with \code{indexTabix}) files that have been
-  sorted into ascending sequence, start and end position ordering.
+  Index (with \code{indexTabix}) files that have been sorted into
+  ascending sequence, start and end position ordering.
 
 }
 \usage{
 
-bgzipTabix(fromFname, toFname, overwrite = FALSE)
 indexTabix(file,
            format=c("gff", "bed", "sam", "vcf", "vcf4", "psltbl"),
            seq=integer(), start=integer(), end=integer(),
@@ -27,16 +24,6 @@ indexTabix(file,
 }
 
 \arguments{
-
-  \item{fromFname}{A character(1) path to an existing file. This file
-    will be compressed.}
-
-  \item{toFname}{A character(1) path to a file. This will be the
-    compressed file. If \code{toFname} exists, then it is only
-    over-written when \code{overwrite=TRUE}.}
-
-  \item{overwrite}{A logical(1) indicating whether \code{toFname} should
-    be over-written, if it already exists.}
 
   \item{file}{A characater(1) path to a sorted, bgzip-compressed file.}
 
@@ -72,8 +59,6 @@ indexTabix(file,
 
 \value{
 
-  \code{bgzipTabix} returns the path to the compressed file.
-
   The return value of \code{indexTabix} is an updated instance of
   \code{file} reflecting the newly-created index file.
 
@@ -94,7 +79,7 @@ indexTabix(file,
 \examples{
 from <- system.file("extdata", "ex1.sam", package="Rsamtools")
 to <- tempfile()
-zipped <- bgzipTabix(from, to)
+zipped <- bgzip(from, to)
 idx <- indexTabix(zipped, "sam")
 
 tab <- TabixFile(zipped, idx) 

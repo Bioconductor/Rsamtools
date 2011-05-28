@@ -1,4 +1,5 @@
 #include <R_ext/Rdynload.h>
+#include "zip_compression.h"
 #include "bamfile.h"
 #include "bcffile.h"
 #include "fafile.h"
@@ -12,6 +13,9 @@
 #endif
 
 static const R_CallMethodDef callMethods[] = {
+    /* zip_compression.c */
+    {".bgzip", (DL_FUNC) &bgzip, 2},
+    {".razip", (DL_FUNC) &razip, 2},
     /* bamfile.c */
     {".bamfile_init", (DL_FUNC) &bamfile_init, 0},
     {".bamfile_open", (DL_FUNC) &bamfile_open, 3},
@@ -40,7 +44,6 @@ static const R_CallMethodDef callMethods[] = {
     {".fafile_open", (DL_FUNC) &fafile_open, 1},
     {".fafile_close", (DL_FUNC) &fafile_close, 1},
     {".fafile_isopen", (DL_FUNC) &fafile_isopen, 1},
-    {".razf_fa", (DL_FUNC) &razf_fa, 2},
     {".index_fa", (DL_FUNC) &index_fa, 1},
     {".n_fa", (DL_FUNC) &n_fa, 1},
     {".scan_fa", (DL_FUNC) &scan_fa, 5},
@@ -49,7 +52,6 @@ static const R_CallMethodDef callMethods[] = {
     {".tabixfile_open", (DL_FUNC) &tabixfile_open, 2},
     {".tabixfile_close", (DL_FUNC) &tabixfile_close, 1},
     {".tabixfile_isopen", (DL_FUNC) &tabixfile_isopen, 1},
-    {".bgzip_tabix", (DL_FUNC) &bgzip_tabix, 3},
     {".index_tabix", (DL_FUNC) &index_tabix, 8},
     {".header_tabix", (DL_FUNC) &header_tabix, 1},
     {".scan_tabix", (DL_FUNC) &scan_tabix, 3},
