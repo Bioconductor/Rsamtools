@@ -73,7 +73,7 @@ bamDirname(x, ...) <- value
 ## Input
 \S4method{scanBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
 \S4method{countBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
-\S4method{readBamGappedAlignments}{BamViews}(file, index=file, ..., which)
+\S4method{readBamGappedAlignments}{BamViews}(file, index=file, use.names=FALSE, ..., which)
 
 ## Show
 \S4method{show}{BamViews}(object)
@@ -129,6 +129,10 @@ bamDirname(x, ...) <- value
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
      further influence scanning or counting.}
+
+  \item{use.names}{Construct the names of the returned object
+     from the query template names (QNAME field)? If not (the default),
+     then the returned object has no names.}
 
   \item{which}{An optional \code{\linkS4class{RangesList}} instance to
      further subset \code{file}.}
@@ -216,8 +220,7 @@ bamDirname(x, ...) <- value
   Methods:
   \describe{
 
-	\item{"["}{Subset the object by \code{bamRanges} or
-	  \code{bamSamples}.}
+    \item{"["}{Subset the object by \code{bamRanges} or \code{bamSamples}.}
 
     \item{scanBam}{Visit each path in \code{bamPaths(file)}, returning
       the result of \code{scanBam} applied to the specified
@@ -240,7 +243,7 @@ bamDirname(x, ...) <- value
       available as \code{elementMetadata} of the returned
       \code{SimpleList}.}
 
-	\item{show}{Compactly display the object.}
+    \item{show}{Compactly display the object.}
 
   }
 

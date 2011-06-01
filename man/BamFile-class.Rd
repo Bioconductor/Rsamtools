@@ -58,8 +58,8 @@ BamFileList(...)
     indexDestination=TRUE, param=ScanBamParam())
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
-\S4method{readBamGappedAlignments}{BamFile}(file, index=file, ..., which)
-\S4method{readBamGappedReads}{BamFile}(file, index=file, ..., which)
+\S4method{readBamGappedAlignments}{BamFile}(file, index=file, use.names=FALSE, ..., which)
+\S4method{readBamGappedReads}{BamFile}(file, index=file, use.names=FALSE, ..., which)
 
 }
 
@@ -86,6 +86,10 @@ BamFileList(...)
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
      further influence scanning, counting, or filtering.}
+
+  \item{use.names}{Construct the names of the returned object
+     from the query template names (QNAME field)? If not (the default),
+     then the returned object has no names.}
 
   \item{which}{An optional \code{\linkS4class{RangesList}} instance to
      further subset \code{file}.}

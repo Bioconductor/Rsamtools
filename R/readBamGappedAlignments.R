@@ -1,5 +1,5 @@
 setMethod(readBamGappedAlignments, "character",
-          function(file, index=file, ..., which)
+          function(file, index=file, use.names=FALSE, ..., which)
 {
     if (missing(which))
         which <- RangesList()
@@ -7,11 +7,11 @@ setMethod(readBamGappedAlignments, "character",
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    callGeneric(bam, character(), ..., which=which)
+    callGeneric(bam, character(), use.names=use.names, ..., which=which)
 })
 
 setMethod(readBamGappedReads, "character",
-          function(file, index=file, ..., which)
+          function(file, index=file, use.names=FALSE, ..., which)
 {
     if (missing(which))
         which <- RangesList()
@@ -19,6 +19,6 @@ setMethod(readBamGappedReads, "character",
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    callGeneric(bam, character(), ..., which=which)
+    callGeneric(bam, character(), use.names=use.names, ..., which=which)
 })
 

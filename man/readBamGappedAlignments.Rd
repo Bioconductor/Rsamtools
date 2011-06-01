@@ -14,8 +14,8 @@ or \link[ShortRead]{GappedReads} object.
 }
 
 \usage{
-readBamGappedAlignments(file, index=file, ..., which)
-readBamGappedReads(file, index=file, ..., which)
+readBamGappedAlignments(file, index=file, use.names=FALSE, ..., which)
+readBamGappedReads(file, index=file, use.names=FALSE, ..., which)
 }
 
 \arguments{
@@ -24,6 +24,10 @@ readBamGappedReads(file, index=file, ..., which)
   
   \item{index}{The character(1) name of the index file of the 'BAM' file
 	being processed; this is given \emph{without} the '.bai' extension.}
+
+  \item{use.names}{Construct the names of the returned object
+     from the query template names (QNAME field)? If not (the default),
+     then the returned object has no names.}
 
   \item{\dots}{Additional arguments, currently unused.}
   
@@ -60,6 +64,11 @@ readBamGappedReads(file, index=file, ..., which)
 ex1_bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
 galn1 <- readBamGappedAlignments(ex1_bamfile)
 galn1
+names(galn1)
+galn2 <- readBamGappedAlignments(ex1_bamfile, use.names=TRUE)
+galn2
+head(names(galn2))
+
 greads1 <- readBamGappedReads(ex1_bamfile)
 greads1
 }

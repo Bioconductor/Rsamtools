@@ -103,40 +103,48 @@ setMethod(sortBam, "BamFile",
 })
 
 setMethod(readBamGappedAlignments, "BamFile",
-          function(file, index=file, ..., which)
+          function(file, index=file, use.names=FALSE, ..., which)
 {
     if (missing(which))
         which <- RangesList()
-    param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE,
-                                           isDuplicate=FALSE),
-                          what=c("rname", "strand", "pos", "cigar"),
-                          which=which)
+    if (!isTRUEorFALSE(use.names))
+        stop("'use.names' must be TRUE or FALSE")
+    what <- c("rname", "strand", "pos", "cigar")
+    if (use.names)
+        what <- c(what, "qname")
+    param <- ScanBamParam(
+                 flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE),
+                 what=what,
+                 which=which)
     bam <- scanBam(file, param=param)
     ## unlist(list(factor())) returns integer(0), so exit early if all
     ## values are empty
     bam <- bam[sapply(bam, function(x) length(x$rname) != 0L)]
     if (length(bam) == 0L)
         return(GappedAlignments())
+    qname <- do.call(c, unname(lapply(bam, "[[", "qname")))
     rname <- unlist(unname(lapply(bam, "[[", "rname")))
     strand <- unlist(unname(lapply(bam, "[[", "strand")))
     pos <- unlist(unname(lapply(bam, "[[", "pos")))
     cigar <- unlist(unname(lapply(bam, "[[", "cigar")))
     seqlengths <- scanBamHeader(file)[["targets"]]
-    urname <- levels(rname)
-    if (!all(urname %in% names(seqlengths))) {
-        bad <- paste(urname[!urname %in% names(seqlengths)],
+    seqlevels <- levels(rname)
+    if (!all(seqlevels %in% names(seqlengths))) {
+        bad <- paste(seqlevels[!(seqlevels %in% names(seqlengths))],
                      collapse="' '")
         msg <- sprintf("'rname' lengths not in BamFile header; seqlengths not used\n  file: %s\n  missing rname(s): '%s'",
                        path(file), bad)
         warning(msg)
-        GappedAlignments(rname, pos, cigar, strand)
+        GappedAlignments(rname=rname, pos=pos, cigar=cigar, strand=strand,
+                         names=qname)
     } else {
-        GappedAlignments(rname, pos, cigar, strand, seqlengths)
+        GappedAlignments(rname=rname, pos=pos, cigar=cigar, strand=strand,
+                         names=qname, seqlengths=seqlengths)
     }
 })
 
 setMethod(readBamGappedReads, "BamFile",
-          function(file, index=file, ..., which)
+          function(file, index=file, use.names=FALSE, ..., which)
 {
     require(ShortRead)  # for the GappedReads() constructor
     if (missing(which))

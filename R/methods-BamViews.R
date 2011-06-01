@@ -230,7 +230,7 @@ setMethod(countBam, "BamViews",
 })
 
 setMethod(readBamGappedAlignments, "BamViews",
-          function(file, index=file, ..., which)
+          function(file, index=file, use.names=FALSE, ..., which)
 {
     if (missing(index))
         index <- bamIndicies(file)
@@ -239,6 +239,7 @@ setMethod(readBamGappedAlignments, "BamViews",
     fun <- function(i, bamViews, ..., verbose)
         readBamGappedAlignments(file=bamPaths(bamViews)[i],
                                 index=bamIndicies(bamViews)[i],
+                                use.names=use.names,
                                 ..., which=bamRanges(bamViews))
     .BamViews_delegate("readBamGappedAlignments", file, fun, ...)
 })
