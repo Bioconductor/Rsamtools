@@ -26,9 +26,12 @@ DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
 PKG_CFLAGS += \
   $(SHLIB_OPENMP_CFLAGS) \
   $(DFLAGS) -I./samtools -I./samtools/bcftools -I./tabix
+
 PKG_LIBS += \
   $(SHLIB_OPENMP_CFLAGS) \
   -L. -lbam -lbcf -ltabix
+
+.PHONY: all libs clean
 
 all: $(SHLIB)
 

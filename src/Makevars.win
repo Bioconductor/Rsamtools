@@ -2,14 +2,18 @@ include Makevars.common
 
 # order of -llib important -- bcf, bam before ws2_32
 
-PKG_CFLAGS+=-DZ_PREFIX -include zlib-1.2.5/zconf.h -include zlib-1.2.5/zlib.h -D_LARGEFILE64_SOURCE
-PKG_LIBS+=-lzlib1bioc -lws2_32
+PKG_CFLAGS+=-D_LARGEFILE64_SOURCE
+PKG_LIBS+=-lws2_32
 
-zlib1bioc.dll:
-	make -C zlib-1.2.5 -fwin32/Makefile.gcc clean zlib1bioc.dll
-	cp zlib-1.2.5/zlib1bioc.dll zlib1bioc.dll
+ZLIB_CFLAGS+=$(shell echo 'zlibbioc::pkgconfig("PKG_CFLAGS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave)
+PKG_LIBS+=$(shell echo 'zlibbioc::pkgconfig("PKG_LIBS_shared")' |\
+    "${R_HOME}/bin/R" --vanilla --slave)
 
-libs0: zlib1bioc.dll libbam.a libbcf.a libtabix.a
+%.o: %.c
+	$(CC) $(ZLIB_CFLAGS) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c $< -o $@
+
+libs0: libbam.a libbcf.a libtabix.a
 
 libbam.a: $(BAMOBJ)
 
