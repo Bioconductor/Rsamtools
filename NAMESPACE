@@ -4,11 +4,11 @@ importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
 import(IRanges)
 
-importFrom(GenomicRanges, GRanges, GappedAlignments)
+importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo)
 
 importMethodsFrom(GenomicRanges, seqnames, strand)
 
-importClassesFrom(GenomicRanges, GRanges, GappedAlignments)
+importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
 
 importClassesFrom(Biostrings, file, connection, DNAStringSet,
                   BStringSet, PhredQuality)
@@ -21,7 +21,7 @@ exportClasses(ScanBamParam, BamViews, BamFile)
 
 exportPattern("^[^\\.]")
 
-exportMethods(length, names, "[", "[[", show, getSeq)
+exportMethods(length, names, "[", "[[", show, getSeq, seqinfo)
 
 S3method(close, BamFile)
 S3method(close, BcfFile)

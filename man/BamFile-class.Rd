@@ -12,6 +12,7 @@
 \alias{isOpen,BamFile-method}
 % methods
 \alias{scanBamHeader,BamFile-method}
+\alias{seqinfo,BamFile-method}
 \alias{scanBam,BamFile-method}
 \alias{countBam,BamFile-method}
 \alias{filterBam,BamFile-method}
@@ -52,6 +53,7 @@ BamFileList(...)
 ## actions
 
 \S4method{scanBamHeader}{BamFile}(files, ...)
+\S4method{seqinfo}{BamFile}(x)
 \S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
@@ -71,8 +73,8 @@ BamFileList(...)
 
   \item{con}{An instance of \code{BamFile}.}
 
-  \item{file, files}{A character vector of BAM file paths (for \code{BamFile})
-    or a \code{BamFile} instance (for other methdods).}
+  \item{x, file, files}{A character vector of BAM file paths (for
+    \code{BamFile}) or a \code{BamFile} instance (for other methods).}
 
   \item{index}{A character vector of indices (for \code{BamFile});
     ignored for all other methods on this page.}
@@ -141,6 +143,14 @@ BamFileList(...)
 
   Methods:
   \describe{
+
+    \item{scanBamHeader}{Visit the path in \code{path(file)}, returning
+      the information contained in the file header; see
+      \code{\link{scanBamHeader}}.}
+
+    \item{seqinfo}{Visit the path in \code{path(file)}, returning
+      a \code{\linkS4class{Seqinfo}} instance containing information on
+      the lengths of each sequence.}
 
     \item{scanBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanBam}} applied to the specified path.}

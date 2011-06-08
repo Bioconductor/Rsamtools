@@ -46,6 +46,15 @@ setMethod(scanBamHeader, "BamFile",
     header
 })
 
+setMethod(seqinfo, "BamFile",
+          function(x)
+{
+    if (!isOpen(x))
+        stop("BamFile is not open")
+    h <- scanBamHeader(x)[["targets"]]
+    Seqinfo(names(h), unname(h))
+})
+
 setMethod(scanBam, "BamFile",
           function(file, index=file, ..., param=ScanBamParam())
 {
