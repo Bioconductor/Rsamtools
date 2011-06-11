@@ -5,10 +5,10 @@ include Makevars.common
 PKG_CFLAGS+=-D_LARGEFILE64_SOURCE
 PKG_LIBS+=-lws2_32
 
-ZLIB_CFLAGS+=`echo 'zlibbioc::pkgconfig("PKG_CFLAGS")'|\
-    "${R_HOME}/bin/R" --vanilla --slave`
-PKG_LIBS+=`echo 'zlibbioc::pkgconfig("PKG_LIBS_shared")' |\
-    "${R_HOME}/bin/R" --vanilla --slave`
+ZLIB_CFLAGS+=$(shell echo 'zlibbioc::pkgconfig("PKG_CFLAGS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave)
+PKG_LIBS+=$(shell echo 'zlibbioc::pkgconfig("PKG_LIBS_shared")' |\
+    "${R_HOME}/bin/R" --vanilla --slave)
 
 %.o: %.c
 	$(CC) $(ZLIB_CFLAGS) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c $< -o $@
