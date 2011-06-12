@@ -17,8 +17,6 @@ importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
            DNAStringSet, BStringSet, PhredQuality,
            getSeq)
 
-exportClasses(ScanBamParam, BamViews, BamFile)
-
 exportPattern("^[^\\.]")
 
 exportMethods(length, names, "[", "[[", show, getSeq, seqinfo)
