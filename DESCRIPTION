@@ -12,8 +12,8 @@ URL: http://bioconductor.org/packages/release/bioc/html/Rsamtools.html
 License: Artistic-2.0 + file LICENSE
 LazyLoad: yes
 Depends: methods, IRanges (>= 1.9.4), GenomicRanges (>= 1.5.11),
-	Biostrings (>= 2.21.4), zlibbioc
-Imports: methods, utils, IRanges, GenomicRanges, Biostrings
+	Biostrings (>= 2.21.4)
+Imports: methods, utils, IRanges, GenomicRanges, Biostrings, zlibbioc
 Suggests: ShortRead (>= 1.11.10), GenomicFeatures, RUnit, KEGG.db
 LinkingTo: Biostrings, IRanges
 biocViews: DataImport, Sequencing, HighThroughputSequencing
