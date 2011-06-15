@@ -15,6 +15,7 @@
 \alias{seqinfo,BamFile-method}
 \alias{scanBam,BamFile-method}
 \alias{countBam,BamFile-method}
+\alias{countBam,BamFileList-method}
 \alias{filterBam,BamFile-method}
 \alias{indexBam,BamFile-method}
 \alias{sortBam,BamFile-method}
@@ -56,6 +57,7 @@ BamFileList(...)
 \S4method{seqinfo}{BamFile}(x)
 \S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
+\S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
     indexDestination=TRUE, param=ScanBamParam())
 \S4method{indexBam}{BamFile}(files, ...)
@@ -155,7 +157,7 @@ BamFileList(...)
     \item{scanBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanBam}} applied to the specified path.}
 
-    \item{countBam}{Visit the path in \code{path(file)}, returning
+    \item{countBam}{Visit the path(s) in \code{path(file)}, returning
       the result of \code{\link{countBam}} applied to the specified
       path.}
 

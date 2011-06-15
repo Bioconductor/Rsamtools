@@ -48,3 +48,12 @@ BcfFileList <- function(...) .RsamtoolsFileList(..., class="BcfFile")
 TabixFileList <- function(...) .RsamtoolsFileList(..., class="TabixFile")
 
 FaFileList <- function(...) .RsamtoolsFileList(..., class="FaFile")
+
+## BamFileList
+
+setMethod(countBam, "BamFileList",
+    function(file, index=file, ..., param=ScanBamParam())
+{
+    counts <- lapply(file, countBam, ..., param=param)
+    do.call(rbind, counts)
+})
