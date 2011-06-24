@@ -17,7 +17,9 @@
         names(lst) <- unms
         do.call(RangesList, lst)
     } else {
-        IRangesList(lapply(rangesList, as, "NormalIRanges"))
+        if (is(rangesList, "CompressedIRangesList"))
+            rangesList <- as(rangesList, "SimpleIRangesList")
+        endoapply(rangesList, as, "NormalIRanges")
     }
 }
 
