@@ -17,7 +17,7 @@
         names(lst) <- unms
         do.call(RangesList, lst)
     } else {
-        endoapply(rangesList, as, "NormalIRanges")
+        IRangesList(lapply(rangesList, as, "NormalIRanges"))
     }
 }
 
