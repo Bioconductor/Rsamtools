@@ -1,7 +1,8 @@
 TabixFile <-
-    function(file, index=paste(file, "tbi", sep="."), ...)
+    function(file, index=paste(file, "tbi", sep="."), name=basename(file),
+             ...)
 {
-    .RsamtoolsFile(.TabixFile, file, index)
+    .RsamtoolsFile(.TabixFile, name, file, index)
 }
 
 open.TabixFile <-

@@ -1,8 +1,8 @@
 BcfFile <-
-    function(file, index=file,
+    function(file, index=file, name=basename(file),
              mode=ifelse(grepl("\\.bcf$", file), "rb", "r"))
 {
-    bf <- .RsamtoolsFile(.BcfFile, file, index)
+    bf <- .RsamtoolsFile(.BcfFile, name, file, index)
     bf$mode <- mode
     bf
 }

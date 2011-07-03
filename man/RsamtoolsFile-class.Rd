@@ -4,6 +4,7 @@
 \alias{RsamtoolsFile-class}
 \alias{path}
 \alias{index}
+\alias{names,RsamtoolsFile-method}
 \alias{isOpen,RsamtoolsFile-method}
 \alias{show,RsamtoolsFile-method}
 
@@ -12,8 +13,8 @@
 \description{
 
   \code{RsamtoolsFile} is a base class for managing file references in
-  \pkg{Rsamtools}; it is not intended for direct use by users -- see, e.g.,
-  \code{\link{BamFile}}.
+  \pkg{Rsamtools}; it is not intended for direct use by users -- see,
+  e.g., \code{\link{BamFile}}.
 
 }
 
@@ -22,6 +23,7 @@
 ## accessors
 path(object)
 index(object)
+\S4method{names}{RsamtoolsFile}(x)
 \S4method{isOpen}{RsamtoolsFile}(con, rw="")
 \S4method{show}{RsamtoolsFile}(object)
 
@@ -29,7 +31,8 @@ index(object)
 
 \arguments{
 
-  \item{con, object}{An instance of a class derived from \code{RsamtoolsFile}.}
+  \item{con, object, x}{An instance of a class derived from
+    \code{RsamtoolsFile}.}
 
   \item{rw}{Mode of file; ignored.}
 
@@ -52,6 +55,9 @@ index(object)
     \item{.extptr}{An \code{externalptr} initialized to an internal
       structure with opened bam file and bam index pointers.}
 
+    \item{name}{A character(1) vector specifying an identifier for this
+      instance.}
+
     \item{path}{A character(1) vector of the file name.}
 
     \item{index}{A character(1) vector of the index file name.}
@@ -73,6 +79,8 @@ index(object)
 
   Methods:
   \describe{
+
+    \item{name}{Returns a character(1) name for this instance.}
 
     \item{isOpen}{Report whether the file is currently open.}
 
