@@ -103,9 +103,6 @@ setGeneric("yieldTabix", function(file, ..., yieldSize=1000000L)
 
 setGeneric(".asSpace", function(x) standardGeneric(".asSpace"))
 
-setGeneric("PileupFiles", function(files, ..., param=PileupParam())
-           standardGeneric("PileupFiles"), signature="files")
-
 setGeneric("applyPileups", function(files, FUN, ..., param)
            standardGeneric("applyPileups"),
            signature=c("files", "param"))

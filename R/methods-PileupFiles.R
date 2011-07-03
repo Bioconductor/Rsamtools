@@ -1,70 +1,35 @@
-setMethod(.validity, "PileupFiles", function(object) {
-    msg <- NULL
-    ok <- sapply(object$.files, is, "RsamtoolsFile")
-    if (!all(ok))
-        msg <- c(msg, "all elements must extend 'RsamtoolsFile'")
-    if (is.null(msg)) TRUE else msg
-})
-
-setMethod(PileupFiles, "character",
+PileupFiles <-
     function(files, ..., param=PileupParam())
 {
-    fls <- lapply(files, function(x) open(BamFile(x)))
-    res <- .PileupFiles$new(files=fls, param=param)
-    validObject(res)
-    res
-})
-
-setMethod(PileupFiles, "list",
-    function(files, ..., param=PileupParam())
-{
-    fls <- lapply(files, function(x) {
-        if (!isOpen(x)) open(x) else x
-    })
-    .PileupFiles$new(files=fls, param=param)
-})
-
-open.PileupFiles <-
-    function(con, ...)
-{
-    for (fl in con$files)
-        open(fl)
-    invisible(con)
+    bfl <- BamFileList(files, ...)
+    new("PileupFiles", bfl, param=param)
 }
 
-close.PileupFiles <-
-    function(con, ...)
-{
-    for (fl in con$files)
-        close(fl)
-    invisible(con)
-}
+plpFiles <- function(object) as(object, "BamFileList")
 
-setMethod(isOpen, "PileupFiles",
-    function(con, rw="")
-{
-    if (!missing(rw) && rw != "read")
-        stop("'rw' must be 'read'")
-    sapply(con$files, isOpen)
-})
-
-plpFiles <- function(object) object$files
-
-plpParam <- function(object) object$param
+plpParam <- function(object) object@param
 
 setMethod(applyPileups, c("PileupFiles", "PileupParam"),
     function(files, FUN, ..., param)
 {
     FUN <- match.fun(FUN)
+    ok <- isOpen(files)
+    if (!all(ok))
+        if (any(ok))
+            stop("all(isOpen(<PileupFiles>))' is not 'TRUE'")
+        else {
+            open(files)
+            on.exit(close(files))
+        }
     tryCatch({
         param <- as(param, "list")
-        files <- lapply(files$files, .extptr)
+        extptr <- lapply(files, .extptr)
         space <-
             if (0L != length(param[["which"]])) .asSpace(param[["which"]])
             else NULL
         what <- logical(2);
         param[["what"]] <- c("seq", "qual") %in% param[["what"]]
-        .Call(.apply_pileups, files, space, param, FUN)
+        .Call(.apply_pileups, extptr, space, param, FUN)
     }, error=function(err) {
         stop("applyPileups: ", conditionMessage(err), call.=FALSE)
     })
@@ -78,7 +43,10 @@ setMethod(applyPileups, c("PileupFiles", "missing"),
 
 setMethod(show, "PileupFiles", function(object) {
     cat("class:", class(object), "\n")
-    fls <- sapply(plpFiles(object), function(x) basename(path(x)))
+    nms <- names(object)
+    txt <- paste(IRanges:::selectSome(nms, 3L), collapse=", ")
+    cat(sprintf("names: %s (%d total)\n", txt, length(fls)))
+    fls <- sapply(object, function(x) basename(path(x)))
     txt <- paste(IRanges:::selectSome(fls, 3L), collapse=", ")
     cat(sprintf("plpFiles: %s (%d total)\n", txt, length(fls)))
     cat("plpParam: class", class(plpParam(object)), "\n")

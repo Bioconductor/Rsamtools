@@ -62,9 +62,6 @@ setClass("PileupParam",
 .TabixFile <- setRefClass("TabixFile", contains="RsamtoolsFile")
 .FaFile <- setRefClass("FaFile", contains="RsamtoolsFile")
 
-.PileupFiles <- setRefClass("PileupFiles",
-     fields=list(files="list", param="PileupParam"))
-
 setClass("RsamtoolsFileList", contains=c("SimpleList", "VIRTUAL"),
          prototype=prototype(elementType="RsamtoolsFile"))
 
@@ -80,3 +77,5 @@ setClass("TabixFileList", contains="RsamtoolsFileList",
 setClass("FaFileList", contains="RsamtoolsFileList",
          prototype=prototype(elementType="FaFile"))
 
+setClass("PileupFiles", contains="BamFileList",
+         representation=representation(param="PileupParam"))
