@@ -48,6 +48,7 @@ typedef struct {
 
 typedef struct {
     int n_files;
+    SEXP names;
     int min_base_quality, min_map_quality, min_depth, max_depth;
     uint32_t keep_flag[2];
     int yieldSize, yieldAll;
@@ -57,6 +58,9 @@ typedef struct {
 
 /* from bam_aux.c; should really be exported part of library? */
 KHASH_MAP_INIT_STR(s, int)
+
+const int QUAL_LEVELS = 94,     /* printable ASCII */
+    SEQ_LEVELS = 5;             /* A, C, G, T, N */
 
 static void
 _bam_header_hash_init(bam_header_t *header)
@@ -265,7 +269,10 @@ _mplp_setup_R(const PILEUP_PARAM_T *param, const SPACE_T *spc,
 #endif
     SEXP alloc = PROTECT(NEW_LIST(4)),
         nms = PROTECT(NEW_CHARACTER(4)),
-        opos, oseq, oqual;
+        opos, oseq, oqual,
+        dimnms, dim_elt;
+    char qualbuf[] = { ' ', '\0' };
+    int i;
 
     SET_STRING_ELT(nms, 0, mkChar("seqnames"));
     SET_STRING_ELT(nms, 1, mkChar("pos"));
@@ -283,19 +290,47 @@ _mplp_setup_R(const PILEUP_PARAM_T *param, const SPACE_T *spc,
     result->pos = INTEGER(opos);
 
     if (param->what & WHAT_SEQ) {
-        oseq = Rf_alloc3DArray(INTSXP, 16, param->n_files,
+        oseq = Rf_alloc3DArray(INTSXP, SEQ_LEVELS, param->n_files,
                                param->yieldSize);
         memset(INTEGER(oseq), 0, sizeof(int) * Rf_length(oseq));
         SET_VECTOR_ELT(alloc, 2, oseq);
+
+        dimnms = NEW_LIST(3);
+        Rf_setAttrib(oseq, R_DimNamesSymbol, dimnms);
+
+        dim_elt = NEW_CHARACTER(SEQ_LEVELS);
+        SET_VECTOR_ELT(dimnms, 0, dim_elt);
+        SET_VECTOR_ELT(dimnms, 1, param->names);
+        SET_VECTOR_ELT(dimnms, 2, R_NilValue);
+
+        SET_STRING_ELT(dim_elt, 0, mkChar("A"));
+        SET_STRING_ELT(dim_elt, 1, mkChar("C"));
+        SET_STRING_ELT(dim_elt, 2, mkChar("G"));
+        SET_STRING_ELT(dim_elt, 3, mkChar("T"));
+        SET_STRING_ELT(dim_elt, 4, mkChar("N"));
+
         result->seq = INTEGER(oseq);
     } else
         SET_VECTOR_ELT(alloc, 2, R_NilValue);
 
     if (param->what & WHAT_QUAL) {
-        oqual = Rf_alloc3DArray(INTSXP, 256, param->n_files,
+        oqual = Rf_alloc3DArray(INTSXP, QUAL_LEVELS, param->n_files,
                                 param->yieldSize);
         memset(INTEGER(oqual), 0, sizeof(int) * Rf_length(oqual));
         SET_VECTOR_ELT(alloc, 3, oqual);
+
+        dimnms = NEW_LIST(3);
+        Rf_setAttrib(oqual, R_DimNamesSymbol, dimnms);
+
+        dim_elt = NEW_CHARACTER(QUAL_LEVELS);
+        SET_VECTOR_ELT(dimnms, 0, dim_elt);
+        SET_VECTOR_ELT(dimnms, 1, param->names);
+        SET_VECTOR_ELT(dimnms, 2, R_NilValue);
+        for (i = 0; i < QUAL_LEVELS; ++i) {
+            qualbuf[0] = (char) (i + 33);
+            SET_STRING_ELT(dim_elt, i, mkChar(qualbuf));
+        }
+
         result->qual = INTEGER(oqual);
     } else
         SET_VECTOR_ELT(alloc, 3, R_NilValue);
@@ -346,14 +381,20 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
 #ifdef PILEUPBAM_DEBUG
     REprintf("_pileup_bam1\n");
 #endif
+    /* A, C, G, T, N only */
+    static const int nuc[] = {
+        /*  A  C      G              T                          N */
+        -1, 0, 1, -1, 2, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, 4
+    };
+
     const int n_files = plp_iter->n_files,
         start = spc->start, end = spc->end;
     int *n_plp = plp_iter->n_plp,
         pos, i, j, idx = 0;
 
     int *opos = result->pos + result->i_yld,
-        *oseq = result->seq + 16 * n_files * result->i_yld,
-        *oqual = result->qual + 256 * n_files * result->i_yld;
+        *oseq = result->seq + SEQ_LEVELS * n_files * result->i_yld,
+        *oqual = result->qual + QUAL_LEVELS * n_files * result->i_yld;
 
     const bam_pileup1_t **plp = plp_iter->plp;
     bam_mplp_t mplp_iter = plp_iter->mplp_iter;
@@ -384,9 +425,9 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
             continue;
 
         if (param->what & WHAT_SEQ)
-            s0 = oseq + 16 * n_files * idx;
+            s0 = oseq + SEQ_LEVELS * n_files * idx;
         if (param->what & WHAT_QUAL)
-            q0 = oqual + 256 * n_files * idx;
+            q0 = oqual + QUAL_LEVELS * n_files * idx;
 
         for (i = 0; i < n_files; ++i) {
             for (j = 0; j < n_plp[i]; ++j) { /* each read */
@@ -397,12 +438,17 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
                     continue;
                 /* query, e.g., ...*/
                 if (param->what & WHAT_SEQ) {
-                    /* FIXME: A, C, G, T, N only */
-                    const int s = bam1_seqi(bam1_seq(p->b), p->qpos);
-                    s0[16 * i + s] += 1;
+                    const int s = nuc[bam1_seqi(bam1_seq(p->b), p->qpos)];
+                    if (s < 0)
+                        Rf_error("unexpected nucleotide code '%d'",
+                                 bam1_seqi(bam1_seq(p->b), p->qpos));
+                    s0[SEQ_LEVELS * i + s] += 1;
                 }
-                if (param->what & WHAT_QUAL)
-                    q0[256 * i + q] += 1;
+                if (param->what & WHAT_QUAL) {
+                    if (QUAL_LEVELS <= q)
+                        Rf_error("unexpected quality score '%ud'", q);
+                    q0[QUAL_LEVELS * i + q] += 1;
+                }
             }
         }
         if (!param->yieldAll)
@@ -416,11 +462,13 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
 static SEXP
 _resize_3D_dim3(SEXP s, int n)
 {
-    SEXP t, dim;
+    SEXP t, dim, dimnms;
     dim = Rf_getAttrib(s, R_DimSymbol);
+    dimnms = Rf_getAttrib(s, R_DimNamesSymbol);
     t = PROTECT(Rf_lengthgets(s, INTEGER(dim)[0] * INTEGER(dim)[1] * n));
     INTEGER(dim)[2] = n;
     Rf_setAttrib(t, R_DimSymbol, dim);
+    Rf_setAttrib(t, R_DimNamesSymbol, dimnms);
     UNPROTECT(1);
     return t;
 }
@@ -437,14 +485,14 @@ _resize(SEXP r, int n)
     s = VECTOR_ELT(r, 1);   /* pos */
     SET_VECTOR_ELT(r, 1, Rf_lengthgets(s, n));
 
-    s = VECTOR_ELT(r, 2);  /* seq array -- 16 x n_files x n */
+    s = VECTOR_ELT(r, 2);  /* seq array -- SEQ_LEVELS x n_files x n */
     if (R_NilValue != s) {
         SET_VECTOR_ELT(r, i, _resize_3D_dim3(s, n));
         SET_STRING_ELT(nm, i, STRING_ELT(nm, 2));
         ++i;
     }
 
-    s = VECTOR_ELT(r, 3);  /* qual array -- 256 x n_files x n */
+    s = VECTOR_ELT(r, 3);  /* qual array -- QUAL_LEVELS x n_files x n */
     if (R_NilValue != s) {
         SET_VECTOR_ELT(r, i, _resize_3D_dim3(s, n));
         SET_STRING_ELT(nm, i, STRING_ELT(nm, 3));
@@ -628,7 +676,8 @@ _pileup_yieldby_position(PILEUP_PARAM_T *param, SPACE_ITER_T *spc_iter,
 }
 
 SEXP
-apply_pileups(SEXP files, SEXP space, SEXP param, SEXP callback)
+apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
+              SEXP callback)
 {
     int i;
     PILEUP_PARAM_T p;
@@ -640,6 +689,7 @@ apply_pileups(SEXP files, SEXP space, SEXP param, SEXP callback)
         Rf_error("'files' must be list() of BamFiles");
 
     p.n_files = Rf_length(files);
+    p.names = names;
     for (i = 0; i < p.n_files; ++i)
         _check_isbamfile(VECTOR_ELT(files, i), "pileup");
     if (R_NilValue == space)

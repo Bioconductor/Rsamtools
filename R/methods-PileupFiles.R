@@ -29,7 +29,7 @@ setMethod(applyPileups, c("PileupFiles", "PileupParam"),
             else NULL
         what <- logical(2);
         param[["what"]] <- c("seq", "qual") %in% param[["what"]]
-        .Call(.apply_pileups, extptr, space, param, FUN)
+        .Call(.apply_pileups, extptr, names(files), space, param, FUN)
     }, error=function(err) {
         stop("applyPileups: ", conditionMessage(err), call.=FALSE)
     })

@@ -57,7 +57,7 @@ test_applyPileups_byPosition <- function()
     checkIdentical(list(18132L, 20125L, 2909L), res)
 }
 
-test_applypileups_byPosition_yieldAll <- function() {
+test_applyPileups_byPosition_yieldAll <- function() {
     fls <- PileupFiles(c(fl, fl))
     fun <- function(x) colSums(x$seq[,1,,drop=FALSE])
     which <- GRanges("seq1", IRanges(1000, 1100))
@@ -113,7 +113,8 @@ test_applyPileups_what <- function() {
 
     param <- PileupParam(which=which, yieldAll=TRUE)
     obs <- applyPileups(fls, function(x) sapply(x, length), param=param)[[1]]
-    exp <- c(seqnames=1L, pos=1000L, seq=32000L, qual=512000L)
+    exp <- c(seqnames=1L, pos=1000L, seq=2L * 5L * 1000L,
+             qual=2L * 94L * 1000L)
     checkIdentical(obs, exp)
 
     param <- PileupParam(which=which, yieldAll=TRUE, what=character())

@@ -43,10 +43,9 @@ applyPileups(files, FUN, ..., param)
       \item{seq:}{An \code{array} of dimensions nucleotide x file x
 	position.
 
-	The \sQuote{nucleotide} dimension is length 16,
-	corresponding to the samtools nucleotide encoding, in particular
-	elements 2, 3, 5, and 9 correspond to nucleotides \sQuote{A},
-	\sQuote{C}, \sQuote{G}, and \sQuote{T}, respectively.
+	The \sQuote{nucleotide} dimension is length 5, corresponding to
+	\sQuote{A}, \sQuote{C}, \sQuote{G}, \sQuote{T}, and \sQuote{N}
+	respectively.
 
 	Entries in the array represent the number of times the
 	nucleotide occurred in reads in the file overlapping the
@@ -55,7 +54,8 @@ applyPileups(files, FUN, ..., param)
       }
 
       \item{qual:}{Like \code{seq}, but summarizing quality; the first
-	dimension is the Phred-encoded quality score.}
+	dimension is the Phred-encoded quality score, ranging from
+	\sQuote{!} (0) to \sQuote{~} (93).}
 
     }
   }
@@ -94,7 +94,7 @@ calcInfo <-
 {
     ## information at each pile-up position
     info <- apply(x[["seq"]], 2, function(y) {
-        y <- y[c(1, 2, 4, 8) + 1,]      # A, C, G, T
+        y <- y[c("A", "C", "G", "T"),]
         y <- y + 1L                     # continuity
         cvg <- colSums(y)
         p <- y / cvg[col(y)]
