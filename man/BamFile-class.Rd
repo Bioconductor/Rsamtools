@@ -39,7 +39,7 @@
 
 ## Constructors
 
-BamFile(file, index=file, name=basename(file))
+BamFile(file, index=file)
 BamFileList(...)
 
 ## Opening / closing
@@ -47,7 +47,7 @@ BamFileList(...)
 \S3method{open}{BamFile}(con, ...)
 \S3method{close}{BamFile}(con, ...)
 
-## accessors; also names(), path(), index()
+## accessors; also path(), index()
 
 \S4method{isOpen}{BamFile}(con, rw="")
 
@@ -80,8 +80,6 @@ BamFileList(...)
 
   \item{index}{A character vector of indices (for \code{BamFile});
     ignored for all other methods on this page.}
-
-  \item{name}{A character(1) identifier for this instance.}
 
   \item{destination}{character(1) file path to write filtered reads to.}
 

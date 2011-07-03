@@ -15,11 +15,11 @@ _bam_tryopen(const char *filename, const char *filemode, void *aux)
 {
     samfile_t *sfile = samopen(filename, filemode, aux);
     if (sfile == 0)
-        Rf_error("failed to open SAM/BAM file\n  file: '%s'",
+        Rf_error("failed to open SAM/BAM file\n  file: '%s'", 
 		 filename);
     if (sfile->header == 0 || sfile->header->n_targets == 0) {
         samclose(sfile);
-        Rf_error("SAM/BAM header missing or empty\n  file: '%s'",
+        Rf_error("SAM/BAM header missing or empty\n  file: '%s'", 
                  filename);
     }
     return sfile;
@@ -74,7 +74,7 @@ bamfile_open(SEXP filename, SEXP indexname, SEXP filemode)
     bfile->file = NULL;
     if (0 != Rf_length(filename)) {
 	const char *cfile = translateChar(STRING_ELT(filename, 0));
-	bfile->file =
+	bfile->file = 
 	    _bam_tryopen(cfile, CHAR(STRING_ELT(filemode, 0)), 0);
 	if ((bfile->file->type & 1) != 1) {
 	    samclose(bfile->file);
@@ -163,8 +163,8 @@ scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
           (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");
     _bam_check_template_list(template_list);
-    return _scan_bam(ext, space, keepFlags, isSimpleCigar,
-		     filename, indexname, filemode,
+    return _scan_bam(ext, space, keepFlags, isSimpleCigar, 
+		     filename, indexname, filemode, 
 		     reverseComplement, template_list);
 }
 

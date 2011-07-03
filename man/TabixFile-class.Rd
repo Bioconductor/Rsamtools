@@ -35,8 +35,7 @@
 
 ## Constructors
 
-TabixFile(file, index = paste(file, "tbi", sep="."),
-          name=basename(file), ...)
+TabixFile(file, index = paste(file, "tbi", sep="."), ...)
 TabixFileList(...)
 
 ## Opening / closing
@@ -69,8 +68,6 @@ TabixFileList(...)
     \code{TabixFile} instance.}
 
   \item{index}{A character(1) vector of the tabix file index.}
-
-  \item{name}{A character(1) identifier for this instance.}
 
   \item{param}{An instance of GRanges, IRangedData, or RangesList, used
     to select which records to scan.}

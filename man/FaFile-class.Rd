@@ -38,7 +38,7 @@
 
 ## Constructors
 
-FaFile(file, name=basename(file), ...)
+FaFile(file, ...)
 FaFileList(...)
 
 ## Opening / closing
@@ -75,8 +75,6 @@ FaFileList(...)
   \item{file}{A character(1) vector of the fasta file path (for
     \code{FaFile}), or an instance of class \code{FaFile} or
     \code{FaFileList} (for \code{getSeq}).}
-
-  \item{name}{A character(1) identifier for this instance.}
 
   \item{param}{An optional \code{\linkS4class{GRanges}},
     \code{\linkS4class{RangesList}}, or \code{\linkS4class{RangedData}}

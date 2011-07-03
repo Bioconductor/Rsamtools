@@ -7,9 +7,9 @@ setMethod(isOpen, "BamFile",
 })
 
 BamFile <-
-    function(file, index=file, name=basename(file))
+    function(file, index=file)
 {
-    .RsamtoolsFile(.BamFile, name, .normalizePath(file),
+    .RsamtoolsFile(.BamFile, .normalizePath(file),
                    .normalizePath(index))
 }
 

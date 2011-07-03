@@ -32,7 +32,7 @@
 
 ## Constructors
 
-BcfFile(file, index = file, name=basename(file),
+BcfFile(file, index = file,
         mode=ifelse(grepl("\\\\.bcf$", file), "rb", "r"))
 BcfFileList(...)
 
@@ -60,8 +60,6 @@ bcfMode(object)
   \item{file}{A character(1) vector of the VCF or BCF file path.}
 
   \item{index}{A character(1) vector of the BCF index.}
-
-  \item{name}{A character(1) identifier for this instance.}
 
   \item{mode}{A character(1) vector; \code{mode="rw"} indicates a binary
     (BCF) file, \code{mode="r"} a text (VCF) file.}

@@ -1,7 +1,7 @@
 FaFile <-
-    function(file, name=basename(file), ...)
+    function(file, ...)
 {
-    .RsamtoolsFile(.FaFile, name, file, file)
+    .RsamtoolsFile(.FaFile, file, file)
 }
 
 open.FaFile <-
