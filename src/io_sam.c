@@ -2,17 +2,18 @@
 #include "io_sam.h"
 #include "bamfile.h"
 #include "encode.h"
+#include "geometry.h"
 #include "utilities.h"
 #include "IRanges_interface.h"
 #include "Biostrings_interface.h"
 
 /* from samtoools/bam_sort.c */
-void 
-bam_sort_core(int is_by_qname, const char *fn, const char *prefix, 
+void
+bam_sort_core(int is_by_qname, const char *fn, const char *prefix,
               size_t max_mem);
 
 typedef enum {
-    OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR=1, 
+    OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR=1,
     CIGAR_BUFFER_OVERFLOW_ERROR = 2
 } _BAM_PARSE_STATUS;
 
@@ -48,18 +49,18 @@ enum {
 
 enum { CIGAR_SIMPLE = 1 };
 
-SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, 
+SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags,
 		SEXP isSimpleCigar);
 
 void
 _bam_check_template_list(SEXP template_list)
 {
-    if (!IS_LIST(template_list) || 
+    if (!IS_LIST(template_list) ||
         LENGTH(template_list) != N_TMPL_ELTS)
         Rf_error("'template' must be list(%d)", N_TMPL_ELTS);
     SEXP names = GET_ATTR(template_list, R_NamesSymbol);
     if (!IS_CHARACTER(names) || LENGTH(names) != N_TMPL_ELTS)
-        Rf_error("'names(template)' must be character(%d)", 
+        Rf_error("'names(template)' must be character(%d)",
                  N_TMPL_ELTS);
     for (int i = 0; i < LENGTH(names); ++i)
         if (strcmp(TMPL_ELT_NMS[i], CHAR(STRING_ELT(names, i))) != 0)
@@ -87,14 +88,14 @@ _Free_BAM_DATA(_BAM_DATA *bd)
 }
 
 uint32_t
-_bamseq(const bam1_t *bam, unsigned char *BUF, 
+_bamseq(const bam1_t *bam, unsigned char *BUF,
         Rboolean reverseComplement)
 {
     static const char key[] = {
-        '\0', 'A', 'C',  '\0',  'G', '\0', '\0', '\0', 
+        '\0', 'A', 'C',  '\0',  'G', '\0', '\0', '\0',
         'T', '\0', '\0', '\0', '\0', '\0', '\0', 'N'
     };
-    
+
     uint32_t len = bam->core.l_qseq;
     unsigned char *seq = bam1_seq(bam);
     for (int i = 0; i < len; ++i)
@@ -117,13 +118,13 @@ _bamqual(const bam1_t *bam, unsigned char *BUF, Rboolean reverse)
 }
 
 int
-_bamcigar(const uint32_t *cigar, const uint32_t n_cigar, 
+_bamcigar(const uint32_t *cigar, const uint32_t n_cigar,
           char *buf, int buf_sz)
 {
     const char lookup[] = { 'M', 'I', 'D', 'N', 'S', 'H', 'P' };
     buf[0] = '\0';
     for (uint32_t i = 0; i < n_cigar; ++i) {
-        int n = snprintf(buf, buf_sz, "%u%c", cigar[i] >> 4, 
+        int n = snprintf(buf, buf_sz, "%u%c", cigar[i] >> 4,
                          lookup[cigar[i] & BAM_CIGAR_MASK]);
         if (n >= buf_sz)
             return -1;
@@ -187,7 +188,7 @@ _bamtags(const bam1_t *bam, _BAM_DATA *bd, SEXP tags)
             SET_VECTOR_ELT(tags, i, tag);
         }
         switch (aux[0]) {
-        case 'c': case 'C': case 's': case 'S': case 'i': case 'I': 
+        case 'c': case 'C': case 's': case 'S': case 'i': case 'I':
             _tag_type_check(tagname, tag, INTSXP);
             INTEGER(tag)[idx] = bam_aux2i(aux);
             break;
@@ -262,7 +263,7 @@ _init_BAM_DATA(SEXP ext, SEXP flag, SEXP isSimpleCigar,
     _BAM_DATA *bdata = _Calloc_BAM_DATA(1048576, 2048, 32768);
     bdata->parse_status = 0;
     bdata->bfile = BAMFILE(ext);
-    bdata->nrec = bdata->idx = bdata->irange = 0; 
+    bdata->nrec = bdata->idx = bdata->irange = 0;
     bdata->keep_flag[0] = INTEGER(flag)[0];
     bdata->keep_flag[1] = INTEGER(flag)[1];
     bdata->cigar_flag = LOGICAL(isSimpleCigar)[0];
@@ -273,19 +274,19 @@ _init_BAM_DATA(SEXP ext, SEXP flag, SEXP isSimpleCigar,
 Rboolean
 _bam_filter(const bam1_t *bam, _BAM_DATA *bdata)
 {
-    /* 
+    /*
        flag : 1101
        keep0: 1111
        keep1: 1111
        test = (keep0 & ~flag) | (keep1 & flag) = 0010 | 1101 = 1111
        ~test = 0000 = FALSE
-       
+
        flag:  1101
        keep0: 1101
        keep1: 1111
        test = (keep0 & ~flag) | (keep1 & flag) = 0000 | 1101 = 1101
        ~test = 0010 = TRUE
-       
+
        flag:  1101
        keep0: 1111
        keep1: 1101
@@ -293,7 +294,7 @@ _bam_filter(const bam1_t *bam, _BAM_DATA *bdata)
        ~test = 0000 = FALSE
     */
 
-    uint32_t test = (bdata->keep_flag[0] & ~bam->core.flag) | 
+    uint32_t test = (bdata->keep_flag[0] & ~bam->core.flag) |
         (bdata->keep_flag[1] & bam->core.flag);
     if (~test & 2047u)
         return FALSE;
@@ -302,7 +303,7 @@ _bam_filter(const bam1_t *bam, _BAM_DATA *bdata)
     uint32_t n_cigar = bam->core.n_cigar;
     if (bdata->cigar_flag == CIGAR_SIMPLE)
     {
-        if (!(n_cigar == 0 || 
+        if (!(n_cigar == 0 ||
               (n_cigar == 1  && ((cigar[0] & BAM_CIGAR_MASK) == 0))))
             return FALSE;
     }
@@ -332,7 +333,7 @@ _scan_bam_fetch(_BAM_DATA *bd, SEXP space, int* start, int* end,
 
     for (int irange = 0; irange < LENGTH(space); ++irange) {
         const char* spc = translateChar(STRING_ELT(space, irange));
-        const int starti = 
+        const int starti =
             start[irange] > 0 ? start[irange] - 1 : start[irange];
         for (tid = 0; tid < sfile->header->n_targets; ++tid) {
             if (strcmp(spc, sfile->header->target_name[tid]) == 0)
@@ -343,7 +344,7 @@ _scan_bam_fetch(_BAM_DATA *bd, SEXP space, int* start, int* end,
             return -1;
         }
 
-        bam_fetch(sfile->x.bam, bindex, tid, 
+        bam_fetch(sfile->x.bam, bindex, tid,
                   starti, end[irange], bd, parse1);
         n_tot += bd->idx;
         bd->irange += 1;
@@ -418,7 +419,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
     SEXP s, r = VECTOR_ELT((SEXP) bd->extra, bd->irange);
     int idx = bd->idx, start, len;
     Rboolean reverseComplement = bd->reverseComplement;
-    
+
     for (int i = 0; i < LENGTH(r); ++i) {
         if ((s = VECTOR_ELT(r, i)) == R_NilValue)
             continue;
@@ -430,15 +431,15 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
             INTEGER(s)[idx] = bam->core.flag;
             break;
         case RNAME_IDX:
-            INTEGER(s)[idx] = 
+            INTEGER(s)[idx] =
                 bam->core.tid < 0 ? NA_INTEGER : bam->core.tid + 1;
             break;
         case STRAND_IDX:
-            INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
+            INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
                 NA_INTEGER : (bam1_strand(bam) + 1);
             break;
         case POS_IDX:
-            INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ? 
+            INTEGER(s)[idx] = bam->core.flag & BAM_FUNMAP ?
                 NA_INTEGER : bam->core.pos + 1;
             break;
         case QWIDTH_IDX:
@@ -463,7 +464,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
             }
             break;
         case MRNM_IDX:
-            INTEGER(s)[idx] = bam->core.mtid < 0 ? 
+            INTEGER(s)[idx] = bam->core.mtid < 0 ?
                 NA_INTEGER : bam->core.mtid + 1;
             break;
         case MPOS_IDX:
@@ -471,7 +472,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
                 NA_INTEGER : bam->core.mpos + 1;
             break;
         case ISIZE_IDX:
-            INTEGER(s)[idx] = 
+            INTEGER(s)[idx] =
                 bam->core.flag & (BAM_FUNMAP | BAM_FMUNMAP) ?
                 NA_INTEGER : bam->core.isize;
             break;
@@ -505,12 +506,12 @@ _scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
 {
     int nrange = LENGTH(VECTOR_ELT(count, 0));
     SEXP result = PROTECT(NEW_LIST(nrange));
-    /* result: 
+    /* result:
        range1: tmpl1, tmpl2...
        range2: tmpl1, tmpl2...
        ...
     */
-    for (int irange = 0; irange < nrange; ++irange) 
+    for (int irange = 0; irange < nrange; ++irange)
     {
         int n_read = INTEGER(VECTOR_ELT(count, 0))[irange],
             n_nucs = INTEGER(VECTOR_ELT(count, 1))[irange];
@@ -522,7 +523,7 @@ _scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
             SEXP nms = getAttrib(tag, R_NamesSymbol);
             tmpl = PROTECT(scan_bam_template(nms));
             SEXP count = PROTECT(ScalarInteger(n_read));
-            setAttrib(VECTOR_ELT(tmpl, TAG_IDX), 
+            setAttrib(VECTOR_ELT(tmpl, TAG_IDX),
                       install("count"), count);
             UNPROTECT(1);
         }
@@ -570,7 +571,7 @@ _as_XStringSet(SEXP lst, const char *baseclass)
 
     ENCODE_FUNC encode = _encoder(baseclass);
     char *str = (char *) RAW(seq);
-    for (int i = 0; i < LENGTH(seq); ++i)       
+    for (int i = 0; i < LENGTH(seq); ++i)
         str[i] = encode(str[i]);
 
     SEXP start = PROTECT(NEW_INTEGER(LENGTH(width)));
@@ -579,7 +580,7 @@ _as_XStringSet(SEXP lst, const char *baseclass)
         INTEGER(start)[i] = s;
         s += INTEGER(width)[i];
     }
-    SEXP irange = 
+    SEXP irange =
         PROTECT(new_IRanges("IRanges", start, width, R_NilValue));
     SEXP xstringset =
 	PROTECT(new_XRawList_from_tag(classname, baseclass, seq, irange));
@@ -643,19 +644,18 @@ _scan_bam_finish(_BAM_DATA *bdata)
 
 SEXP
 _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-	  SEXP filename, SEXP indexname, SEXP filemode, 
+	  SEXP filename, SEXP indexname, SEXP filemode,
 	  SEXP reverseComplement, SEXP template_list)
 {
-    SEXP count = 
+    SEXP count =
 	PROTECT(_count_bam(bfile, space, keepFlags, isSimpleCigar));
-    if (R_NilValue == count) {
+    if (R_NilValue == count)
         Rf_error("scanBam failed during countBam");
-    }
     if (R_NilValue == space)   /* bam file invalid if fully scanned */
         bamfile_reopen(bfile, filename, indexname, filemode);
 
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
-    SEXP result = 
+    SEXP result =
         PROTECT(_scan_bam_result_init(count, template_list, names));
     _BAM_DATA *bdata = _init_BAM_DATA(bfile, keepFlags, isSimpleCigar,
 				      LOGICAL(reverseComplement)[0]);
@@ -697,7 +697,7 @@ SEXP
 _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
     SEXP result = PROTECT(NEW_LIST(2));
-    int spc_length = 
+    int spc_length =
         (R_NilValue == space) ? 1 : LENGTH(VECTOR_ELT(space, 0));
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(spc_length));
     SET_VECTOR_ELT(result, 1, NEW_INTEGER(spc_length));
@@ -712,7 +712,7 @@ _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
     setAttrib(result, R_NamesSymbol, nms);
     UNPROTECT(1);
 
-    _BAM_DATA *bdata = 
+    _BAM_DATA *bdata =
         _init_BAM_DATA(bfile, keepFlags, isSimpleCigar, FALSE);
     bdata->extra = result;
 
@@ -745,15 +745,15 @@ _filter_bam1(const bam1_t *bam, void *data)
 }
 
 SEXP
-_filter_bam(SEXP bfile, SEXP space, SEXP keepFlags, 
+_filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
 	    SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode)
 {
     /* open destination */
-    _BAM_DATA *bdata = 
+    _BAM_DATA *bdata =
         _init_BAM_DATA(bfile, keepFlags, isSimpleCigar, FALSE);
     /* FIXME: this just copies the header... */
     bam_header_t *header = BAMFILE(bfile)->file->header;
-    samfile_t *f_out = 
+    samfile_t *f_out =
         _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),
                      CHAR(STRING_ELT(fout_mode, 0)), header);
     bdata->extra = f_out;
@@ -772,7 +772,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
 /* sort_bam */
 
 SEXP
-sort_bam(SEXP filename, SEXP destination, SEXP isByQname, 
+sort_bam(SEXP filename, SEXP destination, SEXP isByQname,
 	 SEXP maxMemory)
 {
     if (!IS_CHARACTER(filename) || 1 != LENGTH(filename))
@@ -781,18 +781,18 @@ sort_bam(SEXP filename, SEXP destination, SEXP isByQname,
         Rf_error("'destination' must be character(1)");
     if (!IS_LOGICAL(isByQname)  || LENGTH(isByQname) != 1)
         Rf_error("'isByQname' must be logical(1)");
-    if (!IS_INTEGER(maxMemory) || LENGTH(maxMemory) != 1 || 
+    if (!IS_INTEGER(maxMemory) || LENGTH(maxMemory) != 1 ||
         INTEGER(maxMemory)[0] < 1)
         Rf_error("'maxMemory' must be a positive integer(1)");
-        
+
     const char *fbam = translateChar(STRING_ELT(filename, 0));
     const char *fout = translateChar(STRING_ELT(destination, 0));
     int sortMode = asInteger(isByQname);
-    
+
     size_t maxMem = (size_t) INTEGER(maxMemory)[0] * 1024 * 1024;
     bam_sort_core(sortMode, fbam, fout, maxMem);
     return destination;
-}	
+}
 
 /* index_bam */
 
