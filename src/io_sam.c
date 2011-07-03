@@ -689,7 +689,7 @@ _count_bam1(const bam1_t *bam, void *data)
         return 0;
     SEXP cnt = (SEXP) (bd->extra);
     INTEGER(VECTOR_ELT(cnt, 0))[bd->irange] += 1;
-    INTEGER(VECTOR_ELT(cnt, 1))[bd->irange] += bam->core.l_qseq;
+    REAL(VECTOR_ELT(cnt, 1))[bd->irange] += bam->core.l_qseq;
     return 1;
 }
 
@@ -700,10 +700,10 @@ _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
     int spc_length =
         (R_NilValue == space) ? 1 : LENGTH(VECTOR_ELT(space, 0));
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(spc_length));
-    SET_VECTOR_ELT(result, 1, NEW_INTEGER(spc_length));
+    SET_VECTOR_ELT(result, 1, NEW_REAL(spc_length));
     for (int i = 0; i < spc_length; ++i) {
         INTEGER(VECTOR_ELT(result, 0))[i] =
-            INTEGER(VECTOR_ELT(result, 1))[i] = 0;
+            REAL(VECTOR_ELT(result, 1))[i] = 0;
     }
 
     SEXP nms = PROTECT(NEW_CHARACTER(2));
