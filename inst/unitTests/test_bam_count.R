@@ -13,7 +13,7 @@ test_countBam <- function()
     exp <- cbind(as.data.frame(which),
                  file=basename(fl),
                  records=c(612L, 1169L, 642L),
-                 nucleotides=c(21549L, 41235L, 22640L))
+                 nucleotides=c(21549, 41235, 22640))
     checkIdentical(exp, countBam(fl, param=p1))
 
     which <- RangesList(seq2=IRanges(c(100, 1000), c(1000, 2000)),
@@ -32,7 +32,7 @@ test_countBam_index <- function()
     exp <- cbind(as.data.frame(which),
                  file="ex1_noindex.bam",
                  records=c(612L, 1169L, 642L),
-                 nucleotides=c(21549L, 41235L, 22640L))
+                 nucleotides=c(21549, 41235, 22640))
 
     src <- system.file("unitTests", "cases", package="Rsamtools")
     fl <- file.path(src, "ex1_noindex.bam")

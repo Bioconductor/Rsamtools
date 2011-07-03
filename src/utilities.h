@@ -3,10 +3,11 @@
 
 SEXP _get_namespace(const char *pkg);
 SEXP _get_strand_levels();
+SEXP _get_encoding_lookup(const char *from, const char *to);
 void _as_factor_SEXP(SEXP vec, SEXP lvls);
 void _as_factor(SEXP vect, const char **lvls, const int n_lvls);
-void _reverse(unsigned char *buf, int len);
-void _reverseComplement(unsigned char *buf, int len);
+void _reverse(char *buf, int len);
+void _reverseComplement(char *buf, int len);
 
 /* scan-related */
 

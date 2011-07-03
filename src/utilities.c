@@ -22,6 +22,21 @@ _get_strand_levels()
     return ans;
 }
 
+SEXP
+_get_encoding_lookup(const char *from, const char *to)
+{
+    SEXP nmspc, fun, f, t, call, ans;
+    nmspc = PROTECT(_get_namespace("Biostrings"));
+    fun = findFun(install("get_xsbasetypes_conversion_lookup"),
+                  nmspc);
+    f = PROTECT(mkString(from));
+    t = PROTECT(mkString(to));
+    call = PROTECT(lang3(fun, f, t));
+    ans = eval(call, nmspc);
+    UNPROTECT(4);
+    return ans;
+}
+
 void
 _as_factor_SEXP(SEXP vec, SEXP lvls)
 {
@@ -44,10 +59,10 @@ _as_factor(SEXP vec, const char **lvls, const int n_lvls)
 }
 
 void
-_reverse(unsigned char *buf, int len)
+_reverse(char *buf, int len)
 {
     int i;
-    unsigned char tmp;
+    char tmp;
     for (i = 0; i < floor(len / 2); ++i) {
         tmp = buf[len-i-1];
         buf[len-i-1] = buf[i];
@@ -56,10 +71,10 @@ _reverse(unsigned char *buf, int len)
 }
 
 void
-_reverseComplement(unsigned char *buf, int len)
+_reverseComplement(char *buf, int len)
 {
     static const int MAX_MAP = 256;
-    static unsigned char map[256];
+    static char map[256];
     static int init = 0;
     if (init == 0) {
         init = 1;

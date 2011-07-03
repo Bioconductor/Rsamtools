@@ -2,7 +2,6 @@
 #include "io_sam.h"
 #include "bamfile.h"
 #include "encode.h"
-#include "geometry.h"
 #include "utilities.h"
 #include "IRanges_interface.h"
 #include "Biostrings_interface.h"
@@ -27,6 +26,8 @@ typedef struct {
     int nrec, idx, irange;
     uint32_t keep_flag[2], cigar_flag;
     Rboolean reverseComplement;
+
+    CharAEAE *seq, *qual;
 
     void *extra;
 } _BAM_DATA;
@@ -76,7 +77,16 @@ _Calloc_BAM_DATA(int blocksize, int buf_sz, int cigar_buf_sz)
     bd->BUF = Calloc(bd->BUF_SZ, char);
     bd->CIGAR_BUF_SZ = cigar_buf_sz;
     bd->CIGAR_BUF = Calloc(bd->CIGAR_BUF_SZ, char);
+
     return bd;
+}
+
+void
+_grow_BUF_BAM_DATA(_BAM_DATA *bd, int sz)
+{
+    Free(bd->BUF);
+    bd->BUF_SZ = sz;
+    bd->BUF = Calloc(bd->BUF_SZ, char);
 }
 
 void
@@ -87,9 +97,8 @@ _Free_BAM_DATA(_BAM_DATA *bd)
     Free(bd);
 }
 
-uint32_t
-_bamseq(const bam1_t *bam, unsigned char *BUF,
-        Rboolean reverseComplement)
+void
+_bamseq(const bam1_t *bam, _BAM_DATA *bd, Rboolean reverseComplement)
 {
     static const char key[] = {
         '\0', 'A', 'C',  '\0',  'G', '\0', '\0', '\0',
@@ -98,23 +107,29 @@ _bamseq(const bam1_t *bam, unsigned char *BUF,
 
     uint32_t len = bam->core.l_qseq;
     unsigned char *seq = bam1_seq(bam);
+    if (len + 1 > bd->BUF_SZ)
+        _grow_BUF_BAM_DATA(bd, len + 1);
     for (int i = 0; i < len; ++i)
-        BUF[i] = key[bam1_seqi(seq, i)];
+        bd->BUF[i] = key[bam1_seqi(seq, i)];
     if (reverseComplement && (bam1_strand(bam) == 1))
-        _reverseComplement(BUF, len);
-    return len;
+        _reverseComplement(bd->BUF, len);
+    bd->BUF[len] = '\0';
+    append_string_to_CharAEAE(bd->seq + bd->irange, bd->BUF);
 }
 
-uint32_t
-_bamqual(const bam1_t *bam, unsigned char *BUF, Rboolean reverse)
+void
+_bamqual(const bam1_t *bam, _BAM_DATA *bd, Rboolean reverse)
 {
     uint32_t len = bam->core.l_qseq;
     unsigned char *bamq = bam1_qual(bam);
+    if (len + 1 > bd->BUF_SZ)
+        _grow_BUF_BAM_DATA(bd, len + 1);
     for (int i = 0; i < len; ++i)
-        BUF[i] = bamq[i] + 33;
+        bd->BUF[i] = bamq[i] + 33;
     if (reverse && (bam1_strand(bam) == 1))
-        _reverse(BUF, len);
-    return len;
+        _reverse(bd->BUF, len);
+    bd->BUF[len] = '\0';
+    append_string_to_CharAEAE(bd->qual + bd->irange, bd->BUF);
 }
 
 int
@@ -417,7 +432,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
         return 0;
 
     SEXP s, r = VECTOR_ELT((SEXP) bd->extra, bd->irange);
-    int idx = bd->idx, start, len;
+    int idx = bd->idx;
     Rboolean reverseComplement = bd->reverseComplement;
 
     for (int i = 0; i < LENGTH(r); ++i) {
@@ -477,18 +492,10 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
                 NA_INTEGER : bam->core.isize;
             break;
         case SEQ_IDX:
-            start = TRUELENGTH(s);
-            len = _bamseq(bam, RAW(VECTOR_ELT(s, 0)) + start,
-                          reverseComplement);
-            SET_TRUELENGTH(s, start + len);
-            INTEGER(VECTOR_ELT(s, 1))[idx] = len;
+            _bamseq(bam, bd, reverseComplement);
             break;
         case QUAL_IDX:
-            start = TRUELENGTH(s);
-            len = _bamqual(bam, RAW(VECTOR_ELT(s, 0)) + start,
-                           reverseComplement);
-            SET_TRUELENGTH(s, start + len);
-            INTEGER(VECTOR_ELT(s, 1))[idx] = len;
+            _bamqual(bam, bd, reverseComplement);
             break;
         case TAG_IDX:
             _bamtags(bam, bd, s);
@@ -502,19 +509,24 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 }
 
 SEXP
-_scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
+_scan_bam_result_init(SEXP count, SEXP template_list, SEXP names,
+                      _BAM_DATA *bd)
 {
-    int nrange = LENGTH(VECTOR_ELT(count, 0));
+    int nrange = LENGTH(VECTOR_ELT(count, 0)), i;
     SEXP result = PROTECT(NEW_LIST(nrange));
     /* result:
        range1: tmpl1, tmpl2...
        range2: tmpl1, tmpl2...
        ...
     */
+    for (i = 0; i < LENGTH(names); ++i)
+        if (SEQ_IDX == i)
+            bd->seq = (CharAEAE *) R_alloc(nrange, sizeof(CharAEAE));
+        else if (QUAL_IDX == i)
+            bd->qual = (CharAEAE *) R_alloc(nrange, sizeof(CharAEAE));
     for (int irange = 0; irange < nrange; ++irange)
     {
-        int n_read = INTEGER(VECTOR_ELT(count, 0))[irange],
-            n_nucs = INTEGER(VECTOR_ELT(count, 1))[irange];
+        int n_read = INTEGER(VECTOR_ELT(count, 0))[irange];
         SEXP tag = VECTOR_ELT(template_list, TAG_IDX);
         SEXP tmpl;
         if (R_NilValue == tag)
@@ -527,21 +539,18 @@ _scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
                       install("count"), count);
             UNPROTECT(1);
         }
-        for (int i = 0; i < LENGTH(names); ++i) {
+        for (i = 0; i < LENGTH(names); ++i) {
             if (TAG_IDX == i)
                 continue;
             else if (VECTOR_ELT(template_list, i) == R_NilValue)
                 SET_VECTOR_ELT(tmpl, i, R_NilValue);
             else {
-                if (SEQ_IDX == i || QUAL_IDX == i) {
-                    SEXP lst = PROTECT(NEW_LIST(2));
-                    SET_TRUELENGTH(lst, 0); /* nucleotide count */
-                    if (0 > n_nucs || R_LEN_T_MAX < n_nucs)
-                        Rf_error("too many nucleotides, use 'param=ScanBamParam(which=<...>)'");
-                    SET_VECTOR_ELT(lst, 0, NEW_RAW(n_nucs));
-                    SET_VECTOR_ELT(lst, 1, NEW_INTEGER(n_read));
-                    SET_VECTOR_ELT(tmpl, i, lst);
-                    UNPROTECT(1);
+                if (SEQ_IDX == i) {
+                    SET_VECTOR_ELT(tmpl, i, ScalarLogical(TRUE));
+                    bd->seq[irange] = new_CharAEAE(1048576, 0);
+                } else if (QUAL_IDX == i) {
+                    SET_VECTOR_ELT(tmpl, i, ScalarLogical(TRUE));
+                    bd->qual[irange] = new_CharAEAE(1048576, 0);
                 } else {
                     SEXP elt = allocVector(TYPEOF(VECTOR_ELT(tmpl, i)),
                                            n_read);
@@ -557,7 +566,7 @@ _scan_bam_result_init(SEXP count, SEXP template_list, SEXP names)
 }
 
 SEXP
-_as_XStringSet(SEXP lst, const char *baseclass)
+_as_XStringSet(CharAEAE *aeae, const char *baseclass)
 {
     char classname[40];  /* longest string should be "DNAStringSet" */
 
@@ -566,32 +575,29 @@ _as_XStringSet(SEXP lst, const char *baseclass)
         error("Rsamtools internal error in _as_XStringSet(): "
               "'classname' buffer too small");
 
-    SEXP seq = VECTOR_ELT(lst, 0);
-    SEXP width = VECTOR_ELT(lst, 1);
-
-    ENCODE_FUNC encode = _encoder(baseclass);
-    char *str = (char *) RAW(seq);
-    for (int i = 0; i < LENGTH(seq); ++i)
-        str[i] = encode(str[i]);
-
-    SEXP start = PROTECT(NEW_INTEGER(LENGTH(width)));
-    int s = 1;
-    for (int i = 0; i < LENGTH(width); ++i) {
-        INTEGER(start)[i] = s;
-        s += INTEGER(width)[i];
+    SEXP lkup;
+    switch(*baseclass) {
+    case 'D':
+        lkup = _get_encoding_lookup("B", "DNA");
+        break;
+    case 'B':
+        lkup = R_NilValue;
+        break;
+    default:
+        Rf_error("Rsamtools internal: '%s' unhandled in _as_XStringSet",
+                 baseclass);
+        break;
     }
-    SEXP irange =
-        PROTECT(new_IRanges("IRanges", start, width, R_NilValue));
-    SEXP xstringset =
-	PROTECT(new_XRawList_from_tag(classname, baseclass, seq, irange));
-    UNPROTECT(3);
-    return xstringset;
+
+    return new_XRawList_from_CharAEAE(classname, baseclass,
+                                      aeae, lkup);
 }
 
 SEXP
-_as_PhredQuality(SEXP lst)
+_as_PhredQuality(CharAEAE *aeae)
 {
-    SEXP xstringset = PROTECT(_as_XStringSet(lst, "BString"));
+    SEXP xstringset =
+        PROTECT(_as_XStringSet(aeae, "BString"));
 
     SEXP s, t, nmspc, result;
     nmspc = PROTECT(_get_namespace("Rsamtools"));
@@ -603,9 +609,9 @@ _as_PhredQuality(SEXP lst)
 }
 
 void
-_scan_bam_finish1range(_BAM_DATA *bdata, SEXP result)
+_scan_bam_finish1range(_BAM_DATA *bdata, int irange)
 {
-    SEXP s;
+    SEXP result = VECTOR_ELT((SEXP) bdata->extra, irange), s;
     if ((s = VECTOR_ELT(result, STRAND_IDX)) != R_NilValue) {
         SEXP strand_lvls = PROTECT(_get_strand_levels());
         _as_factor_SEXP(s, strand_lvls);
@@ -622,13 +628,14 @@ _scan_bam_finish1range(_BAM_DATA *bdata, SEXP result)
     }
     if ((s = VECTOR_ELT(result, SEQ_IDX)) != R_NilValue)
     {
-        s = PROTECT(_as_XStringSet(s, "DNAString"));
+        PROTECT(s = _as_XStringSet(bdata->seq + irange,
+                                   "DNAString"));
         SET_VECTOR_ELT(result, SEQ_IDX, s);
         UNPROTECT(1);
     }
     if ((s = VECTOR_ELT(result, QUAL_IDX)) != R_NilValue)
     {
-        PROTECT(s = _as_PhredQuality(s));
+        PROTECT(s = _as_PhredQuality(bdata->qual + irange));
         SET_VECTOR_ELT(result, QUAL_IDX, s);
         UNPROTECT(1);
     }
@@ -637,9 +644,9 @@ _scan_bam_finish1range(_BAM_DATA *bdata, SEXP result)
 void
 _scan_bam_finish(_BAM_DATA *bdata)
 {
-    SEXP result = (SEXP) bdata->extra;
-    for (int irange = 0; irange < LENGTH(result); ++irange)
-        _scan_bam_finish1range(bdata, VECTOR_ELT(result, irange));
+    int len = Rf_length((SEXP) bdata->extra);
+    for (int irange = 0; irange < len; ++irange)
+        _scan_bam_finish1range(bdata, irange);
 }
 
 SEXP
@@ -655,10 +662,11 @@ _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
         bamfile_reopen(bfile, filename, indexname, filemode);
 
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
-    SEXP result =
-        PROTECT(_scan_bam_result_init(count, template_list, names));
     _BAM_DATA *bdata = _init_BAM_DATA(bfile, keepFlags, isSimpleCigar,
 				      LOGICAL(reverseComplement)[0]);
+    SEXP result =
+        PROTECT(_scan_bam_result_init(count, template_list, names,
+                                      bdata));
     bdata->extra = (void *) result;
 
     int status = _do_scan_bam(bdata, space, _scan_bam_parse1);
@@ -700,7 +708,7 @@ _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
     int spc_length =
         (R_NilValue == space) ? 1 : LENGTH(VECTOR_ELT(space, 0));
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(spc_length));
-    SET_VECTOR_ELT(result, 1, NEW_REAL(spc_length));
+    SET_VECTOR_ELT(result, 1, NEW_NUMERIC(spc_length));
     for (int i = 0; i < spc_length; ++i) {
         INTEGER(VECTOR_ELT(result, 0))[i] =
             REAL(VECTOR_ELT(result, 1))[i] = 0;

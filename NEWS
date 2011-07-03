@@ -20,6 +20,10 @@ NEW FEATURES
 
     o razfFa creates random access compressed fasta files.
 
+    o count and scanBam support input of larger numbers of records; 
+    countBam nucleotide count is now numeric() and subject to rounding
+    error when large.
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or
