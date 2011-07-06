@@ -45,7 +45,7 @@ setMethod(show, "PileupFiles", function(object) {
     cat("class:", class(object), "\n")
     nms <- names(object)
     txt <- paste(IRanges:::selectSome(nms, 3L), collapse=", ")
-    cat(sprintf("names: %s (%d total)\n", txt, length(fls)))
+    cat(sprintf("names: %s (%d total)\n", txt, length(nms)))
     fls <- sapply(object, function(x) basename(path(x)))
     txt <- paste(IRanges:::selectSome(fls, 3L), collapse=", ")
     cat(sprintf("plpFiles: %s (%d total)\n", txt, length(fls)))
