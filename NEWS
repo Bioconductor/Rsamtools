@@ -24,6 +24,8 @@ NEW FEATURES
     countBam nucleotide count is now numeric() and subject to rounding
     error when large.
 
+    o Update to samtools 0.1.17
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or
