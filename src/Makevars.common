@@ -38,15 +38,15 @@ all: $(SHLIB)
 $(SHLIB): libs
 
 libs: libs0
-	mkdir -p ${R_PACKAGE_DIR}/usretc${R_ARCH}
-	cp Rsamtools.mk ${R_PACKAGE_DIR}/usretc${R_ARCH}
-	mkdir -p ${R_PACKAGE_DIR}/include/samtools/bcftools
-	mkdir -p ${R_PACKAGE_DIR}/include/tabix
-	cp samtools/*.h ${R_PACKAGE_DIR}/include/samtools/
-	cp samtools/bcftools/*h ${R_PACKAGE_DIR}/include/samtools/bcftools/
-	cp tabix/*h ${R_PACKAGE_DIR}/include/tabix/
-	mkdir -p ${R_PACKAGE_DIR}/usrlib${R_ARCH}
-	cp libbam.a libbcf.a libtabix.a ${R_PACKAGE_DIR}/usrlib${R_ARCH}
+	mkdir -p "${R_PACKAGE_DIR}/usretc${R_ARCH}"
+	cp Rsamtools.mk "${R_PACKAGE_DIR}/usretc${R_ARCH}"
+	mkdir -p "${R_PACKAGE_DIR}/include/samtools/bcftools"
+	mkdir -p "${R_PACKAGE_DIR}/include/tabix"
+	cp samtools/*.h "${R_PACKAGE_DIR}/include/samtools/"
+	cp samtools/bcftools/*h "${R_PACKAGE_DIR}/include/samtools/bcftools/"
+	cp tabix/*h "${R_PACKAGE_DIR}/include/tabix/"
+	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
+	cp libbam.a libbcf.a libtabix.a "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 
 clean:
 	rm $(BAMOBJ) $(BCFOBJ) $(TABIXOBJ) *.a *.o *.so *.dll
