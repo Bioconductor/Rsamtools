@@ -547,10 +547,10 @@ _scan_bam_result_init(SEXP count, SEXP template_list, SEXP names,
             else {
                 if (SEQ_IDX == i) {
                     SET_VECTOR_ELT(tmpl, i, ScalarLogical(TRUE));
-                    bd->seq[irange] = new_CharAEAE(1048576, 0);
+                    bd->seq[irange] = new_CharAEAE(n_read, 0);
                 } else if (QUAL_IDX == i) {
                     SET_VECTOR_ELT(tmpl, i, ScalarLogical(TRUE));
-                    bd->qual[irange] = new_CharAEAE(1048576, 0);
+                    bd->qual[irange] = new_CharAEAE(n_read, 0);
                 } else {
                     SEXP elt = allocVector(TYPEOF(VECTOR_ELT(tmpl, i)),
                                            n_read);
