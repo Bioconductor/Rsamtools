@@ -20,7 +20,7 @@ applyPileups(files, FUN, ..., param)
 
 \arguments{
 
-  \item{files}{A \code{list()} of open \code{\link{BamFile}} instances.}
+  \item{files}{A \code{\link{PileupFiles}} instances.}
 
   \item{FUN}{A function of 1 argument, \code{x}, to be evaluated for
     each yield (see \code{yieldSize}, \code{yieldBy},
