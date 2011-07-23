@@ -261,8 +261,7 @@ _seq_rle(int *cnt, const char **chr, int n)
 }
 
 static SEXP
-_mplp_setup_R(const PILEUP_PARAM_T *param, const SPACE_T *spc,
-              PILEUP_RESULT_T *result)
+_mplp_setup_R(const PILEUP_PARAM_T *param, PILEUP_RESULT_T *result)
 {
 #ifdef PILEUPBAM_DEBUG
     REprintf("_mplp_setup_R\n");
@@ -515,7 +514,7 @@ _pileup_call1(SEXP r, SEXP call)
 static SEXP
 _pileup_yield1_byrange(PILEUP_PARAM_T *param,
                        SPACE_ITER_T *spc_iter,
-                       PILEUP_ITER_T *plp_iter, SEXP call)
+                       PILEUP_ITER_T *plp_iter)
 {
 #ifdef PILEUPBAM_DEBUG
     REprintf("_pileup_yield1_byrange\n");
@@ -528,7 +527,7 @@ _pileup_yield1_byrange(PILEUP_PARAM_T *param,
     if (NULL != (spc = _space_iter_next(spc_iter)))
     {
         param->yieldSize = spc->end - spc->start + 1;
-        res = PROTECT(_mplp_setup_R(param, spc, &plp_result));
+        res = PROTECT(_mplp_setup_R(param, &plp_result));
 
         _mplp_setup_bam(param, spc, plp_iter);
         n_rec = _pileup_bam1(param, spc, plp_iter, &plp_result);
@@ -559,7 +558,7 @@ _pileup_yieldby_range(PILEUP_PARAM_T *param, SPACE_ITER_T *spc_iter,
     for (i = 0; i < spc_iter->n_spc; ++i)
     {
         res = PROTECT(_pileup_yield1_byrange(param, spc_iter,
-                                             plp_iter, call));
+                                             plp_iter));
         if (R_NilValue == res)
             Rf_error("internal: 'spc_iter' did not yield");
         SET_VECTOR_ELT(result, i, _pileup_call1(res, call));
@@ -587,9 +586,11 @@ _pileup_yield1_byposition(PILEUP_PARAM_T *param,
     SEXP res = R_NilValue, rle;
     int *cnt, start, start_spc, i_spc, n_rec, i_yld = 0;
 
-    if (NULL == (spc = _space_iter_pop(spc_iter)))
+    if (NULL == (spc = _space_iter_pop(spc_iter))) {
         if (NULL == (spc = _space_iter_next(spc_iter)))
             return res;         /* early exit */
+        _mplp_setup_bam(param, spc, plp_iter);
+    }
 
     if ((spc_iter->n_spc - 1 == spc->i_spc) &&
         (param->yieldSize > spc->end - spc->start + 1))
@@ -597,8 +598,7 @@ _pileup_yield1_byposition(PILEUP_PARAM_T *param,
 
     start_spc = spc->i_spc;
     i_spc = 1;
-    res = PROTECT(_mplp_setup_R(param, spc, &plp_result));
-    _mplp_setup_bam(param, spc, plp_iter);
+    res = PROTECT(_mplp_setup_R(param, &plp_result));
     cnt = (int *) Calloc(n_spc, int);
     memset(cnt, 0, sizeof(int) * n_spc);
 
@@ -636,7 +636,6 @@ _pileup_yield1_byposition(PILEUP_PARAM_T *param,
                 _space_iter_stash(spc_iter, spc);
             }
         }
-        _mplp_teardown_bam(plp_iter);
     }
 
     param->yieldSize = yieldSize;
@@ -668,6 +667,7 @@ _pileup_yieldby_position(PILEUP_PARAM_T *param, SPACE_ITER_T *spc_iter,
         SET_VECTOR_ELT(result, i_res++, _pileup_call1(res, call));
         UNPROTECT(1);
     }
+    _mplp_teardown_bam(plp_iter); /* from _pileup_yield1_byposition */
 
     result = Rf_lengthgets(result, i_res);
     UNPROTECT(1);
