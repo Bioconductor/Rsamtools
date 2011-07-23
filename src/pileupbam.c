@@ -616,8 +616,8 @@ _pileup_yield1_byposition(PILEUP_PARAM_T *param,
 
         if (yieldSize > i_yld)
         {                       /* next space */
-            _mplp_teardown_bam(plp_iter);
             if ((spc = _space_iter_next(spc_iter))) {
+                _mplp_teardown_bam(plp_iter);
                 _mplp_setup_bam(param, spc, plp_iter);
                 i_spc++;
             }
