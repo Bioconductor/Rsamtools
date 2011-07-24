@@ -12,8 +12,10 @@ importMethodsFrom(GenomicRanges, seqnames, strand)
 
 importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
 
-importClassesFrom(Biostrings, file, connection, DNAStringSet,
-                  BStringSet, PhredQuality)
+importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality,
+                  file, connection)
+
+importClassesFrom(rtracklayer, url, gzfile, unz, pipe)
 
 importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
            DNAStringSet, BStringSet, PhredQuality,
