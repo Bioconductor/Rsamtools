@@ -12,7 +12,8 @@
         else NULL
     on.exit(.Call(.scan_bam_cleanup))
     tryCatch({
-        .Call(func, .extptr(file), space, flag, simpleCigar, ...)
+        .Call2(func, .extptr(file), space, flag, simpleCigar, ...,
+               PACKAGE="Rsamtools")
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(file),
              "\n  index: ", index(file))
