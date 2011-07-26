@@ -15,6 +15,6 @@ Depends: methods, IRanges (>= 1.11.14), GenomicRanges (>= 1.5.11),
 	Biostrings (>= 2.21.4)
 Imports: methods, utils, IRanges, GenomicRanges, Biostrings, zlibbioc,
         rtracklayer
-Suggests: ShortRead (>= 1.11.10), GenomicFeatures, RUnit, KEGG.db
+Suggests: ShortRead (>= 1.11.30), GenomicFeatures, RUnit, KEGG.db
 LinkingTo: Biostrings, IRanges
 biocViews: DataImport, Sequencing, HighThroughputSequencing
