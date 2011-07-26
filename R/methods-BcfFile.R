@@ -148,13 +148,13 @@ setMethod(scanBcfHeader, "BcfFile",
         res[["GENO"]] <- res[["GENO"]][idx]
     }
     idx <- sapply(res[["GENO"]], function(x) 2L == length(dim(x)))
-    res[["GENO"]][idx] <- lapply(res[["GENO"]][idx], t)
+    if (length(idx))
+        res[["GENO"]][idx] <- lapply(res[["GENO"]][idx], t)
     res
 }
 
 setMethod(scanBcf, "BcfFile",
-
           function(file, ..., param=ScanBcfParam())
 {
-    res <- .io_bcf(.scan_bcf, file, ..., param=param)
+    .io_bcf(.scan_bcf, file, ..., param=param)
 })
