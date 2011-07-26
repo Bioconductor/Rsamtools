@@ -111,6 +111,31 @@ setMethod(sortBam, "BamFile",
                 byQname=byQname, maxMemory=maxMemory)
 })
 
+### 'bamfile' must be a BamFile object.
+### Returns either NULL or a list which names are guaranted to be 'what'.
+.loadBamCols <- function(bamfile, what, which)
+{
+    param <- ScanBamParam(
+                 flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE),
+                 what=what,
+                 which=which)
+    bam <- scanBam(bamfile, param=param)
+    ## unlist(list(factor())) returns integer(0), so exit early if all
+    ## values are empty
+    bam <- bam[sapply(bam, function(x) length(x$rname) != 0L)]
+    if (length(bam) == 0L)
+        return(NULL)
+    if (length(bam) == 1L)
+        return(bam[[1L]][what])
+    ans <- lapply(what,
+                  function(field)
+                      #unlist(unname(lapply(bam, "[[", field)))
+                      do.call(c, unname(lapply(bam, "[[", field)))
+                 )
+    names(ans) <- what
+    ans
+}
+
 setMethod(readBamGappedAlignments, "BamFile",
           function(file, index=file, use.names=FALSE, ..., which)
 {
@@ -121,35 +146,27 @@ setMethod(readBamGappedAlignments, "BamFile",
     what <- c("rname", "strand", "pos", "cigar")
     if (use.names)
         what <- c(what, "qname")
-    param <- ScanBamParam(
-                 flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE),
-                 what=what,
-                 which=which)
-    bam <- scanBam(file, param=param)
-    ## unlist(list(factor())) returns integer(0), so exit early if all
-    ## values are empty
-    bam <- bam[sapply(bam, function(x) length(x$rname) != 0L)]
-    if (length(bam) == 0L)
-        return(GappedAlignments())
-    qname <- do.call(c, unname(lapply(bam, "[[", "qname")))
-    rname <- unlist(unname(lapply(bam, "[[", "rname")))
-    strand <- unlist(unname(lapply(bam, "[[", "strand")))
-    pos <- unlist(unname(lapply(bam, "[[", "pos")))
-    cigar <- unlist(unname(lapply(bam, "[[", "cigar")))
     seqlengths <- scanBamHeader(file)[["targets"]]
-    seqlevels <- levels(rname)
-    if (!all(seqlevels %in% names(seqlengths))) {
+    bamcols <- .loadBamCols(file, what, which)
+    if (is.null(bamcols)) {
+        ans <- GappedAlignments(rname=factor(levels=names(seqlengths)),
+                                seqlengths=seqlengths)
+        return(ans)
+    }
+    ## 'bamcols' names must be valid GappedAlignments() arg names.
+    what[match("qname", what)] <- "names"
+    names(bamcols) <- what
+    seqlevels <- levels(bamcols[["rname"]])
+    if (all(seqlevels %in% names(seqlengths))) {
+        bamcols$seqlengths <- seqlengths
+    } else {
         bad <- paste(seqlevels[!(seqlevels %in% names(seqlengths))],
                      collapse="' '")
         msg <- sprintf("'rname' lengths not in BamFile header; seqlengths not used\n  file: %s\n  missing rname(s): '%s'",
                        path(file), bad)
         warning(msg)
-        GappedAlignments(rname=rname, pos=pos, cigar=cigar, strand=strand,
-                         names=qname)
-    } else {
-        GappedAlignments(rname=rname, pos=pos, cigar=cigar, strand=strand,
-                         names=qname, seqlengths=seqlengths)
     }
+    do.call(GappedAlignments, bamcols)
 })
 
 setMethod(readBamGappedReads, "BamFile",
@@ -158,32 +175,32 @@ setMethod(readBamGappedReads, "BamFile",
     require(ShortRead)  # for the GappedReads() constructor
     if (missing(which))
         which <- RangesList()
-    param <- ScanBamParam(
-                 flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE),
-                 what=c("rname", "strand", "pos", "cigar", "qname", "seq"),
-                 which=which)
-    bam <- scanBam(file, param=param)
-    ## unlist(list(factor())) returns integer(0), so exit early if all
-    ## values are empty
-    bam <- bam[sapply(bam, function(x) length(x$rname) != 0L)]
-    if (length(bam) == 0L)
-        return(GappedReads())
-    rname <- unlist(unname(lapply(bam, "[[", "rname")))
-    strand <- unlist(unname(lapply(bam, "[[", "strand")))
-    pos <- unlist(unname(lapply(bam, "[[", "pos")))
-    cigar <- unlist(unname(lapply(bam, "[[", "cigar")))
-    qname <- BStringSet(do.call(c, unname(lapply(bam, "[[", "qname"))))
-    qseq <- do.call(c, unname(lapply(bam, "[[", "seq")))
+    if (!isTRUEorFALSE(use.names))
+        stop("'use.names' must be TRUE or FALSE")
+    what <- c("rname", "strand", "pos", "cigar", "seq")
+    if (use.names)
+        what <- c(what, "qname")
     seqlengths <- scanBamHeader(file)[["targets"]]
-    urname <- levels(rname)
-    if (!all(urname %in% names(seqlengths))) {
-        bad <- paste(urname[!urname %in% names(seqlengths)],
+    bamcols <- .loadBamCols(file, what, which)
+    if (is.null(bamcols)) {
+        ans <- GappedReads(rname=factor(levels=names(seqlengths)),
+                           seqlengths=seqlengths)
+        return(ans)
+    }
+    ## 'bamcols' names must be valid GappedReads() arg names.
+    what[match("qname", what)] <- "names"
+    what[match("seq", what)] <- "qseq"
+    names(bamcols) <- what
+    seqlevels <- levels(bamcols[["rname"]])
+    if (all(seqlevels %in% names(seqlengths))) {
+        bamcols$seqlengths <- seqlengths
+    } else {
+        bad <- paste(seqlevels[!seqlevels %in% names(seqlengths)],
                      collapse="' '")
         msg <- sprintf("'rname' lengths not in BamFile header; seqlengths not used\n  file: %s\n  missing rname(s): '%s'",
                        path(file), bad)
         warning(msg)
-        GappedReads(rname, pos, cigar, strand, qname, qseq)
-    } else {
-        GappedReads(rname, pos, cigar, strand, qname, qseq, seqlengths)
     }
+    do.call(GappedReads, bamcols)
 })
+

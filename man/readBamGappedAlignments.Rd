@@ -23,11 +23,11 @@ readBamGappedReads(file, index=file, use.names=FALSE, ..., which)
   \item{file}{The character(1) file name of the `BAM' file to be processed.}
   
   \item{index}{The character(1) name of the index file of the 'BAM' file
-	being processed; this is given \emph{without} the '.bai' extension.}
+    being processed; this is given \emph{without} the '.bai' extension.}
 
-  \item{use.names}{Construct the names of the returned object
-     from the query template names (QNAME field)? If not (the default),
-     then the returned object has no names.}
+  \item{use.names}{Use the query template names (QNAME field) as the
+    names of the returned object? If not (the default), then the returned
+    object has no names.}
 
   \item{\dots}{Additional arguments, currently unused.}
   
@@ -46,10 +46,12 @@ readBamGappedReads(file, index=file, use.names=FALSE, ..., which)
   See \code{?\link[ShortRead]{GappedReads-class}} for a
   description of \link[ShortRead]{GappedReads} objects.
 
-  See \code{?\link{scanBam}} for a description of the arguments. Unlike
-  SAM/BAM records, we don't support unaligned queries so we discard
-  those records.
-  
+  See \code{?\link{scanBam}} for a description of the arguments.
+
+}
+
+\note{
+  BAM records corresponding to unaligned queries are ignored.
 }
 
 \author{H. Pages}
@@ -61,16 +63,21 @@ readBamGappedReads(file, index=file, use.names=FALSE, ..., which)
 }
 
 \examples{
-ex1_bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
-galn1 <- readBamGappedAlignments(ex1_bamfile)
+bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
+galn1 <- readBamGappedAlignments(bamfile)
 galn1
 names(galn1)
-galn2 <- readBamGappedAlignments(ex1_bamfile, use.names=TRUE)
+galn2 <- readBamGappedAlignments(bamfile, use.names=TRUE)
 galn2
 head(names(galn2))
 
-greads1 <- readBamGappedReads(ex1_bamfile)
+greads1 <- readBamGappedReads(bamfile)
 greads1
+names(greads1)
+qseq(greads1)
+greads2 <- readBamGappedReads(bamfile, use.names=TRUE)
+greads2
+head(names(greads2))
 }
 
 \keyword{methods}
