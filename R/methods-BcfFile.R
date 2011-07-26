@@ -147,9 +147,10 @@ setMethod(scanBcfHeader, "BcfFile",
         })
         res[["GENO"]] <- res[["GENO"]][idx]
     }
-    idx <- sapply(res[["GENO"]], function(x) 2L == length(dim(x)))
-    if (length(idx))
+    if (length(res[["GENO"]])) {
+        idx <- sapply(res[["GENO"]], function(x) 2L == length(dim(x)))
         res[["GENO"]][idx] <- lapply(res[["GENO"]][idx], t)
+    }
     res
 }
 
