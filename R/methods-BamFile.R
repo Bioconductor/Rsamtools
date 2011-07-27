@@ -128,10 +128,13 @@ setMethod(sortBam, "BamFile",
     if (length(bam) == 1L)
         return(bam[[1L]][what])
     ans <- lapply(what,
-                  function(field)
-                      #unlist(unname(lapply(bam, "[[", field)))
-                      do.call(c, unname(lapply(bam, "[[", field)))
-                 )
+                  function(field) {
+                      tmp <- unname(lapply(bam, "[[", field))
+                      if (is.factor(tmp[[1L]]))
+                          unlist(tmp)  # doesn't work on list of XStringSets
+                      else
+                          do.call(c, tmp)  # doesn't work on list of factors
+                  })
     names(ans) <- what
     ans
 }
