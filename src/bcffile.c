@@ -13,7 +13,7 @@ struct typemap {
     int len;
 };
 
-enum { 
+enum {
     BCF_HDR_REF = 0, BCF_HDR_SAMPLE, BCF_HDR_HEADER, BCF_HDR_LAST
 };
 
@@ -220,7 +220,7 @@ _bcf_gi2sxp(SEXP geno, const int i_rec, const bcf_hdr_t *h, bcf1_t *b)
             int *dp = INTEGER(g) + off;
             for (int j = 0; j < h->n_smpl; ++j)
                 *dp++ = ((uint16_t*)b->gi[i].data)[j];
-        } else if (b->gi[i].fmt == bcf_str2int("GQ", 2) || 
+        } else if (b->gi[i].fmt == bcf_str2int("GQ", 2) ||
                    b->gi[i].fmt == bcf_str2int("SP", 2)) {
             int *gq = INTEGER(g) + off;
             for (int j = 0; j < h->n_smpl; ++j)
@@ -272,7 +272,7 @@ scan_bcf_header(SEXP ext)
 	for (c = hdr->txt; *c != '\0'; ++c)
 	    if (*c == '\n') ++n_hdr;
     SET_VECTOR_ELT(ans, BCF_HDR_HEADER, NEW_STRING(n_hdr));
-    
+
     int i;
     SEXP x = VECTOR_ELT(ans, BCF_HDR_REF);
     for (i = 0; i < hdr->n_ref; ++i)
@@ -324,7 +324,7 @@ scan_bcf_range(bcf_t *bcf, bcf_hdr_t *hdr, SEXP ans,
         if (n >= sz)
             Rf_error("bcf_scan: failed to increase size; out of memory?");
         if (hdr->ns)
-            SET_STRING_ELT(VECTOR_ELT(ans, BCF_TID), n, 
+            SET_STRING_ELT(VECTOR_ELT(ans, BCF_TID), n,
                            smkChar(hdr->ns[bcf1->tid]));
         else {
             snprintf(buf, TID_BUFSZ, "%d", bcf1->tid);
@@ -355,6 +355,8 @@ scan_bcf(SEXP ext, SEXP space, SEXP tmpl)
     if (!bcf->is_vcf && 0 != bgzf_seek(bcf->fp, 0, SEEK_SET))
         Rf_error("internal: failed to 'seek' on bcf file");
     bcf_hdr_t *hdr = vcf_hdr_read(bcf);
+    if (NULL == hdr)
+        Rf_error("failed to read header; wrong 'mode' or corrupt file?");
 
     int n = 0;
     tmpl = PROTECT(Rf_duplicate(tmpl));
@@ -365,7 +367,7 @@ scan_bcf(SEXP ext, SEXP space, SEXP tmpl)
         INTEGER(VECTOR_ELT(tmpl, BCF_RECS_PER_RANGE))[0] = n;
     } else {
         SEXP spc = VECTOR_ELT(space, 0);
-        const int 
+        const int
             *start = INTEGER(VECTOR_ELT(space, 1)),
             *end = INTEGER(VECTOR_ELT(space, 2)),
             nspc = Rf_length(spc);
@@ -373,7 +375,7 @@ scan_bcf(SEXP ext, SEXP space, SEXP tmpl)
         SEXP nrec = NEW_INTEGER(nspc);
         SET_VECTOR_ELT(tmpl, BCF_RECS_PER_RANGE, nrec);
 
-        for (int i = 0; i < nspc; ++i) 
+        for (int i = 0; i < nspc; ++i)
         {
             int tid = bcf_str2id(str2id, CHAR(STRING_ELT(spc, i)));
             if (tid < 0) {
