@@ -61,7 +61,7 @@ bcfMode(object)
 
   \item{index}{A character(1) vector of the BCF index.}
 
-  \item{mode}{A character(1) vector; \code{mode="rw"} indicates a binary
+  \item{mode}{A character(1) vector; \code{mode="rb"} indicates a binary
     (BCF) file, \code{mode="r"} a text (VCF) file.}
 
   \item{param}{An optional \code{\linkS4class{ScanBcfParam}} instance to
