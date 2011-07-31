@@ -24,15 +24,15 @@ as_bam(SEXP file, SEXP destination)
     if (!IS_CHARACTER(destination) || 1 != LENGTH(destination))
         Rf_error("'destination' must be character(1)");
 
-    samfile_t *fin = 
+    samfile_t *fin =
         _bam_tryopen(translateChar(STRING_ELT(file, 0)), "r", NULL);
     if (fin->header == 0) {
         samclose(fin);
         Rf_error("invalid header");
     }
-    
+
     samfile_t *fout =           /* f_in leaks if this fails */
-        _bam_tryopen(translateChar(STRING_ELT(destination, 0)), 
+        _bam_tryopen(translateChar(STRING_ELT(destination, 0)),
                      "wb", fin->header);
 
     int count = _as_bam(fin, fout);

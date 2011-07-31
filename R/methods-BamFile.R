@@ -69,9 +69,8 @@ setMethod(scanBam, "BamFile",
     }
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
-    x <- .io_bam(.scan_bamfile, file, param=param,
-                 path(file), index(file), "rb",
-                 reverseComplement, tmpl)
+    x <- .io_bam(.scan_bamfile, file, param=param, reverseComplement,
+                 tmpl)
     .scanBam_postprocess(x, param)
 })
 
