@@ -36,6 +36,8 @@ BUG FIXES
     o scanFa fails, rather than returns incorrect sequences, when file
     is compressed and file positions are not accessed sequentially
 
+    o scanBcf parses VCF files with no genotype information.
+
 CHANGES IN VERSION 1.4.0
 ------------------------
 

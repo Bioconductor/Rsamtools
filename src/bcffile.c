@@ -185,6 +185,35 @@ _bcf_ans_grow(SEXP ans, R_len_t sz, int n_smpl)
     return n;
 }
 
+static int
+_bcf_sync1(bcf1_t * b)
+{
+    /* called when no FORMAT / GENO fields present;
+       from bcftools/bcf.c:bcf_sync */
+    char *p, *tmp[5];
+    int n;
+    for (p = b->str, n = 0; p < b->str + b->l_str; ++p) {
+        if (*p == 0 && p+1 != b->str + b->l_str) {
+            if (n == 5) {
+                ++n;
+                break;
+            } else tmp[n++] = p + 1;
+        }
+    }
+    if (n != 4)
+        return -1;
+    b->ref = tmp[0]; b->alt = tmp[1]; b->flt = tmp[2];
+    b->info = tmp[3]; b->fmt = 0;
+    if (*b->alt == 0) b->n_alleles = 1;
+    else {
+        for (p = b->alt, n = 1; *p; ++p)
+            if (*p == ',') ++n;
+        b->n_alleles = n + 1;
+    }
+    b->n_gi = 0;
+    return 0;
+}
+
 static void
 _bcf_gi2sxp(SEXP geno, const int i_rec, const bcf_hdr_t *h, bcf1_t *b)
 {
@@ -321,8 +350,10 @@ scan_bcf_range(bcf_t *bcf, bcf_hdr_t *hdr, SEXP ans,
         }
         if (n >= sz)
             sz = _bcf_ans_grow(ans, BCF_BUFSIZE_GROW, hdr->n_smpl);
-        if (n >= sz)
+        if (n >= sz) {
+            bcf_destroy(bcf1);
             Rf_error("bcf_scan: failed to increase size; out of memory?");
+        }
         if (hdr->ns)
             SET_STRING_ELT(VECTOR_ELT(ans, BCF_TID), n,
                            smkChar(hdr->ns[bcf1->tid]));
@@ -330,6 +361,12 @@ scan_bcf_range(bcf_t *bcf, bcf_hdr_t *hdr, SEXP ans,
             snprintf(buf, TID_BUFSZ, "%d", bcf1->tid);
             SET_STRING_ELT(VECTOR_ELT(ans, BCF_TID), n, smkChar(buf));
         }
+        if (bcf->is_vcf && NULL == bcf1->ref)
+            if (_bcf_sync1(bcf1)) {
+                bcf_destroy(bcf1);
+                Rf_error("bcf_scan: unexpected number of fields in line %d",
+                         n + 1);
+            }
         INTEGER(VECTOR_ELT(ans, BCF_POS))[n] = bcf1->pos + 1;
         REAL(VECTOR_ELT(ans, BCF_QUAL))[n] = bcf1->qual;
         SET_STRING_ELT(VECTOR_ELT(ans, BCF_ID), n, smkChar(bcf1->str));
@@ -339,6 +376,8 @@ scan_bcf_range(bcf_t *bcf, bcf_hdr_t *hdr, SEXP ans,
         SET_STRING_ELT(VECTOR_ELT(ans, BCF_INFO), n, smkChar(bcf1->info));
         SET_STRING_ELT(VECTOR_ELT(ans, BCF_FMT), n, smkChar(bcf1->fmt));
         _bcf_gi2sxp(VECTOR_ELT(ans, BCF_GENO), n, hdr, bcf1);
+        if (bcf->is_vcf)
+            bcf1->ref = NULL;
         ++n;
     }
     bcf_destroy(bcf1);
