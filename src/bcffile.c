@@ -107,7 +107,7 @@ bcffile_open(SEXP filename, SEXP indexname, SEXP filemode)
     }
 
     bfile->index = NULL;
-    if (0 != Rf_length(indexname)) {
+    if (0 != Rf_length(indexname) && !bfile->file->is_vcf) {
         const char *cindex = translateChar(STRING_ELT(indexname, 0));
         bfile->index = _bcf_idx_load(cindex);
         if (NULL == bfile->index) {
