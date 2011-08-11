@@ -14,6 +14,7 @@
 % methods
 \alias{scanBcfHeader,BcfFile-method}
 \alias{scanBcf,BcfFile-method}
+\alias{indexBcf,BcfFile-method}
 
 \title{Manipulate BCF or VCF files.}
 
@@ -50,6 +51,7 @@ bcfMode(object)
 
 \S4method{scanBcfHeader}{BcfFile}(file, ...)
 \S4method{scanBcf}{BcfFile}(file, ..., param=ScanBcfParam())
+\S4method{indexBcf}{BcfFile}(file, ...)
 
 }
 
@@ -57,7 +59,8 @@ bcfMode(object)
 
   \item{con, object}{An instance of \code{BcfFile}.}
 
-  \item{file}{A character(1) vector of the VCF or BCF file path.}
+  \item{file}{A character(1) vector of the VCF or BCF file path or, (for
+    indexBcf) an instance of \code{BcfFile} point to a BCF file.}
 
   \item{index}{A character(1) vector of the BCF index.}
 

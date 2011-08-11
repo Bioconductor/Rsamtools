@@ -64,6 +64,17 @@ setGeneric("scanBcfHeader",
 setGeneric("scanBcf",
            function(file, ...) standardGeneric("scanBcf"))
 
+setGeneric("asBcf",
+           function(file, dictionary, destination, ...,
+                    overwrite=FALSE, indexDestination=TRUE)
+           standardGeneric("asBcf"),
+           signature="file")
+
+setGeneric("indexBcf",
+           function(file, ...) standardGeneric("indexBcf"))
+
+## other
+
 setGeneric("BamViews",
            function(bamPaths=character(0),
                     bamIndicies=bamPaths,

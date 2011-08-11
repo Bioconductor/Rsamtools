@@ -144,6 +144,18 @@ bcffile_isopen(SEXP ext)
     return ans;
 }
 
+SEXP
+bcffile_isvcf(SEXP ext)
+{
+    SEXP ans = ScalarLogical(FALSE);
+    if (NULL != BCFFILE(ext)) {
+	_scan_checkext(ext, BCFFILE_TAG, "isVcf");
+	if (BCFFILE(ext)->file && BCFFILE(ext)->file->is_vcf)
+	    ans = ScalarLogical(TRUE);
+    }
+    return ans;
+}
+
 /* implementation */
 static int
 _bcf_ans_grow(SEXP ans, R_len_t sz, int n_smpl)
@@ -441,4 +453,74 @@ scan_bcf(SEXP ext, SEXP space, SEXP tmpl)
 
     UNPROTECT(1);
     return tmpl;
+}
+
+int
+_as_bcf(bcf_t *fin, const char *dict, bcf_t *fout)
+{
+    bcf1_t *b = calloc(1, sizeof(bcf1_t)); /* free'd in bcf_destroy */
+    bcf_hdr_t *hin, *hout;
+    int r, count = 0;
+
+    hin = hout = vcf_hdr_read(fin);
+    vcf_dictread(fin, hin, dict);
+    vcf_hdr_write(fout, hout);
+    while (0 <= (r = vcf_read(fin, hin, b))) {
+        if (NULL == b->ref)
+            Rf_error("cannot (yet) coerce VCF files without FORMAT");
+        vcf_write(fout, hout, b);
+        count++;
+    }
+
+    if (hin != hout)
+        bcf_hdr_destroy(hout);
+    bcf_hdr_destroy(hin);
+    bcf_destroy(b);
+
+    return r >= -1 ? count : -1 * count;
+}
+
+SEXP
+as_bcf(SEXP file, SEXP dictionary, SEXP destination)
+{
+    if (!IS_CHARACTER(file) || 1 != LENGTH(file))
+        Rf_error("'file' must be character(1)");
+    if (!IS_CHARACTER(dictionary) || 1 != LENGTH(dictionary))
+        Rf_error("'dictionary' must be character(1)");
+    if (!IS_CHARACTER(destination) || 1 != LENGTH(destination))
+        Rf_error("'destination' must be character(1)");
+
+    bcf_t *fin =
+        _bcf_tryopen(translateChar(STRING_ELT(file, 0)), "r");
+    if (NULL == fin)
+        Rf_error("failed to open VCF 'file'");
+
+    bcf_t *fout =
+        _bcf_tryopen(translateChar(STRING_ELT(destination, 0)), "wb");
+    if (NULL == fout)
+        Rf_error("failed to open BCF 'destination'");
+
+    int count =
+        _as_bcf(fin, translateChar(STRING_ELT(dictionary, 0)), fout);
+
+    _bcf_close(fin, FALSE);
+    _bcf_close(fout, FALSE);
+    if (count < 0)
+        Rf_error("truncated input file at record %d", -1 * count);
+
+    return destination;
+}
+
+SEXP
+index_bcf(SEXP file)
+{
+    if (!IS_CHARACTER(file) || 1 != LENGTH(file))
+        Rf_error("'file' must be character(1)");
+    const char *fbcf = translateChar(STRING_ELT(file, 0));
+    int status = bcf_idx_build(fbcf);
+    if (0 != status)
+        Rf_error("failed to build index");
+    char *fidx = (char *) R_alloc(strlen(fbcf) + 5, sizeof(char));
+    sprintf(fidx, "%s.bci", fbcf);
+    return mkString(fidx);
 }

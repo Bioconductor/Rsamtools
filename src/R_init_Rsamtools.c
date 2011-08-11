@@ -37,8 +37,11 @@ static const R_CallMethodDef callMethods[] = {
     {".bcffile_open", (DL_FUNC) &bcffile_open, 3},
     {".bcffile_close", (DL_FUNC) &bcffile_close, 1},
     {".bcffile_isopen", (DL_FUNC) &bcffile_isopen, 1},
+    {".bcffile_isvcf", (DL_FUNC) &bcffile_isvcf, 1},
     {".scan_bcf_header", (DL_FUNC) &scan_bcf_header, 1},
     {".scan_bcf", (DL_FUNC) &scan_bcf, 3},
+    {".as_bcf", (DL_FUNC) &as_bcf, 3},
+    {".index_bcf", (DL_FUNC) &index_bcf, 1},
     /* fafile.c */
     {".fafile_init", (DL_FUNC) &fafile_init, 0},
     {".fafile_open", (DL_FUNC) &fafile_open, 1},

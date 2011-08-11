@@ -5,6 +5,10 @@
 \alias{scanBcfHeader,character-method}
 \alias{scanBcf}
 \alias{scanBcf,character-method}
+\alias{asBcf}
+\alias{asBcf,character-method}
+\alias{indexBcf}
+\alias{indexBcf,character-method}
 
 \title{
 
@@ -12,7 +16,7 @@
 
 }
 \description{
-  Scan headers of variant call files in text or binary format.
+  Import, coerce, or index variant call files in text or binary format.
 }
 \usage{
 
@@ -22,15 +26,32 @@ scanBcfHeader(file, ...)
 scanBcf(file, ...)
 \S4method{scanBcf}{character}(file, index = file, ..., param=ScanBcfParam())
 
+asBcf(file, dictionary, destination, ...,
+      overwrite=FALSE, indexDestination=TRUE)
+\S4method{asBcf}{character}(file, dictionary, destination, ...,
+      overwrite=FALSE, indexDestination=TRUE)
+
+indexBcf(file, ...)
+\S4method{indexBcf}{character}(file, ...)
+
 }
 
 \arguments{
 
-  \item{file}{The character() file name(s) of the `VCF' or `BCF' file to
-    be processed, or an instance of class \code{\link{BcfFile}}.}
+  \item{file}{The character() file name(s) of the \sQuote{VCF} or
+    \sQuote{BCF} file to be processed, or an instance of class
+    \code{\link{BcfFile}}. For \code{indexBcf}, it must be a
+    \sQuote{BCF} file.}
 
   \item{index}{The character() file name(s) of the `BCF' index to be
     processed.}
+
+  \item{dictionary}{a character vector of the unique \dQuote{CHROM}
+    names in the VCF file.}
+
+  \item{destination}{The character(1) file name of the location where
+    the BCF output file will be created. For \code{asBcf} this is
+    without the \dQuote{.bcf} file suffix.}
 
   \item{param}{A instance of \code{\linkS4class{ScanBcfParam}}
     influencing which records are parsed and the \sQuote{INFO} and
@@ -40,12 +61,18 @@ scanBcf(file, ...)
     \code{scanBcfHeader,character-method}, \code{mode} of
     \code{\link{BcfFile}}.}
 
+  \item{overwrite}{A logical(1) indicating whether the destination
+    can be over-written if it already exists.}
+
+  \item{indexDestination}{A logical(1) indicating whether the created
+    destination file should also be indexed.}
+
 }
 
 \value{
 
   \code{scanBcfHeader} returns a list, with one element for each file
-  named in \code{files}. Each element of the list is itself a list
+  named in \code{file}. Each element of the list is itself a list
   containing three element. The \code{reference} element is a
   character() vector with names of reference sequences.  The
   \code{sample} element is a character() vector of names of samples. The
@@ -59,6 +86,10 @@ scanBcf(file, ...)
   \code{GENO}. The \code{GENO} element is itself a list, with elements
   corresponding to those supported by \sQuote{bcftools} (see
   documentation at the url below).
+
+  \code{asBcf} creates a binary BCF file from a text VCF file.
+
+  \code{indexBcf} creates an index into the BCF file.
 
 }
 
@@ -74,6 +105,12 @@ scanBcf(file, ...)
 
   \url{http://samtools.sourceforge.net/} provides information on
   \code{samtools}.
+
+}
+
+\seealso{
+
+  \code{\link{BcfFile}}
 
 }
 

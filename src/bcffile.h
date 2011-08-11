@@ -16,8 +16,12 @@ SEXP bcffile_init();
 SEXP bcffile_open(SEXP filename, SEXP indexname, SEXP mode);
 SEXP bcffile_close(SEXP ext);
 SEXP bcffile_isopen(SEXP ext);
+SEXP bcffile_isvcf(SEXP ext);
 
 SEXP scan_bcf_header(SEXP ext);
 SEXP scan_bcf(SEXP ext, SEXP space, SEXP typemap);
+
+SEXP as_bcf(SEXP file, SEXP dictionary, SEXP destination);
+SEXP index_bcf(SEXP file);
 
 #endif /* _BCFFILE_H_ */

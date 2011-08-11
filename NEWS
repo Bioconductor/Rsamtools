@@ -26,6 +26,8 @@ NEW FEATURES
 
     o Update to samtools 0.1.17
 
+    o asBcf and indexBcf coerces VCF files to BCF, and indexes BCF
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or

@@ -159,3 +159,58 @@ setMethod(scanBcf, "BcfFile",
 {
     .io_bcf(.scan_bcf, file, ..., param=param)
 })
+
+setMethod(asBcf, "character",
+    function(file, dictionary, destination, ...,
+             overwrite=FALSE, indexDestination=TRUE)
+{
+    file <- .normalizePath(file)
+    destination <- .normalizePath(destination)
+    destination <- paste(destination, "bcf", sep=".")
+
+    dict <- tempfile()
+    on.exit(unlink(dict))
+    tryCatch({
+        if (!overwrite && file.exists(destination)) {
+            msg <-
+                sprintf("'destination' exists, 'overwrite' is FALSE\n  destination.bcf: %s",
+                        "destination", "overwrite", destination)
+            stop(msg)
+        }
+        writeLines(dictionary, dict)
+        result <- .Call(.as_bcf, file, dict, destination)
+        if (!file.exists(destination))
+            stop("failed to create 'BCF' file")
+        if (indexDestination)
+            indexBcf(destination)
+    }, error=function(err) {
+        msg <- sprintf("'asBcf' %s\n  VCF file: '%s'\n  destination: '%s'\n",
+                       conditionMessage(err), file, destination)
+        stop(msg)
+    })
+    destination
+})
+
+setMethod(indexBcf, "BcfFile", function(file, ...)
+{
+    if (!isOpen(file)) {
+        open(file)
+        on.exit(close(file))
+    }
+    if (.Call(.bcffile_isvcf, .extptr(file)))
+        stop("'indexBcf' requires a BCF (not VCF) file")
+    tryCatch({
+        .Call(.index_bcf, path(file))
+    }, error=function(err) {
+        msg <- sprintf("'indexBcf' %s\n  file: '%s'\n",
+                       conditionMessage(err), file)
+        stop(msg)
+    })
+})
+
+setMethod(indexBcf, "character",
+          function(file, ...)
+{
+    indexBcf(BcfFile(file, character()), ...)
+})
+              

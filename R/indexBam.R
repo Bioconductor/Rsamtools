@@ -4,4 +4,3 @@ setMethod(indexBam, "character",
     files <- .normalizePath(files)
     sapply(files, function(file) .Call(.index_bam, file))
 })
-              
