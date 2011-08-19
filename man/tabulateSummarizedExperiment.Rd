@@ -15,9 +15,18 @@
 }
 
 \usage{
-  \S4method{tabulateBamFiles}{character}(x,rowData,colData,annotType,ignore.strand) 
-  \S4method{tabulateBamFiles}{BamViews}(x,rowData,colData,annotType,ignore.strand) 
-  \S4method{tabulateBamFiles}{BamFileList}(x,rowData,colData,annotType,ignore.strand) 
+  \S4method{tabulateBamFiles}{character}(x, rowData, colData,
+                                         annotType, type,
+                                         resolution, ignore.strand,
+                                         splitreads, ...)
+  \S4method{tabulateBamFiles}{BamViews}(x, rowData, colData,
+                                         annotType, type,
+                                         resolution, ignore.strand,
+                                         splitreads, ...) 
+  \S4method{tabulateBamFiles}{BamFileList}(x, rowData, colData,
+                                         annotType, type,
+                                         resolution, ignore.strand,
+                                         splitreads, ...) 
 }
 
 \arguments{
@@ -45,8 +54,22 @@
   object that has an element for each exon, then you will want to use
   "exon_id" etc.
   }
+  \item{type}{passed in to \code{countGenomicOverlaps},
+  please see manual page for \code{countGenomicOverlaps} for a
+  detailed description.
+  }
+  \item{resolution}{passed in to \code{countGenomicOverlaps},
+  please see manual page for \code{countGenomicOverlaps} for a
+  detailed description.
+  }
   \item{ignore.strand}{TRUE of FALSE value used to decide whether to
   ignore strand information that is present in the .bam files when counting.
+  }
+  \item{splitreads}{passed in to \code{countGenomicOverlaps},
+  please see manual page for \code{countGenomicOverlaps} for a
+  detailed description.
+  }
+  \item{...}{Additional arguments, passed to \code{countGenomicOverlaps}.
   }
 }
 
@@ -77,10 +100,12 @@ dir <- "/mnt/cpl/data/Solexa/SOC/101101/Samples"
 ## indexed BAM files
 fls <- sub(".bai$", "", list.files(dir, recursive=TRUE,
                                    pattern="*bai$", full=TRUE))
+
 ##TEMP restrict so it doesn't take too long to test:
 fls <- fls[1:2]
 fileNames = sub("tophat_", "", basename(dirname(fls)))
 names(fls) = fileNames
+fls <- BamFileList(fls)
 
 ## fls: named character vector to specify the files (and sample names = names)
 ## rowData: GRanges Object to specify the annotations.
@@ -95,12 +120,14 @@ rownames(expData) <- fileNames
 
 ## the core function will take a bam file list 
 sx <- tabulateBamFiles(fls, rowData=exons, colData = expData,
-                       annotType="exon_id", ignore.strand=TRUE)
+                       annotType = "exon_id", type = "any",
+                       resolution = "none",ignore.strand = TRUE)
 
-## example with GRangesList
-txs <- transcriptsBy(txdb, by="gene")
-sx2 <- tabulateBamFiles(fls, rowData=txs, colData = expData,
-                       annotType="exon_id", ignore.strand=TRUE)
+## example with GRangesList (much slower and needs better alignment for
+## rowData for the example to work..)
+## txs <- transcriptsBy(txdb, by="gene")
+## sx2 <- tabulateBamFiles(fls, rowData=txs, colData = expData,
+##                        annotType="exon_id", ignore.strand=TRUE)
 
 
 }

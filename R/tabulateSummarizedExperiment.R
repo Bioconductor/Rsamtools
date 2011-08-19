@@ -17,12 +17,14 @@
 
 
 
-## For now inernal function will take a character vector of files and process
-## those into a grid of numbers (then put that into a SummarizedExperiment
-## obj.)
+## For now inernal function will take a BamFileList
 .tabulateBamFiles <- function(x, rowData, colData,
                               annotType=c("exon_id", "gene_id", "tx_id"),
-                             ignore.strand=TRUE, ...){
+                              type,
+                              resolution,
+                              ignore.strand = TRUE,
+                              spitreads = TRUE,
+                              ...){
   ## TODO: better argument checking 
   ## check args
   annotType <- match.arg(annotType)
@@ -32,18 +34,23 @@
   }
 
   len <- seqlengths(rowData)
-  ## TODO: also make sure that x is a list of open BamFiles?
-  #len <- len[names(len) %in% seqnames(x[[1]])]  ## requires that x be BamFileList???
+  ## Make sure that x is a list of open BamFiles?
+  if(!is(x, "BamFileList"))stop("x must be a BamFileList")
+  
+  ## len <- len[names(len) %in% seqnames(x[[1]])]  ## requires that x be BamFileList???
   which <- GRanges(names(len), IRanges(1, len))
   ## count
   cnt <- lapply(x, function(fl, rowData) {
+    fl <- path(fl)
     message(fl)        
     ga <- readGappedAlignments(fl, which=which)
-    if(ignore.strand == TRUE){
-      strand(ga) <- "*"
-    }
-    ## list(region = unlist(countGenomicOverlaps(rowData, ga, ...)) )
-    list(region = unlist(countOverlaps(rowData, ga)) )
+    ## if(ignore.strand == TRUE){
+    ##   strand(ga) <- "*"
+    ## }
+    list(region = values(countGenomicOverlaps(query=ga,subject=rowData,
+           type=type, resolution=resolution, ignore.strand=ignore.strand,
+           spitreads=splitreads, ...))$hits )
+    ## list(region = unlist(countOverlaps(rowData, ga)) )
   }, rowData)
   ## If there are sample names, lets use them
   if(!is.null(names(x))){
@@ -79,7 +86,8 @@
 ## rename???
 ## move to Rsamtools?
 setGeneric("tabulateBamFiles", signature="x",
-    function(x, rowData, colData,annotType,ignore.strand){standardGeneric("tabulateBamFiles")})
+    function(x, rowData, colData, annotType,type,resolution,ignore.strand,
+             splitreads, ...){standardGeneric("tabulateBamFiles")})
 
 
 
@@ -89,31 +97,33 @@ setGeneric("tabulateBamFiles", signature="x",
 ## Define methods:
 ## for a named character vector (names/paths to files)
 setMethod("tabulateBamFiles", "character",
-    function(x, rowData, colData,annotType,ignore.strand){
-      .tabulateBamFiles(x, rowData, colData, annotType=NULL,
-                                       ignore.strand=TRUE)}
+    function(x, rowData, colData,annotType,type,resolution,ignore.strand,
+             splitreads, ...){
+      ## convert to BamFileList
+      x <- BamFileList(x)
+      .tabulateBamFiles(x, rowData, colData, annotType=NULL, type, resolution,
+                        ignore.strand=TRUE, splitreads, ...)}
 )
 
 ## x <- BamFileList(fls)
 ## for a BamFileList
 setMethod("tabulateBamFiles", "BamFileList",
-    function(x, rowData, colData,annotType,ignore.strand){
-      ## convert to character list
-      x <- unlist(lapply(x,path))
-      .tabulateBamFiles(x, rowData, colData, annotType=NULL,
-                        ignore.strand=TRUE)
-    }
+    function(x, rowData, colData,annotType,type,resolution,ignore.strand,
+             splitreads, ...){
+      .tabulateBamFiles(x, rowData, colData, annotType=NULL, type, resolution,
+                        ignore.strand=TRUE, splitreads, ...)}
 )
 
 
 ## x <- BamViews(fls, bamRanges=rngs)
 ## for a BamViews
 setMethod("tabulateBamFiles", "BamViews",
-    function(x, rowData, colData,annotType,ignore.strand){
+    function(x, rowData, colData,annotType,type,resolution,ignore.strand,
+             splitreads, ...){
       ## convert to character list
-      x <- bamPaths(x)
-      .tabulateBamFiles(x, rowData, colData, annotType=NULL,
-                        ignore.strand=TRUE)
+      x <- BamFileList(bamPaths(x))      
+      .tabulateBamFiles(x, rowData, colData, annotType=NULL, type, resolution,
+                        ignore.strand=TRUE, splitreads, ...)
     }
 )
 
