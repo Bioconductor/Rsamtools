@@ -234,16 +234,18 @@ setMethod(readBamGappedAlignments, "BamViews",
 {
     if (missing(index))
         index <- bamIndicies(file)
-    if (!is.null(param) && !identical(bamRanges(file), bamWhich(param))) {
+    if (is.null(param)) {
+        param <- ScanBamParam(what=character(0), which=bamRanges(file))
+    } else if (!identical(bamRanges(file), bamWhich(param))) {
         warning("'bamRanges(file)' and 'bamWhich(param)' differ; using 'bamRanges(file)'")
         bamWhich(param) <- bamRanges(file)
     }
-    fun <- function(i, bamViews, ..., verbose)
+    fun <- function(i, bamViews, verbose)
         readBamGappedAlignments(file=bamPaths(bamViews)[i],
                                 index=bamIndicies(bamViews)[i],
                                 use.names=use.names,
                                 param=param)
-    .BamViews_delegate("readBamGappedAlignments", file, fun, ...)
+    .BamViews_delegate("readBamGappedAlignments", file, fun)
 })
 
 ## show
