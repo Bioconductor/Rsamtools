@@ -40,6 +40,9 @@ BUG FIXES
 
     o scanBcf parses VCF files with no genotype information.
 
+    o scanBam called with the first range having no reads returned
+    invalid results for subsequent ranges; introduced in svn r57138
+
 CHANGES IN VERSION 1.4.0
 ------------------------
 

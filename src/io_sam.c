@@ -669,12 +669,7 @@ _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
 				      LOGICAL(reverseComplement)[0]);
     SEXP result =
         _scan_bam_result_init(count, template_list, names, bdata);
-    if (0 == INTEGER(VECTOR_ELT(count, 0))[0]) {
-        UNPROTECT(2);
-        return result;
-    }
     PROTECT(result);
-
     bdata->extra = (void *) result;
 
     int status = _do_scan_bam(bdata, space, _scan_bam_parse1);

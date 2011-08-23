@@ -143,6 +143,25 @@ test_scanBam_which_order <- function()
     checkIdentical(exp, obs)
 }
 
+test_scanBam_which_empty <- function()
+{
+    ## range 1 is empty
+    which <- IRangesList(seq2=IRanges(c(1570,1562), width=1))
+    what <- c("strand", "rname", "mrnm")
+    res <- scanBam(fl, param=ScanBamParam(what=what, which=which))
+
+    checkIdentical(c(3L, 3L), unname(sapply(res, length)))
+    checkIdentical(res[[1]][["strand"]], strand())
+    exp <- factor(levels=c("seq1", "seq2"))
+    checkIdentical(exp, res[[1]][["rname"]])
+    checkIdentical(exp, res[[1]][["mrnm"]])
+
+    checkIdentical(res[[2]][["strand"]], strand(rep("-", 3)))
+    exp <- factor(rep("seq2", 3), levels=c("seq1", "seq2"))
+    checkIdentical(exp, res[[2]][["rname"]])
+    checkIdentical(exp, res[[2]][["mrnm"]])
+}
+
 test_scanBam_what_overflow <- function()
 {
     ## src/samtools/bam_index.c requires that the largest bin be <= 512Mbp
