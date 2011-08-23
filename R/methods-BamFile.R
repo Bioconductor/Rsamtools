@@ -133,11 +133,16 @@ setMethod(sortBam, "BamFile",
     ans_names <- names(res[[1L]])
     ans <- lapply(ans_names,
                   function(nm) {
-                      tmp <- unname(lapply(res, "[[", nm))
-                      if (is.factor(tmp[[1L]]))
-                          factor(unlist(tmp), levels=levels(res[[1L]][[nm]]))
-                      else
+                      tmp <- lapply(unname(res), "[[", nm)
+                      tmp1 <- tmp[[1L]]
+                      if (is.factor(tmp1)) {
+                          ## Fast unlisting of a list of factors that have all
+                          ## the same levels in the same order.
+                          structure(unlist(tmp),
+                                    class="factor", levels=levels(tmp1))
+                      } else {
                           do.call(c, tmp)  # doesn't work on list of factors
+                      }
                   })
     names(ans) <- ans_names
     ans

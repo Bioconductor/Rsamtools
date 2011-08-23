@@ -88,14 +88,18 @@ galn2 <- readBamGappedAlignments(bamfile, use.names=TRUE)
 galn2
 head(names(galn2))
 
-## Using the 'param' arg:
+## Using the 'param' arg to load additional BAM fields:
 param <- ScanBamParam(what=c("qual", "flag"))
 galn3 <- readBamGappedAlignments(bamfile, param=param)
 galn3
 elementMetadata(galn3)
 
-param <- ScanBamParam(what=c("qual", "flag"),
-                      which=RangesList(seq2=IRanges(155, 164)))
+## Using the 'param' arg to load reads from particular regions.
+## Note that if we don't specify 'what=character(0)' here, all
+## the BAM fields will be loaded:
+which <- RangesList(seq1=IRanges(1000, 2000),
+                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+param <- ScanBamParam(what=character(0), which=which)
 galn4 <- readBamGappedAlignments(bamfile, param=param)
 galn4
 
