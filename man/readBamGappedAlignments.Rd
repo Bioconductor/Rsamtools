@@ -103,6 +103,14 @@ param <- ScanBamParam(what=character(0), which=which)
 galn4 <- readBamGappedAlignments(bamfile, param=param)
 galn4
 
+## Note that a given record is loaded one time for each region it
+## belongs to (this is a scanBam() feature, readBamGappedAlignments()
+## is based on scanBam()):
+which <- IRangesList(seq2=IRanges(c(1563, 1567), width=1))
+param <- ScanBamParam(which=which)
+galn5 <- readBamGappedAlignments(bamfile, param=param)
+galn5
+
 ## readBamGappedReads():
 greads1 <- readBamGappedReads(bamfile)
 greads1
