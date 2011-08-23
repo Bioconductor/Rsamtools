@@ -40,7 +40,7 @@ readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
     By default (i.e. \code{param=NULL}), no additional field is loaded and
     the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE,
     isDuplicate=FALSE)} (i.e. all the records corresponding to mapped reads
-    that are not PCR or optical duplicates are loaded).
+    that are not PCR or optical duplicates are loaded).}
 }
 
 \details{
