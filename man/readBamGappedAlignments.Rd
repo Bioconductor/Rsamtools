@@ -55,8 +55,16 @@ readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
 
 }
 
+\value{
+  A \link[GenomicRanges]{GappedAlignments} object for
+  \code{readBamGappedAlignments}.
+
+  A \link[ShortRead]{GappedReads} object for \code{readBamGappedReads}.
+}
+
 \note{
-  BAM records corresponding to unaligned queries are ignored.
+  BAM records corresponding to unmapped reads or to reads that are PCR
+  or optical duplicates are always ignored.
 }
 
 \author{H. Pages}
@@ -64,7 +72,8 @@ readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
 \seealso{
   \link[GenomicRanges]{GappedAlignments-class},
   \link[ShortRead]{GappedReads-class},
-  \code{\link{scanBam}}
+  \code{\link{scanBam}},
+  \code{\link{ScanBamParam}}
 }
 
 \examples{
@@ -80,13 +89,14 @@ galn2
 head(names(galn2))
 
 ## Using the 'param' arg:
-galn3 <- readBamGappedAlignments(bamfile,
-                                 param=ScanBamParam(what=c("qual", "flag")))
+param <- ScanBamParam(what=c("qual", "flag"))
+galn3 <- readBamGappedAlignments(bamfile, param=param)
 galn3
 elementMetadata(galn3)
-galn4 <- readBamGappedAlignments(bamfile,
-                                 param=ScanBamParam(what=c("qual", "flag"),
-                                 which=RangesList(seq2=IRanges(1562, width=1))))
+
+param <- ScanBamParam(what=c("qual", "flag"),
+                      which=RangesList(seq2=IRanges(155, 164)))
+galn4 <- readBamGappedAlignments(bamfile, param=param)
 galn4
 
 ## readBamGappedReads():
