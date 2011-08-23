@@ -14,8 +14,8 @@ or \link[ShortRead]{GappedReads} object.
 }
 
 \usage{
-readBamGappedAlignments(file, index=file, use.names=FALSE, ..., which)
-readBamGappedReads(file, index=file, use.names=FALSE, ..., which)
+readBamGappedAlignments(file, index=file, use.names=FALSE, param=NULL)
+readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
 }
 
 \arguments{
@@ -29,13 +29,18 @@ readBamGappedReads(file, index=file, use.names=FALSE, ..., which)
     names of the returned object? If not (the default), then the returned
     object has no names.}
 
-  \item{\dots}{Additional arguments, currently unused.}
-  
-  \item{which}{An object passed to \code{which} in
-    \code{\linkS4class{ScanBamParam}} to specify ranges from which
-    alignments will be retrieved. Valid types are described on the
-    \code{\linkS4class{ScanBamParam}} help page.}
-
+  \item{param}{\code{NULL} or an instance of \code{\linkS4class{ScanBamParam}}.
+    Like for \code{\link{scanBam}}, this influences what fields and which
+    records are imported. However, please note that the fields specified
+    thru this \code{\linkS4class{ScanBamParam}} object will be loaded
+    \emph{in addition} to any field required for generating the returned
+    object (\link[GenomicRanges]{GappedAlignments} or
+    \link[GenomicRanges]{GappedReads} object) and will be stored in its
+    elementMetadata part.
+    By default (i.e. \code{param=NULL}), no additional field is loaded and
+    the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE,
+    isDuplicate=FALSE)} (i.e. all the records corresponding to mapped reads
+    that are not PCR or optical duplicates are loaded).
 }
 
 \details{
@@ -63,14 +68,28 @@ readBamGappedReads(file, index=file, use.names=FALSE, ..., which)
 }
 
 \examples{
+## Simple use:
 bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
 galn1 <- readBamGappedAlignments(bamfile)
 galn1
 names(galn1)
+
+## Using the 'use.names' arg:
 galn2 <- readBamGappedAlignments(bamfile, use.names=TRUE)
 galn2
 head(names(galn2))
 
+## Using the 'param' arg:
+galn3 <- readBamGappedAlignments(bamfile,
+                                 param=ScanBamParam(what=c("qual", "flag")))
+galn3
+elementMetadata(galn3)
+galn4 <- readBamGappedAlignments(bamfile,
+                                 param=ScanBamParam(what=c("qual", "flag"),
+                                 which=RangesList(seq2=IRanges(1562, width=1))))
+galn4
+
+## readBamGappedReads():
 greads1 <- readBamGappedReads(bamfile)
 greads1
 names(greads1)
