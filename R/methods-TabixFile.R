@@ -1,13 +1,17 @@
 TabixFile <-
     function(file, index=paste(file, "tbi", sep="."), ...)
 {
+    tryCatch({
+        .io_check_exists(c(file, index))
+    }, error=function(err) {
+        stop(sprintf("TabixFile: %s", conditionMessage(err)), call.=FALSE)
+    })
     .RsamtoolsFile(.TabixFile, file, index)
 }
 
 open.TabixFile <-
     function(con, ...)
 {
-    .io_check_exists(index(con))
     ## FIXME: path? index?
     con$.extptr <- .Call(.tabixfile_open, path(con), index(con))
     invisible(con)
@@ -37,6 +41,7 @@ indexTabix <-
              skip=0L, comment="#", zeroBased=FALSE, ...)
 {
     tryCatch({
+        file <- .normalizePath(file)
         format <- 
             if (!missing(format)) match.arg(format)
             else character()

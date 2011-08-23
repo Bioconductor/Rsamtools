@@ -16,7 +16,7 @@
     idx <- !grepl("^(ftp)|(http)://", file)
     if (!all(sapply(file[idx], file.exists))) {
         msg <- paste(sprintf("'%s'", file[idx]), collapse="\n  ")
-        stop("'file' elements do not exist:\n  ", msg)
+        stop("file(s) do not exist:\n  ", msg)
     }
 }
 
