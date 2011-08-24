@@ -175,7 +175,9 @@ setMethod(readBamGappedAlignments, "BamFile",
     seqlengths <- .loadBamSeqlengths(file, levels(bamcols[["rname"]]))
     ans <- GappedAlignments(rname=bamcols$rname, pos=bamcols$pos,
                             cigar=bamcols$cigar, strand=bamcols$strand,
-                            names=bamcols$qname, seqlengths=seqlengths)
+                            seqlengths=seqlengths)
+    if (use.names)
+        names(ans) <- bamcols$qname
     if (!is.null(param) && length(bamWhat(param)) != 0L) {
         df <- do.call(DataFrame, bamcols[bamWhat(param)])
         elementMetadata(ans) <- df
@@ -196,8 +198,9 @@ setMethod(readBamGappedReads, "BamFile",
     seqlengths <- .loadBamSeqlengths(file, levels(bamcols[["rname"]]))
     ans <- GappedReads(rname=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
-                       qseq=bamcols$seq,
-                       names=bamcols$qname, seqlengths=seqlengths)
+                       qseq=bamcols$seq, seqlengths=seqlengths)
+    if (use.names)
+        names(ans) <- bamcols$qname
     if (!is.null(param) && length(bamWhat(param)) != 0L) {
         df <- do.call(DataFrame, bamcols[bamWhat(param)])
         elementMetadata(ans) <- df
