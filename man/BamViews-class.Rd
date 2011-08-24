@@ -134,9 +134,6 @@ bamDirname(x, ...) <- value
      from the query template names (QNAME field)? If not (the default),
      then the returned object has no names.}
 
-  \item{which}{An optional \code{\linkS4class{RangesList}} instance to
-     further subset \code{file}.}
-
 }
 
 \section{Objects from the Class}{
@@ -235,10 +232,10 @@ bamDirname(x, ...) <- value
     \item{readBamGappedAlignments}{Visit each path in \code{bamPaths(file)},
       returning the result of \code{readBamGappedAlignments} applied to the
       specified path. When \code{index} is missing, it is set equal to
-      \code{bamIndicies(file)}. When \code{which} is missing, only reads in
-      \code{bamRanges(file)} are returned. When \code{which} is present,
-      reads matching \code{bamRanges(file[which])} are returned. The
-      return value is a \code{\linkS4class{SimpleList}}, with elements
+      \code{bamIndicies(file)}. Only reads in \code{bamRanges(file)} are
+      returned (if \code{param} is supplied, \code{bamRanges(file)} takes
+      precedence over \code{bamWhich(param)}).
+      The return value is a \code{\linkS4class{SimpleList}}, with elements
       of the list corresponding to each path. \code{bamSamples(file)} is
       available as \code{elementMetadata} of the returned
       \code{SimpleList}.}

@@ -95,9 +95,6 @@ BamFileList(...)
      from the query template names (QNAME field)? If not (the default),
      then the returned object has no names.}
 
-  \item{which}{An optional \code{\linkS4class{RangesList}} instance to
-     further subset \code{file}.}
-
   \item{rw}{Mode of file; ignored.}
 
 }

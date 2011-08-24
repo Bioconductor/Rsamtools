@@ -35,7 +35,7 @@ readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
     thru this \code{\linkS4class{ScanBamParam}} object will be loaded
     \emph{in addition} to any field required for generating the returned
     object (\link[GenomicRanges]{GappedAlignments} or
-    \link[GenomicRanges]{GappedReads} object) and will be stored in its
+    \link[ShortRead]{GappedReads} object) and will be stored in its
     elementMetadata part.
     By default (i.e. \code{param=NULL}), no additional field is loaded and
     the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE,
