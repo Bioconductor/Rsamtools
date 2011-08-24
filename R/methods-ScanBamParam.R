@@ -111,6 +111,20 @@ bamWhat <- function(object) slot(object, "what")
 
 ## helpers 
 
+.FLAG_BITNAMES <- c(
+    "isPaired",
+    "isProperPair",
+    "isUnmappedQuery",
+    "hasUnmappedMate",
+    "isMinusStrand",
+    "isMateMinusStrand",
+    "isFirstMateRead",
+    "isSecondMateRead",
+    "isNotPrimaryRead",
+    "isValidVendorRead",
+    "isDuplicate"
+)
+
 scanBamFlag <-
     function(isPaired=NA, isProperPair=NA, isUnmappedQuery=NA,
              hasUnmappedMate=NA, isMinusStrand=NA, isMateMinusStrand=NA,
@@ -118,11 +132,8 @@ scanBamFlag <-
              isNotPrimaryRead=NA, isValidVendorRead=NA, isDuplicate=NA)
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
 {
-    flag <- c(isPaired=1L, isProperPair=2L, isUnmappedQuery=4L,
-              hasUnmappedMate=8L, isMinusStrand=16L, isMateMinusStrand=32L,
-              isFirstMateRead=64L, isSecondMateRead=128L,
-              isNotPrimaryRead=256L, isValidVendorRead=512L,
-              isDuplicate=1024L)
+    flag <- IRanges:::makePowersOfTwo(length(.FLAG_BITNAMES))
+    names(flag) <- .FLAG_BITNAMES
     args <- lapply(as.list(match.call())[-1], eval, parent.frame())
     if (any(sapply(args, length) > 1L))
         stop("all arguments must be logical(1)")
@@ -162,3 +173,24 @@ setMethod(show, "ScanBamParam",
     what <- paste("bamWhat: ", paste(bamWhat(object), collapse=", "))
     cat(strwrap(what, exdent=2), sep="\n")
 })
+
+## flag utils
+
+## Explode the bits of a 'flag' vector into a matrix.
+bamFlagAsBitMatrix <- function(flag)
+{
+    ans <- IRanges:::explodeIntBits(flag, length(.FLAG_BITNAMES))
+    dimnames(ans) <- list(names(flag), .FLAG_BITNAMES)
+    ans
+}
+
+## Performs a logical AND between 2 'flag' vectors.
+bamFlagAND <- function(flag1, flag2)
+{
+    bits1 <- bamFlagAsBitMatrix(flag1)
+    bits2 <- bamFlagAsBitMatrix(flag2)
+    ans <- IRanges:::implodeIntBits(bits1 & bits2)
+    names(ans) <- names(flag1)
+    ans
+}
+

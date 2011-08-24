@@ -25,6 +25,9 @@
 \alias{bamWhich}
 % methods
 \alias{show,ScanBamParam-method}
+% flag utils
+\alias{bamFlagAsBitMatrix}
+\alias{bamFlagAND}
 
 \title{Parameters for scanning BAM files}
 \description{
@@ -66,13 +69,20 @@ bamWhich(object) <- value
 
 \S4method{show}{ScanBamParam}(object)
 
+# Flag utils
+bamFlagAsBitMatrix(flag)
+bamFlagAND(flag1, flag2)
 }
 
 \arguments{
 
-  \item{flag}{An integer(2) vector used to filter reads based on their
-    'flag' entry. This is most easily created with the
-    \code{scanBamFlag()} helper function.}
+  \item{flag}{For \code{ScanBamParam}, an integer(2) vector used to filter
+    reads based on their 'flag' entry. This is most easily created with the
+    \code{scanBamFlag()} helper function.
+
+    For \code{bamFlagAsBitMatrix}, an integer vector where each element
+    represents a 'flag' entry.
+  }
 
   \item{simpleCigar}{A logical(1) vector which, when TRUE, returns only
     those reads for which the cigar (run-length encoded representation
@@ -158,6 +168,7 @@ bamWhich(object) <- value
   \item{value}{An instance of the corresponding slot, to be assigned to
     \code{object}.}
 
+  \item{flag1, flag2}{Integer vectors containing 'flag' entries.}
 }
 
 \section{Objects from the Class}{
@@ -269,5 +280,12 @@ lapply(res, head)
 p4 <- ScanBamParam(tag=c("NM", "H1"))
 bam4 <- scanBam(fl, param=p4)
 str(bam4[[1]][["tag"]])
+
+## flag utils
+flag <- scanBamFlag(isUnmappedQuery=FALSE, isMinusStrand=TRUE)
+flag
+bamFlagAsBitMatrix(flag)
+flag4 <- bam4[[1]][["flag"]]
+bamFlagAsBitMatrix(flag4[1:9])
 }
 \keyword{classes}

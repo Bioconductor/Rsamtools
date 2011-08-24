@@ -115,39 +115,20 @@ setMethod(sortBam, "BamFile",
 ### "readBamGappedAlignments" and "readBamGappedReads" methods.
 ###
 
-.intToBitVector <- function(x, nbit=31L)
+### A "flag filter" is represented as a flag vector of length 2 with names
+### keep0 and keep1. The .combineBamFlagFilters() function performs a logical
+### AND between 2 flag filters. It returns a "flag filter".
+.combineBamFlagFilters <- function(flagfilterA, flagfilterB)
 {
-    ans <- logical(nbit)
-    for (i in seq_len(nbit)) {
-        ans[i] <- x %% 2L
-        x <- x %/% 2
-    }
+    if (!identical(names(flagfilterA), c("keep0", "keep1"))
+     || !identical(names(flagfilterB), c("keep0", "keep1")))
+        stop("input must be BAM flag filters")
+    ans <- bamFlagAND(flagfilterA, flagfilterB)
+    names(ans) <- names(flagfilterA)
+    if (!all(bamFlagAsBitMatrix(ans[["keep0"]]) |
+             bamFlagAsBitMatrix(ans[["keep1"]])))
+        stop("BAM flag filters to combine are incompatible")
     ans
-}
-
-.bitVectorToInt <- function(x)
-{
-    sum(x * as.integer(2^(0:(length(x)-1L))))
-}
-
-### Performs a logical AND between 2 flags. This kind of operation on flags
-### could probably be put somewhere else in the package.
-.combineBamFlags <- function(flagA, flagB)
-{
-    ## Combine the keep0 bits:
-    bitsA0 <- .intToBitVector(flagA[1L], nbit=11L)
-    bitsB0 <- .intToBitVector(flagB[1L], nbit=11L)
-    bits0 <- bitsA0 & bitsB0
-    ## Combine the keep1 bits:
-    bitsA1 <- .intToBitVector(flagA[2L], nbit=11L)
-    bitsB1 <- .intToBitVector(flagB[2L], nbit=11L)
-    bits1 <- bitsA1 & bitsB1
-    ## Check for an incompatibility:
-    if (!all(bits0 | bits1))
-        stop("BAM flags to combine are incompatible")
-    keep0 <- .bitVectorToInt(bits0)
-    keep1 <- .bitVectorToInt(bits1)
-    c(keep0=keep0, keep1=keep1)
 }
 
 .normargParam <- function(param, what0)
@@ -155,7 +136,7 @@ setMethod(sortBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam(what=character(0))
     flag0 <- scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE)
-    bamFlag(param) <- .combineBamFlags(bamFlag(param), flag0)
+    bamFlag(param) <- .combineBamFlagFilters(bamFlag(param), flag0)
     bamWhat(param) <- union(bamWhat(param), what0)
     param
 }
