@@ -110,14 +110,52 @@ setMethod(sortBam, "BamFile",
                 byQname=byQname, maxMemory=maxMemory)
 })
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### "readBamGappedAlignments" and "readBamGappedReads" methods.
+###
+
+.intToBitVector <- function(x, nbit=31L)
+{
+    ans <- logical(nbit)
+    for (i in seq_len(nbit)) {
+        ans[i] <- x %% 2L
+        x <- x %/% 2
+    }
+    ans
+}
+
+.bitVectorToInt <- function(x)
+{
+    sum(x * as.integer(2^(0:(length(x)-1L))))
+}
+
+### Performs a logical AND between 2 flags. This kind of operation on flags
+### could probably be put somewhere else in the package.
+.combineBamFlags <- function(flagA, flagB)
+{
+    ## Combine the keep0 bits:
+    bitsA0 <- .intToBitVector(flagA[1L], nbit=11L)
+    bitsB0 <- .intToBitVector(flagB[1L], nbit=11L)
+    bits0 <- bitsA0 & bitsB0
+    ## Combine the keep1 bits:
+    bitsA1 <- .intToBitVector(flagA[2L], nbit=11L)
+    bitsB1 <- .intToBitVector(flagB[2L], nbit=11L)
+    bits1 <- bitsA1 & bitsB1
+    ## Check for an incompatibility:
+    if (!all(bits0 | bits1))
+        stop("BAM flags to combine are incompatible")
+    keep0 <- .bitVectorToInt(bits0)
+    keep1 <- .bitVectorToInt(bits1)
+    c(keep0=keep0, keep1=keep1)
+}
+
 .normargParam <- function(param, what0)
 {
     if (is.null(param))
         param <- ScanBamParam(what=character(0))
-    if (!identical(bamFlag(param), scanBamFlag()))
-        stop("don't know how to handle a user supplied flag yet")
     flag0 <- scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE)
-    bamFlag(param) <- flag0
+    bamFlag(param) <- .combineBamFlags(bamFlag(param), flag0)
     bamWhat(param) <- union(bamWhat(param), what0)
     param
 }
