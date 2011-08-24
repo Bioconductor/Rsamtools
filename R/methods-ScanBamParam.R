@@ -115,13 +115,14 @@ scanBamFlag <-
     function(isPaired=NA, isProperPair=NA, isUnmappedQuery=NA,
              hasUnmappedMate=NA, isMinusStrand=NA, isMateMinusStrand=NA,
              isFirstMateRead=NA, isSecondMateRead=NA, # redundant
-             isPrimaryRead=NA, isValidVendorRead=NA, isDuplicate=NA)
+             isNotPrimaryRead=NA, isValidVendorRead=NA, isDuplicate=NA)
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
 {
     flag <- c(isPaired=1L, isProperPair=2L, isUnmappedQuery=4L,
               hasUnmappedMate=8L, isMinusStrand=16L, isMateMinusStrand=32L,
               isFirstMateRead=64L, isSecondMateRead=128L,
-              isPrimaryRead=256L, isValidVendorRead=512L, isDuplicate=1024L)
+              isNotPrimaryRead=256L, isValidVendorRead=512L,
+              isDuplicate=1024L)
     args <- lapply(as.list(match.call())[-1], eval, parent.frame())
     if (any(sapply(args, length) > 1L))
         stop("all arguments must be logical(1)")

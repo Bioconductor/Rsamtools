@@ -46,7 +46,7 @@ ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
 # Constructor helpers
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
     hasUnmappedMate = NA, isMinusStrand = NA, isMateMinusStrand = NA, 
-    isFirstMateRead = NA, isSecondMateRead = NA, isPrimaryRead = NA, 
+    isFirstMateRead = NA, isSecondMateRead = NA, isNotPrimaryRead = NA, 
     isValidVendorRead = NA, isDuplicate = NA) 
 scanBamWhat()
 
@@ -71,18 +71,18 @@ bamWhich(object) <- value
 \arguments{
 
   \item{flag}{An integer(2) vector used to filter reads based on their
-	'flag' entry. This is most easily created with the
-	\code{scanBamFlag()} helper function.}
+    'flag' entry. This is most easily created with the
+    \code{scanBamFlag()} helper function.}
 
   \item{simpleCigar}{A logical(1) vector which, when TRUE, returns only
-	those reads for which the cigar (run-length encoded representation
-	of the alignment) is missing or contains only matches / mismatches
-	(\code{'M'}).}
+    those reads for which the cigar (run-length encoded representation
+    of the alignment) is missing or contains only matches / mismatches
+    (\code{'M'}).}
 
   \item{reverseComplement}{A logical(1) vector which, when TRUE, returns
-	the sequence and quality scores of reads mapped to the minus strand
-	in the reverse complement (sequence) and reverse (quality) of the
-	read as stored in the BAM file.}
+    the sequence and quality scores of reads mapped to the minus strand
+    in the reverse complement (sequence) and reverse (quality) of the
+    read as stored in the BAM file.}
 
   \item{tag}{A character vector naming tags to be extracted. A tag is an
     optional field, with arbitrary information, stored with each
@@ -90,67 +90,68 @@ bamWhich(object) <- value
     \code{tag} must have exactly 2 characters.}
 
   \item{what}{A character vector naming the fields to
-	return. \code{scanBamWhat()} returns a vector of available
-	fields. Fields are described on the \code{\link{scanBam}} help
-	page.}
+    return. \code{scanBamWhat()} returns a vector of available
+    fields. Fields are described on the \code{\link{scanBam}} help
+    page.}
 
   \item{which}{A \code{\linkS4class{GRanges}},
     \code{\linkS4class{RangesList}}, \code{\linkS4class{RangedData}}, or
-	missing object, from which a \code{IRangesList} instance will be
-	constructed. Names of the \code{IRangesList} correspond to reference
-	sequences, and ranges to the regions on that reference sequence for
-	which matches are desired. Because data types are coerced to
-	\code{IRangesList}, \code{which} does \emph{not} include strand
-	information (use the \code{flag} argument instead). Only records
-	with a read overlapping the specified ranges are returned. All
-	ranges must have ends less than or equal to 536870912.}
+    missing object, from which a \code{IRangesList} instance will be
+    constructed. Names of the \code{IRangesList} correspond to reference
+    sequences, and ranges to the regions on that reference sequence for
+    which matches are desired. Because data types are coerced to
+    \code{IRangesList}, \code{which} does \emph{not} include strand
+    information (use the \code{flag} argument instead). Only records
+    with a read overlapping the specified ranges are returned. All
+    ranges must have ends less than or equal to 536870912.}
 
   \item{isPaired}{A logical(1) indicating whether unpaired (FALSE),
-	paired (TRUE), or any (NA) read should be returned.}
+    paired (TRUE), or any (NA) read should be returned.}
 
   \item{isProperPair}{A logical(1) indicating whether improperly paired
-	(FALSE), properly paired (TRUE), or any (NA) read should be
-	returned. A properly paired read is defined by the alignment
-	algorithm and might, e.g., represent reads aligning to identical
-	reference sequences and with a specified distance.}
+    (FALSE), properly paired (TRUE), or any (NA) read should be
+    returned. A properly paired read is defined by the alignment
+    algorithm and might, e.g., represent reads aligning to identical
+    reference sequences and with a specified distance.}
 
   \item{isUnmappedQuery}{A logical(1) indicating whether unmapped
-  (TRUE), mapped (FALSE), or any (NA) read should be returned.}
+    (TRUE), mapped (FALSE), or any (NA) read should be returned.}
 
   \item{hasUnmappedMate}{A logical(1) indicating whether reads with
-  mapped (FALSE), unmapped (TRUE), or any (NA) mate should be returned.}
+    mapped (FALSE), unmapped (TRUE), or any (NA) mate should be
+    returned.}
 
   \item{isMinusStrand}{A logical(1) indicating whether reads aligned to
-	the plus (FALSE), minus (TRUE), or any (NA) strand should be
-	returned.}
+    the plus (FALSE), minus (TRUE), or any (NA) strand should be
+    returned.}
 
   \item{isMateMinusStrand}{A logical(1) indicating whether mate reads
-	aligned to the plus (FALSE), minus (TRUE), or any (NA) strand should
-	be returned.}
+    aligned to the plus (FALSE), minus (TRUE), or any (NA) strand should
+    be returned.}
 
   \item{isFirstMateRead}{A logical(1) indicating whether the first mate
-	read should be returned (TRUE) or not (FALSE), or whether mate read
-	number should be ignored (NA).}
+    read should be returned (TRUE) or not (FALSE), or whether mate read
+    number should be ignored (NA).}
 
-  \item{isSecondMateRead}{A logical(1) indicating whether the second mate
-	read should be returned (TRUE) or not (FALSE), or whether mate read
-	number should be ignored (NA).}
+  \item{isSecondMateRead}{A logical(1) indicating whether the second
+    mate read should be returned (TRUE) or not (FALSE), or whether mate
+    read number should be ignored (NA).}
 
-  \item{isPrimaryRead}{A logical(1) indicating whether reads that are
-	not primary (FALSE), are primary (TRUE) or whose primary status does
-	not matter (NA) should be returned. A non-primary read might result
-	when portions of a read aligns to multiple locations, e.g., when
-	spanning splice junctions).}
+  \item{isNotPrimaryRead}{A logical(1) indicating whether reads that are
+    primary (FALSE), are not primary (TRUE) or whose primary status does
+    not matter (NA) should be returned. A non-primary read might result
+    when portions of a read aligns to multiple locations, e.g., when
+    spanning splice junctions).}
 
   \item{isValidVendorRead}{A logical(1) indicating whether invalid
-	(FALSE), valid (TRUE), or any (NA) read should be returned. A
-	'valid' read is one flagged by the vendor as passing quality control
-	criteria.}
+    (FALSE), valid (TRUE), or any (NA) read should be returned. A
+    'valid' read is one flagged by the vendor as passing quality control
+    criteria.}
 
   \item{isDuplicate}{A logical(1) indicating that un-duplicated (FALSE),
-	duplicated (TRUE), or any (NA) reads should be
-	returned. 'Duplicated' reads may represent PCR or optical
-	duplicates.}
+    duplicated (TRUE), or any (NA) reads should be
+    returned. 'Duplicated' reads may represent PCR or optical
+    duplicates.}
   
   \item{object}{An instance of class \code{ScanBamParam}.}
 
@@ -176,8 +177,8 @@ bamWhich(object) <- value
       returned.}
 
     \item{\code{reverseComplement}}{Object of class \code{logical}
-	  indicating, when TRUE, that reads on the minus strand are to be
-	  reverse complemented (sequence) and reversed (quality).}
+      indicating, when TRUE, that reads on the minus strand are to be
+      reverse complemented (sequence) and reversed (quality).}
 
     \item{\code{tag}}{Object of class \code{character} indicating what
       tags are to be returned.}
@@ -198,9 +199,9 @@ bamWhich(object) <- value
   Constructor:
   \describe{
 
-	\item{ScanBamParam:}{Returns a \code{ScanBamParam} object. The
-	  \code{which} argument to the constructor can be one of several
-	  different types, as documented above.}
+    \item{ScanBamParam:}{Returns a \code{ScanBamParam} object. The
+      \code{which} argument to the constructor can be one of several
+      different types, as documented above.}
 
   }
 
@@ -210,31 +211,31 @@ bamWhich(object) <- value
     \item{bamTag, bamTag<-}{Returns or sets a \code{character} vector of
       tags to be extracted.}
 
-	\item{bamWhat, bamWhat<-}{Returns or sets a \code{character} vector
-	  of fields to be extracted.}
+    \item{bamWhat, bamWhat<-}{Returns or sets a \code{character} vector
+      of fields to be extracted.}
 
-	\item{bamWhich, bamWhich<-}{Returns or sets a \code{RangesList} of
-	  bounds on reads to be extracted. A length 0 \code{RangesList}
-	  represents all reads.}
+    \item{bamWhich, bamWhich<-}{Returns or sets a \code{RangesList} of
+      bounds on reads to be extracted. A length 0 \code{RangesList}
+      represents all reads.}
 
-	\item{bamFlag, bamFlag<-}{Returns or sets an \code{integer(2)}
-	  representation of reads flagged to be kept or excluded.}
+    \item{bamFlag, bamFlag<-}{Returns or sets an \code{integer(2)}
+      representation of reads flagged to be kept or excluded.}
 
-	\item{bamSimpleCigar, bamSimpleCigar<-}{Returns or sets a
-	  \code{logical(1)} vector indicating whether reads without indels
-	  or clipping be kept.}
+    \item{bamSimpleCigar, bamSimpleCigar<-}{Returns or sets a
+      \code{logical(1)} vector indicating whether reads without indels
+      or clipping be kept.}
 
-	\item{bamReverseComplement, bamReverseComplement<-}{Returns or sets
-	  a \code{logical(1)} vector indicating whether reads on the minus
-	  strand will be returned with sequence reverse complemented and
-	  quality reversed.}
+    \item{bamReverseComplement, bamReverseComplement<-}{Returns or sets
+      a \code{logical(1)} vector indicating whether reads on the minus
+      strand will be returned with sequence reverse complemented and
+      quality reversed.}
 
   }
 
   Methods:
   \describe{
 
-	\item{show}{Compactly display the object.}
+    \item{show}{Compactly display the object.}
 
   }
 

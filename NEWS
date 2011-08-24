@@ -44,6 +44,9 @@ BUG FIXES
     o scanBam called with the first range having no reads returned
     invalid results for subsequent ranges; introduced in svn r57138
 
+    o scanBamFlag isPrimaryRead changed to isNotPrimaryRead,
+    correctly reflecting the meaning of the flag.
+
 CHANGES IN VERSION 1.4.0
 ------------------------
 
