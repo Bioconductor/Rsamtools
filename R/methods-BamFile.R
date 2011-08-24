@@ -124,7 +124,6 @@ setMethod(sortBam, "BamFile",
      || !identical(names(flagfilterB), c("keep0", "keep1")))
         stop("input must be BAM flag filters")
     ans <- bamFlagAND(flagfilterA, flagfilterB)
-    names(ans) <- names(flagfilterA)
     if (!all(bamFlagAsBitMatrix(ans[["keep0"]]) |
              bamFlagAsBitMatrix(ans[["keep1"]])))
         stop("BAM flag filters to combine are incompatible")
