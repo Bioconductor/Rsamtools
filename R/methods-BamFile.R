@@ -115,9 +115,9 @@ setMethod(sortBam, "BamFile",
 ### "readBamGappedAlignments" and "readBamGappedReads" methods.
 ###
 
-### A "flag filter" is represented as a flag vector of length 2 with names
+### A "flag filter" is represented as a 'flag' vector of length 2 with names
 ### keep0 and keep1. The .combineBamFlagFilters() function performs a logical
-### AND between 2 flag filters. It returns a "flag filter".
+### AND between 2 "flag filters". It returns a "flag filter".
 .combineBamFlagFilters <- function(flagfilterA, flagfilterB)
 {
     if (!identical(names(flagfilterA), c("keep0", "keep1"))
