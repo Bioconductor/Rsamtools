@@ -87,6 +87,9 @@ index_tabix(SEXP filename, SEXP format,
 
     if (!IS_CHARACTER(filename) || 1L != Rf_length(filename))
 	Rf_error("'filename' must be character(1)");
+
+    const char *fname = translateChar(STRING_ELT(filename, 0));
+
     if (1L == Rf_length(format)) {
 	const char *txt = CHAR(STRING_ELT(format, 0));
 	if (strcmp(txt, "gff") == 0) conf = ti_conf_gff;
@@ -116,10 +119,9 @@ index_tabix(SEXP filename, SEXP format,
     if (IS_LOGICAL(zeroBased) && 1L == Rf_length(zeroBased))
 	conf.preset |= TI_FLAG_UCSC;
 
-    int res = ti_index_build(translateChar(STRING_ELT(filename, 0)),
-			     &conf);
-
-    if (-1L == res)
+    if (1 != bgzf_check_bgzf(fname))
+        Rf_error("file does not appear to be bgzip'd");
+    if (-1L == ti_index_build(fname, &conf))
 	Rf_error("index build failed");
 
     return filename;
