@@ -110,7 +110,7 @@ setMethod(scanVcf, c("character", "ANY"),
         txt <- readLines(file, ...)
         txt <- txt[!grepl("^#", txt)] # FIXME: handle header lines better
         result <- .Call(.scan_vcf_connection, txt, samples, map)
-        names(result) <- file
+        names(result) <- fl
         result
     }, error = function(err) {
         stop("scanVcf: ", conditionMessage(err), "\n  path: ", 
