@@ -2,9 +2,9 @@ Path: samtools
 URL: https://samtools.svn.sourceforge.net/svnroot/samtools/trunk/samtools
 Repository Root: https://samtools.svn.sourceforge.net/svnroot/samtools
 Repository UUID: fd675618-d7d1-4fc3-a54f-e58cce934862
-Revision: 977
+Revision: 984
 Node Kind: directory
 Last Changed Author: lh3lh3
-Last Changed Rev: 977
-Last Changed Date: 2011-07-06 21:37:01 -0700 (Wed, 06 Jul 2011)
+Last Changed Rev: 984
+Last Changed Date: 2011-09-02 09:57:34 -0700 (Fri, 02 Sep 2011)
 

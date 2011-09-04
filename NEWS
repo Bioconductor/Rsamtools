@@ -29,6 +29,11 @@ NEW FEATURES
 
     o asBcf and indexBcf coerces VCF files to BCF, and indexes BCF
 
+    o Update to samtools 0.1.18
+
+    o scanVcf parses VCF files; use scanVcf,connection,missing-method
+    to stream, scanVcf,TabixFile,*-method to select subsets
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or

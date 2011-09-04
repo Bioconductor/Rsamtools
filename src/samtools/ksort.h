@@ -60,6 +60,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* MTM */
 #ifdef _WIN32
 #define drand48() ((double)rand() / RAND_MAX)
 #endif

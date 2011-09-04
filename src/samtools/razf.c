@@ -755,6 +755,7 @@ int64_t razf_seek(RAZF* rz, int64_t pos, int where){
 		return seek_pos;
 	} else if(rz->file_type == FILE_TYPE_GZ){
 		if(pos >= rz->out) goto SKIP;
+                /* MTM */
                 fprintf(stderr,
                         ".gz files support sequential access only; uncompress");
                 abort();
