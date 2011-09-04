@@ -58,4 +58,3 @@ test_TabixFile_header <- function()
     checkIdentical(hdr$seqnames, seqnamesTabix(fl))
     checkIdentical(character(), hdr$header)
 }
-

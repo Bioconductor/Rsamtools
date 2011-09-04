@@ -2,6 +2,7 @@
 #include "zip_compression.h"
 #include "bamfile.h"
 #include "bcffile.h"
+#include "vcffile.h"
 #include "fafile.h"
 #include "tabixfile.h"
 #include "io_sam.h"
@@ -42,6 +43,9 @@ static const R_CallMethodDef callMethods[] = {
     {".scan_bcf", (DL_FUNC) &scan_bcf, 3},
     {".as_bcf", (DL_FUNC) &as_bcf, 3},
     {".index_bcf", (DL_FUNC) &index_bcf, 1},
+    /* vcffile.c */
+    {".scan_vcf", (DL_FUNC) &scan_vcf, 5},
+    {".scan_vcf_connection", (DL_FUNC) &scan_vcf_connection, 3},
     /* fafile.c */
     {".fafile_init", (DL_FUNC) &fafile_init, 0},
     {".fafile_open", (DL_FUNC) &fafile_open, 1},

@@ -147,3 +147,4 @@ setMethod(yieldTabix, "TabixFile",
 {
     .tabix_yield(file, ..., yieldSize=yieldSize)
 })
+

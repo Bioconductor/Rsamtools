@@ -52,7 +52,7 @@ setGeneric("readPileup",
 
 setGeneric("ScanBcfParam",
            function(info=character(), geno=character(), trimEmpty=TRUE,
-                    which)
+                    which, ...)
            standardGeneric("ScanBcfParam"),
            signature="which")
 
@@ -72,6 +72,20 @@ setGeneric("asBcf",
 
 setGeneric("indexBcf",
            function(file, ...) standardGeneric("indexBcf"))
+
+## vcf
+
+setGeneric("ScanVcfParam",
+           function(info=character(), geno=character(), trimEmpty=TRUE,
+                    which, ...)
+           standardGeneric("ScanVcfParam"),
+           signature="which")
+
+setGeneric("scanVcfHeader",
+           function(file, ...) standardGeneric("scanVcfHeader"))
+
+setGeneric("scanVcf",
+           function(file, ..., param) standardGeneric("scanVcf"))
 
 ## other
 

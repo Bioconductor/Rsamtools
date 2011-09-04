@@ -21,14 +21,19 @@ setClass("BamViews",
            bamExperiment="list"),
          validity=.validity)
 
-setClass("ScanBcfParam",
+setClass("ScanBVcfParam",
     representation=representation(
+      "VIRTUAL",
       which="RangesList",
       info="character",
       geno="character",
       trimEmpty="logical"),
     prototype=prototype(
       trimEmpty=TRUE))
+
+setClass("ScanBcfParam", contains="ScanBVcfParam")
+
+setClass("ScanVcfParam", contains="ScanBVcfParam")
 
 setClass("PileupParam",
     representation=representation(

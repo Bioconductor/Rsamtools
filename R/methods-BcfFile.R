@@ -110,7 +110,10 @@ setMethod(scanBcfHeader, "BcfFile",
                    GL=list()),
                  RecordsPerRange=integer())
     if (!identical(character(), bcfGeno(param))) {
-        idx <- names(tmpl[["GENO"]]) %in% bcfGeno(param)
+        geno <- bcfGeno(param)
+        idx <- 
+            if (1L == length(geno) && is.na(geno)) FALSE
+            else names(tmpl[["GENO"]]) %in% geno
         tmpl[["GENO"]] <- tmpl[["GENO"]][idx]
     }
     tmpl

@@ -15,7 +15,7 @@ TABIXOBJ = \
 
 PKG_OBJECTS = \
   fafile.o bamfile.o io_sam.o as_bam.o utilities.o encode.o \
-  Biostrings_stubs.o IRanges_stubs.o bcffile.o \
+  Biostrings_stubs.o IRanges_stubs.o bcffile.o vcffile.o \
   R_init_Rsamtools.o
 
 DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \

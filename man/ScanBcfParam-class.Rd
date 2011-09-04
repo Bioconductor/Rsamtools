@@ -1,8 +1,12 @@
 \name{ScanBcfParam-class}
 \Rdversion{1.1}
 \docType{class}
+
+\alias{ScanBVcfParam-class}
+
 \alias{ScanBcfParam}
 \alias{ScanBcfParam-class}
+
 \alias{ScanBcfParam,GRanges-method}
 \alias{ScanBcfParam,RangedData-method}
 \alias{ScanBcfParam,RangesList-method}
@@ -11,7 +15,17 @@
 \alias{bcfGeno}
 \alias{bcfTrimEmpty}
 \alias{bcfWhich}
-\alias{show,ScanBcfParam-method}
+
+\alias{ScanVcfParam}
+\alias{ScanVcfParam-class}
+\alias{ScanVcfParam,missing-method}
+\alias{ScanVcfParam,ANY-method}
+\alias{vcfInfo}
+\alias{vcfGeno}
+\alias{vcfTrimEmpty}
+\alias{vcfWhich}
+
+\alias{show,ScanBVcfParam-method}
 
 \title{Parameters for scanning VCF / BCF files}
 \description{
@@ -26,31 +40,39 @@
 \usage{
 
 ScanBcfParam(info=character(), geno=character(), trimEmpty=TRUE,
-             which)
+             which, ...)
 \S4method{ScanBcfParam}{missing}(info=character(), geno=character(), trimEmpty=TRUE,
-             which)
+             which, ...)
 \S4method{ScanBcfParam}{RangesList}(info=character(), geno=character(), trimEmpty=TRUE,
-             which)
+             which, ...)
 \S4method{ScanBcfParam}{RangedData}(info=character(), geno=character(), trimEmpty=TRUE,
-             which)
+             which, ...)
 \S4method{ScanBcfParam}{GRanges}(info=character(), geno=character(), trimEmpty=TRUE,
-             which)
+             which, ...)
+
+ScanVcfParam(info=character(), geno=character(), trimEmpty=TRUE,
+             which, ...)
 
 ## Accessors
 bcfInfo(object)
 bcfGeno(object)
 bcfTrimEmpty(object)
 bcfWhich(object)
+
+vcfInfo(object)
+vcfGeno(object)
+vcfTrimEmpty(object)
+vcfWhich(object)
 }
 
 \arguments{
 
   \item{info}{A character() vector of \sQuote{INFO} fields (see
-    \code{\link{scanBcfHeader}}) to be returned. Not currently
+    \code{\link{scanVcfHeader}}) to be returned. Not currently
     implemented.}
 
   \item{geno}{A character() vector of \sQuote{GENO} fields (see
-    \code{\link{scanBcfHeader}}) to be returned.\code{character(0)}
+    \code{\link{scanVcfHeader}}) to be returned. \code{character(0)}
     returns all fields, \code{NA_character_} returns none.}
 
   \item{trimEmpty}{A logical(1) indicating whether \sQuote{GENO} fields
@@ -59,9 +81,12 @@ bcfWhich(object)
   \item{which}{An object, for which a method is defined (see usage,
     above), describing the sequences and ranges to be queried. Variants
     whose \code{POS} lies in the interval(s) \code{[start, end)} are
-    returned.}
+    returned. Methods defined for \code{ScanBcfParam} are available for
+    \code{ScanVcfParam}.}
 
   \item{object}{An instance of class \code{ScanBcfParam}.}
+
+  \item{\dots}{Arguments used internally.}
 
 }
 
@@ -89,10 +114,9 @@ bcfWhich(object)
   Constructor:
   \describe{
 
-    \item{ScanBcfParam:}{Returns a \code{ScanBcfParam} object. The
-      \code{which} argument to the constructor can be one of several
-      types, as documented above.}
-  }
+    \item{ScanVcfParam, ScanBcfParam:}{Returns a \code{ScanVcfParam} or
+      \code{ScanBcfParam} object. The \code{which} argument to the
+      constructor can be one of several types, as documented above.}  }
 
   Accessors:
   \describe{
@@ -114,20 +138,20 @@ bcfWhich(object)
 }
 \seealso{
 
-  \code{\link{scanBcf}}
+  \code{\link{scanVcf}}
 
 }
 
 \examples{
-p0 <- ScanBcfParam()
+p0 <- ScanVcfParam()
 
 ## subset of reads based on genomic coordinates
 which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
-p1 <- ScanBcfParam(which=which)
+p1 <- ScanVcfParam(which=which)
 
 ## return only specified GENO field(s)
-p2 <- ScanBcfParam(geno="GT")
+p2 <- ScanVcfParam(geno="GT", which=which)
 
 }
 
