@@ -118,6 +118,7 @@ setMethod(scanVcf, c("character", "ANY"),
     })
 }
 
+
 setMethod(scanVcf, c("character", "missing"),
     function(file, ..., param)
 {
@@ -131,3 +132,52 @@ setMethod(scanVcf, c("connection", "missing"),
 {
     .vcf_scan_connection(file, ...)
 })
+
+## utilities
+
+.unpackVcfField <-
+    function(x, id, n, type)
+    ## convert sub-fields in 'x' to full R representation
+{
+    d <- suppressWarnings(as.integer(n))
+    x <- if (!is.na(d)) {
+        if (1L == d) x
+        else {
+            a <- array(unlist(strsplit(x, ",", fixed=TRUE)),
+                       dim=c(d, nrow(x), ncol(x)),
+                       dimnames=list(NULL, NULL, colnames(x)))
+            aperm(a, c(2, 3, 1))
+        }
+    } else {
+        split(strsplit(x, ",", fixed=TRUE), seq_len(nrow(x)))
+    }
+    switch(type,
+           "Character"=,
+           "String"=x,
+           "Integer"={
+               mode(x) <- "integer"
+               x
+           },
+           "Float"={
+               mode(x) <- "numeric"
+               x
+           },
+           stop(sprintf("unhandled FORMAT type '%s'", type)))
+}
+
+.unpackVcfGeno <-
+    function(geno, id, n, type)
+    ## 'geno' is a named list,
+    ## id, n, type are equal-length vectors of FORMAT info
+{
+    if (is.null(names(geno)))
+        stop("'geno' must be a named list")
+    Map(function(elt, nm, id, n, type) {
+        if (is.na(idx <- match(nm, id))) {
+            msg <- sprintf("element '%s' not found in FORMAT identifiers",
+                           nm)
+            stop(msg)
+        }
+        .unpackVcfField(elt, id[idx], n[idx], type[idx])
+    }, geno, names(geno), MoreArgs=list(id, n, type))
+}
