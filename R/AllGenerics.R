@@ -87,6 +87,10 @@ setGeneric("scanVcfHeader",
 setGeneric("scanVcf",
            function(file, ..., param) standardGeneric("scanVcf"))
 
+setGeneric("unpackVcf", function(x, hdr, ..., info=TRUE, geno=TRUE)
+           standardGeneric("unpackVcf"),
+           signature=c("x", "hdr"))
+
 ## other
 
 setGeneric("BamViews",

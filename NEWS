@@ -32,7 +32,8 @@ NEW FEATURES
     o Update to samtools 0.1.18
 
     o scanVcf parses VCF files; use scanVcf,connection,missing-method
-    to stream, scanVcf,TabixFile,*-method to select subsets
+    to stream, scanVcf,TabixFile,*-method to select subsets. Use
+    unpackVcf to expand INFO and GENO fields.
 
 BUG FIXES
 

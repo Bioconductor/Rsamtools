@@ -17,6 +17,12 @@
 \alias{scanVcf,character,missing-method}
 \alias{scanVcf,connection,missing-method}
 
+\alias{unpackVcf}
+\alias{unpackVcf,list,missing-method}
+\alias{unpackVcf,list,character-method}
+\alias{unpackVcf,list,TabixFile-method}
+
+
 \title{
 
   Operations on `VCF' or `BCF' (variant call) files.
@@ -48,6 +54,11 @@ scanVcf(file, ..., param)
 \S4method{scanVcf}{character,ANY}(file, ..., param)
 \S4method{scanVcf}{character,missing}(file, ..., param)
 \S4method{scanVcf}{connection,missing}(file, ..., param)
+
+unpackVcf(x, hdr, ..., info=TRUE, geno=TRUE)
+\S4method{unpackVcf}{list,missing}(x, hdr, ..., info=TRUE, geno=TRUE)
+\S4method{unpackVcf}{list,character}(x, hdr, ..., info=TRUE, geno=TRUE)
+\S4method{unpackVcf}{list,TabixFile}(x, hdr, ..., info=TRUE, geno=TRUE)
 }
 
 \arguments{
@@ -84,6 +95,26 @@ scanVcf(file, ..., param)
   \item{indexDestination}{A logical(1) indicating whether the created
     destination file should also be indexed.}
 
+  \item{x}{A list() resulting from \code{scanVcf}.}
+
+  \item{hdr}{A character(1) or \code{\link{TabixFile}} instance from
+    which \code{\link{scanBamHeader}} can extract information on the
+    structure of \code{INFO} and \code{FORMAT} specifications.}
+
+  \item{info, geno}{For non-\dQuote{missing} methods of
+    \code{unpackVcf}, a logical(1) indicating whether the \sQuote{INFO}
+    or \sQuote{GENO} fields of \code{x} should be expanded. If
+    \code{TRUE}, then \code{scanVcfHeader(hdr)} is consulted for the
+    description of INFO and / or FORMAT fields.
+
+    For the \dQuote{missing} method of \code{unpackVcf}, a logical(1)
+    (in which case the corresponding field is not unpacked, regardless
+    of value) or \code{DataFrame} or \code{data.frame} with row names
+    corresponding to field elements, and with columns \code{Number} and
+    \code{Type} as defined in the VCF specification at the URL
+    below. Usually, these are obtained from \code{scanVcfHeader} on the
+    same file as used to parse the data passed as argument \code{x}.}
+
 }
 
 \details{
@@ -91,15 +122,37 @@ scanVcf(file, ..., param)
   Most users will use the \code{vcf*} functions; \code{bcf*} are
   restricted to the GENO fields supported by \sQuote{bcftools} (see
   documentation at the url below). The argument \code{param} allows
-  protions of the file to be input, but requires that the file be BCF or
+  portions of the file to be input, but requires that the file be BCF or
   bgzip'd and indexed as a \code{\linkS4class{TabixFile}}.
 
   \code{scanVcf} with \code{param="missing"} and \code{file="character"}
-  or \code{file="connection"} parse the entire file. With
+  or \code{file="connection"} scan the entire file. With
   \code{file="connection"}, an argument \code{n} indicates the number of
-  lines of the VCF file to input; a connection open at the begining of
+  lines of the VCF file to input; a connection open at the beginning of
   the call is open and incremented by \code{n} lines at the end of the
   call, providing a convenient way to stream through large VCF files.
+
+  The INFO field of the scanned VCF file is returned as a single
+  \sQuote{packed} vector, as in the VCF file. The GENO field is returned
+  as a list of matricies, each matrix corresponds to a field as defined
+  in the FORMAT field of the VCF header. Each matrix has as many rows as
+  scanned in the VCF file, and as many columns as there are samples. As
+  with the INFO field, the elements of the matrix are
+  \sQuote{packed}. The reason that INFO and GENO are returned packed is
+  to facilitate manipulation, e.g., selecting particular rows or
+  samples in a consistent manner across elements.
+
+  \code{unpackVcf} processes the INFO and / or GENO fields, typically
+  using the information encoded in the header and extracted by
+  consulting \code{\link{scanVcfHeader}}. When the INFO or FORMAT
+  specification includes a field Number. When this is an integer value,
+  the corresponding INFO or GENO is unpacked as a matrix or array. For
+  fields with variable numbers of elements (\sQuote{A}, \sQuote{G},
+  \sQuote{.}), the unpacked data is a list of vectors (for INFO) or list
+  of list of vectors (for GENO), with the outer list corresponding to
+  rows in the scanned VCF, the inner list of GENO corresponding to
+  samples, and the inner vector corresponding to sub-elements of the
+  element.
 
 }
 
@@ -130,6 +183,10 @@ scanVcf(file, ..., param)
   \code{asBcf} creates a binary BCF file from a text VCF file.
 
   \code{indexBcf} creates an index into the BCF file.
+
+  \code{unpackVcf} returns a list of the same form as \code{scanVcf},
+  but with INFO and / or GENO elements unpacked to matrix or list
+  elements as appropriate.
 
 }
 
