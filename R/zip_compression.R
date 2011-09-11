@@ -15,7 +15,14 @@ bgzipTabix <-
         stop("'dest' must be character(1)")
     if (!overwrite && file.exists(dest))
         stop("'dest' exists:\n  dest: ", dest)
-    .Call(func, file, dest)
+    tryCatch({
+        .Call(func, file, dest)
+    }, error=function(err) {
+        msg <- sprintf("'%s' error: %s\n  file: %s\n  dest: %s",
+                       sub(".", "", func), conditionMessage(err),
+                       file, dest)
+        stop(msg, call.=FALSE)
+    })
 }
 
 bgzip <-
