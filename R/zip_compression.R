@@ -14,7 +14,7 @@ bgzipTabix <-
     if (!is.character(dest) || 1L != length(dest))
         stop("'dest' must be character(1)")
     if (!overwrite && file.exists(dest))
-        stop("'dest' exists:\n  dest:", dest)
+        stop("'dest' exists:\n  dest: ", dest)
     .Call(func, file, dest)
 }
 

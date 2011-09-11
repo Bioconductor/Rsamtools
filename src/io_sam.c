@@ -521,13 +521,12 @@ _as_XStringSet(CharAEAE *aeae, const char *baseclass)
         error("Rsamtools internal error in _as_XStringSet(): "
               "'classname' buffer too small");
 
-    SEXP lkup;
+    SEXP lkup = R_NilValue;
     switch(*baseclass) {
     case 'D':
         lkup = _get_encoding_lookup("B", "DNA");
         break;
     case 'B':
-        lkup = R_NilValue;
         break;
     default:
         Rf_error("Rsamtools internal: '%s' unhandled in _as_XStringSet",
