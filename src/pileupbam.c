@@ -415,6 +415,15 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
             idx = pos - start;
             if (idx >= param->yieldSize)
                 break;
+        } else {
+            int empty = TRUE;
+            for (i = 0; empty && i < n_files; ++i)
+                for (j = 0; empty && j < n_plp[i]; ++j) { /* each read */
+                    const bam_pileup1_t *p = plp[i] + j;
+                    if (!p->is_del || !p->is_refskip)
+                        empty = FALSE;
+                }
+            if (empty) continue;
         }
 
         int cvg_depth = 0L;
@@ -432,6 +441,8 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
             for (j = 0; j < n_plp[i]; ++j) { /* each read */
                 const bam_pileup1_t *p = plp[i] + j;
                 /* filter */
+                if (p->is_del || p->is_refskip)
+                    continue;
                 const uint8_t q = bam1_qual(p->b)[p->qpos];
                 if (param->min_base_quality > q)
                     continue;

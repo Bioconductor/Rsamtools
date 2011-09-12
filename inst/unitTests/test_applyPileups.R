@@ -43,7 +43,7 @@ test_applyPileups_byPosition <- function()
     checkIdentical(exp, res)
 
     res <- applyPileups(fls, function(x) sum(x$seq[,1,]), param=param)
-    checkIdentical(list(41166L), res)
+    checkIdentical(list(41165L), res)
 
     param <-
         PileupParam(which=which, yieldSize=500L, yieldBy="position")
@@ -54,7 +54,7 @@ test_applyPileups_byPosition <- function()
     checkIdentical(exp, res)
 
     res <- applyPileups(fls, function(x) sum(x$seq[,1,]), param=param)
-    checkIdentical(list(18132L, 20125L, 2909L), res)
+    checkIdentical(list(18132L, 20125L, 2908L), res)
 }
 
 test_applyPileups_byPosition_yieldAll <- function() {
@@ -145,4 +145,35 @@ test_applyPileups_memoryleak_warning <- function() {
 test_applyPileups_NULL_space <- function() {
     checkException(applyPileups(PileupFiles(fl), identity),
                    silent=TRUE)
+}
+
+test_applyPileups_skip_inserts <- function() {
+    fl <- system.file("unitTests", "cases", "plp_refskip.bam", 
+                      package="Rsamtools")
+    param <- PileupParam(which=GRanges("seq1", IRanges(1, 1000000)),
+                         what="seq")
+    res <-
+        applyPileups(PileupFiles(fl), function(x) rowSums(x$seq[,1,]),
+                     param=param)
+
+    obs <- structure(c(19, 12, 18, 26, 0),
+                     .Names = c("A", "C", "G", "T", "N"))
+    checkIdentical(obs, res[[1]])
+
+    res <-
+        applyPileups(PileupFiles(fl), function(x) length(x$pos),
+                     param=param)
+    checkIdentical(75L, res[[1]])
+
+    ## yieldAll=TRUE
+    param <- PileupParam(which=GRanges("seq1", IRanges(1, 1000000)),
+                         yieldAll=TRUE, what="seq")
+    obs <- structure(c(19, 12, 18, 26, 0),
+                     .Names = c("A", "C", "G", "T", "N"))
+    checkIdentical(obs, res[[1]])
+    
+    res <-
+        applyPileups(PileupFiles(fl), function(x) length(x$pos),
+                     param=param)
+    checkIdentical(width(plpWhich(param)), res[[1]])
 }
