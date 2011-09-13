@@ -35,16 +35,17 @@ typedef struct {
 typedef int (*_PARSE1_FUNC)(const bam1_t *, void *);
 
 static const char *TMPL_ELT_NMS[] = {
-    "qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
-    "mrnm", "mpos", "isize", "seq", "qual", "tag"
+    "qname", "flag", "rname", "strand", "pos", "mapq",
+    "cigar", "mrnm", "mpos", "qwidth", "isize", "seq",
+    "qual", "tag"
     /* "vtype", "value" */
 };
 
 static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
 
 enum {
-    QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, QWIDTH_IDX,
-    MAPQ_IDX, CIGAR_IDX, MRNM_IDX, MPOS_IDX, ISIZE_IDX, SEQ_IDX,
+    QNAME_IDX = 0, FLAG_IDX, RNAME_IDX, STRAND_IDX, POS_IDX, MAPQ_IDX,
+    CIGAR_IDX, MRNM_IDX, MPOS_IDX, QWIDTH_IDX, ISIZE_IDX, SEQ_IDX,
     QUAL_IDX, TAG_IDX
 };
 
@@ -404,11 +405,11 @@ scan_bam_template(SEXP tag)
     SET_VECTOR_ELT(tmpl, RNAME_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, STRAND_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, POS_IDX, NEW_INTEGER(0));
-    SET_VECTOR_ELT(tmpl, QWIDTH_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, MAPQ_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, CIGAR_IDX, NEW_CHARACTER(0));
     SET_VECTOR_ELT(tmpl, MRNM_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, MPOS_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, QWIDTH_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, ISIZE_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, SEQ_IDX, NEW_CHARACTER(0));
     SET_VECTOR_ELT(tmpl, QUAL_IDX, NEW_CHARACTER(0));

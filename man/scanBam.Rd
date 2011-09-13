@@ -82,7 +82,7 @@ indexBam(files, ...)
     memory (in MB) that the function is allowed to use.}
 
   \item{param}{An instance of \code{\linkS4class{ScanBamParam}}. This
-	influences what fields and which records are imported.}
+    influences what fields and which records are imported.}
 
 }
 \details{
@@ -142,40 +142,55 @@ indexBam(files, ...)
   are as follows, taken from the description in the samtools API
   documentation:
 
-  \item{qname}{The query name, i.e., identifier, associated with the
-	read.}
+  \itemize{
+    \item qname: This is the QNAME field in SAM Spec v1.4.
+      The query name, i.e., identifier, associated with the read.
 
-  \item{flag}{A numeric value summarizing details of the read. See
-	\code{\linkS4class{ScanBamParam}} and the \code{flag} argument, and
-	\code{scanBamFlag()}.}
+    \item flag: This is the FLAG field in SAM Spec v1.4.
+      A numeric value summarizing details of the read. See
+      \code{\linkS4class{ScanBamParam}} and the \code{flag} argument, and
+      \code{scanBamFlag()}.
 
-  \item{rname}{The name of the reference to which the read is aligned.}
+    \item rname: This is the RNAME field in SAM Spec v1.4.
+      The name of the reference to which the read is aligned.
 
-  \item{strand}{The strand to which the read is aligned.}
+    \item strand: The strand to which the read is aligned.
 
-  \item{pos}{The genomic coordinate at the start of the
-	alignment. Coordinates are `left-most', i.e., at the 3' end of a
-	read on the '-' strand, and 1-based. The position \emph{excludes}
-	clipped nucleotides, even though soft-clipped nucleotides are
-	included in \code{seq}.}
+    \item pos: This is the POS field in SAM Spec v1.4.
+      The genomic coordinate at the start of the alignment.
+      Coordinates are `left-most', i.e., at the 3' end of a
+      read on the '-' strand, and 1-based. The position \emph{excludes}
+      clipped nucleotides, even though soft-clipped nucleotides are
+      included in \code{seq}.
 
-  \item{qwidth}{The width of the query, as calculated from the
-	\code{cigar} encoding; normally equal to the width of the query
-	returned in \code{seq}.}
+    \item mapq: This is the MAPQ field in SAM Spec v1.4.
+      The MAPping Quality.
 
-  \item{mrnm}{The reference to which the mate (of a paired end or mate
-	pair read) aligns.}
+    \item cigar: This is the CIGAR field in SAM Spec v1.4.
+      The CIGAR string.
 
-  \item{mpos}{The position to which the mate aligns.}
+    \item mrnm: This is the RNEXT field in SAM Spec v1.4.
+      The reference to which the mate (of a paired end or mate pair read)
+      aligns.
 
-  \item{isize}{Inferred insert size for paired end alignments.}
+    \item mpos: This is the PNEXT field in SAM Spec v1.4.
+      The position to which the mate aligns.
 
-  \item{seq}{The query sequence, in the 5' to 3' orientation. If aligned
-	to the minus strand, it is the reverse complement of the original
-	sequence.}
+    \item qwidth: This is the TLEN field in SAM Spec v1.4.
+      The width of the query, as calculated from the \code{cigar} encoding;
+      normally equal to the width of the query returned in \code{seq}.
 
-  \item{qual}{Phred-encoded, phred-scaled base quality score, oriented
-	as \code{seq}.}
+    \item isize: Inferred insert size for paired end alignments.
+
+    \item seq: This is the SEQ field in SAM Spec v1.4.
+      The query sequence, in the 5' to 3' orientation. If aligned
+      to the minus strand, it is the reverse complement of the original
+      sequence.
+
+    \item qual: This is the QUAL field in SAM Spec v1.4.
+      Phred-encoded, phred-scaled base quality score, oriented as
+      \code{seq}.
+  }
 
   \code{scanBamHeader} returns a list, with one element for each file
   named in \code{files}. The list contains two element. The
