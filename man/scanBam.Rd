@@ -163,6 +163,10 @@ indexBam(files, ...)
       clipped nucleotides, even though soft-clipped nucleotides are
       included in \code{seq}.
 
+    \item qwidth: The width of the query, as calculated from the
+      \code{cigar} encoding; normally equal to the width of the query
+      returned in \code{seq}.
+
     \item mapq: This is the MAPQ field in SAM Spec v1.4.
       The MAPping Quality.
 
@@ -176,11 +180,8 @@ indexBam(files, ...)
     \item mpos: This is the PNEXT field in SAM Spec v1.4.
       The position to which the mate aligns.
 
-    \item qwidth: This is the TLEN field in SAM Spec v1.4.
-      The width of the query, as calculated from the \code{cigar} encoding;
-      normally equal to the width of the query returned in \code{seq}.
-
-    \item isize: Inferred insert size for paired end alignments.
+    \item isize: This is the TLEN field in SAM Spec v1.4.
+      Inferred insert size for paired end alignments.
 
     \item seq: This is the SEQ field in SAM Spec v1.4.
       The query sequence, in the 5' to 3' orientation. If aligned

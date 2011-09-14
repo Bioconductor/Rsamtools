@@ -11,7 +11,7 @@ fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 {
     .check0(res)
     exp <- c("character", "integer", "factor", "factor", "integer",
-             "integer", "character", "factor", "integer", "integer",
+             "integer", "integer", "character", "factor", "integer",
              "integer", "DNAStringSet", "PhredQuality")
     checkIdentical(exp, as.vector(sapply(res, class)))
     checkIdentical(levels(strand()), levels(res[["strand"]]))
