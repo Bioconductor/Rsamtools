@@ -140,30 +140,52 @@ setMethod(sortBam, "BamFile",
     param
 }
 
+### 'x' must be a list of length >= 1 where all the elements have the same
+### type so combining them is straightforward.
+.quickUnlist <- function(x)
+{
+    x1 <- x[[1L]]
+    if (is.factor(x1)) {
+        ## Fast unlisting of a list of factors that have all
+        ## the same levels in the same order.
+        structure(unlist(x), class="factor", levels=levels(x1))
+    } else {
+        do.call(c, x)  # doesn't work on list of factors
+    }
+}
+
 ### 'bamfile' must be a BamFile object.
 ### Returns a named list with 1 element per loaded column.
 .loadBamCols <- function(bamfile, param, what0)
 {
     param <- .normargParam(param, what0)
-    res <- scanBam(bamfile, param=param)
+    res <- unname(scanBam(bamfile, param=param))
     if (length(res) == 0L)
         stop("scanBam() returned a list of length zero")
-    ans_names <- names(res[[1L]])
-    ans <- lapply(ans_names,
-                  function(nm) {
-                      tmp <- lapply(unname(res), "[[", nm)
-                      tmp1 <- tmp[[1L]]
-                      if (is.factor(tmp1)) {
-                          ## Fast unlisting of a list of factors that have all
-                          ## the same levels in the same order.
-                          structure(unlist(tmp),
-                                    class="factor", levels=levels(tmp1))
-                      } else {
-                          do.call(c, tmp)  # doesn't work on list of factors
-                      }
-                  })
-    names(ans) <- ans_names
-    ans
+    ## Extract the "what" cols.
+    ans1 <- lapply(bamWhat(param),
+                   function(nm) {
+                       tmp <- lapply(res, "[[", nm)
+                       .quickUnlist(tmp)
+                   })
+    names(ans1) <- bamWhat(param)
+    ## Extract the "tag" cols.
+    ans2 <- lapply(bamTag(param),
+                   function(nm) {
+                       tmp <- lapply(res,
+                                     function(res_elt) {
+                                         tag <- res_elt[["tag"]]
+                                         count <- attr(tag, "count")
+                                         tag_elt <- tag[[nm]]
+                                         ## Fill empty tag with NAs.
+                                         if (is.null(tag_elt))
+                                             tag_elt <- rep.int(NA, count)
+                                         tag_elt
+                                     })
+                       .quickUnlist(tmp)
+                   })
+    names(ans2) <- bamTag(param)
+    c(ans1, ans2)
 }
 
 .loadBamSeqlengths <- function(file, seqlevels)
@@ -181,6 +203,26 @@ setMethod(sortBam, "BamFile",
     NULL
 }
 
+### 'x' must be a GappedAlignments object.
+.bindExtraData <- function(x, use.names, param, bamcols)
+{
+    if (use.names)
+        names(x) <- bamcols$qname
+    if (is.null(param))
+        return(x)
+    colnames <- c(bamWhat(param), bamTag(param))
+    if (length(colnames) != 0L) {
+        df <- do.call(DataFrame, bamcols[colnames])
+        ## The DataFrame() constructor will mangle the duplicated colnames
+        ## to make them unique. We don't want this so we fix them. Note
+        ## that we cannot use "colnames<-" for this because it's broken,
+        ## but "names<-" seems to work as expected.
+        names(df) <- colnames
+        elementMetadata(x) <- df
+    }
+    x
+}
+
 setMethod(readBamGappedAlignments, "BamFile",
           function(file, index=file, use.names=FALSE, param=NULL)
 {
@@ -194,13 +236,7 @@ setMethod(readBamGappedAlignments, "BamFile",
     ans <- GappedAlignments(rname=bamcols$rname, pos=bamcols$pos,
                             cigar=bamcols$cigar, strand=bamcols$strand,
                             seqlengths=seqlengths)
-    if (use.names)
-        names(ans) <- bamcols$qname
-    if (!is.null(param) && length(bamWhat(param)) != 0L) {
-        df <- do.call(DataFrame, bamcols[bamWhat(param)])
-        elementMetadata(ans) <- df
-    }
-    ans
+    .bindExtraData(ans, use.names, param, bamcols)
 })
 
 setMethod(readBamGappedReads, "BamFile",
@@ -217,12 +253,6 @@ setMethod(readBamGappedReads, "BamFile",
     ans <- GappedReads(rname=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
                        qseq=bamcols$seq, seqlengths=seqlengths)
-    if (use.names)
-        names(ans) <- bamcols$qname
-    if (!is.null(param) && length(bamWhat(param)) != 0L) {
-        df <- do.call(DataFrame, bamcols[bamWhat(param)])
-        elementMetadata(ans) <- df
-    }
-    ans
+    .bindExtraData(ans, use.names, param, bamcols)
 })
 
