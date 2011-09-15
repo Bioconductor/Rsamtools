@@ -17,6 +17,12 @@ setMethod(.RsamtoolsFileList, "ANY",
     new(paste(class, "List", sep=""), listData=list(...))
 })
 
+setMethod(path, "RsamtoolsFileList",
+    function(object, ...)
+{
+    sapply(as.list(object), path)
+})
+
 setMethod(isOpen, "RsamtoolsFileList", 
     function(con, rw="") 
 {

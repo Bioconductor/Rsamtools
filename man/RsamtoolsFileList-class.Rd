@@ -3,6 +3,7 @@
 \docType{class}
 \alias{RsamtoolsFileList-class}
 \alias{RsamtoolsFileList}
+\alias{path,RsamtoolsFileList-method}
 \alias{isOpen,RsamtoolsFileList-method}
 \alias{open.RsamtoolsFileList}
 \alias{close.RsamtoolsFileList}
@@ -19,6 +20,7 @@
 
 \usage{
 
+\S4method{path}{RsamtoolsFileList}(object, ...)
 \S4method{isOpen}{RsamtoolsFileList}(con, rw="")
 \S3method{open}{RsamtoolsFileList}(con, ...)
 \S3method{close}{RsamtoolsFileList}(con, ...)
@@ -27,12 +29,12 @@
 
 \arguments{
 
-  \item{con}{An instance of a class derived from
+  \item{con, object}{An instance of a class derived from
     \code{RsamtoolsFileList}.}
 
   \item{rw}{Mode of file; ignored.}
 
-  \item{\ldots}{Additional arguments.}
+  \item{\dots}{Additional arguments.}
 
 }
 

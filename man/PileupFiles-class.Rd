@@ -37,7 +37,7 @@ PileupFiles(files, ..., param=PileupParam())
 \S3method{open}{PileupFiles}(con, ...)
 \S3method{close}{PileupFiles}(con, ...)
 
-## accessors
+## accessors; also path()
 \S4method{isOpen}{PileupFiles}(con, rw="")
 plpFiles(object)
 plpParam(object)

@@ -2,8 +2,9 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{RsamtoolsFile-class}
-\alias{path}
 \alias{index}
+\alias{path}
+\alias{path,RsamtoolsFile-method}
 \alias{isOpen,RsamtoolsFile-method}
 \alias{show,RsamtoolsFile-method}
 
@@ -20,8 +21,8 @@
 \usage{
 
 ## accessors
-path(object)
 index(object)
+\S4method{path}{RsamtoolsFile}(object, ...)
 \S4method{isOpen}{RsamtoolsFile}(con, rw="")
 \S4method{show}{RsamtoolsFile}(object)
 
@@ -32,6 +33,8 @@ index(object)
   \item{con, object}{An instance of a class derived from \code{RsamtoolsFile}.}
 
   \item{rw}{Mode of file; ignored.}
+
+  \item{\dots}{Additional arguments, unused.}
 
 }
 

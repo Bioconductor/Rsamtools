@@ -139,3 +139,5 @@ setGeneric("applyPileups", function(files, FUN, ..., param)
 ## RsamtoolsFile(s)
 
 setGeneric("isOpen")
+
+setGeneric("path", function(object, ...) standardGeneric("path"))

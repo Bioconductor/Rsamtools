@@ -1,7 +1,5 @@
 .extptr <- function(object) object$.extptr
 
-path <- function(object) object$path
-
 index <- function(object) object$index
 
 .RsamtoolsFile <-
@@ -9,6 +7,8 @@ index <- function(object) object$index
 {
     g$new(path=.normalizePath(path), index=.normalizePath(index), ...)
 }
+
+setMethod(path, "RsamtoolsFile", function(object, ...) object$path)
 
 setMethod(isOpen, "RsamtoolsFile", function(con, rw="") FALSE)
 
