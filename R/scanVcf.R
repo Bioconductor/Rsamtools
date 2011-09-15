@@ -178,8 +178,7 @@ setMethod(scanVcf, c("connection", "missing"),
     recs <- strsplit(info, ";", fixed=TRUE)
     ridx <- rep(seq_along(recs), sapply(recs, length))
     flds <- strsplit(unlist(recs), "=", fixed=TRUE)
-    tags <- factor(sapply(flds, "[[", 1),
-                   levels=id)
+    tags <- factor(sapply(flds, "[[", 1), levels=id)
     names(type) <- id
 
     info <- Map(function(type, ridx, flds) {
