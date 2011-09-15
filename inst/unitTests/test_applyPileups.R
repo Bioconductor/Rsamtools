@@ -170,8 +170,6 @@ test_applyPileups_skip_inserts <- function() {
                          yieldAll=TRUE, what="seq")
     obs <- structure(c(19, 12, 18, 26, 0),
                      .Names = c("A", "C", "G", "T", "N"))
-    checkIdentical(obs, res[[1]])
-    
     res <-
         applyPileups(PileupFiles(fl), function(x) length(x$pos),
                      param=param)
