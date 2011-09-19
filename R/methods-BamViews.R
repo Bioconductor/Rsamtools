@@ -257,3 +257,23 @@ setMethod(show, "BamViews", function(object) {
     cat("detail: use bamPaths(), bamSamples(), bamRanges(), ...",
         "\n")
 })
+
+
+## countFeatureHits methods
+setMethod("countFeatureHits", c("BamViews", "GRanges"),
+    function(reads, features, 
+             mode, 
+             ignore.strand = FALSE, ..., param = ScanBamParam())
+{
+    reads <- BamFileList(bamPaths(reads))
+    .processBamFiles(reads, features, mode, ignore.strand, ..., param=param)
+})
+
+setMethod("countFeatureHits", c("BamViews", "GRangesList"),
+    function(reads, features, 
+             mode, 
+             ignore.strand = FALSE, ..., param = ScanBamParam())
+{
+    reads <- BamFileList(bamPaths(reads))
+    .processBamFiles(reads, features, mode, ignore.strand, ..., param=param)
+})

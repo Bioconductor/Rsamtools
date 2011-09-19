@@ -6,9 +6,10 @@ importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
 import(IRanges)
 
-importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo)
+importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo, Union, 
+           IntersectionNotEmpty, IntersectionStrict)
 
-importMethodsFrom(GenomicRanges, seqnames, strand)
+importMethodsFrom(GenomicRanges, seqnames, strand, countFeatureHits)
 
 importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
 
@@ -23,7 +24,7 @@ importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
 
 exportPattern("^[^\\.]")
 
-exportMethods(length, names, "[", "[[", show, getSeq, seqinfo)
+exportMethods(length, names, "[", "[[", show, getSeq, seqinfo, countFeatureHits)
 
 S3method(close, BamFile)
 S3method(close, BcfFile)

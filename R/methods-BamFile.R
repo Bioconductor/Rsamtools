@@ -256,3 +256,39 @@ setMethod(readBamGappedReads, "BamFile",
     .bindExtraData(ans, use.names, param, bamcols)
 })
 
+
+## countFeatureHits methods
+.processBamFiles <- function(reads, features, mode, ignore.strand, ..., param){
+    mode <- match.fun(mode)
+    if("package:parallel" %in% search() ) lapply <- mclapply
+    reads <- path(reads)
+    lst <- lapply(reads,
+                  function(bf) {
+                    x <- readGappedAlignments(bf, param=param)
+                    GenomicRanges:::.dispatch(x, features, mode=mode, 
+                              ignore.strand=ignore.strand)
+                  })
+    counts <- do.call(cbind, lst)
+    colData <- DataFrame(fileName = reads)
+    rownames(colData) <- sub(".bai$", "", basename(reads))
+    SummarizedExperiment(assays=SimpleList(counts=as.matrix(counts)),
+                         rowData=features, colData=colData)
+}
+
+setMethod("countFeatureHits", c("BamFileList", "GRanges"),
+    function(reads, features, 
+             mode, 
+             ignore.strand = FALSE, ..., param = ScanBamParam())
+{
+    .processBamFiles(reads, features, mode, ignore.strand, ..., param=param)
+})
+
+setMethod("countFeatureHits", c("BamFileList", "GRangesList"),
+    function(reads, features, 
+             mode, 
+             ignore.strand = FALSE, ..., param = ScanBamParam())
+{
+    .processBamFiles(reads, features, mode, ignore.strand, ..., param=param)
+})
+
+

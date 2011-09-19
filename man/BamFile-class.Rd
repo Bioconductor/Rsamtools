@@ -22,6 +22,10 @@
 \alias{readBamGappedAlignments,BamFile-method}
 \alias{readBamGappedReads,BamFile-method}
 
+\alias{countFeatureHits,BamFileList,GRanges-method}
+\alias{countFeatureHits,BamFileList,GRangesList-method}
+
+
 \title{Maintain SAM and BAM files}
 
 \description{
@@ -65,6 +69,9 @@ BamFileList(...)
 \S4method{readBamGappedAlignments}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readBamGappedReads}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 
+## counting
+\S4method{countFeatureHits}{BamFileList,GRanges}(
+    reads, features, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
 }
 
 \arguments{
@@ -97,6 +104,46 @@ BamFileList(...)
 
   \item{rw}{Mode of file; ignored.}
 
+  \item{reads}{
+    A BamFileList that represents the data to be
+    counted by countFeatureHits.
+  }
+  \item{features}{
+    A \link{GRanges} or a \link{GRangesList} object of genomic regions of 
+    interest. When a \link{GRanges} is supplied, each row is considered a 
+    feature. When a \link{GRangesList} is supplied, each higher list-level is
+    considered a feature. This distinction is important when defining an overlap
+    between a read and a feature. See examples for details. 
+  }
+  \item{mode}{
+    A function that defines the method to be used when a read overlaps
+    more than one feature. Pre-defined options are "Union",
+    "IntersectionStrict", or "IntersectionNotEmpty" and are designed
+    after the counting modes available in the HTSeq package by Simon
+    Anders (see references).
+
+    \itemize{
+      \item "Union" : (Default) Reads that overlap any portion of exactly one 
+            feature are counted. Reads that overlap multiple features are 
+            discarded. 
+      \item "IntersectionStrict" : A read must fall completely "within" the
+            feature to be counted. If a read overlaps multiple features but
+            falls "within" only one, the read is counted for that feature.
+            If the read is "within" multiple features, the read is discarded. 
+      \item "IntersectionNotEmpty" : A read must fall in a unique disjoint
+            region of a feature to be counted. When a read overlaps multiple
+            features, the features are partitioned into disjoint intervals. 
+            Regions that are shared between the features are discarded leaving
+            only the unique disjoint regions. If the read overlaps one of 
+            these remaining regions, it is assigned to the feature the
+            unique disjoint region came from.
+   }
+  }
+
+  \item{ignore.strand}{
+    A logical value indicating if strand should be considered when matching.
+  }
+  
 }
 
 \section{Objects from the Class}{
@@ -180,7 +227,12 @@ BamFileList(...)
   }
 
 }
-\author{Martin Morgan}
+\author{Martin Morgan and Marc Carlson}
+
+\seealso{
+  The \code{GenomicRanges} package is where the \code{countFeatureHits}
+  method originates.
+}
 
 \examples{
 
@@ -197,6 +249,29 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
     bam <- scanBam(bamFile, param=param)[[1]]
     alphabetFrequency(bam[["seq"]], baseOnly=TRUE, collapse=TRUE)
 }, bf, rng)
+
+
+##---------------------------------------------------------------------------##
+## How to use countFeatureHits with a BamFileList object.
+fls = list.files(system.file("extdata",package="GenomicRanges"),
+                 recursive=TRUE, pattern="*bam$", full=TRUE)
+bfs <- BamFileList(fls)
+
+## "features" will be the argument for an "annotations" object (GRanges
+## or GRangesList object.
+group_id <- c("A", "B", "C", "C", "D", "D", "E", "F", "G", "H", "H")
+features <- GRanges(
+    seqnames = Rle(c("chr2L", "chr2R", "chr2L", "chr2R", "chr2L", "chr2R", 
+        "chr2L", "chr2R", "chr2R", "chr3L", "chr3L")),
+    strand = strand(rep("+", length(group_id))),
+    ranges = IRanges(
+        start=c(1000, 2000, 3000, 3600, 7000, 7500, 4000, 4000, 3000, 5000, 5400),
+        width=c(500, 900, 500, 300, 600, 300, 500, 900, 500, 500, 500)),
+   DataFrame(group_id)
+)
+## Then call the method:
+countFeatureHits(bfs, features, mode = Union, ignore.strand=TRUE)
+
 
 }
 
