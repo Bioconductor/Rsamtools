@@ -260,7 +260,8 @@ setMethod(readBamGappedReads, "BamFile",
 ## countFeatureHits methods
 .processBamFiles <- function(reads, features, mode, ignore.strand, ..., param){
     mode <- match.fun(mode)
-    if("package:parallel" %in% search() ) lapply <- mclapply
+    if("package:parallel" %in% search() & .Platform$OS.type != "windows" ){
+      lapply <- mclapply}
     reads <- path(reads)
     lst <- lapply(reads,
                   function(bf) {
