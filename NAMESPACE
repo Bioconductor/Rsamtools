@@ -9,7 +9,7 @@ import(IRanges)
 importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo, Union, 
            IntersectionNotEmpty, IntersectionStrict)
 
-importMethodsFrom(GenomicRanges, seqnames, strand, countFeatureHits)
+importMethodsFrom(GenomicRanges, seqnames, strand, summarizeOverlaps)
 
 importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
 
@@ -24,7 +24,7 @@ importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
 
 exportPattern("^[^\\.]")
 
-exportMethods(length, names, "[", "[[", show, getSeq, seqinfo, countFeatureHits)
+exportMethods(length, names, "[", "[[", show, getSeq, seqinfo, summarizeOverlaps)
 
 S3method(close, BamFile)
 S3method(close, BcfFile)

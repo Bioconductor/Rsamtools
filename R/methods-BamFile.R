@@ -257,7 +257,7 @@ setMethod(readBamGappedReads, "BamFile",
 })
 
 
-## countFeatureHits methods
+## summarizeOverlaps methods
 .processBamFiles <- function(reads, features, mode, ignore.strand, ..., param){
     mode <- match.fun(mode)
     if("package:parallel" %in% search() & .Platform$OS.type != "windows" ){
@@ -276,7 +276,7 @@ setMethod(readBamGappedReads, "BamFile",
                          rowData=features, colData=colData)
 }
 
-setMethod("countFeatureHits", c("BamFileList", "GRanges"),
+setMethod("summarizeOverlaps", c("BamFileList", "GRanges"),
     function(reads, features, 
              mode, 
              ignore.strand = FALSE, ..., param = ScanBamParam())
@@ -284,7 +284,7 @@ setMethod("countFeatureHits", c("BamFileList", "GRanges"),
     .processBamFiles(reads, features, mode, ignore.strand, ..., param=param)
 })
 
-setMethod("countFeatureHits", c("BamFileList", "GRangesList"),
+setMethod("summarizeOverlaps", c("BamFileList", "GRangesList"),
     function(reads, features, 
              mode, 
              ignore.strand = FALSE, ..., param = ScanBamParam())

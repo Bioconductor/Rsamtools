@@ -259,8 +259,8 @@ setMethod(show, "BamViews", function(object) {
 })
 
 
-## countFeatureHits methods
-setMethod("countFeatureHits", c("BamViews", "GRanges"),
+## summarizeOverlaps methods
+setMethod("summarizeOverlaps", c("BamViews", "GRanges"),
     function(reads, features, 
              mode, 
              ignore.strand = FALSE, ..., param = ScanBamParam())
@@ -269,7 +269,7 @@ setMethod("countFeatureHits", c("BamViews", "GRanges"),
     .processBamFiles(reads, features, mode, ignore.strand, ..., param=param)
 })
 
-setMethod("countFeatureHits", c("BamViews", "GRangesList"),
+setMethod("summarizeOverlaps", c("BamViews", "GRangesList"),
     function(reads, features, 
              mode, 
              ignore.strand = FALSE, ..., param = ScanBamParam())

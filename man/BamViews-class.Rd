@@ -30,8 +30,8 @@
 \alias{readBamGappedAlignments,BamViews-method}
 \alias{show,BamViews-method}
 
-\alias{countFeatureHits,BamViews,GRanges-method}
-\alias{countFeatureHits,BamViews,GRangesList-method}
+\alias{summarizeOverlaps,BamViews,GRanges-method}
+\alias{summarizeOverlaps,BamViews,GRangesList-method}
 
 
 \title{Views into a set of BAM files}
@@ -83,7 +83,7 @@ bamDirname(x, ...) <- value
 \S4method{show}{BamViews}(object)
 
 ## Counting
-\S4method{countFeatureHits}{BamViews,GRanges}(
+\S4method{summarizeOverlaps}{BamViews,GRanges}(
     reads, features, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
 
 }
@@ -144,7 +144,7 @@ bamDirname(x, ...) <- value
 
   \item{reads}{
     A BamFileList that represents the data to be
-    counted by countFeatureHits.
+    counted by summarizeOverlaps.
   }
   \item{features}{
     A \link{GRanges} or a \link{GRangesList} object of genomic regions of 
@@ -297,7 +297,7 @@ bamDirname(x, ...) <- value
 
 \seealso{
   \code{\link{readBamGappedAlignments}}.
-  The \code{GenomicRanges} package is where the \code{countFeatureHits}
+  The \code{GenomicRanges} package is where the \code{summarizeOverlaps}
   method originates.
 }
 
@@ -327,7 +327,7 @@ aln[colnames(bv)]
 elementMetadata(aln)
 
 ##---------------------------------------------------------------------------##
-## How to use countFeatureHits with a BamViews object.
+## How to use summarizeOverlaps with a BamViews object.
 fls = list.files(system.file("extdata",package="GenomicRanges"),
                  recursive=TRUE, pattern="*bam$", full=TRUE)
 bfs <- BamViews(fls)
@@ -345,7 +345,7 @@ features <- GRanges(
    DataFrame(group_id)
 )
 ## Then call the method:
-countFeatureHits(bfs, features, mode = Union, ignore.strand=TRUE)
+summarizeOverlaps(bfs, features, mode = Union, ignore.strand=TRUE)
 
 }
 
