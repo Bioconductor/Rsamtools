@@ -30,8 +30,8 @@
 \alias{readBamGappedAlignments,BamViews-method}
 \alias{show,BamViews-method}
 
-\alias{summarizeOverlaps,BamViews,GRanges-method}
-\alias{summarizeOverlaps,BamViews,GRangesList-method}
+\alias{summarizeOverlaps,GRanges,BamViews-method}
+\alias{summarizeOverlaps,GRangesList,BamViews-method}
 
 
 \title{Views into a set of BAM files}
@@ -83,8 +83,8 @@ bamDirname(x, ...) <- value
 \S4method{show}{BamViews}(object)
 
 ## Counting
-\S4method{summarizeOverlaps}{BamViews,GRanges}(
-    reads, features, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRanges,BamViews}(
+    features, reads, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
 
 }
 
@@ -345,7 +345,7 @@ features <- GRanges(
    DataFrame(group_id)
 )
 ## Then call the method:
-summarizeOverlaps(bfs, features, mode = Union, ignore.strand=TRUE)
+summarizeOverlaps(features, bfs, mode = Union, ignore.strand=TRUE)
 
 }
 

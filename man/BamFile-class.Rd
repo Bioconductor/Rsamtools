@@ -22,8 +22,8 @@
 \alias{readBamGappedAlignments,BamFile-method}
 \alias{readBamGappedReads,BamFile-method}
 
-\alias{summarizeOverlaps,BamFileList,GRanges-method}
-\alias{summarizeOverlaps,BamFileList,GRangesList-method}
+\alias{summarizeOverlaps,GRanges,BamFileList-method}
+\alias{summarizeOverlaps,GRangesList,BamFileList-method}
 
 
 \title{Maintain SAM and BAM files}
@@ -70,8 +70,8 @@ BamFileList(...)
 \S4method{readBamGappedReads}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 
 ## counting
-\S4method{summarizeOverlaps}{BamFileList,GRanges}(
-    reads, features, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRanges,BamFileList}(
+    features, reads, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
 }
 
 \arguments{
@@ -270,7 +270,7 @@ features <- GRanges(
    DataFrame(group_id)
 )
 ## Then call the method:
-summarizeOverlaps(bfs, features, mode = Union, ignore.strand=TRUE)
+summarizeOverlaps(features, bfs, mode = Union, ignore.strand=TRUE)
 
 
 }

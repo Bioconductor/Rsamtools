@@ -260,20 +260,20 @@ setMethod(show, "BamViews", function(object) {
 
 
 ## summarizeOverlaps methods
-setMethod("summarizeOverlaps", c("BamViews", "GRanges"),
-    function(reads, features, 
+setMethod("summarizeOverlaps", c("GRanges", "BamViews"),
+    function(features, reads, 
              mode, 
              ignore.strand = FALSE, ..., param = ScanBamParam())
 {
     reads <- BamFileList(bamPaths(reads))
-    .processBamFiles(reads, features, mode, ignore.strand, ..., param=param)
+    .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
 })
 
-setMethod("summarizeOverlaps", c("BamViews", "GRangesList"),
-    function(reads, features, 
+setMethod("summarizeOverlaps", c("GRangesList", "BamViews"),
+    function(features, reads, 
              mode, 
              ignore.strand = FALSE, ..., param = ScanBamParam())
 {
     reads <- BamFileList(bamPaths(reads))
-    .processBamFiles(reads, features, mode, ignore.strand, ..., param=param)
+    .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
 })
