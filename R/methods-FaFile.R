@@ -74,8 +74,10 @@ setMethod(countFa, "FaFile",
 .scanFa <-
     function(file, param, ...)
 {
-    if (!isOpen(file))
-        stop("'FaFile' not open")
+    if (!isOpen(file)) {
+        open(file)
+        on.exit(close(file))
+    }
     lkup <- Biostrings:::get_xsbasetypes_conversion_lookup("B", "DNA")
     tryCatch({
         spc <- .asSpace(param)
@@ -98,8 +100,6 @@ setMethod(scanFa, c("FaFile", "RangedData"), .scanFa)
 setMethod(scanFa, c("FaFile", "missing"),
     function(file, param, ...)
 {
-    if (!isOpen(file))
-        stop("'FaFile' not open")
     read.DNAStringSet(path(file))
 })
 

@@ -349,6 +349,8 @@ scan_bcf_range(bcf_t *bcf, bcf_hdr_t *hdr, SEXP ans,
     const int TID_BUFSZ = 8;
     static char *buf = NULL;
     bcf1_t *bcf1 = calloc(1, sizeof(bcf1_t)); /* free'd in bcf_destroy */
+    if (NULL == bcf1)
+        Rf_error("scan_bcf_region: failed to allocate memory");
     int sz = Rf_length(VECTOR_ELT(ans, BCF_TID));
     int res;
     if (NULL == buf)
@@ -459,6 +461,8 @@ int
 _as_bcf(bcf_t *fin, const char *dict, bcf_t *fout)
 {
     bcf1_t *b = calloc(1, sizeof(bcf1_t)); /* free'd in bcf_destroy */
+    if (NULL == b)
+        Rf_error("_as_bcf: failed to allocate memory");
     bcf_hdr_t *hin, *hout;
     int r, count = 0;
 

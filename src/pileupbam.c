@@ -399,7 +399,7 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
     bam_mplp_t mplp_iter = plp_iter->mplp_iter;
     int32_t tid;
 
-    int *s0, *q0;
+    int *s0 = NULL, *q0 = NULL;
 
     if (param->yieldAll)
         for (i = 0; i < param->yieldSize && i < end - start + 1; ++i)

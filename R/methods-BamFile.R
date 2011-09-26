@@ -35,8 +35,10 @@ close.BamFile <-
 setMethod(scanBamHeader, "BamFile",
           function(files, ...)
 {
-    if (!isOpen(files))
-        stop("BamFile is not open")
+    if (!isOpen(files)) {
+        open(files)
+        on.exit(close(files))
+    }
     header <- .Call(.read_bamfile_header, .extptr(files))
     text <- strsplit(header[["text"]], "\n")[[1]]
     tag <- sub("^(@[A-Z]{2}).*", "\\1", text)
@@ -49,8 +51,6 @@ setMethod(scanBamHeader, "BamFile",
 setMethod(seqinfo, "BamFile",
           function(x)
 {
-    if (!isOpen(x))
-        stop("BamFile is not open")
     h <- scanBamHeader(x)[["targets"]]
     Seqinfo(names(h), unname(h))
 })
@@ -58,8 +58,10 @@ setMethod(seqinfo, "BamFile",
 setMethod(scanBam, "BamFile",
           function(file, index=file, ..., param=ScanBamParam())
 {
-    if (!isOpen(file))
-        stop("BamFile not open")
+    if (!isOpen(file)) {
+        open(file)
+        on.exit(close(file))
+    }
     if (!missing(index))
         warning("'index' ignored for scanBam,BamFile-method")
     if (!is(param, "ScanBamParam")) {
@@ -77,8 +79,10 @@ setMethod(scanBam, "BamFile",
 setMethod(countBam, "BamFile",
           function (file, index=file, ..., param = ScanBamParam())
 {
-    if (!isOpen(file))
-        stop("BamFile not open")
+    if (!isOpen(file)) {
+        open(file)
+        on.exit(close(file))
+    }
     if (!missing(index))
         warning("'index' ignored for countBam,BamFile-method")
     x <- .io_bam(.count_bamfile, file, param=param)
@@ -89,8 +93,10 @@ setMethod(filterBam, "BamFile",
           function (file, destination, index=file, ...,
                     indexDestination=TRUE, param=ScanBamParam())
 {
-    if (!isOpen(file))
-        stop("BamFile not open")
+    if (!isOpen(file)) {
+        open(file)
+        on.exit(close(file))
+    }
     param <- .filterBam_preprocess(file, param)
     destination <- .normalizePath(destination)
     fl <- .io_bam(.filter_bamfile, file, param=param, destination, "wb")
