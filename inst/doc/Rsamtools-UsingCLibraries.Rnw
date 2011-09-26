@@ -29,7 +29,7 @@
 
 \maketitle
 
-This document is meant for package developers wanting to usethe
+This document is meant for package developers wanting to use the
 \href{http://samtools.sourceforge.net/}{samtools} C libraries provided
 by \Rsamtools{}. The instructions here are based on the `Writing R
 Extensions' manual associated with R-2.13; consult the current version
@@ -74,15 +74,22 @@ The content of the include files can be found in the \Rsamtools{}
 source (under \verb|src/samtools|) or at their installed location.
 
 Linking to the static libraries is accomplished by including the
-following code in \verb|src/Makevars|:
+following code in \verb|src/Makevars.win| on Windows:
 \begin{verbatim}
-SAMVARS=`echo 'cat(system.file("usretc", .Platform[["r_arch"]], \
+SAMVARS=$(shell echo 'cat(system.file("usretc", .Platform[["r_arch"]],\
+              "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
+      "${R_HOME}/bin/R" --vanilla --slave)
+include $(SAMVARS)
+\end{verbatim}
+or otherwise in \verb|src/Makevars|:
+\begin{verbatim}
+SAMVARS=`echo 'cat(system.file("usretc", .Platform[["r_arch"]],\
               "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
       "${R_HOME}/bin/R" --vanilla --slave`
 include $(SAMVARS)
 \end{verbatim}
 This updates the environment variables \verb|$PKG_CPPFLAGS| and
-\verb|$PKG_LIBS|; if your \verb|Makefile| modies these also, be sure
+\verb|$PKG_LIBS|; if your \verb|Makefile| modifies these also, be sure
 to use syntax like \verb|PKG_LIBS+=-l...|.
 
 \end{document}

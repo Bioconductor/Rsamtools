@@ -1,9 +1,18 @@
-include Makevars.common
+# Rsamtools
 
 # order of -llib important -- bcf, bam before ws2_32
 
-PKG_CFLAGS+=-D_LARGEFILE64_SOURCE
-PKG_LIBS+=-lws2_32
+SAMTOOLS_PATH=\
+    $(shell echo 'cat(system.file("usrlib", .Platform[["r_arch"]],\
+        	                 package="Rsamtools", mustWork=TRUE))'|\
+	                 "${R_HOME}/bin/R" --vanilla --slave)
+PKG_LIBS+="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbam.a"\
+    "$(SAMTOOLS_PATH)/libbcf.a" "$(SAMTOOLS_PATH)/libtabix.a"\
+    -lws2_32
+PKG_CPPFLAGS+=-D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
+	-D_LARGEFILE64_SOURCE
+
+# zlib
 
 ZLIB_CFLAGS+=$(shell echo 'zlibbioc::pkgconfig("PKG_CFLAGS")'|\
     "${R_HOME}/bin/R" --vanilla --slave)
@@ -16,13 +25,3 @@ PKG_LIBS+=$(shell echo 'zlibbioc::pkgconfig("PKG_LIBS_shared")' |\
 	$(CXX) $(ZLIB_CFLAGS) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -c $< -o $@
 %.o: %.cpp
 	$(CXX) $(ZLIB_CFLAGS) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -c $< -o $@
-
-libs0: libbam.a libbcf.a libtabix.a
-	mkdir -p "${R_PACKAGE_DIR}/usretc${R_ARCH}"
-	cp Rsamtools.mk.win "${R_PACKAGE_DIR}/usretc${R_ARCH}/Rsamtools.mk"
-
-libbam.a: $(BAMOBJ)
-
-libbcf.a: $(BCFOBJ)
-
-libtabix.a: $(TABIXOBJ)

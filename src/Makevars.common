@@ -29,7 +29,9 @@ PKG_CFLAGS += \
 
 PKG_LIBS += \
   $(SHLIB_OPENMP_CFLAGS) \
-  -L. -lbam -lbcf -ltabix
+  "${R_PACKAGE_DIR}/usrlib${R_ARCH}/libbam.a" \
+  "${R_PACKAGE_DIR}/usrlib${R_ARCH}/libbcf.a" \
+  "${R_PACKAGE_DIR}/usrlib${R_ARCH}/libtabix.a"
 
 .PHONY: all libs clean
 
@@ -38,8 +40,6 @@ all: $(SHLIB)
 $(SHLIB): libs
 
 libs: libs0
-	mkdir -p "${R_PACKAGE_DIR}/usretc${R_ARCH}"
-	cp Rsamtools.mk "${R_PACKAGE_DIR}/usretc${R_ARCH}"
 	mkdir -p "${R_PACKAGE_DIR}/include/samtools/bcftools"
 	mkdir -p "${R_PACKAGE_DIR}/include/tabix"
 	cp samtools/*.h "${R_PACKAGE_DIR}/include/samtools/"
