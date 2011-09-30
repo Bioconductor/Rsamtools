@@ -96,12 +96,37 @@ bamTag <- function(object) slot(object, "tag")
     slot(object, "tag") <- value
     object
 }
+
 bamWhich <- function(object) slot(object, "which")
-"bamWhich<-" <- function(object, value)
+
+setGeneric("bamWhich<-",
+           function(object, value) standardGeneric("bamWhich<-"))
+        
+setReplaceMethod("bamWhich", c("ScanBamParam", "RangesList"),
+    function(object, value) 
 {
     slot(object, "which") <- value
     object
-}
+})
+
+setReplaceMethod("bamWhich", c("ScanBamParam", "GRanges"),
+    function(object, value) 
+{
+    callGeneric(object, split(ranges(value), seqnames(value)))
+})
+        
+setReplaceMethod("bamWhich", c("ScanBamParam", "RangedData"),
+    function(object, value) 
+{
+    callGeneric(object, ranges(value))
+})
+        
+setReplaceMethod("bamWhich", c("ScanBamParam", "ANY"),
+    function(object, value) 
+{
+    callGeneric(object, as(value, "RangesList"))
+})
+
 bamWhat <- function(object) slot(object, "what")
 "bamWhat<-" <- function(object, value)
 {

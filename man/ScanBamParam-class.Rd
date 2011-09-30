@@ -22,6 +22,10 @@
 \alias{bamWhat<-}
 \alias{bamWhat}
 \alias{bamWhich<-}
+\alias{bamWhich<-,ScanBamParam,GRanges-method}
+\alias{bamWhich<-,ScanBamParam,RangedData-method}
+\alias{bamWhich<-,ScanBamParam,RangesList-method}
+\alias{bamWhich<-,ScanBamParam,ANY-method}
 \alias{bamWhich}
 % methods
 \alias{show,ScanBamParam-method}
