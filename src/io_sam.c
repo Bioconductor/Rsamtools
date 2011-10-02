@@ -33,6 +33,7 @@ typedef struct {
 } _BAM_DATA;
 
 typedef int (*_PARSE1_FUNC)(const bam1_t *, void *);
+typedef void (_TRIM1_FUNC)(_BAM_DATA *);
 
 static const char *TMPL_ELT_NMS[] = {
     "qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
@@ -340,7 +341,7 @@ _bam_filter(const bam1_t *bam, _BAM_DATA *bd)
 }
 
 int
-_scan_bam_all(_BAM_DATA *bd, _PARSE1_FUNC parse1)
+_scan_bam_all(_BAM_DATA *bd, _PARSE1_FUNC parse1, _TRIM1_FUNC trim1)
 {
     bam1_t *bam = bam_init1();
     int r = 0;
@@ -350,12 +351,14 @@ _scan_bam_all(_BAM_DATA *bd, _PARSE1_FUNC parse1)
         int result = (*parse1)(bam, bd);
         if (result < 0) return result;
     }
+    if (NULL != trim1)
+        (*trim1)(bd);
     return bd->icnt[bd->irange];
 }
 
 int
 _scan_bam_fetch(_BAM_DATA *bd, SEXP space, int* start, int* end,
-                _PARSE1_FUNC parse1)
+                _PARSE1_FUNC parse1, _TRIM1_FUNC trim1)
 {
     int tid;
     samfile_t *sfile = bd->bfile->file;
@@ -378,6 +381,8 @@ _scan_bam_fetch(_BAM_DATA *bd, SEXP space, int* start, int* end,
         bam_fetch(sfile->x.bam, bindex, tid,
                   starti, end[irange], bd, parse1);
         n_tot += bd->icnt[bd->irange];
+        if (NULL != trim1)
+            (*trim1)(bd);
         bd->irange += 1;
     }
 
@@ -385,19 +390,21 @@ _scan_bam_fetch(_BAM_DATA *bd, SEXP space, int* start, int* end,
 }
 
 int
-_do_scan_bam(_BAM_DATA *bd, SEXP space, _PARSE1_FUNC parse1)
+_do_scan_bam(_BAM_DATA *bd, SEXP space, _PARSE1_FUNC parse1,
+             _TRIM1_FUNC trim1)
 {
     int status;
 
     if (R_NilValue == space)
 	/* everything */
-        status = _scan_bam_all(bd, parse1);
+        status = _scan_bam_all(bd, parse1, trim1);
     else {                   /* fetch */
 	if (NULL == bd->bfile->index)
 	    Rf_error("valid 'index' file required");
         status = _scan_bam_fetch(bd, VECTOR_ELT(space, 0),
-				 INTEGER(VECTOR_ELT(space, 1)),
-				 INTEGER(VECTOR_ELT(space, 2)), parse1);
+                                 INTEGER(VECTOR_ELT(space, 1)),
+                                 INTEGER(VECTOR_ELT(space, 2)),
+                                 parse1, trim1);
     }
 
     return status;
@@ -683,10 +690,15 @@ _scan_bam_get1range(_BAM_DATA *bd, int len)
 }
 
 void
+_scan_bam_trim1range(_BAM_DATA *bd)
+{
+    (void) _scan_bam_get1range(bd, bd->icnt[bd->irange]);
+}
+
+void
 _scan_bam_finish1range(_BAM_DATA *bd, int irange)
 {
-    bd->irange = irange;
-    SEXP r = _scan_bam_get1range(bd, bd->icnt[irange]), s;
+    SEXP r = VECTOR_ELT((SEXP) bd->extra, irange), s;
     if (R_NilValue != (s = VECTOR_ELT(r, STRAND_IDX))) {
         SEXP strand_lvls = PROTECT(_get_strand_levels());
         _as_factor_SEXP(s, strand_lvls);
@@ -737,7 +749,8 @@ _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     PROTECT(result);
     bd->extra = (void *) result;
 
-    int status = _do_scan_bam(bd, space, _scan_bam_parse1);
+    int status = _do_scan_bam(bd, space, _scan_bam_parse1,
+                              _scan_bam_trim1range);
     if (status < 0) {
         int idx = bd->idx;
         _BAM_PARSE_STATUS parse_status = bd->parse_status;
@@ -788,7 +801,7 @@ _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
     setAttrib(result, R_NamesSymbol, nms);
     UNPROTECT(1);
 
-    int status = _do_scan_bam(bd, space, _count_bam1);
+    int status = _do_scan_bam(bd, space, _count_bam1, NULL);
     if (status < 0)
         result = R_NilValue;
 
@@ -830,7 +843,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
                      CHAR(STRING_ELT(fout_mode, 0)), header);
     bd->extra = f_out;
 
-    int status = _do_scan_bam(bd, space, _filter_bam1);
+    int status = _do_scan_bam(bd, space, _filter_bam1, NULL);
 
     /* sort and index destintation ? */
     /* cleanup */
