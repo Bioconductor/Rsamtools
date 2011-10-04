@@ -258,7 +258,7 @@ scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
 	const char *line;
 	int irec = 0;
 	while (NULL != (line = ti_read(tabix, iter, &linelen))) {
-	    if (totrec < irec) { /* grow */
+	    if (totrec <= irec) { /* grow */
 		totrec *= REC_SCALE;
 		records = Rf_lengthgets(records, totrec);
 		SET_VECTOR_ELT(result, ispc, records);
