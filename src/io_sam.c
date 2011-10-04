@@ -24,7 +24,7 @@ typedef struct {
 
     _BAM_PARSE_STATUS parse_status;
     _BAM_FILE *bfile;
-    int idx, irange, nrange;
+    int irec, iparsed, irange, nrange;
     uint32_t keep_flag[2], cigar_flag;
     Rboolean reverseComplement;
 
@@ -102,7 +102,7 @@ _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
     bd->bfile = BAMFILE(ext);
     bd->irange = 0;
     bd->nrange = nrange;
-    bd->idx = 0;
+    bd->irec = bd->iparsed = 0;
     bd->keep_flag[0] = INTEGER(flag)[0];
     bd->keep_flag[1] = INTEGER(flag)[1];
     bd->cigar_flag = LOGICAL(isSimpleCigar)[0];
@@ -587,7 +587,7 @@ _scan_bam_all(_BAM_DATA *bd, _PARSE1_FUNC parse1, _FINISH1_FUNC finish1)
     }
     if (NULL != finish1)
         (*finish1)(bd);
-    return ((_SCAN_BAM_DATA *) bd->extra)->icnt;
+    return bd->iparsed;
 }
 
 static int
@@ -597,7 +597,7 @@ _scan_bam_fetch(_BAM_DATA *bd, SEXP space, int* start, int* end,
     int tid;
     samfile_t *sfile = bd->bfile->file;
     bam_index_t *bindex = bd->bfile->index;
-    int n_tot = 0;
+    int n_tot = bd->iparsed;
 
     for (int irange = 0; irange < LENGTH(space); ++irange) {
         const char* spc = translateChar(STRING_ELT(space, irange));
@@ -614,13 +614,12 @@ _scan_bam_fetch(_BAM_DATA *bd, SEXP space, int* start, int* end,
 
         bam_fetch(sfile->x.bam, bindex, tid,
                   starti, end[irange], bd, parse1);
-        n_tot += ((_SCAN_BAM_DATA *) bd->extra)->icnt;
         if (NULL != finish1)
             (*finish1)(bd);
         bd->irange += 1;
     }
 
-    return n_tot;
+    return bd->iparsed - n_tot;
 }
 
 static int
@@ -651,7 +650,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
 {
     _BAM_DATA *bd = (_BAM_DATA *) data;
     _SCAN_BAM_DATA * sbd = (_SCAN_BAM_DATA *) bd->extra;
-    bd->idx += 1;
+    bd->irec += 1;
     if (FALSE == _bam_filter(bam, bd))
         return 0;
 
@@ -729,6 +728,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
         }
     }
     sbd->icnt += 1;
+    bd->iparsed += 1;
     return 1;
 }
 
@@ -959,7 +959,7 @@ _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     int status = _do_scan_bam(bd, space, _scan_bam_parse1,
                               _scan_bam_finish1range);
     if (status < 0) {
-        int idx = bd->idx;
+        int idx = bd->irec;
         _BAM_PARSE_STATUS parse_status = bd->parse_status;
         _Free_SCAN_BAM_DATA(bd->extra);
         _Free_BAM_DATA(bd);
@@ -979,12 +979,13 @@ static int
 _count_bam1(const bam1_t *bam, void *data)
 {
     _BAM_DATA *bd = (_BAM_DATA *) data;
-    bd->idx += 1;
+    bd->irec += 1;
     if (FALSE == _bam_filter(bam, bd))
         return 0;
     SEXP cnt = (SEXP) (bd->extra);
     INTEGER(VECTOR_ELT(cnt, 0))[bd->irange] += 1;
     REAL(VECTOR_ELT(cnt, 1))[bd->irange] += bam->core.l_qseq;
+    bd->iparsed += 1;
     return 1;
 }
 
@@ -1030,10 +1031,11 @@ static int
 _filter_bam1(const bam1_t *bam, void *data)
 {
     _BAM_DATA *bd = (_BAM_DATA *) data;
-    bd->idx += 1;
+    bd->irec += 1;
     if (FALSE == _bam_filter(bam, bd))
         return 0;
     samwrite((samfile_t*) bd->extra, bam);
+    bd->iparsed += 1;
     return 1;
 }
 
