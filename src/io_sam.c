@@ -348,8 +348,8 @@ static char *
 _bamseq(const bam1_t *bam, _BAM_DATA *bd)
 {
     static const char key[] = {
-        '\0', 'A', 'C',  '\0',  'G', '\0', '\0', '\0',
-        'T', '\0', '\0', '\0', '\0', '\0', '\0', 'N'
+        '-', 'A', 'C',  'M',  'G', 'R', 'S', 'V',
+        'T', 'W', 'Y', 'H', 'K', 'D', 'B', 'N'
     };
 
     const uint32_t len = bam->core.l_qseq;

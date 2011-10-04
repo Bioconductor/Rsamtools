@@ -82,6 +82,10 @@ _reverseComplement(char *buf, int len)
             map[i] = (char) i;
         map['A'] = 'T'; map['C'] = 'G'; map['G'] = 'C'; map['T'] = 'A';
         map['a'] = 't'; map['c'] = 'g'; map['g'] = 'c'; map['t'] = 'a';
+        map['M'] = 'K'; map['R'] = 'Y'; map['Y'] = 'R'; map['K'] = 'M';
+        map['m'] = 'k'; map['r'] = 'y'; map['y'] = 'r'; map['k'] = 'm';
+        map['V'] = 'B'; map['H'] = 'D'; map['D'] = 'H'; map['B'] = 'V';
+        map['v'] = 'b'; map['h'] = 'd'; map['d'] = 'h'; map['b'] = 'v';
     }
     _reverse(buf, len);
     for (int i = 0; i < len; ++i)
