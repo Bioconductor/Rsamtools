@@ -2,7 +2,9 @@
 \Rdversion{1.1}
 
 \alias{scanTabix}
-\alias{scanTabix,character,ANY-method}
+\alias{scanTabix,character,GRanges-method}
+\alias{scanTabix,character,RangedData-method}
+\alias{scanTabix,character,RangesList-method}
 
 \title{
 
@@ -15,7 +17,9 @@
 \usage{
 
 scanTabix(file, ..., param)
-\S4method{scanTabix}{character,ANY}(file, ..., param)
+\S4method{scanTabix}{character,RangesList}(file, ..., param)
+\S4method{scanTabix}{character,RangedData}(file, ..., param)
+\S4method{scanTabix}{character,GRanges}(file, ..., param)
 
 }
 

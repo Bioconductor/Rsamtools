@@ -46,7 +46,8 @@ indexTabix <-
             if (!missing(format)) match.arg(format)
             else character()
         idx <- .Call(.index_tabix, file, format,
-                     seq, start, end, skip, comment, zeroBased)
+                     as.integer(seq), as.integer(start),
+                     as.integer(end), skip, comment, zeroBased)
         sprintf("%s.tbi", file)
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", file)
@@ -122,11 +123,25 @@ setMethod(scanTabix, c("TabixFile", "GRanges"),
                 start=start(param), end=end(param))
 })
 
-setMethod(scanTabix, c("character", "ANY"),
+setMethod(scanTabix, c("character", "RangesList"),
     function(file, ..., param)
 {
     file <- TabixFile(file)
-    scanTabix(file, ..., param=param)
+    callGeneric(file, ..., param)
+})
+
+setMethod(scanTabix, c("character", "RangedData"),
+    function(file, ..., param)
+{
+    file <- TabixFile(file)
+    callGeneric(file, ..., param)
+})
+
+setMethod(scanTabix, c("character", "GRanges"),
+    function(file, ..., param)
+{
+    file <- TabixFile(file)
+    callGeneric(file, ..., param)
 })
 
 .tabix_yield <-
