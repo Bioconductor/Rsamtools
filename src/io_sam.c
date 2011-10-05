@@ -36,8 +36,9 @@ KHASH_SET_INIT_STR(str);
 typedef struct {
     int *flag, *rname, *strand, *pos, *qwidth, *mapq,
         *mrnm, *mpos, *isize;
-    const char **qname, **cigar, **seq, **qual;
-    khash_t(str) *qnamehash, *cigarhash;
+    char **qname;
+    const char **cigar, **seq, **qual;
+    khash_t(str) *cigarhash;
     int icnt, ncnt;
     SEXP result;
 } _SCAN_BAM_DATA;
@@ -123,7 +124,6 @@ static _SCAN_BAM_DATA *
 _Calloc_SCAN_BAM_DATA()
 {
     _SCAN_BAM_DATA *sbd = Calloc(1, _SCAN_BAM_DATA);
-    sbd->qnamehash = kh_init(str);
     sbd->cigarhash = kh_init(str);
     return sbd;
 }
@@ -134,14 +134,15 @@ _Free_strhash(khash_t(str) *h)
     khiter_t k;
     for (k = kh_begin(h); kh_end(h) != k; ++k)
         if (kh_exist(h, k))
-            Free(kh_key(h, k));
+            /* strdup, so free not Free; hash key is const char *, so
+             * cast (yuck) */
+            free((char *) kh_key(h, k));
     kh_destroy(str, h);
 }
 
 static void
 _Free_SCAN_BAM_DATA(_SCAN_BAM_DATA *sbd)
 {
-    _Free_strhash(sbd->qnamehash);
     _Free_strhash(sbd->cigarhash);
     Free(sbd);
 }
@@ -218,7 +219,7 @@ _grow_SCAN_BAM_DATA(_BAM_DATA *bd, int len)
             sbd->isize = Realloc(sbd->isize, len, int);
             break;
         case QNAME_IDX:
-            sbd->qname = Realloc(sbd->qname, len, const char *);
+            sbd->qname = Realloc(sbd->qname, len, char *);
             break;
         case CIGAR_IDX:
             sbd->cigar = Realloc(sbd->cigar, len, const char *);
@@ -662,7 +663,7 @@ _scan_bam_parse1(const bam1_t *bam, void *data)
             continue;
         switch(i) {
         case QNAME_IDX:
-            sbd->qname[idx] = _map(sbd->qnamehash, bam1_qname(bam));
+            sbd->qname[idx] = strdup(bam1_qname(bam));
             break;
         case FLAG_IDX:
             sbd->flag[idx] = bam->core.flag;
@@ -897,12 +898,13 @@ _scan_bam_finish1range(_BAM_DATA *bd)
             memcpy(INTEGER(s), sbd->isize, sbd->icnt * sizeof(int));
             Free(sbd->isize);
             break;
-
         case QNAME_IDX:
             s = Rf_lengthgets(s, sbd->icnt);
             SET_VECTOR_ELT(r, i, s);
-            for (j = 0; j < sbd->icnt; ++j)
+            for (j = 0; j < sbd->icnt; ++j) {
                 SET_STRING_ELT(s, j, mkChar(sbd->qname[j]));
+                free(sbd->qname[j]); /* strdup, so free (not Free) */
+            }
             Free(sbd->qname);
             break;
         case CIGAR_IDX:
