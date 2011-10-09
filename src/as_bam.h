@@ -5,4 +5,4 @@
 
 SEXP as_bam(SEXP file, SEXP destination);
 
-#endif /* _AS_BAM_H_ */
+#endif                          /* _AS_BAM_H_ */

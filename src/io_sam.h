@@ -7,18 +7,16 @@ SEXP read_bam_header(SEXP fname, SEXP mode);
 SEXP scan_bam_template(SEXP tags);
 SEXP as_bam(SEXP fname, SEXP destination);
 SEXP sort_bam(SEXP fname, SEXP destinationPrefix, SEXP isByQname,
-	      SEXP maxMemory);
+              SEXP maxMemory);
 SEXP index_bam(SEXP indexname);
-void scan_bam_cleanup();                /* error handling only */
+void scan_bam_cleanup();        /* error handling only */
 
 void _bam_check_template_list(SEXP template_list);
 SEXP _read_bam_header(SEXP ext);
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags,
-	       SEXP isSimpleCigar, SEXP reverseComplement,
-               SEXP template_list);
-SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags,
-		SEXP isSimpleCigar);
+               SEXP isSimpleCigar, SEXP reverseComplement, SEXP template_list);
+SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 SEXP _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
-		 SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode);
+                 SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode);
 
-#endif /* _IO_SAM_H_ */
+#endif                          /* _IO_SAM_H_ */

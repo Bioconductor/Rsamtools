@@ -17,8 +17,8 @@ SEXP tabixfile_close(SEXP ext);
 SEXP tabixfile_isopen(SEXP ext);
 
 SEXP index_tabix(SEXP filename, SEXP format,
-		 SEXP seq, SEXP begin, SEXP end,
-		 SEXP skip, SEXP comment, SEXP zeroBased);
+                 SEXP seq, SEXP begin, SEXP end,
+                 SEXP skip, SEXP comment, SEXP zeroBased);
 SEXP header_tabix(SEXP ext);
 SEXP scan_tabix(SEXP ext, SEXP space, SEXP yieldSize);
 SEXP yield_tabix(SEXP ext, SEXP yieldSize);

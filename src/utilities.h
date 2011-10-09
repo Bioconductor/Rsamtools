@@ -30,4 +30,4 @@ void _scan_checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
     GETS = eval(S, ENV);                        \
     UNPROTECT(1)
 
-#endif /* _UTILITIES_H_ */
+#endif                          /* _UTILITIES_H_ */

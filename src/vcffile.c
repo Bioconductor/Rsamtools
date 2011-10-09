@@ -10,10 +10,9 @@ struct it {
     char delim;
 };
 
-char *
-_it_next(struct it *it)
+char *_it_next(struct it *it)
 {
-    char *curr= it->str;
+    char *curr = it->str;
     while ('\0' != *it->str && it->delim != *it->str)
         it->str++;
     if ('\0' != *it->str)
@@ -21,8 +20,7 @@ _it_next(struct it *it)
     return curr;
 }
 
-char *
-_it_init(struct it *it, char *str, char delim)
+char *_it_init(struct it *it, char *str, char delim)
 {
     it->str = str;
     it->delim = delim;
@@ -35,32 +33,35 @@ const struct fld_fmt {
     const char *name;
     SEXPTYPE type;
 } FLD_FMT[] = {
-    {"CHROM", STRSXP}, {"POS", INTSXP}, {"ID", STRSXP},
-    {"REF", STRSXP}, {"ALT", STRSXP}, {"QUAL", REALSXP},
-    {"FILTER", STRSXP}, {"INFO", STRSXP}, {"GENO", VECSXP}
+    {
+    "CHROM", STRSXP}, {
+    "POS", INTSXP}, {
+    "ID", STRSXP}, {
+    "REF", STRSXP}, {
+    "ALT", STRSXP}, {
+    "QUAL", REALSXP}, {
+    "FILTER", STRSXP}, {
+    "INFO", STRSXP}, {
+    "GENO", VECSXP}
 };
 
 const int N_FLDS = sizeof(FLD_FMT) / sizeof(FLD_FMT[0]);
 
-SEXP
-_split_vcf(SEXP vcf, SEXP sample, SEXP map)
+SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP map)
 {
     int i, j;
     const int
         vcf_n = Rf_length(vcf),
-        samp_n = Rf_length(sample),
-        map_n = Rf_length(map);
+        samp_n = Rf_length(sample), map_n = Rf_length(map);
 
     SEXP nms = GET_NAMES(map);
-    int fmtidx, sampleidx,
-        *mapidx = (int *) R_alloc(sizeof(int), map_n);
+    int fmtidx, sampleidx, *mapidx = (int *) R_alloc(sizeof(int), map_n);
 
     /* allocate result and fixed fields */
     SEXP result, geno, eltnms;
     PROTECT(result = Rf_allocVector(VECSXP, N_FLDS));
     for (i = 0; i < N_FLDS - 1; ++i)
-        SET_VECTOR_ELT(result, i,
-                       Rf_allocVector(FLD_FMT[i].type, vcf_n));
+        SET_VECTOR_ELT(result, i, Rf_allocVector(FLD_FMT[i].type, vcf_n));
     geno = Rf_allocVector(VECSXP, map_n);
     SET_VECTOR_ELT(result, N_FLDS - 1, geno);
 
@@ -112,11 +113,9 @@ _split_vcf(SEXP vcf, SEXP sample, SEXP map)
 
         /* 'fixed' fields */
         for (field = _it_init(&it0, record, '\t'), j = 0;
-             j < N_FLDS - 1;
-             field = _it_next(&it0), ++j)
-        {
+             j < N_FLDS - 1; field = _it_next(&it0), ++j) {
             SEXP elt = VECTOR_ELT(result, j);
-            switch(TYPEOF(elt)) {
+            switch (TYPEOF(elt)) {
             case INTSXP:
                 INTEGER(elt)[i] = atoi(field);
                 break;
@@ -135,9 +134,7 @@ _split_vcf(SEXP vcf, SEXP sample, SEXP map)
         /* 'FORMAT' field */
         fmt = field;
         for (field = _it_init(&it1, fmt, ':'), fmtidx = 0;
-             '\0' != *field;
-             field = _it_next(&it1), fmtidx++)
-        {
+             '\0' != *field; field = _it_next(&it1), fmtidx++) {
             for (j = 0; j < map_n; ++j) {
                 if (0L == strcmp(field, CHAR(STRING_ELT(nms, j))))
                     break;
@@ -150,13 +147,9 @@ _split_vcf(SEXP vcf, SEXP sample, SEXP map)
 
         /* 'samples' field(s) */
         for (sample = _it_next(&it0), sampleidx = 0;
-             '\0' != *sample;
-             sample = _it_next(&it0), sampleidx++)
-        {
+             '\0' != *sample; sample = _it_next(&it0), sampleidx++) {
             for (field = _it_init(&it1, sample, ':'), fmtidx = 0;
-                 '\0' != *field;
-                 field = _it_next(&it1), fmtidx++)
-            {
+                 '\0' != *field; field = _it_next(&it1), fmtidx++) {
                 SEXP matrix = VECTOR_ELT(geno, mapidx[fmtidx]);
                 int midx = sampleidx * vcf_n + i;
                 switch (TYPEOF(matrix)) {
@@ -190,8 +183,7 @@ _split_vcf(SEXP vcf, SEXP sample, SEXP map)
     return result;
 }
 
-SEXP
-scan_vcf(SEXP ext, SEXP space, SEXP yieldSize, SEXP sample, SEXP map)
+SEXP scan_vcf(SEXP ext, SEXP space, SEXP yieldSize, SEXP sample, SEXP map)
 {
     SEXP tbx = PROTECT(scan_tabix(ext, space, yieldSize));
 
@@ -204,8 +196,7 @@ scan_vcf(SEXP ext, SEXP space, SEXP yieldSize, SEXP sample, SEXP map)
     return tbx;
 }
 
-SEXP
-scan_vcf_connection(SEXP txt, SEXP sample, SEXP map)
+SEXP scan_vcf_connection(SEXP txt, SEXP sample, SEXP map)
 {
     SEXP result = PROTECT(Rf_allocVector(VECSXP, 1));
 

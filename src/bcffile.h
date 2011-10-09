@@ -24,4 +24,4 @@ SEXP scan_bcf(SEXP ext, SEXP space, SEXP typemap);
 SEXP as_bcf(SEXP file, SEXP dictionary, SEXP destination);
 SEXP index_bcf(SEXP file);
 
-#endif /* _BCFFILE_H_ */
+#endif                          /* _BCFFILE_H_ */

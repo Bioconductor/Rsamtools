@@ -4,6 +4,6 @@
 #include <Rdefines.h>
 
 SEXP apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
-		   SEXP callback);
+                   SEXP callback);
 
 #endif

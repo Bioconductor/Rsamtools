@@ -5,7 +5,7 @@
 #include "utilities.h"
 
 typedef enum {
-    YIELDBY_RANGE=0, YIELDBY_POSITION
+    YIELDBY_RANGE = 0, YIELDBY_POSITION
 } YIELDBY;
 
 typedef enum {
@@ -32,7 +32,6 @@ typedef struct {
     const char *chr;
     int i_spc, start, end;
 } SPACE_T;
-
 
 typedef struct {
     SPACE_T *spc;
@@ -62,13 +61,12 @@ KHASH_MAP_INIT_STR(s, int)
 const int QUAL_LEVELS = 94,     /* printable ASCII */
     SEQ_LEVELS = 5;             /* A, C, G, T, N */
 
-static void
-_bam_header_hash_init(bam_header_t *header)
+static void _bam_header_hash_init(bam_header_t * header)
 {
     if (0 == header->hash) {
         int ret, i;
         khiter_t iter;
-        khash_t(s) *h;
+        khash_t(s) * h;
         header->hash = h = kh_init(s);
         for (i = 0; i < header->n_targets; ++i) {
             iter = kh_put(s, h, header->target_name[i], &ret);
@@ -79,8 +77,7 @@ _bam_header_hash_init(bam_header_t *header)
 
 /* PILEUP_ITER_T */
 
-static PILEUP_ITER_T *
-_pileup_iter_init(SEXP files, PILEUP_PARAM_T *param)
+static PILEUP_ITER_T *_iter_init(SEXP files, PILEUP_PARAM_T * param)
 {
     int i;
     PILEUP_ITER_T *iter = Calloc(1, PILEUP_ITER_T);
@@ -104,8 +101,7 @@ _pileup_iter_init(SEXP files, PILEUP_PARAM_T *param)
     return iter;
 }
 
-static PILEUP_ITER_T *
-_pileup_iter_destroy(PILEUP_ITER_T *iter)
+static PILEUP_ITER_T *_iter_destroy(PILEUP_ITER_T * iter)
 {
     Free(iter->plp);
     Free(iter->n_plp);
@@ -117,8 +113,7 @@ _pileup_iter_destroy(PILEUP_ITER_T *iter)
 
 /* SPACE_ITER_T */
 
-static SPACE_ITER_T *
-_space_iter_init(SEXP space)
+static SPACE_ITER_T *_space_iter_init(SEXP space)
 {
     int i;
     SPACE_ITER_T *iter;
@@ -139,8 +134,7 @@ _space_iter_init(SEXP space)
     return iter;
 }
 
-static SPACE_T *
-_space_iter_next(SPACE_ITER_T *iter)
+static SPACE_T *_space_iter_next(SPACE_ITER_T * iter)
 {
     iter->stashed = FALSE;
     iter->i_spc += 1;
@@ -156,8 +150,7 @@ _space_iter_next(SPACE_ITER_T *iter)
     return spc;
 }
 
-static void
-_space_iter_stash(SPACE_ITER_T *iter, SPACE_T *spc)
+static void _space_iter_stash(SPACE_ITER_T * iter, SPACE_T * spc)
 {
     iter->spc->chr = spc->chr;
     iter->spc->start = spc->start;
@@ -165,8 +158,7 @@ _space_iter_stash(SPACE_ITER_T *iter, SPACE_T *spc)
     iter->stashed = TRUE;
 }
 
-static SPACE_T *
-_space_iter_pop(SPACE_ITER_T *iter)
+static SPACE_T *_space_iter_pop(SPACE_ITER_T * iter)
 {
     SPACE_T *spc = NULL;
     if (iter->stashed) {
@@ -176,8 +168,7 @@ _space_iter_pop(SPACE_ITER_T *iter)
     return spc;
 }
 
-static SPACE_ITER_T *
-_space_iter_destroy(SPACE_ITER_T *iter)
+static SPACE_ITER_T *_space_iter_destroy(SPACE_ITER_T * iter)
 {
     Free(iter->chr);
     Free(iter->spc);
@@ -187,8 +178,7 @@ _space_iter_destroy(SPACE_ITER_T *iter)
 
 /*  */
 
-static SEXP
-_lst_elt(SEXP lst, const char *name, const char *lst_name)
+static SEXP _lst_elt(SEXP lst, const char *name, const char *lst_name)
 {
     SEXP nms = GET_NAMES(lst);
     SEXP elt_nm = PROTECT(mkChar(name));
@@ -198,13 +188,11 @@ _lst_elt(SEXP lst, const char *name, const char *lst_name)
             break;
     UNPROTECT(1);
     if (i == Rf_length(nms))
-        Rf_error("'%s' does not contain element '%s'",
-                 lst_name, name);
+        Rf_error("'%s' does not contain element '%s'", lst_name, name);
     return VECTOR_ELT(lst, i);
 }
 
-static int
-_mplp_read_bam(void *data, bam1_t *b)
+static int _mplp_read_bam(void *data, bam1_t * b)
 {
     BAM_ITER_T *mdata = (BAM_ITER_T *) data;
     uint32_t test_flag;
@@ -212,8 +200,7 @@ _mplp_read_bam(void *data, bam1_t *b)
 
     do {
         result = mdata->iter ?
-            bam_iter_read(mdata->fp, mdata->iter, b) :
-            bam_read1(mdata->fp, b);
+            bam_iter_read(mdata->fp, mdata->iter, b) : bam_read1(mdata->fp, b);
         if (0 == result)
             break;
 
@@ -230,17 +217,16 @@ _mplp_read_bam(void *data, bam1_t *b)
     return result;
 }
 
-static SEXP
-_seq_rle(int *cnt, const char **chr, int n)
+static SEXP _seq_rle(int *cnt, const char **chr, int n)
 {
     int i = 0, j;
     SEXP s, t;
 
     for (j = 1; j < n; ++j) {
-        if (0 != strcmp(chr[j], chr[j-1])) {
+        if (0 != strcmp(chr[j], chr[j - 1])) {
             i += 1;
             chr[i] = chr[j];
-            cnt[i] = cnt[j] - cnt[i-1];
+            cnt[i] = cnt[j] - cnt[i - 1];
         } else
             cnt[i] += cnt[j] - cnt[j - 1];
     }
@@ -260,16 +246,14 @@ _seq_rle(int *cnt, const char **chr, int n)
     return s;
 }
 
-static SEXP
-_mplp_setup_R(const PILEUP_PARAM_T *param, PILEUP_RESULT_T *result)
+static SEXP _mplp_setup_R(const PILEUP_PARAM_T * param,
+                          PILEUP_RESULT_T * result)
 {
 #ifdef PILEUPBAM_DEBUG
     REprintf("_mplp_setup_R\n");
 #endif
     SEXP alloc = PROTECT(NEW_LIST(4)),
-        nms = PROTECT(NEW_CHARACTER(4)),
-        opos, oseq, oqual,
-        dimnms, dim_elt;
+        nms = PROTECT(NEW_CHARACTER(4)), opos, oseq, oqual, dimnms, dim_elt;
     char qualbuf[] = { ' ', '\0' };
     int i;
 
@@ -338,9 +322,8 @@ _mplp_setup_R(const PILEUP_PARAM_T *param, PILEUP_RESULT_T *result)
     return alloc;
 }
 
-static void
-_mplp_setup_bam(const PILEUP_PARAM_T *param,
-                const SPACE_T *spc, PILEUP_ITER_T *plp_iter)
+static void _mplp_setup_bam(const PILEUP_PARAM_T * param, const SPACE_T * spc,
+                            PILEUP_ITER_T * plp_iter)
 {
 #ifdef PILEUPBAM_DEBUG
     REprintf("_mplp_setup_bam\n");
@@ -360,8 +343,7 @@ _mplp_setup_bam(const PILEUP_PARAM_T *param,
     bam_mplp_set_maxcnt(plp_iter->mplp_iter, param->max_depth);
 }
 
-static void
-_mplp_teardown_bam(PILEUP_ITER_T *iter)
+static void _mplp_teardown_bam(PILEUP_ITER_T * iter)
 {
 #ifdef PILEUPBAM_DEBUG
     REprintf("_mplp_teardown_bam\n");
@@ -373,12 +355,11 @@ _mplp_teardown_bam(PILEUP_ITER_T *iter)
         bam_iter_destroy(iter->mfile[j]->iter);
 }
 
-static int
-_pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
-             PILEUP_ITER_T *plp_iter, PILEUP_RESULT_T *result)
+static int _bam1(const PILEUP_PARAM_T * param, const SPACE_T * spc,
+                 PILEUP_ITER_T * plp_iter, PILEUP_RESULT_T * result)
 {
 #ifdef PILEUPBAM_DEBUG
-    REprintf("_pileup_bam1\n");
+    REprintf("_bam1\n");
 #endif
     /* A, C, G, T, N only */
     static const int nuc[] = {
@@ -386,10 +367,8 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
         -1, 0, 1, -1, 2, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, 4
     };
 
-    const int n_files = plp_iter->n_files,
-        start = spc->start, end = spc->end;
-    int *n_plp = plp_iter->n_plp,
-        pos, i, j, idx = 0;
+    const int n_files = plp_iter->n_files, start = spc->start, end = spc->end;
+    int *n_plp = plp_iter->n_plp, pos, i, j, idx = 0;
 
     int *opos = result->pos + result->i_yld,
         *oseq = result->seq + SEQ_LEVELS * n_files * result->i_yld,
@@ -406,8 +385,7 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
             opos[i] = start + i;
 
     while (param->yieldSize > idx &&
-           0 < bam_mplp_auto(mplp_iter, &tid, &pos, n_plp, plp))
-    {
+           0 < bam_mplp_auto(mplp_iter, &tid, &pos, n_plp, plp)) {
         pos += 1;
         if (pos < start || pos > end)
             continue;
@@ -418,12 +396,13 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
         } else {
             int empty = TRUE;
             for (i = 0; empty && i < n_files; ++i)
-                for (j = 0; empty && j < n_plp[i]; ++j) { /* each read */
+                for (j = 0; empty && j < n_plp[i]; ++j) {	/* each read */
                     const bam_pileup1_t *p = plp[i] + j;
                     if (!p->is_del || !p->is_refskip)
                         empty = FALSE;
                 }
-            if (empty) continue;
+            if (empty)
+                continue;
         }
 
         int cvg_depth = 0L;
@@ -438,7 +417,7 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
             q0 = oqual + QUAL_LEVELS * n_files * idx;
 
         for (i = 0; i < n_files; ++i) {
-            for (j = 0; j < n_plp[i]; ++j) { /* each read */
+            for (j = 0; j < n_plp[i]; ++j) {	/* each read */
                 const bam_pileup1_t *p = plp[i] + j;
                 /* filter */
                 if (p->is_del || p->is_refskip)
@@ -446,7 +425,7 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
                 const uint8_t q = bam1_qual(p->b)[p->qpos];
                 if (param->min_base_quality > q)
                     continue;
-                /* query, e.g., ...*/
+                /* query, e.g., ... */
                 if (param->what & WHAT_SEQ) {
                     const int s = nuc[bam1_seqi(bam1_seq(p->b), p->qpos)];
                     if (s < 0)
@@ -469,8 +448,7 @@ _pileup_bam1(const PILEUP_PARAM_T *param, const SPACE_T *spc,
     return idx;
 }
 
-static SEXP
-_resize_3D_dim3(SEXP s, int n)
+static SEXP _resize_3D_dim3(SEXP s, int n)
 {
     SEXP t, dim, dimnms;
     dim = Rf_getAttrib(s, R_DimSymbol);
@@ -483,8 +461,7 @@ _resize_3D_dim3(SEXP s, int n)
     return t;
 }
 
-static SEXP
-_resize(SEXP r, int n)
+static SEXP _resize(SEXP r, int n)
 {
 #ifdef PILEUPBAM_DEBUG
     REprintf("_resize\n");
@@ -492,17 +469,17 @@ _resize(SEXP r, int n)
     SEXP s, nm = Rf_getAttrib(r, R_NamesSymbol);
     int i = 2;
 
-    s = VECTOR_ELT(r, 1);   /* pos */
+    s = VECTOR_ELT(r, 1);       /* pos */
     SET_VECTOR_ELT(r, 1, Rf_lengthgets(s, n));
 
-    s = VECTOR_ELT(r, 2);  /* seq array -- SEQ_LEVELS x n_files x n */
+    s = VECTOR_ELT(r, 2);       /* seq array -- SEQ_LEVELS x n_files x n */
     if (R_NilValue != s) {
         SET_VECTOR_ELT(r, i, _resize_3D_dim3(s, n));
         SET_STRING_ELT(nm, i, STRING_ELT(nm, 2));
         ++i;
     }
 
-    s = VECTOR_ELT(r, 3);  /* qual array -- QUAL_LEVELS x n_files x n */
+    s = VECTOR_ELT(r, 3);       /* qual array -- QUAL_LEVELS x n_files x n */
     if (R_NilValue != s) {
         SET_VECTOR_ELT(r, i, _resize_3D_dim3(s, n));
         SET_STRING_ELT(nm, i, STRING_ELT(nm, 3));
@@ -512,36 +489,32 @@ _resize(SEXP r, int n)
     return Rf_lengthgets(r, i);
 }
 
-static SEXP
-_pileup_call1(SEXP r, SEXP call)
+static SEXP _call1(SEXP r, SEXP call)
 {
 #ifdef PILEUPBAM_DEBUG
-    REprintf("_pileup_call1\n");
+    REprintf("_call1\n");
 #endif
     SETCADR(call, r);           /* let's say this doesn't allocate */
     return Rf_eval(call, R_GlobalEnv);
 }
 
-static SEXP
-_pileup_yield1_byrange(PILEUP_PARAM_T *param,
-                       SPACE_ITER_T *spc_iter,
-                       PILEUP_ITER_T *plp_iter)
+static SEXP _yield1_byrange(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
+                            PILEUP_ITER_T * plp_iter)
 {
 #ifdef PILEUPBAM_DEBUG
-    REprintf("_pileup_yield1_byrange\n");
+    REprintf("_yield1_byrange\n");
 #endif
     SPACE_T *spc;
     PILEUP_RESULT_T plp_result;
     SEXP res = R_NilValue, rle;
     int n_rec;
 
-    if (NULL != (spc = _space_iter_next(spc_iter)))
-    {
+    if (NULL != (spc = _space_iter_next(spc_iter))) {
         param->yieldSize = spc->end - spc->start + 1;
         res = PROTECT(_mplp_setup_R(param, &plp_result));
 
         _mplp_setup_bam(param, spc, plp_iter);
-        n_rec = _pileup_bam1(param, spc, plp_iter, &plp_result);
+        n_rec = _bam1(param, spc, plp_iter, &plp_result);
         if (param->yieldAll)
             n_rec = param->yieldSize;
         _mplp_teardown_bam(plp_iter);
@@ -557,22 +530,19 @@ _pileup_yield1_byrange(PILEUP_PARAM_T *param,
     return res;
 }
 
-static SEXP
-_pileup_yieldby_range(PILEUP_PARAM_T *param, SPACE_ITER_T *spc_iter,
-                      PILEUP_ITER_T *plp_iter, SEXP call)
+static SEXP _yieldby_range(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
+                           PILEUP_ITER_T * plp_iter, SEXP call)
 {
     SEXP result, res;
     int i;
 
     result = PROTECT(NEW_LIST(spc_iter->n_spc));
 
-    for (i = 0; i < spc_iter->n_spc; ++i)
-    {
-        res = PROTECT(_pileup_yield1_byrange(param, spc_iter,
-                                             plp_iter));
+    for (i = 0; i < spc_iter->n_spc; ++i) {
+        res = PROTECT(_yield1_byrange(param, spc_iter, plp_iter));
         if (R_NilValue == res)
             Rf_error("internal: 'spc_iter' did not yield");
-        SET_VECTOR_ELT(result, i, _pileup_call1(res, call));
+        SET_VECTOR_ELT(result, i, _call1(res, call));
         UNPROTECT(1);
     }
 
@@ -580,17 +550,13 @@ _pileup_yieldby_range(PILEUP_PARAM_T *param, SPACE_ITER_T *spc_iter,
     return result;
 }
 
-static SEXP
-_pileup_yield1_byposition(PILEUP_PARAM_T *param,
-                          SPACE_ITER_T *spc_iter,
-                          PILEUP_ITER_T *plp_iter)
+static SEXP _yield1_byposition(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
+                               PILEUP_ITER_T * plp_iter)
 {
 #ifdef PILEUPBAM_DEBUG
-    REprintf("_pileup_yield1_byposition\n");
+    REprintf("_yield1_byposition\n");
 #endif
-    const int
-        yieldSize = param->yieldSize,
-        n_spc = spc_iter->n_spc;
+    const int yieldSize = param->yieldSize, n_spc = spc_iter->n_spc;
 
     SPACE_T *spc;
     PILEUP_RESULT_T plp_result;
@@ -613,20 +579,17 @@ _pileup_yield1_byposition(PILEUP_PARAM_T *param,
     cnt = (int *) Calloc(n_spc, int);
     memset(cnt, 0, sizeof(int) * n_spc);
 
-    while (spc && yieldSize > i_yld)
-    {
-        n_rec = _pileup_bam1(param, spc, plp_iter, &plp_result);
+    while (spc && yieldSize > i_yld) {
+        n_rec = _bam1(param, spc, plp_iter, &plp_result);
         if (param->yieldAll) {
             const int spc_width = spc->end - spc->start + 1L;
-            n_rec = spc_width < param->yieldSize ?
-                spc_width : param->yieldSize;
+            n_rec = spc_width < param->yieldSize ? spc_width : param->yieldSize;
         }
         param->yieldSize -= n_rec;
         i_yld += n_rec;
         cnt[spc->i_spc] = i_yld;
 
-        if (yieldSize > i_yld)
-        {                       /* next space */
+        if (yieldSize > i_yld) {	/* next space */
             if ((spc = _space_iter_next(spc_iter))) {
                 _mplp_teardown_bam(plp_iter);
                 _mplp_setup_bam(param, spc, plp_iter);
@@ -657,28 +620,25 @@ _pileup_yield1_byposition(PILEUP_PARAM_T *param,
     return res;
 }
 
-static SEXP
-_pileup_yieldby_position(PILEUP_PARAM_T *param, SPACE_ITER_T *spc_iter,
-                         PILEUP_ITER_T *plp_iter, SEXP call)
+static SEXP _yieldby_position(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
+                              PILEUP_ITER_T * plp_iter, SEXP call)
 {
     const int GROW_BY_ELTS = 10;
     SEXP result = R_NilValue, res;
     int i_res = 0, len, pidx;
 
     PROTECT_WITH_INDEX(result = NEW_LIST(0), &pidx);
-    while (R_NilValue !=
-           (res = _pileup_yield1_byposition(param, spc_iter, plp_iter)))
-    {
+    while (R_NilValue != (res = _yield1_byposition(param, spc_iter, plp_iter))) {
         PROTECT(res);
-        if (Rf_length(result) == i_res) { /* more space for results */
+        if (Rf_length(result) == i_res) {	/* more space for results */
             len = Rf_length(result) + GROW_BY_ELTS;
             result = Rf_lengthgets(result, len);
             REPROTECT(result, pidx);
         }
-        SET_VECTOR_ELT(result, i_res++, _pileup_call1(res, call));
+        SET_VECTOR_ELT(result, i_res++, _call1(res, call));
         UNPROTECT(1);
     }
-    _mplp_teardown_bam(plp_iter); /* from _pileup_yield1_byposition */
+    _mplp_teardown_bam(plp_iter);	/* from _yield1_byposition */
 
     result = Rf_lengthgets(result, i_res);
     UNPROTECT(1);
@@ -686,9 +646,8 @@ _pileup_yieldby_position(PILEUP_PARAM_T *param, SPACE_ITER_T *spc_iter,
     return result;
 }
 
-SEXP
-apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
-              SEXP callback)
+SEXP apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
+                   SEXP callback)
 {
     int i;
     PILEUP_PARAM_T p;
@@ -713,29 +672,21 @@ apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
     /* param */
     spc_iter = _space_iter_init(space);
 
-    p.keep_flag[0] =
-        INTEGER(_lst_elt(param, "flag", "param"))[0];
-    p.keep_flag[1] =
-        INTEGER(_lst_elt(param, "flag", "param"))[1];
-    p.min_depth =
-        INTEGER(_lst_elt(param, "minDepth", "param"))[0];
-    p.max_depth =
-        INTEGER(_lst_elt(param, "maxDepth", "param"))[0];
-    p.min_base_quality =
-        INTEGER(_lst_elt(param, "minBaseQuality", "param"))[0];
-    p.min_map_quality =
-        INTEGER(_lst_elt(param, "minMapQuality", "param"))[0];
+    p.keep_flag[0] = INTEGER(_lst_elt(param, "flag", "param"))[0];
+    p.keep_flag[1] = INTEGER(_lst_elt(param, "flag", "param"))[1];
+    p.min_depth = INTEGER(_lst_elt(param, "minDepth", "param"))[0];
+    p.max_depth = INTEGER(_lst_elt(param, "maxDepth", "param"))[0];
+    p.min_base_quality = INTEGER(_lst_elt(param, "minBaseQuality", "param"))[0];
+    p.min_map_quality = INTEGER(_lst_elt(param, "minMapQuality", "param"))[0];
 
-    p.yieldSize =
-        INTEGER(_lst_elt(param, "yieldSize", "param"))[0];
+    p.yieldSize = INTEGER(_lst_elt(param, "yieldSize", "param"))[0];
     const char *yieldBy =
         CHAR(STRING_ELT(_lst_elt(param, "yieldBy", "param"), 0));
     p.yieldBy =
         0 == strcmp(yieldBy, "range") ? YIELDBY_RANGE : YIELDBY_POSITION;
-    p.yieldAll =
-        LOGICAL(_lst_elt(param, "yieldAll", "param"))[0];
+    p.yieldAll = LOGICAL(_lst_elt(param, "yieldAll", "param"))[0];
 
-    int  *what = LOGICAL(_lst_elt(param, "what", "param"));
+    int *what = LOGICAL(_lst_elt(param, "what", "param"));
     p.what = 0;
     if (what[0])
         p.what |= WHAT_SEQ;
@@ -743,23 +694,23 @@ apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
         p.what |= WHAT_QUAL;
 
     /* data -- validate */
-    plp_iter = _pileup_iter_init(files, &p);
+    plp_iter = _iter_init(files, &p);
 
     /* result */
     result = R_NilValue;
     if (R_NilValue == space) {  /* all */
         /* FIXME: allocate seq, but this is too big! */
-        /* _pileup_bam1(n, -1, -1, max_depth,  */
-        /*            _mplp_read_bam, (void **) mfile,  */
-        /*            seq); */
+        /* _bam1(n, -1, -1, max_depth,  */
+        /*        _mplp_read_bam, (void **) mfile,  */
+        /*        seq); */
     } else {                    /* some */
         if (YIELDBY_RANGE == p.yieldBy)
-            result = _pileup_yieldby_range(&p, spc_iter, plp_iter, call);
+            result = _yieldby_range(&p, spc_iter, plp_iter, call);
         else
-            result = _pileup_yieldby_position(&p, spc_iter, plp_iter, call);
+            result = _yieldby_position(&p, spc_iter, plp_iter, call);
     }
 
-    _pileup_iter_destroy(plp_iter);
+    _iter_destroy(plp_iter);
     _space_iter_destroy(spc_iter);
     UNPROTECT(1);
 

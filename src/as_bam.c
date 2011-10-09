@@ -1,23 +1,21 @@
 #include "samtools/sam.h"
 #include "bamfile.h"
 
-int
-_as_bam(samfile_t *fin, samfile_t *fout)
+int _as_bam(samfile_t * fin, samfile_t * fout)
 {
     bam1_t *b = bam_init1();
     int r, count = 0;
 
     while (0 <= (r = samread(fin, b))) {
-	samwrite(fout, b);
-	count++;
+        samwrite(fout, b);
+        count++;
     }
     bam_destroy1(b);
 
     return r >= -1 ? count : -1 * count;
 }
 
-SEXP
-as_bam(SEXP file, SEXP destination)
+SEXP as_bam(SEXP file, SEXP destination)
 {
     if (!IS_CHARACTER(file) || 1 != LENGTH(file))
         Rf_error("'file' must be character(1)");
