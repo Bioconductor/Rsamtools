@@ -219,3 +219,13 @@ bamFlagAND <- function(flag1, flag2)
     ans
 }
 
+bamFlagTest <- function(flag, value)
+{
+    if (length(value) != 1 || !value %in% .FLAG_BITNAMES) {
+        msg <- sprintf("'is' must be character(1) in '%s'",
+                       paste(.FLAG_BITNAMES, collapse="' '"))
+        stop(msg)
+    }
+    i <- 2 ^ match(value, .FLAG_BITNAMES)
+    bitAnd(flag, i) == i
+}

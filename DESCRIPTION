@@ -1,7 +1,7 @@
 Package: Rsamtools
 Type: Package
 Title: Binary alignment (BAM), variant call (BCF), or tabix file import
-Version: 1.5.75
+Version: 1.5.76
 Author: Martin Morgan, Herv\'e Pag\`es
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
 Description: This package provides an interface to the 'samtools',
@@ -14,7 +14,7 @@ LazyLoad: yes
 Depends: methods, IRanges (>= 1.11.25), GenomicRanges (>= 1.5.49),
 	Biostrings (>= 2.21.4)
 Imports: methods, utils, IRanges, GenomicRanges, Biostrings, zlibbioc,
-        rtracklayer
+        rtracklayer, bitops
 Suggests: ShortRead (>= 1.11.30), GenomicFeatures, RUnit, KEGG.db
 LinkingTo: Biostrings, IRanges
 biocViews: DataImport, Sequencing, HighThroughputSequencing

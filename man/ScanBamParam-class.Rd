@@ -32,6 +32,7 @@
 % flag utils
 \alias{bamFlagAsBitMatrix}
 \alias{bamFlagAND}
+\alias{bamFlagTest}
 
 \title{Parameters for scanning BAM files}
 \description{
@@ -76,6 +77,7 @@ bamWhich(object) <- value
 # Flag utils
 bamFlagAsBitMatrix(flag)
 bamFlagAND(flag1, flag2)
+bamFlagTest(flag, value)
 }
 
 \arguments{
@@ -84,9 +86,8 @@ bamFlagAND(flag1, flag2)
     reads based on their 'flag' entry. This is most easily created with the
     \code{scanBamFlag()} helper function.
 
-    For \code{bamFlagAsBitMatrix}, an integer vector where each element
-    represents a 'flag' entry.
-  }
+    For \code{bamFlagAsBitMatrix}, \code{bamFlagTest} an integer vector
+    where each element represents a 'flag' entry.  }
 
   \item{simpleCigar}{A logical(1) vector which, when TRUE, returns only
     those reads for which the cigar (run-length encoded representation
@@ -170,7 +171,9 @@ bamFlagAND(flag1, flag2)
   \item{object}{An instance of class \code{ScanBamParam}.}
 
   \item{value}{An instance of the corresponding slot, to be assigned to
-    \code{object}.}
+    \code{object} or, for \code{bamFlagTest}, a \code{character(1)} name
+    of the flag to test, e.g., \dQuote{isUnmappedQuery}, from the
+    arguments to \code{scanBamFlag}.}
 
   \item{flag1, flag2}{Integer vectors containing 'flag' entries.}
 }

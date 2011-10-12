@@ -2,6 +2,8 @@ useDynLib(Rsamtools, .registration=TRUE)
 
 import(zlibbioc)
 
+importFrom(bitops, bitAnd)
+
 importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
 import(IRanges)
