@@ -30,7 +30,7 @@ typedef struct {
     void *extra;
 } _BAM_DATA;
 
-KHASH_SET_INIT_STR(str);
+KHASH_SET_INIT_STR(str)
 
 typedef struct {
     int *flag, *rname, *strand, *pos, *qwidth, *mapq, *mrnm, *mpos, *isize;
