@@ -2,7 +2,7 @@
     function(func, file, ..., param)
 {
     .io_check_exists(path(file))
-    flag <- bamFlag(param)
+    flag <- bamFlag(param, asInteger=TRUE)
     simpleCigar <- bamSimpleCigar(param)
     which <- bamWhich(param)
     space <- 

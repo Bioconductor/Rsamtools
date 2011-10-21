@@ -156,7 +156,7 @@ address, the following retrieves just those reads in the specified
 range
 <<bam-remote,eval=FALSE>>=
 which <- RangesList("6"=IRanges(100000L, 110000L))
-param <- ScanBamParam(which=which)
+param <- ScanBamParam(which=which, what=scanBamWhat())
 na19240bam <- scanBam(na19240url, param=param)
 @ 
 %% 

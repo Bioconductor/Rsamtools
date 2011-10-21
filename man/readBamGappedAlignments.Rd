@@ -99,7 +99,7 @@ elementMetadata(galn3)
 ## BAM fields would be loaded:
 which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
-param <- ScanBamParam(what=character(0), which=which)
+param <- ScanBamParam(which=which)
 galn4 <- readBamGappedAlignments(bamfile, param=param)
 galn4
 
@@ -114,8 +114,6 @@ galn5
 ## Using the 'param' arg to load tags. Except for MF and Aq, the tags
 ## specified below are predefined tags (see the SAM Spec for the list
 ## of predefined tags and their meaning).
-## Note that if we weren't providing a 'what' argument here, all the
-## BAM fields would be loaded:
 param <- ScanBamParam(tag=c("MF", "Aq", "NM", "UQ", "H0", "H1"),
                       what="isize")
 galn6 <- readBamGappedAlignments(bamfile, param=param)

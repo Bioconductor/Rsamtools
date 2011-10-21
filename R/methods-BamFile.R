@@ -56,7 +56,8 @@ setMethod(seqinfo, "BamFile",
 })
 
 setMethod(scanBam, "BamFile",
-          function(file, index=file, ..., param=ScanBamParam())
+          function(file, index=file, ...,
+                   param=ScanBamParam(what=scanBamWhat()))
 {
     if (!isOpen(file)) {
         open(file)
@@ -91,7 +92,8 @@ setMethod(countBam, "BamFile",
 
 setMethod(filterBam, "BamFile",
           function (file, destination, index=file, ...,
-                    indexDestination=TRUE, param=ScanBamParam())
+                    indexDestination=TRUE,
+                    param=ScanBamParam(what=scanBamWhat()))
 {
     if (!isOpen(file)) {
         open(file)
@@ -139,9 +141,10 @@ setMethod(sortBam, "BamFile",
 .normargParam <- function(param, what0)
 {
     if (is.null(param))
-        param <- ScanBamParam(what=character(0))
+        param <- ScanBamParam()
     flag0 <- scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE)
-    bamFlag(param) <- .combineBamFlagFilters(bamFlag(param), flag0)
+    bamFlag(param) <-
+        .combineBamFlagFilters(bamFlag(param, asInteger=TRUE), flag0)
     bamWhat(param) <- union(bamWhat(param), what0)
     param
 }

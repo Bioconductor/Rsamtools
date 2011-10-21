@@ -78,7 +78,7 @@ test_scanBam_which <- function()
     ## 'which'
     which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
-    p1 <- ScanBamParam(which=which)
+    p1 <- ScanBamParam(which=which, what=scanBamWhat())
     res <- scanBam(fl, param=p1)
 
     checkIdentical("list", class(res))
@@ -99,7 +99,7 @@ test_scanBam_which_bounds <- function()
     ## 'which'
     which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
-    p1 <- ScanBamParam(which=which)
+    p1 <- ScanBamParam(which=which, what=scanBamWhat())
     res <- scanBam(fl, param=p1)
 
     checkIdentical("list", class(res))
@@ -123,7 +123,7 @@ test_scanBam_which_bounds <- function()
             IRanges(pos[idx], width=qwidth[idx])
         })
         exp <- sum(countOverlaps(res, snp))
-        param <- ScanBamParam(which=GRanges("seq2", snp))
+        param <- ScanBamParam(which=GRanges("seq2", snp), what=scanBamWhat())
         try(checkIdentical(exp, countBam(fl, param=param)$records,
                            msg=sprintf("i: %d\n", i)))
     }
@@ -166,7 +166,8 @@ test_scanBam_what_overflow <- function()
 {
     ## src/samtools/bam_index.c requires that the largest bin be <= 512Mbp
     which <- RangesList(seq1=IRanges(1000, 536870912L-1L))
-    checkTrue(validObject(scanBam(fl, param=ScanBamParam(which=which))))
+    p1 <- ScanBamParam(which=which, what=scanBamWhat())
+    checkTrue(validObject(scanBam(fl, param=p1)))
     which <- RangesList(seq1=IRanges(1000, 536870912L))
     checkTrue(validObject(scanBam(fl, param=ScanBamParam(which=which))))
     which <- RangesList(seq1=IRanges(1000, 536870912L+1L))
@@ -194,7 +195,8 @@ test_scanBam_what <- function()
 
 test_scanBam_flag <- function()
 {
-    p3 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=TRUE))
+    p3 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=TRUE),
+                       what=scanBamWhat())
     res <- scanBam(fl, param=p3)
     checkIdentical("list", class(res))
     checkIdentical(1L, length(res))
@@ -207,7 +209,7 @@ test_scanBam_flag <- function()
 test_scanBam_badSpace <- function()
 {
     which <- RangesList(badspc=IRanges(100000, 2000000))
-    p1 <- ScanBamParam(which=which)
+    p1 <- ScanBamParam(which=which, what=scanBamWhat())
 
     oopts <- options(warn=-1)
     on.exit(options(oopts))
@@ -233,7 +235,7 @@ test_scanBam_index <- function()
 {
     which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
-    p1 <- ScanBamParam(which=which)
+    p1 <- ScanBamParam(which=which, what=scanBamWhat())
     src <- system.file("unitTests", "cases", package="Rsamtools")
     fl <- file.path(src, "ex1_noindex.bam")
     idx <- system.file("extdata", "ex1.bam", package="Rsamtools")

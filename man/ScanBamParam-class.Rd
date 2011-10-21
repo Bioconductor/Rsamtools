@@ -49,7 +49,7 @@
 # Constructor
 ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
     reverseComplement = FALSE, tag = character(0),
-    what = scanBamWhat(), which)
+    what = character(0), which)
 
 # Constructor helpers
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
@@ -59,7 +59,7 @@ scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA,
 scanBamWhat()
 
 # Accessors
-bamFlag(object)
+bamFlag(object, asInteger=FALSE)
 bamFlag(object) <- value
 bamReverseComplement(object)
 bamReverseComplement(object) <- value
@@ -175,7 +175,11 @@ bamFlagTest(flag, value)
     of the flag to test, e.g., \dQuote{isUnmappedQuery}, from the
     arguments to \code{scanBamFlag}.}
 
-  \item{flag1, flag2}{Integer vectors containing 'flag' entries.}
+  \item{asInteger}{logical(1) indicating whether \sQuote{flag} should be
+    returned as an encoded integer vector (\code{TRUE}) or
+    human-readable form (\code{FALSE}).}
+
+  \item{flag1, flag2}{Integer vectors containing \sQuote{flag} entries.}
 }
 
 \section{Objects from the Class}{
@@ -284,7 +288,7 @@ res <- scanBam(fl, param=p2)[[1]]
 lapply(res, head)
 
 ## tags; NM: edit distance; H1: 1-difference hits
-p4 <- ScanBamParam(tag=c("NM", "H1"))
+p4 <- ScanBamParam(tag=c("NM", "H1"), what="flag")
 bam4 <- scanBam(fl, param=p4)
 str(bam4[[1]][["tag"]])
 

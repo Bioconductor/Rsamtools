@@ -35,6 +35,13 @@ NEW FEATURES
     to stream, scanVcf,TabixFile,*-method to select subsets. Use
     unpackVcf to expand INFO and GENO fields.
 
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o ScanBamParam argument 'what' defaults to character(0) (nothing)
+    rather than scanBamWhat() (everything)
+
+    o bamFlag returns a user-friendly description of flags by default
+
 BUG FIXES
 
     o scanBam (and readBamGappedAlignments) called with an invalid or

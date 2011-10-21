@@ -1,7 +1,7 @@
 setMethod(ScanBamParam, c(which="missing"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=scanBamWhat(), which)
+                   what=character(0), which)
 {
     which <- IRangesList()
     names(which) <- character()
@@ -13,7 +13,7 @@ setMethod(ScanBamParam, c(which="missing"),
 setMethod(ScanBamParam, c(which="RangesList"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=scanBamWhat(), which)
+                   what=character(0), which)
 {
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
         reverseComplement=reverseComplement, tag=tag, what=what,
@@ -23,7 +23,7 @@ setMethod(ScanBamParam, c(which="RangesList"),
 setMethod(ScanBamParam, c(which="RangedData"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=scanBamWhat(), which)
+                   what=character(0), which)
 {
     callGeneric(flag=flag, simpleCigar=simpleCigar,
                 reverseComplement=reverseComplement, tag=tag, what=what,
@@ -33,7 +33,7 @@ setMethod(ScanBamParam, c(which="RangedData"),
 setMethod(ScanBamParam, c(which="GRanges"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=scanBamWhat(), which)
+                   what=character(0), which)
 {
     callGeneric(flag=flag, simpleCigar=simpleCigar,
                 reverseComplement=reverseComplement, tag=tag, what=what,
@@ -42,7 +42,7 @@ setMethod(ScanBamParam, c(which="GRanges"),
 
 setValidity("ScanBamParam", function(object) {
     msg <- NULL
-    flag <- bamFlag(object)
+    flag <- bamFlag(object, asInteger=TRUE)
     simpleCigar <- bamSimpleCigar(object)
     reverseComplement <- bamReverseComplement(object)
     tag <- bamTag(object)
@@ -72,8 +72,20 @@ setValidity("ScanBamParam", function(object) {
     if (is.null(msg)) TRUE else msg
 })
 
-bamFlag <- function(object) slot(object, "flag")
+bamFlag <- function(object, asInteger=FALSE) {
+    if (asInteger) {
+        slot(object, "flag")
+    } else {
+        keep <- slot(object, "flag")
+        keep0 <- bamFlagAsBitMatrix(keep[[1]])[1L,] == 1L
+        flag <- keep1 <- bamFlagAsBitMatrix(keep[[2]])[1L,] == 1L
+        flag[keep1 & sapply(keep0, isTRUE)] <- NA
+        flag
+    }
+}
+
 "bamFlag<-" <- function(object, value)
+    ## FIXME: make this support input like bamFlag
 {
     slot(object, "flag") <- value
     object
@@ -188,8 +200,10 @@ setMethod(show, "ScanBamParam",
           function(object)
 {
     .show_classname(object)
-    cat("bamFlag: keep '0' bits: ", bamFlag(object)[1],
-        "; keep '1' bits: ", bamFlag(object)[2], "\n", sep="")
+    flag <- bamFlag(object)[!is.na(bamFlag(object))]
+    vals <- sprintf("bamFlag (NA unless specified): %s",
+                    paste(names(flag), flag, sep="=", collapse=", "))
+    cat(strwrap(vals, exdent=2), sep="\n")
     cat("bamSimpleCigar: ", bamSimpleCigar(object), "\n", sep="")
     cat("bamReverseComplement: ", bamReverseComplement(object), "\n",
         sep="")

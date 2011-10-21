@@ -75,7 +75,8 @@ bamDirname(x, ...) <- value
 \S4method{[}{BamViews,missing,ANY}(x, i, j, \dots, drop=TRUE)
 
 ## Input
-\S4method{scanBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
+\S4method{scanBam}{BamViews}(file, index = file, ...,
+    param = ScanBamParam(what=scanBamWhat()))
 \S4method{countBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
 \S4method{readBamGappedAlignments}{BamViews}(file, index=file, use.names=FALSE, param=NULL)
 

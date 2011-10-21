@@ -59,11 +59,11 @@ BamFileList(...)
 
 \S4method{scanBamHeader}{BamFile}(files, ...)
 \S4method{seqinfo}{BamFile}(x)
-\S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
+\S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
-    indexDestination=TRUE, param=ScanBamParam())
+    indexDestination=TRUE, param=ScanBamParam(what=scanBamWhat()))
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
 \S4method{readBamGappedAlignments}{BamFile}(file, index=file, use.names=FALSE, param=NULL)

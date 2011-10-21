@@ -206,7 +206,8 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
 }
 
 setMethod(scanBam, "BamViews",
-          function(file, index=file, ..., param=ScanBamParam())
+          function(file, index=file, ...,
+                   param=ScanBamParam(what=scanBamWhat()))
 {
     if (!missing(index))
         warning("using bamIndicies(file) for 'index'")
@@ -235,7 +236,7 @@ setMethod(readBamGappedAlignments, "BamViews",
     if (missing(index))
         index <- bamIndicies(file)
     if (is.null(param)) {
-        param <- ScanBamParam(what=character(0), which=bamRanges(file))
+        param <- ScanBamParam(which=bamRanges(file))
     } else if (!identical(bamRanges(file), bamWhich(param))) {
         warning("'bamRanges(file)' and 'bamWhich(param)' differ; using 'bamRanges(file)'")
         bamWhich(param) <- bamRanges(file)

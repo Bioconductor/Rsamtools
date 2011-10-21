@@ -8,7 +8,7 @@ test_asBam <- function()
     checkIdentical(bam, paste(ofl, "bam", sep="."))
 
     which <- GRanges("seq2", IRanges(1000, 2000))
-    res <- scanBam(bam, param=ScanBamParam(which=which))[[1]]
+    res <- scanBam(bam, param=ScanBamParam(which=which, what="rname"))[[1]]
     checkIdentical(642L, length(res[["rname"]]))
     checkIdentical("seq2", as.character(unique(res[["rname"]])))
 

@@ -1,12 +1,13 @@
 setGeneric("ScanBamParam",
            function(flag=scanBamFlag(), simpleCigar=FALSE,
                     reverseComplement=FALSE, tag=character(0),
-                    what=scanBamWhat(), which)
+                    what=character(0), which)
            standardGeneric("ScanBamParam"),
            signature="which")
 
 setGeneric("scanBam",
-           function(file, index=file, ..., param=ScanBamParam())
+           function(file, index=file, ...,
+                    param=ScanBamParam(what=scanBamWhat()))
            standardGeneric("scanBam"),
            signature="file")
 

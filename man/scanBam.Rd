@@ -28,7 +28,7 @@
 }
 \usage{
 
-scanBam(file, index=file, ..., param=ScanBamParam())
+scanBam(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
 
 countBam(file, index=file, ..., param=ScanBamParam())
 
@@ -41,7 +41,7 @@ asBam(file, destination, ...)
 
 filterBam(file, destination, index=file, ...)
 \S4method{filterBam}{character}(file, destination, index=file, ...,
-    indexDestination=TRUE, param=ScanBamParam())
+    indexDestination=TRUE, param=ScanBamParam(what=scanBamWhat()))
     
 sortBam(file, destination, ...)
 \S4method{sortBam}{character}(file, destination, ..., byQname=FALSE, maxMemory=512)
@@ -242,7 +242,7 @@ table(res0[["flag"]], useNA="always")
 
 which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
-p1 <- ScanBamParam(which=which)
+p1 <- ScanBamParam(which=which, what=scanBamWhat())
 res1 <- scanBam(fl, param=p1)
 names(res1)
 names(res1[[2]])

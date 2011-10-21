@@ -26,7 +26,8 @@
 }
 
 setMethod(scanBam, "character",
-          function(file, index=file, ..., param=ScanBamParam())
+          function(file, index=file, ...,
+                   param=ScanBamParam(what=scanBamWhat()))
 {
     if (missing(index) && 0L == length(bamWhich(param)))
         index <- character(0)

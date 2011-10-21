@@ -34,7 +34,8 @@
 
 setMethod(filterBam, "character",
           function(file, destination, index=file, ...,
-                   indexDestination=TRUE, param=ScanBamParam())
+                   indexDestination=TRUE,
+                   param=ScanBamParam(what=scanBamWhat()))
 {
     if (missing(index) && 0L == length(bamWhich(param)))
         index <- character(0)
