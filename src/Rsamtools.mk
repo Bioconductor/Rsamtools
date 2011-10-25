@@ -3,6 +3,6 @@ SAMTOOLS_PATH=\
                          package="Rsamtools", mustWork=TRUE))' |\
                  "${R_HOME}/bin/R" --vanilla --slave`
 PKG_LIBS+="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbcf.a"\
-	"$(SAMTOOLS_PATH)/libtabix.a" @LIBS@
+	"$(SAMTOOLS_PATH)/libtabix.a" -lz
 PKG_CPPFLAGS+=-D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
 	-D_LARGEFILE64_SOURCE
