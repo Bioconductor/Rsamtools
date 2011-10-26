@@ -6,6 +6,8 @@ importFrom(bitops, bitAnd)
 
 importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
+importFrom(rtracklayer, path)
+
 import(IRanges)
 
 importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo, Union, 
@@ -26,7 +28,10 @@ importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
 
 exportPattern("^[^\\.]")
 
-exportMethods(length, names, "[", "[[", show, getSeq, seqinfo, summarizeOverlaps)
+export(path)
+
+exportMethods(length, names, "[", "[[", show, getSeq, seqinfo,
+              summarizeOverlaps)
 
 S3method(close, BamFile)
 S3method(close, BcfFile)
