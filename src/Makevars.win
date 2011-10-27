@@ -19,7 +19,7 @@ PKG_LIBS+=$(shell echo 'zlibbioc::pkgconfig("PKG_LIBS_shared")' |\
 
 libs0: libbam.a libbcf.a libtabix.a
 	mkdir -p "${R_PACKAGE_DIR}/usretc${R_ARCH}"
-	cp Rsamtools.mk.win "${R_PACKAGE_DIR}/usretc${R_ARCH}/Rsamtools.mk"
+	cp ../Rsamtools.mk.win "${R_PACKAGE_DIR}/usretc${R_ARCH}/Rsamtools.mk"
 
 libbam.a: $(BAMOBJ)
 
