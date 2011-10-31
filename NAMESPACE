@@ -17,8 +17,7 @@ importMethodsFrom(GenomicRanges, seqnames, strand, summarizeOverlaps)
 
 importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
 
-importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality,
-                  file, connection)
+importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
 importClassesFrom(rtracklayer, url, gzfile, unz, pipe)
 
