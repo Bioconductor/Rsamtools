@@ -213,7 +213,7 @@ setMethod(scanVcf, c("connection", "missing"),
         .unpackVcfField(elt, id[idx], n[idx], type[idx])
     }, geno, names(geno), MoreArgs=list(id, n, type))
 }
-           
+ 
 setMethod(unpackVcf, c("list", "missing"),
     function(x, hdr, ..., info=TRUE, geno=TRUE)
 {
@@ -238,7 +238,8 @@ setMethod(unpackVcf, c("list", "character") ,
         if (is.null(info)) {
             msg <- sprintf("'INFO' vcf header info not found\n  path: %s",
                            hdr)
-            stop(msg)
+            warning(msg)
+        info <- FALSE
         }
     }
     if (geno) {
@@ -246,7 +247,8 @@ setMethod(unpackVcf, c("list", "character") ,
         if (is.null(geno)) {
             msg <- sprintf("'FORMAT' vcf header info not found\n  path: %s",
                            hdr)
-            stop(msg)
+            warning(msg)
+        geno <- FALSE
         }
     }
     unpackVcf(x, ..., info=info, geno=geno)
