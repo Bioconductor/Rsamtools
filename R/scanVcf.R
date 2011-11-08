@@ -140,27 +140,32 @@ setMethod(scanVcf, c("connection", "missing"),
     ## convert sub-fields in 'x' to full R representation
 {
     d <- suppressWarnings(as.integer(n))
+    na <- all(is.na(unlist(x, use.names=FALSE)))
     withCallingHandlers({
-        x <- if (!is.na(d)) {
-            if (1L < d) {
-                x <- array(unlist(strsplit(x, ",", fixed=TRUE)),
-                           dim=c(d, nrow(x), ncol(x)),
-                           dimnames=list(NULL, NULL, colnames(x)))
-                x <- aperm(x, c(2, 3, 1))
-            }
-            switch(type, Flag= !is.na(x),
-                   Character=, String=x,
-                   Integer={ mode(x) <- "integer"; x },
-                   Float={ mode(x) <- "numeric"; x },
-                   stop(sprintf("unhandled FORMAT type '%s'", type)))
+        x <- if (na == TRUE) {
+            x <- unlist(x, use.names=FALSE)
         } else {
-            x <- split(strsplit(x, ",", fixed=TRUE), seq_len(nrow(x)))
-            x <- switch(type, Character=, String=x,
-                        Integer=lapply(x, lapply, as.integer),
-                        Float=lapply(x, lapply, as.numeric),
-                        stop(sprintf("unhandled FORMAT type '%s'", type)))
-            names(x) <- NULL
-            x
+            x <- if (!is.na(d)) {
+                if (1L < d) {
+                    x <- array(unlist(strsplit(x, ",", fixed=TRUE)),
+                               dim=c(d, nrow(x), ncol(x)),
+                               dimnames=list(NULL, NULL, colnames(x)))
+                    x <- aperm(x, c(2, 3, 1))
+                }
+                switch(type, Flag= !is.na(x),
+                       Character=, String=x,
+                       Integer={ mode(x) <- "integer"; x },
+                       Float={ mode(x) <- "numeric"; x },
+                       stop(sprintf("unhandled FORMAT type '%s'", type)))
+            } else {
+                x <- split(strsplit(x, ",", fixed=TRUE), seq_len(nrow(x)))
+                x <- switch(type, Character=, String=x,
+                            Integer=lapply(x, lapply, as.integer),
+                            Float=lapply(x, lapply, as.numeric),
+                            stop(sprintf("unhandled FORMAT type '%s'", type)))
+                names(x) <- NULL
+                x
+            }
         }
     }, warning=function(w) {
         msg <- sprintf("unpackVcf field '%s': %s", id,
