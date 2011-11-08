@@ -142,7 +142,7 @@ setMethod(sortBam, "BamFile",
 {
     if (is.null(param))
         param <- ScanBamParam()
-    flag0 <- scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=FALSE)
+    flag0 <- scanBamFlag(isUnmappedQuery=FALSE)
     bamFlag(param) <-
         .combineBamFlagFilters(bamFlag(param, asInteger=TRUE), flag0)
     bamWhat(param) <- union(bamWhat(param), what0)

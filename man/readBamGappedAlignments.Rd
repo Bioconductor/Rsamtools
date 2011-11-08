@@ -20,10 +20,10 @@ readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
 
 \arguments{
 
-  \item{file}{The character(1) file name of the `BAM' file to be processed.}
+  \item{file}{The path to the `BAM' file to read.}
   
-  \item{index}{The character(1) name of the index file of the 'BAM' file
-    being processed; this is given \emph{without} the '.bai' extension.}
+  \item{index}{The path to the index file of the 'BAM' file
+    to read; this is given \emph{without} the '.bai' extension.}
 
   \item{use.names}{Use the query template names (QNAME field) as the
     names of the returned object? If not (the default), then the returned
@@ -38,9 +38,8 @@ readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
     \link[ShortRead]{GappedReads} object) and will be stored in its
     elementMetadata part.
     By default (i.e. \code{param=NULL}), no additional field is loaded and
-    the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE,
-    isDuplicate=FALSE)} (i.e. all the records corresponding to mapped reads
-    that are not PCR or optical duplicates are loaded).}
+    the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE) (i.e. records
+    corresponding to unmapped reads are not loaded).}
 }
 
 \details{
@@ -63,8 +62,11 @@ readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
 }
 
 \note{
-  BAM records corresponding to unmapped reads or to reads that are PCR
-  or optical duplicates are always ignored.
+  BAM records corresponding to unmapped reads are always ignored.
+
+  Starting with Rsamtools 1.7.1 (BioC 2.10), PCR or optical duplicates
+  are loaded by default (use \code{scanBamFlag(isDuplicate=FALSE)} to
+  drop them).
 }
 
 \author{H. Pages}
@@ -88,8 +90,10 @@ galn2 <- readBamGappedAlignments(bamfile, use.names=TRUE)
 galn2
 head(names(galn2))
 
-## Using the 'param' arg to load additional BAM fields:
-param <- ScanBamParam(what=c("qual", "flag"))
+## Using the 'param' arg to drop PCR or optical duplicates and load
+## additional BAM fields:
+param <- ScanBamParam(flag=scanBamFlag(isDuplicate=FALSE),
+                      what=c("qual", "flag"))
 galn3 <- readBamGappedAlignments(bamfile, param=param)
 galn3
 elementMetadata(galn3)
