@@ -240,6 +240,6 @@ bamFlagTest <- function(flag, value)
                        paste(.FLAG_BITNAMES, collapse="' '"))
         stop(msg)
     }
-    i <- 2 ^ match(value, .FLAG_BITNAMES)
+    i <- 2 ^ (match(value, .FLAG_BITNAMES) - 1L)
     bitAnd(flag, i) == i
 }
