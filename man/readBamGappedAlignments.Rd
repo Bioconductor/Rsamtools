@@ -38,7 +38,7 @@ readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
     \link[ShortRead]{GappedReads} object) and will be stored in its
     elementMetadata part.
     By default (i.e. \code{param=NULL}), no additional field is loaded and
-    the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE) (i.e. records
+    the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE)} (i.e. records
     corresponding to unmapped reads are not loaded).}
 }
 
