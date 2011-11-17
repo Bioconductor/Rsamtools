@@ -41,18 +41,18 @@ setMethod(isOpen, "BcfFile",
 {
     h <- sub("^##", "", header[["Header"]])
     ## simple key=value pairs --> DataFrame
-    rex <- "^[[:alpha:]]+=[^<]"
+    rex <- "^[[:alnum:]]+=[^<]"
     x <- strsplit(grep(rex, h, value=TRUE), "=")
     meta <- DataFrame(row.names=sapply(x, "[[", 1),
                       Value=sapply(x, "[[", 2))
     ## key=<values> as SimpleList of DataFrame's
-    rex <- "^([[:alpha:]]+)=<(.*)>"
+    rex <- "^([[:alnum:]]+)=<(.*)>"
     lines <- grep(rex, h, value=TRUE)
     tags <- sub(rex, "\\1", lines)
 
     keyval0 <- sub(rex, "\\2", lines)
-    keyval1 <- strsplit(keyval0, ",(?=[[:alpha:]]+=)", perl=TRUE)
-    keyval <- lapply(keyval1, strsplit, "(?<=[[:alpha:]])=", perl=TRUE)
+    keyval1 <- strsplit(keyval0, ",(?=[[:alnum:]]+=)", perl=TRUE)
+    keyval <- lapply(keyval1, strsplit, "(?<=[[:alnum:]])=", perl=TRUE)
 
     tbls <- tapply(keyval, tags, function(elt) {
         keys <- lapply(elt, sapply, "[[", 1)
