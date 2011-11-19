@@ -6,8 +6,6 @@ importFrom(bitops, bitAnd)
 
 importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
-importFrom(rtracklayer, path)
-
 import(IRanges)
 
 importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo, Union, 
@@ -19,7 +17,7 @@ importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
 
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
-importClassesFrom(rtracklayer, url, gzfile, unz, pipe)
+importClassesFrom(BiocGenerics, url, gzfile, unz, pipe)
 
 importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
            DNAStringSet, BStringSet, PhredQuality,
