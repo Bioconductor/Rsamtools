@@ -34,3 +34,18 @@ test_readBamGappedAlignments_length0 <- function()
     result <- readBamGappedAlignments(fl, param=param)
     checkTrue(validObject(result))
 }
+
+test_readBamGappedAlignments_tag <- function()
+{
+    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+
+    ## valid
+    param <- ScanBamParam(tag=("NM"))
+    aln <- readBamGappedAlignments(fl, param=param)
+    checkIdentical(924L, sum(values(aln)[["NM"]]))
+
+    ## empty
+    param <- ScanBamParam(tag=("FO"))
+    aln <- readBamGappedAlignments(fl, param=param)
+    checkIdentical(rep.int(NA, length(aln)), values(aln)[["FO"]])
+}

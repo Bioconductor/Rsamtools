@@ -184,11 +184,12 @@ setMethod(sortBam, "BamFile",
                        tmp <- lapply(res,
                                      function(res_elt) {
                                          tag <- res_elt[["tag"]]
-                                         count <- attr(tag, "count")
                                          tag_elt <- tag[[nm]]
                                          ## Fill empty tag with NAs.
-                                         if (is.null(tag_elt))
+                                         if (is.null(tag_elt)) {
+                                             count <- length(res_elt[["rname"]])
                                              tag_elt <- rep.int(NA, count)
+                                         }
                                          tag_elt
                                      })
                        .quickUnlist(tmp)
