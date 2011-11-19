@@ -6,6 +6,10 @@ importFrom(bitops, bitAnd)
 
 importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
+importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
+           order, paste, rbind, Reduce, rep.int, sapply, setdiff,
+           tapply, union, unique)
+
 import(IRanges)
 
 importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo, Union, 
@@ -21,7 +25,7 @@ importClassesFrom(BiocGenerics, url, gzfile, unz, pipe)
 
 importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
            DNAStringSet, BStringSet, PhredQuality,
-           getSeq)
+           getSeq, reverseComplement)
 
 exportPattern("^[^\\.]")
 
