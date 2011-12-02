@@ -147,7 +147,10 @@ setMethod(scanVcf, c("connection", "missing"),
         } else {
             x <- if (!is.na(d)) {
                 if (1L < d) {
-                    x <- array(unlist(strsplit(x, ",", fixed=TRUE)),
+                    idx <- as.integer(!is.na(x))
+                    idx[idx == 0] <- d
+                    xrep <- rep(x, idx)
+                    x <- array(unlist(strsplit(xrep, ",", fixed=TRUE)),
                                dim=c(d, nrow(x), ncol(x)),
                                dimnames=list(NULL, NULL, colnames(x)))
                     x <- aperm(x, c(2, 3, 1))
