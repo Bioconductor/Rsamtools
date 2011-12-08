@@ -77,7 +77,7 @@ setMethod(show, "ScanBVcfParam", function(object)
             if ("ScanBcfParam" == class(object)) "bcf" else "vcf"
         paste(cl, lbl, sep="")
     }
-    cat("class;", class(object), "\n")
+    cat("class:", class(object), "\n")
     cat(sprintf("%s: %d elements\n", .clslbl("Which"),
                 length(bcfWhich(object))))
     cat(.clslbl("Info:"), .ptags(bcfInfo(object)), "\n")

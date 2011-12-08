@@ -173,11 +173,11 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP map)
         free(record);
     }
 
-    /* remove NULL elements of geno */
+    /* remove NULL elements of geno 
     for (i = 0, j = 0; i < Rf_length(geno); ++i)
         if (R_NilValue != VECTOR_ELT(geno, i))
             SET_VECTOR_ELT(geno, j++, VECTOR_ELT(geno, i));
-    geno = Rf_lengthgets(geno, j);
+    geno = Rf_lengthgets(geno, j);*/
 
     UNPROTECT(1);
     return result;

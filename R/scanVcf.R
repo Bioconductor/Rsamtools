@@ -12,10 +12,11 @@ setMethod(scanVcfHeader, "TabixFile",
     scanVcfHeader(path(file), ...)
 })
 
-## scanVcf
+
+## scanVcf 
 
 .vcf_map <-
-    function(hdr)
+    function(hdr, geno, ...)
 {
     ## map header FORMAT to R types
     fmt <- hdr$Header[["FORMAT"]]
@@ -24,12 +25,23 @@ setMethod(scanVcfHeader, "TabixFile",
                   Float=numeric())
     map[fmt$Number != 1] <- list(character())
     names(map) <- rownames(fmt)
+
+    ## user selected geno
+    if (!identical(character(), geno))
+        if (1L == length(geno) && is.na(geno)) {
+            map[] <- list(NULL)
+        } else {
+            map[!names(map) %in% geno] <- list(NULL)
+            if (!all(geno %in% names(map)))
+                warning("values in ScanVcfParam(geno=c(...)) ",
+                        "not present in FORMAT field :", 
+                        geno[!geno %in% names(map)])
+        }
     map
 }
 
 .vcf_scan <-
-    function(file, ..., info=character(), geno=character(),
-             space, start, end)
+    function(file, ..., geno=character(), space, start, end)
 {
     tryCatch({
         space <- as.character(space)    # could be factor
@@ -37,16 +49,9 @@ setMethod(scanVcfHeader, "TabixFile",
             open(file)
             on.exit(close(file))
         }
-
         hdr <- scanVcfHeader(file)[[1]]
         samples <- hdr$Sample
-        map <- .vcf_map(hdr)
-        if (!identical(character(), geno))
-            if (1L == length(geno) && is.na(geno))
-                map[] <- list(NULL)
-            else
-                map[!names(map) %in% geno] <- list(NULL)
-
+        map <- .vcf_map(hdr, geno=geno)
         yieldSize <- 1000000L           # a guess, grows as necessary
         result <- .Call(.scan_vcf, .extptr(file), list(space, start,
                         end), yieldSize, samples, map)
@@ -55,6 +60,26 @@ setMethod(scanVcfHeader, "TabixFile",
     }, error = function(err) {
         stop("scanVcf: ", conditionMessage(err), "\n  path: ", 
              path(file), call. = FALSE)
+    })
+}
+
+.vcf_scan_connection <-
+    function(file, ..., geno=character())
+{
+    tryCatch({
+        fl <- summary(file)$description
+        hdr <- scanVcfHeader(fl)[[1]]
+        samples <- hdr$Sample
+        map <- .vcf_map(hdr, geno=geno)
+
+        txt <- readLines(file, ...)
+        txt <- txt[!grepl("^#", txt)] # FIXME: handle header lines better
+        result <- .Call(.scan_vcf_connection, txt, samples, map)
+        names(result) <- "*:*-*"
+        result
+    }, error = function(err) {
+        stop("scanVcf: ", conditionMessage(err), "\n  path: ", 
+             summary(file)$description, call. = FALSE)
     })
 }
 
@@ -81,8 +106,7 @@ setMethod(scanVcf, c("TabixFile", "GRanges"),
 setMethod(scanVcf, c("TabixFile", "ScanVcfParam"),
     function(file, ..., param)
 {
-    res <- scanVcf(file, ..., info=vcfInfo(param),
-                   geno=vcfGeno(param), param=vcfWhich(param))
+    res <- scanVcf(file, ..., geno=vcfGeno(param), param=vcfWhich(param))
     if (vcfTrimEmpty(param))
         lapply(res, function(rng) {
             rng[["GENO"]] <- Filter(Negate(is.null), rng[["GENO"]])
@@ -94,30 +118,23 @@ setMethod(scanVcf, c("TabixFile", "ScanVcfParam"),
 setMethod(scanVcf, c("character", "ANY"),
     function(file, ..., param)
 {
-    file <- TabixFile(file)
-    scanVcf(file, ..., param=param)
+    ## ScanVcfParam with no ranges
+    if (class(param) == "ScanVcfParam") {
+        if (length(vcfWhich(param)) == 0) {
+            con <- file(file)
+            on.exit(close(con))
+            .vcf_scan_connection(con, geno=vcfGeno(param))
+        } else {
+    ## ScanVcfParam with ranges
+          file <- TabixFile(file)
+          scanVcf(file, ..., param=param)
+        }
+    } else {
+    ## all others 
+        file <- TabixFile(file)
+        scanVcf(file, ..., param=param)
+    }
 })
-
-.vcf_scan_connection <-
-    function(file, ...)
-{
-    tryCatch({
-        fl <- summary(file)$description
-        hdr <- scanVcfHeader(fl)[[1]]
-        samples <- hdr$Sample
-        map <- .vcf_map(hdr)
-
-        txt <- readLines(file, ...)
-        txt <- txt[!grepl("^#", txt)] # FIXME: handle header lines better
-        result <- .Call(.scan_vcf_connection, txt, samples, map)
-        names(result) <- "*:*-*"
-        result
-    }, error = function(err) {
-        stop("scanVcf: ", conditionMessage(err), "\n  path: ", 
-             summary(file)$description, call. = FALSE)
-    })
-}
-
 
 setMethod(scanVcf, c("character", "missing"),
     function(file, ..., param)
@@ -218,7 +235,11 @@ setMethod(scanVcf, c("connection", "missing"),
                            nm)
             stop(msg)
         }
-        .unpackVcfField(elt, id[idx], n[idx], type[idx])
+    ## handle NULL elements
+        if (is.null(elt))
+            elt
+        else 
+            .unpackVcfField(elt, id[idx], n[idx], type[idx])
     }, geno, names(geno), MoreArgs=list(id, n, type))
 }
  
