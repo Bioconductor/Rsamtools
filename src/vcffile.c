@@ -62,8 +62,7 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP map)
     PROTECT(result = Rf_allocVector(VECSXP, N_FLDS));
     for (i = 0; i < N_FLDS - 1; ++i)
         SET_VECTOR_ELT(result, i, Rf_allocVector(FLD_FMT[i].type, vcf_n));
-    geno = Rf_allocVector(VECSXP, map_n);
-    SET_VECTOR_ELT(result, N_FLDS - 1, geno);
+    PROTECT(geno = Rf_allocVector(VECSXP, map_n));
 
     PROTECT(eltnms = Rf_allocVector(STRSXP, N_FLDS));
     for (i = 0; i < N_FLDS; ++i)
@@ -72,7 +71,6 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP map)
     UNPROTECT(1);
 
     /* allocate geno, including matricies */
-    geno = Rf_namesgets(geno, nms);
     PROTECT(eltnms = Rf_allocVector(VECSXP, 2));
     SET_VECTOR_ELT(eltnms, 0, R_NilValue);
     SET_VECTOR_ELT(eltnms, 1, sample);
@@ -173,9 +171,26 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP map)
         free(record);
     }
 
-    UNPROTECT(1);
+    /* remove NULL elements of geno */
+    for (i = 0, j = 0; i < Rf_length(geno); ++i) {
+        if (R_NilValue != VECTOR_ELT(geno, i)) {
+            SET_VECTOR_ELT(geno, j, VECTOR_ELT(geno, i));
+            SET_STRING_ELT(nms, j, STRING_ELT(nms, i));
+            j++; 
+        }
+    }
+    PROTECT(nms = Rf_lengthgets(nms, j)); 
+    PROTECT(geno = Rf_lengthgets(geno, j));
+    geno = Rf_namesgets(geno, nms);
+    SET_VECTOR_ELT(result, N_FLDS - 1, geno);
+
+    UNPROTECT(4);
     return result;
 }
+
+
+
+
 
 SEXP scan_vcf(SEXP ext, SEXP space, SEXP yieldSize, SEXP sample, SEXP map)
 {
