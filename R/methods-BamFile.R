@@ -273,12 +273,14 @@ setMethod(readBamGappedReads, "BamFile",
     if("package:parallel" %in% search() & .Platform$OS.type != "windows" ){
       lapply <- mclapply}
     reads <- path(reads)
+
     lst <- lapply(reads,
                   function(bf) {
                     x <- readGappedAlignments(bf, param=param)
                     GenomicRanges:::.dispatch(x, features, mode=mode, 
                               ignore.strand=ignore.strand)
-                  })
+                  }, ...)
+
     counts <- do.call(cbind, lst)
     colData <- DataFrame(fileName = reads)
     rownames(colData) <- sub(".bai$", "", basename(reads))
