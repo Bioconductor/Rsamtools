@@ -111,7 +111,8 @@ SEXP index_tabix(SEXP filename, SEXP format, SEXP seq, SEXP begin, SEXP end,
         conf.line_skip = INTEGER(skip)[0];
     if (IS_CHARACTER(comment) && 1L == Rf_length(comment))
         conf.meta_char = CHAR(STRING_ELT(comment, 0))[0];
-    if (IS_LOGICAL(zeroBased) && 1L == Rf_length(zeroBased))
+    if (IS_LOGICAL(zeroBased) && 1L == Rf_length(zeroBased) &&
+        TRUE == LOGICAL(zeroBased)[0])
         conf.preset |= TI_FLAG_UCSC;
 
     if (1 != bgzf_check_bgzf(fname))
