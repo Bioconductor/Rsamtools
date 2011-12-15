@@ -5,6 +5,8 @@ BUG FIXES
 
     o readBamGappedAlignments handles empty 'tag' fields
 
+    o scanTabix would omit variants overlapping range ends
+
 CHANGES IN VERSION 1.6.0
 ------------------------
 

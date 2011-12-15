@@ -243,7 +243,9 @@ SEXP scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
         const char *s = CHAR(STRING_ELT(spc, ispc));
         if (0 > (tid = ti_get_tid(tabix->idx, s)))
             Rf_error("'%s' not present in tabix index", s);
-        ti_iter_t iter = ti_iter_query(tabix->idx, tid, start[ispc], end[ispc]);
+        int beg = start[ispc];
+        if (0 < beg) beg -= 1;
+        ti_iter_t iter = ti_queryi(tabix, tid, beg, end[ispc]);
 
         int linelen;
         const char *line;
