@@ -263,22 +263,30 @@ setMethod(unpackVcf, c("list", "character") ,
     function(x, hdr, ..., info=TRUE, geno=TRUE)
 {
     if (info) {
-        info <- scanVcfHeader(hdr)[[1]][["Header"]][["INFO"]]
-        if (is.null(info)) {
-            msg <- sprintf("'INFO' vcf header info not found\n  path: %s",
-                           hdr)
-            warning(msg)
-        info <- FALSE
+        if (length(x[[1]]$INFO) != 0) {
+            info <- scanVcfHeader(hdr)[[1]][["Header"]][["INFO"]]
+            if (is.null(info)) {
+                msg <- sprintf("'INFO' vcf header info not found\n  path: %s",
+                               hdr)
+                warning(msg)
+            info <- FALSE
+            }
+        } else {
+            info <- FALSE
         }
     }
     if (geno) {
-        geno <- scanVcfHeader(hdr)[[1]][["Header"]][["FORMAT"]]
-        if (is.null(geno)) {
-            msg <- sprintf("'FORMAT' vcf header info not found\n  path: %s",
-                           hdr)
-            warning(msg)
-        geno <- FALSE
-        }
+        if (length(unlist(x[[1]]$GENO, use.names=FALSE)) != 0) {
+            geno <- scanVcfHeader(hdr)[[1]][["Header"]][["FORMAT"]]
+            if (is.null(geno)) {
+                msg <- sprintf("'FORMAT' vcf header info not found\n  path: %s",
+                               hdr)
+                warning(msg)
+            geno <- FALSE
+            }
+       } else {
+            geno <- FALSE
+       }
     }
     unpackVcf(x, ..., info=info, geno=geno)
 })

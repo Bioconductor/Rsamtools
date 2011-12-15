@@ -188,14 +188,10 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP map)
     return result;
 }
 
-
-
-
-
 SEXP scan_vcf(SEXP ext, SEXP space, SEXP yieldSize, SEXP sample, SEXP map)
 {
     SEXP tbx = PROTECT(scan_tabix(ext, space, yieldSize));
-
+ 
     for (int i = 0; i < Rf_length(tbx); ++i) {
         SEXP result = _split_vcf(VECTOR_ELT(tbx, i), sample, map);
         SET_VECTOR_ELT(tbx, i, result);
