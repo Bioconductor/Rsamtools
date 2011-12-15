@@ -897,8 +897,8 @@ const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len)
 			iter->curr_off = bgzf_tell(fp);
 			if (iter->str.s[0] == iter->idx->conf.meta_char) continue;
 			get_intv((ti_index_t*)iter->idx, &iter->str, &intv);
-			if (intv.tid != iter->tid || intv.beg > iter->end) break;  // no need to proceed
-			else if (intv.end >= iter->beg || iter->end >= intv.beg) { 
+			if (intv.tid != iter->tid || intv.beg >= iter->end) break;  // no need to proceed
+			else if (intv.end > iter->beg || iter->end > intv.beg) { 
 				if (len) *len = iter->str.l;
 				return iter->str.s;
 			}
@@ -996,3 +996,4 @@ const char *ti_read(tabix_t *t, ti_iter_t iter, int *len)
 {
 	return ti_iter_read(t->fp, iter, len);
 }
+
