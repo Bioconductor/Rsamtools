@@ -285,12 +285,14 @@ SEXP yield_tabix(SEXP ext, SEXP yieldSize)
 
     tabix_t *tabix = TABIXFILE(ext)->tabix;
     ti_iter_t iter = TABIXFILE(ext)->iter;
+    const ti_conf_t *conf;
 
     if (NULL == iter) {
         if (0 != ti_lazy_index_load(tabix))
             Rf_error("'scanTabix' failed to load index");
         iter = TABIXFILE(ext)->iter = ti_iter_first();
     }
+    conf = ti_get_conf(tabix->idx);
 
     int buflen = 4096;
     char *buf = Calloc(buflen, char);
@@ -305,6 +307,8 @@ SEXP yield_tabix(SEXP ext, SEXP yieldSize)
         line = ti_read(tabix, iter, &linelen);
         if (NULL == line)
             break;
+        if (conf->meta_char == *line)
+            continue;
         if (linelen + 1 > buflen) {
             Free(buf);
             buflen = 2 * linelen;
