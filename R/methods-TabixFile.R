@@ -127,21 +127,21 @@ setMethod(scanTabix, c("character", "RangesList"),
     function(file, ..., param)
 {
     file <- TabixFile(file)
-    callGeneric(file, ..., param)
+    callGeneric(file, ..., param=param)
 })
 
 setMethod(scanTabix, c("character", "RangedData"),
     function(file, ..., param)
 {
     file <- TabixFile(file)
-    callGeneric(file, ..., param)
+    callGeneric(file, ..., param=param)
 })
 
 setMethod(scanTabix, c("character", "GRanges"),
     function(file, ..., param)
 {
     file <- TabixFile(file)
-    callGeneric(file, ..., param)
+    callGeneric(file, ..., param=param)
 })
 
 .tabix_yield <-
