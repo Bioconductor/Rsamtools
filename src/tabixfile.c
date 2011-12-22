@@ -218,6 +218,9 @@ SEXP scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
     _scan_checkparams(space, R_NilValue, R_NilValue);
     if (!IS_INTEGER(yieldSize) || 1L != Rf_length(yieldSize))
         Rf_error("'yieldSize' must be integer(1)");
+    if (!R_finite(INTEGER(yieldSize)[0]) ||
+        0L > INTEGER(yieldSize)[0])
+        Rf_error("'yieldSize' must be >=0 and <.Machine$integer.max");
     _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
 
     tabix_t *tabix = TABIXFILE(ext)->tabix;
@@ -281,6 +284,9 @@ SEXP yield_tabix(SEXP ext, SEXP yieldSize)
 {
     if (!IS_INTEGER(yieldSize) || 1L != Rf_length(yieldSize))
         Rf_error("'yieldSize' must be integer(1)");
+    if (!R_finite(INTEGER(yieldSize)[0]) ||
+        0L > INTEGER(yieldSize)[0])
+        Rf_error("'yieldSize' must be >=0 and <.Machine$integer.max");
     _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
 
     tabix_t *tabix = TABIXFILE(ext)->tabix;
