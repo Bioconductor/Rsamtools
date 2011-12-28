@@ -21,6 +21,9 @@
 \alias{scanVcfHeader,TabixFile-method}
 \alias{scanVcf,TabixFile,ScanVcfParam-method}
 \alias{scanVcf,TabixFile,missing-method}
+\alias{scanVcf,TabixFile,RangesList-method}
+\alias{scanVcf,TabixFile,RangedData-method}
+\alias{scanvcf,TabixFile,GRanges-method}
 
 \title{Manipulate tabix indexed tab-delimited files.}
 
