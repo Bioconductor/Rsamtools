@@ -71,7 +71,7 @@ setMethod(isOpen, "BcfFile",
     })
     SimpleList(Reference=header[["Reference"]],
                Sample=header[["Sample"]],
-               Header=c(DataFrameList(META=meta), tbls))
+               Header=c(DataFrameList(META=meta), tbls[unique(tags)]))
 }
 
 setMethod(scanBcfHeader, "BcfFile",

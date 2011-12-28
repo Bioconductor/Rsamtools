@@ -83,30 +83,14 @@ setMethod(scanVcfHeader, "TabixFile",
     })
 }
 
-setMethod(scanVcf, c("TabixFile", "RangesList"),
-    function(file, ..., param)
-{
-    .vcf_scan(file, ..., space=space(param),
-              start=.uunlist(start(param)), end=.uunlist(end(param)))
-})
-
-setMethod(scanVcf, c("TabixFile", "RangedData"),
-    function(file, ..., param)
-{
-    .vcf_scan(file, ..., param=ranges(param))
-})
-
-setMethod(scanVcf, c("TabixFile", "GRanges"),
-    function(file, ..., param)
-{
-    .vcf_scan(file, ..., space=as.character(seqnames(param)),
-              start=start(param), end=end(param))
-})
-
 setMethod(scanVcf, c("TabixFile", "ScanVcfParam"),
     function(file, ..., param)
 {
-    res <- scanVcf(file, ..., geno=vcfGeno(param), param=vcfWhich(param))
+    rngs <- vcfWhich(param)
+    res <- .vcf_scan(file, ..., geno=vcfGeno(param), 
+        space=as.character(seqnames(rngs)),
+        start=start(rngs), 
+        end=end(rngs))
     if (vcfTrimEmpty(param))
         lapply(res, function(rng) {
             rng[["GENO"]] <- Filter(Negate(is.null), rng[["GENO"]])
@@ -115,24 +99,23 @@ setMethod(scanVcf, c("TabixFile", "ScanVcfParam"),
     else res
 })
 
-setMethod(scanVcf, c("character", "ANY"),
+setMethod(scanVcf, c("TabixFile", "missing"),
     function(file, ..., param)
 {
-    ## ScanVcfParam with no ranges
-    if (class(param) == "ScanVcfParam") {
-        if (length(vcfWhich(param)) == 0) {
-            con <- file(file)
-            on.exit(close(con))
-            .vcf_scan_connection(con, geno=vcfGeno(param))
-        } else {
-    ## ScanVcfParam with ranges
-          file <- TabixFile(file)
-          scanVcf(file, ..., param=param)
-        }
+    callGeneric(file = path(file))
+})
+
+setMethod(scanVcf, c("character", "ScanVcfParam"),
+    function(file, ..., param)
+{
+    ## no ranges
+    if (length(vcfWhich(param)) == 0) {
+        con <- file(file)
+        on.exit(close(con))
+        .vcf_scan_connection(con, geno=vcfGeno(param))
     } else {
-    ## all others 
-        file <- TabixFile(file)
-        scanVcf(file, ..., param=param)
+    ## ranges
+      callGeneric(TabixFile(file), ..., param=param)
     }
 })
 

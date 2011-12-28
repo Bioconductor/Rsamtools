@@ -13,7 +13,7 @@
 \alias{scanVcfHeader}
 \alias{scanVcfHeader,character-method}
 \alias{scanVcf}
-\alias{scanVcf,character,ANY-method}
+\alias{scanVcf,character,ScanVcfParam-method}
 \alias{scanVcf,character,missing-method}
 \alias{scanVcf,connection,missing-method}
 
@@ -51,7 +51,7 @@ scanVcfHeader(file, ...)
 \S4method{scanVcfHeader}{character}(file, ...)
 
 scanVcf(file, ..., param)
-\S4method{scanVcf}{character,ANY}(file, ..., param)
+\S4method{scanVcf}{character,ScanVcfParam}(file, ..., param)
 \S4method{scanVcf}{character,missing}(file, ..., param)
 \S4method{scanVcf}{connection,missing}(file, ..., param)
 

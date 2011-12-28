@@ -19,10 +19,8 @@
 \alias{yieldTabix,TabixFile-method}
 
 \alias{scanVcfHeader,TabixFile-method}
-\alias{scanVcf,TabixFile,GRanges-method}
-\alias{scanVcf,TabixFile,RangedData-method}
-\alias{scanVcf,TabixFile,RangesList-method}
 \alias{scanVcf,TabixFile,ScanVcfParam-method}
+\alias{scanVcf,TabixFile,missing-method}
 
 \title{Manipulate tabix indexed tab-delimited files.}
 
@@ -64,9 +62,7 @@ TabixFileList(...)
 \S4method{yieldTabix}{TabixFile}(file, ..., yieldSize=1000000L)
 
 \S4method{scanVcfHeader}{TabixFile}(file, ...)
-\S4method{scanVcf}{TabixFile,RangesList}(file, ..., param)
-\S4method{scanVcf}{TabixFile,RangedData}(file, ..., param)
-\S4method{scanVcf}{TabixFile,GRanges}(file, ..., param)
+\S4method{scanVcf}{TabixFile,missing}(file, ..., param)
 \S4method{scanVcf}{TabixFile,ScanVcfParam}(file, ..., param)
 
 }
