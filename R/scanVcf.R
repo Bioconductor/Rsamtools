@@ -164,38 +164,33 @@ setMethod(scanVcf, c("connection", "missing"),
     ## convert sub-fields in 'x' to full R representation
 {
     d <- suppressWarnings(as.integer(n))
-   # na <- all(is.na(unlist(x, use.names=FALSE)))
     withCallingHandlers({
-   #     x <- if (na == TRUE) {
-            x <- unlist(x, use.names=FALSE)
-   #     } else {
-            x <- if (!is.na(d)) {
-                if (1L < d) {
-                    idx <- as.integer(!is.na(x))
-                    idx[idx == 0] <- d
-                    xrep <- rep(x, idx)
-                    x <- array(unlist(strsplit(xrep, ",", fixed=TRUE)),
-                               dim=c(d, nrow(x), ncol(x)),
-                               dimnames=list(NULL, NULL, colnames(x)))
-                    x <- aperm(x, c(2, 3, 1))
-                }
-                switch(type, 
-                       Flag= !is.na(x),
-                       Character=, String=x,
-                       Integer={ mode(x) <- "integer"; x },
-                       Float={ mode(x) <- "numeric"; x },
-                       stop(sprintf("unhandled FORMAT type '%s'", type)))
-            } else {
-                x <- split(strsplit(x, ",", fixed=TRUE), seq_len(nrow(x)))
-                x <- switch(type, 
-                            Character=, String=x,
-                            Integer=lapply(x, lapply, as.integer),
-                            Float=lapply(x, lapply, as.numeric),
-                            stop(sprintf("unhandled FORMAT type '%s'", type)))
-                names(x) <- NULL
-                x
+        x <- if (!is.na(d)) {
+            if (1L < d) {
+                idx <- as.integer(!is.na(x))
+                idx[idx == 0] <- d
+                xrep <- rep(x, idx)
+                x <- array(unlist(strsplit(xrep, ",", fixed=TRUE)),
+                           dim=c(d, nrow(x), ncol(x)),
+                           dimnames=list(NULL, NULL, colnames(x)))
+                x <- aperm(x, c(2, 3, 1))
             }
-   #     }
+            switch(type, 
+                   Flag= !is.na(x),
+                   Character=, String=x,
+                   Integer={ mode(x) <- "integer"; x },
+                   Float={ mode(x) <- "numeric"; x },
+                   stop(sprintf("unhandled FORMAT type '%s'", type)))
+        } else {
+            x <- split(strsplit(x, ",", fixed=TRUE), seq_len(nrow(x)))
+            x <- switch(type, 
+                        Character=, String=x,
+                        Integer=lapply(x, lapply, as.integer),
+                        Float=lapply(x, lapply, as.numeric),
+                        stop(sprintf("unhandled FORMAT type '%s'", type)))
+            names(x) <- NULL
+            x
+        }
     }, warning=function(w) {
         msg <- sprintf("unpackVcf field '%s': %s", id,
                        conditionMessage(w))
@@ -204,14 +199,33 @@ setMethod(scanVcf, c("connection", "missing"),
     })
 }
 
+.unpackVcfTag <- function(tag, id, n, type)
+{
+    if (is.null(names(tag)))
+        stop("'tag' must be a named list")
+
+    Map(function(elt, nm, id, n, type) {
+        if (is.na(idx <- match(nm, id))) {
+            msg <- sprintf("element '%s' not found in file header",
+                           nm)
+            stop(msg)
+        }
+    ## handle NULL elements
+        if (is.null(elt))
+            elt
+        else
+            .unpackVcfField(elt, id[idx], n[idx], type[idx])
+    }, tag, names(tag), MoreArgs=list(id, n, type))
+}
+
 .unpackVcfInfo <-
     function(info, id, n, type)
 {
-    result <- Map(.unpackVcfField, info, id, n, type)
-    lapply(result, function(elt) {
+    res <- .unpackVcfTag(info, id, n, type)
+    lapply(res, function(elt) {
         if (is(elt, "list"))
             unlist(elt, recursive=FALSE, use.names=FALSE)
-        else if (ncol(elt) == 1)
+        else if (!is(elt, "array") & ncol(elt) == 1)
             as.vector(elt)
         else 
             elt
@@ -220,23 +234,8 @@ setMethod(scanVcf, c("connection", "missing"),
 
 .unpackVcfGeno <-
     function(geno, id, n, type)
-    ## 'geno' is a named list of GENO information,
-    ## id, n, type are equal-length vectors of FORMAT information
 {
-    if (is.null(names(geno)))
-        stop("'GENO' must be a named list")
-    Map(function(elt, nm, id, n, type) {
-        if (is.na(idx <- match(nm, id))) {
-            msg <- sprintf("element '%s' not found in FORMAT identifiers",
-                           nm)
-            stop(msg)
-        }
-    ## handle NULL elements
-        if (is.null(elt))
-            elt
-        else 
-            .unpackVcfField(elt, id[idx], n[idx], type[idx])
-    }, geno, names(geno), MoreArgs=list(id, n, type))
+    .unpackVcfTag(geno, id, n, type)
 }
  
 setMethod(unpackVcf, c("list", "missing"),
