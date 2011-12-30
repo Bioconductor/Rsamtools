@@ -19,11 +19,11 @@
 \alias{yieldTabix,TabixFile-method}
 
 \alias{scanVcfHeader,TabixFile-method}
+\alias{scanVcf,TabixFile,GRanges-method}
+\alias{scanVcf,TabixFile,RangedData-method}
+\alias{scanVcf,TabixFile,RangesList-method}
 \alias{scanVcf,TabixFile,ScanVcfParam-method}
 \alias{scanVcf,TabixFile,missing-method}
-\alias{scanvcf,TabixFile,GRanges-method}
-\alias{scanVcf,TabixFile,RangesList-method}
-\alias{scanVcf,TabixFile,RangedData-method}
 
 \title{Manipulate tabix indexed tab-delimited files.}
 

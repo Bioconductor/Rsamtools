@@ -54,13 +54,12 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
         vcf_n = Rf_length(vcf),
         samp_n = Rf_length(sample), 
         imap_n = Rf_length(imap),
-        gmap_n = Rf_length(gmap),
-        map_n = Rf_length(gmap);
+        gmap_n = Rf_length(gmap);
 
-    SEXP nms = GET_NAMES(gmap);
+    SEXP gnms = GET_NAMES(gmap);
     SEXP inms = GET_NAMES(imap);
     int fmtidx, sampleidx;
-    int *mapidx = (int *) R_alloc(sizeof(int), map_n),
+    int *gmapidx = (int *) R_alloc(sizeof(int), gmap_n),
         *imapidx = (int *) R_alloc(sizeof(int), imap_n);
 
     /* allocate result and first 7 fixed fields */
@@ -108,7 +107,7 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
     PROTECT(eltnms = Rf_allocVector(VECSXP, 2));
     SET_VECTOR_ELT(eltnms, 0, R_NilValue);
     SET_VECTOR_ELT(eltnms, 1, sample);
-    for (j = 0; j < map_n; ++j) {
+    for (j = 0; j < gmap_n; ++j) {
         SEXPTYPE type = TYPEOF(VECTOR_ELT(gmap, j));
         if (NILSXP == type) {
             SET_VECTOR_ELT(geno, j, R_NilValue);
@@ -167,7 +166,7 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
         ifld = field;
         for (field = _it_init(&it1, ifld, ';'), fmtidx = 0;
             '\0' != *field; field = _it_next(&it1), fmtidx++) {
-            /* FIXME : allocate */
+            /* FIXME : allocate size of 'field' */
             char *txt = (char *) R_alloc(100, sizeof(char));
             strncpy(txt, field, 100);
             ikey = strtok(txt, "=");
@@ -181,7 +180,7 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
             imapidx[fmtidx] = j;
 
             ivlu = strtok(NULL, "=");
-            /* FIXME : set as "1" or "TRUE" */
+            /* FIXME : if NULL set as "1" or "TRUE" */
             if (NULL == ivlu)
                 ivlu = "1";
             SEXP matrix = VECTOR_ELT(info, imapidx[fmtidx]);
@@ -209,14 +208,14 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
         fmt = field;
         for (field = _it_init(&it2, fmt, ':'), fmtidx = 0;
              '\0' != *field; field = _it_next(&it2), fmtidx++) {
-            for (j = 0; j < map_n; ++j) {
-                if (0L == strcmp(field, CHAR(STRING_ELT(nms, j))))
+            for (j = 0; j < gmap_n; ++j) {
+                if (0L == strcmp(field, CHAR(STRING_ELT(gnms, j))))
                     break;
             }
-            if (map_n == j)
+            if (gmap_n == j)
                 Rf_error("record %d field %d FORMAT '%s' not found",
                          i + 1, fmtidx + 1, field);
-            mapidx[fmtidx] = j;
+            gmapidx[fmtidx] = j;
         }
 
         /* 'samples' field(s) */
@@ -224,7 +223,7 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
              '\0' != *sample; sample = _it_next(&it0), sampleidx++) {
             for (field = _it_init(&it2, sample, ':'), fmtidx = 0;
                  '\0' != *field; field = _it_next(&it2), fmtidx++) {
-                SEXP matrix = VECTOR_ELT(geno, mapidx[fmtidx]);
+                SEXP matrix = VECTOR_ELT(geno, gmapidx[fmtidx]);
                 int midx = sampleidx * vcf_n + i;
                 switch (TYPEOF(matrix)) {
                 case NILSXP:
@@ -251,13 +250,13 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
     for (i = 0, j = 0; i < Rf_length(geno); ++i) {
         if (R_NilValue != VECTOR_ELT(geno, i)) {
             SET_VECTOR_ELT(geno, j, VECTOR_ELT(geno, i));
-            SET_STRING_ELT(nms, j, STRING_ELT(nms, i));
+            SET_STRING_ELT(gnms, j, STRING_ELT(gnms, i));
             j++; 
         }
     }
-    PROTECT(nms = Rf_lengthgets(nms, j)); 
+    PROTECT(gnms = Rf_lengthgets(gnms, j)); 
     PROTECT(geno = Rf_lengthgets(geno, j));
-    geno = Rf_namesgets(geno, nms);
+    geno = Rf_namesgets(geno, gnms);
     UNPROTECT(2);
 
     for (i = 0, j = 0; i < Rf_length(info); ++i) {
