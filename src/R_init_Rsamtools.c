@@ -44,8 +44,8 @@ static const R_CallMethodDef callMethods[] = {
     {".as_bcf", (DL_FUNC) & as_bcf, 3},
     {".index_bcf", (DL_FUNC) & index_bcf, 1},
     /* vcffile.c */
-    {".scan_vcf", (DL_FUNC) & scan_vcf, 5},
-    {".scan_vcf_connection", (DL_FUNC) & scan_vcf_connection, 3},
+    {".scan_vcf", (DL_FUNC) & scan_vcf, 6},
+    {".scan_vcf_connection", (DL_FUNC) & scan_vcf_connection, 4},
     /* fafile.c */
     {".fafile_init", (DL_FUNC) & fafile_init, 0},
     {".fafile_open", (DL_FUNC) & fafile_open, 1},

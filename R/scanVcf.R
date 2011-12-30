@@ -16,32 +16,32 @@ setMethod(scanVcfHeader, "TabixFile",
 ## scanVcf 
 
 .vcf_map <-
-    function(hdr, geno, ...)
+    function(fmt, tag, ...)
 {
     ## map header FORMAT to R types
-    fmt <- hdr$Header[["FORMAT"]]
     map <- lapply(fmt$Type, switch,
                   String=character(), Integer=integer(),
-                  Float=numeric())
+                  Float=numeric(), Flag=logical())
     map[fmt$Number != 1] <- list(character())
     names(map) <- rownames(fmt)
 
-    ## user selected geno
-    if (!identical(character(), geno))
-        if (1L == length(geno) && is.na(geno)) {
+    ## user selected 
+    if (!identical(character(), tag))
+        if (1L == length(tag) && is.na(tag)) {
             map[] <- list(NULL)
         } else {
-            map[!names(map) %in% geno] <- list(NULL)
-            if (!all(geno %in% names(map)))
-                warning("values in ScanVcfParam(geno=c(...)) ",
-                        "not present in FORMAT field :", 
-                        geno[!geno %in% names(map)])
+            map[!names(map) %in% tag] <- list(NULL)
+            if (!all(tag %in% names(map)))
+                warning(paste("values in ScanVcfParam(", tag, "=c(...)) ",
+                        "not present in header :", 
+                        tag[!tag %in% names(map)], sep=""))
         }
     map
 }
 
 .vcf_scan <-
-    function(file, ..., geno=character(), space, start, end)
+    function(file, ..., info=character(), geno=character(), 
+             space, start, end)
 {
     tryCatch({
         space <- as.character(space)    # could be factor
@@ -51,10 +51,11 @@ setMethod(scanVcfHeader, "TabixFile",
         }
         hdr <- scanVcfHeader(file)[[1]]
         samples <- hdr$Sample
-        map <- .vcf_map(hdr, geno=geno)
+        imap <- .vcf_map(hdr$Header[["INFO"]], info)
+        gmap <- .vcf_map(hdr$Header[["FORMAT"]], geno)
         yieldSize <- 1000000L           # a guess, grows as necessary
         result <- .Call(.scan_vcf, .extptr(file), list(space, start,
-                        end), yieldSize, samples, map)
+                        end), yieldSize, samples, imap, gmap)
         names(result) <- sprintf("%s:%d-%d", space, start, end)
         result
     }, error = function(err) {
@@ -64,17 +65,18 @@ setMethod(scanVcfHeader, "TabixFile",
 }
 
 .vcf_scan_connection <-
-    function(file, ..., geno=character())
+    function(file, ..., info=character(), geno=character())
 {
     tryCatch({
         fl <- summary(file)$description
         hdr <- scanVcfHeader(fl)[[1]]
         samples <- hdr$Sample
-        map <- .vcf_map(hdr, geno=geno)
+        imap <- .vcf_map(hdr$Header[["INFO"]], info)
+        gmap <- .vcf_map(hdr$Header[["FORMAT"]], geno)
 
         txt <- readLines(file, ...)
         txt <- txt[!grepl("^#", txt)] # FIXME: handle header lines better
-        result <- .Call(.scan_vcf_connection, txt, samples, map)
+        result <- .Call(.scan_vcf_connection, txt, samples, imap, gmap)
         names(result) <- "*:*-*"
         result
     }, error = function(err) {
@@ -111,7 +113,8 @@ setMethod(scanVcf, c("TabixFile", "ScanVcfParam"),
         res <- callGeneric(path(file), param=param)
     else 
     ## ranges
-        res <- scanVcf(file, ..., geno=vcfGeno(param), param=vcfWhich(param))
+        res <- scanVcf(file, ..., info=vcfInfo(param), geno=vcfGeno(param), 
+                       param=vcfWhich(param))
     if (vcfTrimEmpty(param))
         lapply(res, function(rng) {
             rng[["GENO"]] <- Filter(Negate(is.null), rng[["GENO"]])
@@ -133,7 +136,7 @@ setMethod(scanVcf, c("character", "ScanVcfParam"),
     if (length(vcfWhich(param)) == 0) {
         con <- file(file)
         on.exit(close(con))
-        .vcf_scan_connection(con, geno=vcfGeno(param))
+        .vcf_scan_connection(con, info=vcfInfo(param), geno=vcfGeno(param))
     } else {
     ## ranges
       callGeneric(TabixFile(file), ..., param=param)
@@ -199,43 +202,16 @@ setMethod(scanVcf, c("connection", "missing"),
     })
 }
 
-.unpackVcfInfo <-
-    function(info, id, n, type)
+.unpackVcfTag <-
+    function(tag, id, n, type)
+    ## 'tag' is a named list of info or geno,
+    ## id, n, type are equal-length vectors of INFO or FORMAT info
 {
-    nrec <- length(info)
-
-    recs <- strsplit(info, ";", fixed=TRUE)
-    ridx <- rep(seq_along(recs), sapply(recs, length))
-    flds <- strsplit(unlist(recs), "=", fixed=TRUE)
-    tags <- factor(sapply(flds, "[[", 1), levels=id)
-    names(type) <- id
-
-    info <- Map(function(type, ridx, flds) {
-        res <- matrix(NA_character_, nrow=nrec, ncol=1)
-        res[ridx] <- 
-            if (type=="Flag") ""
-            else sapply(flds, "[[", 2)
-        res
-    }, type[levels(tags)], split(ridx, tags), split(flds, tags))
-
-    result <- Map(.unpackVcfField, info, id, n, type)
-    lapply(result, function(elt) {
-        if (is(elt, "list"))
-            unlist(elt, recursive=FALSE, use.names=FALSE)
-        else elt
-    })
-}
-
-.unpackVcfGeno <-
-    function(geno, id, n, type)
-    ## 'geno' is a named list,
-    ## id, n, type are equal-length vectors of FORMAT info
-{
-    if (is.null(names(geno)))
-        stop("'GENO' must be a named list")
+    if (is.null(names(tag)))
+        stop(print(tag, " must be a named list", sep=""))
     Map(function(elt, nm, id, n, type) {
         if (is.na(idx <- match(nm, id))) {
-            msg <- sprintf("element '%s' not found in FORMAT identifiers",
+            msg <- sprintf("element '%s' not found in file header identifiers",
                            nm)
             stop(msg)
         }
@@ -244,7 +220,7 @@ setMethod(scanVcf, c("connection", "missing"),
             elt
         else 
             .unpackVcfField(elt, id[idx], n[idx], type[idx])
-    }, geno, names(geno), MoreArgs=list(id, n, type))
+    }, tag, names(tag), MoreArgs=list(id, n, type))
 }
  
 setMethod(unpackVcf, c("list", "missing"),
@@ -252,12 +228,12 @@ setMethod(unpackVcf, c("list", "missing"),
 {
     if (!is.logical(info))
         x <- lapply(x, function(elt, id, n, type) {
-            elt[["INFO"]] <- .unpackVcfInfo(elt[["INFO"]], id, n, type)
+            elt[["INFO"]] <- .unpackVcfTag(elt[["INFO"]], id, n, type)
             elt
         }, rownames(info), info$Number, info$Type)
     if (!is.logical(geno))
         x <- lapply(x, function(elt, id, n, type) {
-            elt[["GENO"]] <- .unpackVcfGeno(elt[["GENO"]], id, n, type)
+            elt[["GENO"]] <- .unpackVcfTag(elt[["GENO"]], id, n, type)
             elt
         }, rownames(geno), geno$Number, geno$Type)
     x

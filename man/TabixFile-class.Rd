@@ -21,9 +21,9 @@
 \alias{scanVcfHeader,TabixFile-method}
 \alias{scanVcf,TabixFile,ScanVcfParam-method}
 \alias{scanVcf,TabixFile,missing-method}
+\alias{scanvcf,TabixFile,GRanges-method}
 \alias{scanVcf,TabixFile,RangesList-method}
 \alias{scanVcf,TabixFile,RangedData-method}
-\alias{scanvcf,TabixFile,GRanges-method}
 
 \title{Manipulate tabix indexed tab-delimited files.}
 
@@ -58,15 +58,18 @@ TabixFileList(...)
 
 \S4method{seqnamesTabix}{TabixFile}(file, ...)
 \S4method{headerTabix}{TabixFile}(file, ...)
+\S4method{scanTabix}{TabixFile,GRanges}(file, ..., param)
 \S4method{scanTabix}{TabixFile,RangesList}(file, ..., param)
 \S4method{scanTabix}{TabixFile,RangedData}(file, ..., param)
-\S4method{scanTabix}{TabixFile,GRanges}(file, ..., param)
 
 \S4method{yieldTabix}{TabixFile}(file, ..., yieldSize=1000000L)
 
 \S4method{scanVcfHeader}{TabixFile}(file, ...)
 \S4method{scanVcf}{TabixFile,missing}(file, ..., param)
 \S4method{scanVcf}{TabixFile,ScanVcfParam}(file, ..., param)
+\S4method{scanVcf}{TabixFile,GRanges}(file, ..., param)
+\S4method{scanVcf}{TabixFile,RangedData}(file, ..., param)
+\S4method{scanVcf}{TabixFile,RangesList}(file, ..., param)
 
 }
 
