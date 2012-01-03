@@ -47,20 +47,82 @@ const struct fld_fmt {
 
 const int N_FLDS = sizeof(FLD_FMT) / sizeof(FLD_FMT[0]);
 
+SEXP
+_alloc_types_list(int vcf_n, int col_n, SEXP map, SEXP eltnms)
+{
+    int i, j, map_n = Rf_length(map);
+    SEXP types;
+
+    PROTECT(types = Rf_allocVector(VECSXP, map_n));
+    for (j = 0; j < map_n; ++j) {
+        SEXPTYPE type = TYPEOF(VECTOR_ELT(map, j));
+        if (NILSXP == type) {
+            SET_VECTOR_ELT(types, j, R_NilValue);
+            continue;
+        }
+        SEXP elt = Rf_allocMatrix(type, vcf_n, col_n);
+        SET_VECTOR_ELT(types, j, elt);
+        switch (type) {
+        case LGLSXP:
+            for (i = 0; i < vcf_n * col_n; ++i)
+                LOGICAL(elt)[i] = FALSE;
+            break;
+        case INTSXP:
+            for (i = 0; i < vcf_n * col_n; ++i)
+                INTEGER(elt)[i] = R_NaInt;
+            break;
+        case REALSXP:
+            for (i = 0; i < vcf_n * col_n; ++i)
+                REAL(elt)[i] = R_NaReal;
+            break;
+        case STRSXP:
+            for (i = 0; i < vcf_n * col_n; ++i)
+                SET_STRING_ELT(elt, i, R_NaString);
+            break;
+        default:
+            Rf_error("(internal) unhandled type '%s'",
+                     type2char(type));
+        }
+        if (R_NilValue != eltnms)
+            elt = Rf_dimnamesgets(elt, eltnms);
+    }
+
+    UNPROTECT(1);
+    return types;
+}
+
+SEXP
+_trim_null(SEXP data, SEXP nms)
+{
+    int i, j = 0;
+    for (i = 0; i < Rf_length(data); ++i) {
+        if (R_NilValue != VECTOR_ELT(data, i)) {
+            SET_VECTOR_ELT(data, j, VECTOR_ELT(data, i));
+            SET_STRING_ELT(nms, j, STRING_ELT(nms, i));
+            j++;
+        }
+    }
+    PROTECT(nms = Rf_lengthgets(nms, j));
+    PROTECT(data = Rf_lengthgets(data, j));
+    data = Rf_namesgets(data, nms);
+    UNPROTECT(2);
+
+    return data;
+}
+
 SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
 {
     int i, j;
     const int
         vcf_n = Rf_length(vcf),
-        samp_n = Rf_length(sample), 
+        samp_n = Rf_length(sample),
         imap_n = Rf_length(imap),
         gmap_n = Rf_length(gmap);
 
     SEXP gnms = GET_NAMES(gmap);
     SEXP inms = GET_NAMES(imap);
     int fmtidx, sampleidx;
-    int *gmapidx = (int *) R_alloc(sizeof(int), gmap_n),
-        *imapidx = (int *) R_alloc(sizeof(int), imap_n);
+    int *gmapidx = (int *) R_alloc(sizeof(int), gmap_n), imapidx;
 
     /* allocate result and first 7 fixed fields */
     SEXP result, info, geno, eltnms;
@@ -75,70 +137,18 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
     UNPROTECT(1);
 
     /* allocate info */
-    PROTECT(info = Rf_allocVector(VECSXP, imap_n));
-    for (j = 0; j < imap_n; ++j) {
-        SEXPTYPE type = TYPEOF(VECTOR_ELT(imap, j));
-        if (NILSXP == type) {
-            SET_VECTOR_ELT(info, j, R_NilValue);
-            continue;
-        }
-        SEXP elt = Rf_allocMatrix(type, vcf_n, 1);
-        SET_VECTOR_ELT(info, j, elt);
-        switch (type) {
-        case INTSXP:
-            for (i = 0; i < vcf_n; ++i)
-                INTEGER(elt)[i] = R_NaInt;
-            break;
-        case REALSXP:
-            for (i = 0; i < vcf_n; ++i)
-                REAL(elt)[i] = R_NaReal;
-            break;
-        case STRSXP:
-            for (i = 0; i < vcf_n; ++i)
-                SET_STRING_ELT(elt, i, R_NaString);
-            break;
-        default:
-            Rf_error("(internal) unhandled type '%s'", type2char(type));
-        }
-    }
+    PROTECT(info = _alloc_types_list(vcf_n, 1, imap, R_NilValue));
 
     /* allocate geno, including matricies */
-    PROTECT(geno = Rf_allocVector(VECSXP, gmap_n));
     PROTECT(eltnms = Rf_allocVector(VECSXP, 2));
     SET_VECTOR_ELT(eltnms, 0, R_NilValue);
     SET_VECTOR_ELT(eltnms, 1, sample);
-    for (j = 0; j < gmap_n; ++j) {
-        SEXPTYPE type = TYPEOF(VECTOR_ELT(gmap, j));
-        if (NILSXP == type) {
-            SET_VECTOR_ELT(geno, j, R_NilValue);
-            continue;
-        }
-        SEXP elt = Rf_allocMatrix(type, vcf_n, samp_n);
-        SET_VECTOR_ELT(geno, j, elt);
-        switch (type) {
-        case INTSXP:
-            for (i = 0; i < vcf_n * samp_n; ++i)
-                INTEGER(elt)[i] = R_NaInt;
-            break;
-        case REALSXP:
-            for (i = 0; i < vcf_n * samp_n; ++i)
-                REAL(elt)[i] = R_NaReal;
-            break;
-        case STRSXP:
-            for (i = 0; i < vcf_n * samp_n; ++i)
-                SET_STRING_ELT(elt, i, R_NaString);
-            break;
-        default:
-            Rf_error("(internal) unhandled type '%s'", type2char(type));
-        }
-        elt = Rf_dimnamesgets(elt, eltnms);
-    }
-    UNPROTECT(1);
+    PROTECT(geno = _alloc_types_list(vcf_n, samp_n, gmap, eltnms));
 
     /* parse each line */
     for (i = 0; i < vcf_n; i++) {
         struct it it0, it1, it2;
-        char *record, *sample, *field, *ifld, *ikey, *ivlu, *fmt;
+        char *record, *sample, *field, *ifld, *ikey, *fmt;
 
         record = strdup(CHAR(STRING_ELT(vcf, i)));
 
@@ -163,48 +173,45 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
         }
 
         /* 'INFO' field */
-        ifld = field;
-        for (field = _it_init(&it1, ifld, ';'), fmtidx = 0;
-            '\0' != *field; field = _it_next(&it1), fmtidx++) {
-            /* FIXME : allocate size of 'field' */
-            char *txt = (char *) R_alloc(100, sizeof(char));
-            strncpy(txt, field, 100);
-            ikey = strtok(txt, "=");
-            for (j = 0; j < imap_n; ++j) {
-                if (0L == strcmp(ikey, CHAR(STRING_ELT(inms, j))))
+        for (ifld = _it_init(&it1, field, ';'); '\0' != *ifld;
+             ifld = _it_next(&it1)) {
+
+            ikey = _it_init(&it2, ifld, '=');
+            for (imapidx = 0; imapidx < imap_n; ++imapidx) {
+                if (0L == strcmp(ikey, CHAR(STRING_ELT(inms, imapidx))))
                     break;
             }
-            if (imap_n == j)
-                Rf_error("record %d field %d INFO '%s' not found",
-                         i + 1, fmtidx + 1, ikey);
-            imapidx[fmtidx] = j;
+            if (imap_n == imapidx)
+                Rf_error("record %d INFO '%s' not found", i + 1, ikey);
 
-            ivlu = strtok(NULL, "=");
-            /* FIXME : if NULL set as "1" or "TRUE" */
-            if (NULL == ivlu)
-                ivlu = "1";
-            SEXP matrix = VECTOR_ELT(info, imapidx[fmtidx]);
+            SEXP matrix = VECTOR_ELT(info, imapidx);
             int midx = i;
-            switch (TYPEOF(matrix)) {
-            case NILSXP:
-                break;
-            case INTSXP:
-                INTEGER(matrix)[midx] = atoi(ivlu);
-                break;
-            case REALSXP:
-                REAL(matrix)[midx] = atof(ivlu);
-                break;
-            case STRSXP:
-                SET_STRING_ELT(matrix, midx, mkChar(ivlu));
-                break;
-            default:
-                Rf_error("(internal) unhandled type '%s'",
-                         type2char(TYPEOF(matrix)));
+
+            if (LGLSXP == TYPEOF(matrix)) {
+                LOGICAL(matrix)[midx] = TRUE;
+            } else {
+                field = _it_next(&it2);
+                switch (TYPEOF(matrix)) {
+                case NILSXP:
+                    break;
+                case INTSXP:
+                    INTEGER(matrix)[midx] = atoi(field);
+                    break;
+                case REALSXP:
+                    REAL(matrix)[midx] = atof(field);
+                    break;
+                case STRSXP:
+                    SET_STRING_ELT(matrix, midx, mkChar(field));
+                    break;
+                default:
+                    Rf_error("(internal) unhandled type '%s'",
+                             type2char(TYPEOF(matrix)));
+                }
             }
         }
-        field = _it_next(&it0);
 
         /* 'FORMAT' field */
+        field = _it_next(&it0);
         fmt = field;
         for (field = _it_init(&it2, fmt, ':'), fmtidx = 0;
              '\0' != *field; field = _it_next(&it2), fmtidx++) {
@@ -247,42 +254,18 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
     }
 
     /* remove NULL elements of info and geno  */
-    for (i = 0, j = 0; i < Rf_length(geno); ++i) {
-        if (R_NilValue != VECTOR_ELT(geno, i)) {
-            SET_VECTOR_ELT(geno, j, VECTOR_ELT(geno, i));
-            SET_STRING_ELT(gnms, j, STRING_ELT(gnms, i));
-            j++; 
-        }
-    }
-    PROTECT(gnms = Rf_lengthgets(gnms, j)); 
-    PROTECT(geno = Rf_lengthgets(geno, j));
-    geno = Rf_namesgets(geno, gnms);
-    UNPROTECT(2);
+    SET_VECTOR_ELT(result, N_FLDS - 2, _trim_null(info, inms));
+    SET_VECTOR_ELT(result, N_FLDS - 1, _trim_null(geno, gnms));
 
-    for (i = 0, j = 0; i < Rf_length(info); ++i) {
-        if (R_NilValue != VECTOR_ELT(info, i)) {
-            SET_VECTOR_ELT(info, j, VECTOR_ELT(info, i));
-            SET_STRING_ELT(inms, j, STRING_ELT(inms, i));
-            j++; 
-        }
-    }
-    PROTECT(inms = Rf_lengthgets(inms, j)); 
-    PROTECT(info = Rf_lengthgets(info, j));
-    info = Rf_namesgets(info, inms);
-    UNPROTECT(2);
-
-    SET_VECTOR_ELT(result, N_FLDS - 2, info);
-    SET_VECTOR_ELT(result, N_FLDS - 1, geno);
-
-    UNPROTECT(3);
+    UNPROTECT(4);
     return result;
 }
 
-SEXP scan_vcf(SEXP ext, SEXP space, SEXP yieldSize, SEXP sample, 
+SEXP scan_vcf(SEXP ext, SEXP space, SEXP yieldSize, SEXP sample,
               SEXP imap, SEXP gmap)
 {
     SEXP tbx = PROTECT(scan_tabix(ext, space, yieldSize));
- 
+
     for (int i = 0; i < Rf_length(tbx); ++i) {
         SEXP result = _split_vcf(VECTOR_ELT(tbx, i), sample, imap, gmap);
         SET_VECTOR_ELT(tbx, i, result);
