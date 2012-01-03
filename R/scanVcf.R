@@ -225,7 +225,7 @@ setMethod(scanVcf, c("connection", "missing"),
     lapply(res, function(elt) {
         if (is(elt, "list"))
             unlist(elt, recursive=FALSE, use.names=FALSE)
-        else if (!is(elt, "array") & ncol(elt) == 1)
+        else if (is(elt, "matrix") & ncol(elt) == 1)
             as.vector(elt)
         else 
             elt
