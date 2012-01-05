@@ -43,11 +43,25 @@ setMethod(isOpen, "BcfFile",
     ## simple key=value pairs --> DataFrame
     rex <- "^[[:alnum:]]+=[^<]"
     x <- strsplit(grep(rex, h, value=TRUE), "=")
-    meta <- DataFrame(row.names=sapply(x, "[[", 1),
+    rnms <- sapply(x, "[[", 1)
+    if (is(rnms, "character")) {
+        if (any(duplicated(rnms))) { 
+            warning("duplicate keys in header will be forced unique")
+            rnms <- make.unique(rnms)
+        }
+    }
+    meta <- DataFrame(row.names=rnms,
                       Value=sapply(x, "[[", 2))
+
     ## key=<values> as SimpleList of DataFrame's
     rex <- "^([[:alnum:]]+)=<(.*)>"
     lines <- grep(rex, h, value=TRUE)
+    if (length(lines) > 0) {
+        if (any(duplicated(lines))) { 
+            warning("duplicate INFO and FORMAT header lines will be ignored")
+            lines <- lines[duplicated(lines) == FALSE]
+        } 
+    }
     tags <- sub(rex, "\\1", lines)
 
     keyval0 <- sub(rex, "\\2", lines)
@@ -69,6 +83,7 @@ setMethod(isOpen, "BcfFile",
         rownames(df) <- entries[[id]]
         df
     })
+
     SimpleList(Reference=header[["Reference"]],
                Sample=header[["Sample"]],
                Header=c(DataFrameList(META=meta), tbls[unique(tags)]))
@@ -216,4 +231,3 @@ setMethod(indexBcf, "character",
 {
     indexBcf(BcfFile(file, character()), ...)
 })
-              

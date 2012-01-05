@@ -53,38 +53,49 @@ _alloc_types_list(int vcf_n, int col_n, SEXP map, SEXP eltnms)
     int i, j, map_n = Rf_length(map);
     SEXP types;
 
-    PROTECT(types = Rf_allocVector(VECSXP, map_n));
-    for (j = 0; j < map_n; ++j) {
-        SEXPTYPE type = TYPEOF(VECTOR_ELT(map, j));
-        if (NILSXP == type) {
-            SET_VECTOR_ELT(types, j, R_NilValue);
-            continue;
+    /* no INFO or GENO information in header */
+    if (map_n == 0) {
+        PROTECT(types = Rf_allocVector(VECSXP, 1));
+        SEXP elt = Rf_allocMatrix(STRSXP, vcf_n, 1);
+        SET_VECTOR_ELT(types, 0, elt);
+        for (i = 0; i < vcf_n; ++i)
+            SET_STRING_ELT(elt, i, R_NaString);
+    }
+    else {
+        PROTECT(types = Rf_allocVector(VECSXP, map_n));
+
+        for (j = 0; j < map_n; ++j) {
+            SEXPTYPE type = TYPEOF(VECTOR_ELT(map, j));
+            if (NILSXP == type) {
+                SET_VECTOR_ELT(types, j, R_NilValue);
+                continue;
+            }
+            SEXP elt = Rf_allocMatrix(type, vcf_n, col_n);
+            SET_VECTOR_ELT(types, j, elt);
+            switch (type) {
+            case LGLSXP:
+                for (i = 0; i < vcf_n * col_n; ++i)
+                    LOGICAL(elt)[i] = FALSE;
+                break;
+            case INTSXP:
+                for (i = 0; i < vcf_n * col_n; ++i)
+                    INTEGER(elt)[i] = R_NaInt;
+                break;
+            case REALSXP:
+                for (i = 0; i < vcf_n * col_n; ++i)
+                    REAL(elt)[i] = R_NaReal;
+                break;
+            case STRSXP:
+                for (i = 0; i < vcf_n * col_n; ++i)
+                    SET_STRING_ELT(elt, i, R_NaString);
+                break;
+            default:
+                Rf_error("(internal) unhandled type '%s'",
+                         type2char(type));
+            }
+            if (R_NilValue != eltnms)
+                elt = Rf_dimnamesgets(elt, eltnms);
         }
-        SEXP elt = Rf_allocMatrix(type, vcf_n, col_n);
-        SET_VECTOR_ELT(types, j, elt);
-        switch (type) {
-        case LGLSXP:
-            for (i = 0; i < vcf_n * col_n; ++i)
-                LOGICAL(elt)[i] = FALSE;
-            break;
-        case INTSXP:
-            for (i = 0; i < vcf_n * col_n; ++i)
-                INTEGER(elt)[i] = R_NaInt;
-            break;
-        case REALSXP:
-            for (i = 0; i < vcf_n * col_n; ++i)
-                REAL(elt)[i] = R_NaReal;
-            break;
-        case STRSXP:
-            for (i = 0; i < vcf_n * col_n; ++i)
-                SET_STRING_ELT(elt, i, R_NaString);
-            break;
-        default:
-            Rf_error("(internal) unhandled type '%s'",
-                     type2char(type));
-        }
-        if (R_NilValue != eltnms)
-            elt = Rf_dimnamesgets(elt, eltnms);
     }
 
     UNPROTECT(1);
@@ -94,20 +105,20 @@ _alloc_types_list(int vcf_n, int col_n, SEXP map, SEXP eltnms)
 SEXP
 _trim_null(SEXP data, SEXP nms)
 {
-    int i, j = 0;
-    for (i = 0; i < Rf_length(data); ++i) {
-        if (R_NilValue != VECTOR_ELT(data, i)) {
-            SET_VECTOR_ELT(data, j, VECTOR_ELT(data, i));
-            SET_STRING_ELT(nms, j, STRING_ELT(nms, i));
-            j++;
-        }
-    }
-    PROTECT(nms = Rf_lengthgets(nms, j));
-    PROTECT(data = Rf_lengthgets(data, j));
-    data = Rf_namesgets(data, nms);
-    UNPROTECT(2);
+   int i, j = 0;
+   for (i = 0; i < Rf_length(data); ++i) {
+       if (R_NilValue != VECTOR_ELT(data, i)) {
+           SET_VECTOR_ELT(data, j, VECTOR_ELT(data, i));
+           SET_STRING_ELT(nms, j, STRING_ELT(nms, i));
+           j++;
+       }
+   }
+   PROTECT(nms = Rf_lengthgets(nms, j));
+   PROTECT(data = Rf_lengthgets(data, j));
+   data = Rf_namesgets(data, nms);
+   UNPROTECT(2);
 
-    return data;
+   return data;
 }
 
 SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
@@ -173,39 +184,43 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
         }
 
         /* 'INFO' field */
-        for (ifld = _it_init(&it1, field, ';'); '\0' != *ifld;
-             ifld = _it_next(&it1)) {
+        int midx = i;
+        /* INFO field not parsed if no header information present */
+        if (imap_n == 0) {
+            SEXP matrix = VECTOR_ELT(info, 0);
+            SET_STRING_ELT(matrix, midx, mkChar(field)); 
+        } else { 
+            for (ifld = _it_init(&it1, field, ';'); '\0' != *ifld;
+                ifld = _it_next(&it1)) {
+                ikey = _it_init(&it2, ifld, '=');
+                for (imapidx = 0; imapidx < imap_n; ++imapidx) {
+                    if (0L == strcmp(ikey, CHAR(STRING_ELT(inms, imapidx))))
+                        break;
+                }
+                if (imap_n == imapidx)
+                    Rf_error("record %d INFO '%s' not found", i + 1, ikey);
 
-            ikey = _it_init(&it2, ifld, '=');
-            for (imapidx = 0; imapidx < imap_n; ++imapidx) {
-                if (0L == strcmp(ikey, CHAR(STRING_ELT(inms, imapidx))))
-                    break;
-            }
-            if (imap_n == imapidx)
-                Rf_error("record %d INFO '%s' not found", i + 1, ikey);
-
-            SEXP matrix = VECTOR_ELT(info, imapidx);
-            int midx = i;
-
-            if (LGLSXP == TYPEOF(matrix)) {
-                LOGICAL(matrix)[midx] = TRUE;
-            } else {
-                field = _it_next(&it2);
-                switch (TYPEOF(matrix)) {
-                case NILSXP:
-                    break;
-                case INTSXP:
-                    INTEGER(matrix)[midx] = atoi(field);
-                    break;
-                case REALSXP:
-                    REAL(matrix)[midx] = atof(field);
-                    break;
-                case STRSXP:
-                    SET_STRING_ELT(matrix, midx, mkChar(field));
-                    break;
-                default:
-                    Rf_error("(internal) unhandled type '%s'",
-                             type2char(TYPEOF(matrix)));
+                SEXP matrix = VECTOR_ELT(info, imapidx);
+                if (LGLSXP == TYPEOF(matrix)) {
+                    LOGICAL(matrix)[midx] = TRUE;
+                } else {
+                    field = _it_next(&it2);
+                    switch (TYPEOF(matrix)) {
+                    case NILSXP:
+                        break;
+                    case INTSXP:
+                        INTEGER(matrix)[midx] = atoi(field);
+                        break;
+                    case REALSXP:
+                        REAL(matrix)[midx] = atof(field);
+                        break;
+                    case STRSXP:
+                        SET_STRING_ELT(matrix, midx, mkChar(field));
+                        break;
+                    default:
+                        Rf_error("(internal) unhandled type '%s'",
+                                 type2char(TYPEOF(matrix)));
+                    }
                 }
             }
         }
@@ -252,7 +267,12 @@ SEXP _split_vcf(SEXP vcf, SEXP sample, SEXP imap, SEXP gmap)
         }
         free(record);
     }
-
+    /* FIXME: name for vector of unparsed INFO */
+    if (NILSXP == TYPEOF(inms)) {
+        PROTECT(inms = Rf_allocVector(STRSXP, 1));
+        SET_STRING_ELT(inms, 0, mkChar("INFO"));
+        UNPROTECT(1);
+    }
     /* remove NULL elements of info and geno  */
     SET_VECTOR_ELT(result, N_FLDS - 2, _trim_null(info, inms));
     SET_VECTOR_ELT(result, N_FLDS - 1, _trim_null(geno, gnms));
