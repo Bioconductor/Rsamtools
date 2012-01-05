@@ -22,7 +22,11 @@ setMethod(scanVcfHeader, "TabixFile",
     map <- lapply(fmt$Type, switch,
                   String=character(), Integer=integer(),
                   Float=numeric(), Flag=logical())
-    map[fmt$Number != 1] <- list(character())
+    ## FIXME: these types should be parsed to 'arrays' of true data type in C 
+    ##        (reassigns >1 and non-numeric))
+    d <- suppressWarnings(as.integer(fmt$Number))
+    map[is.na(d)] <- list(character())
+    map[d > 1] <- list(character())
     names(map) <- rownames(fmt)
 
     ## user selected 
@@ -167,6 +171,7 @@ setMethod(scanVcf, c("connection", "missing"),
     withCallingHandlers({
         x <- if (!is.na(d)) {
             if (1L < d) {
+            ## >1 
                 idx <- as.integer(!is.na(x))
                 idx[idx == 0] <- d
                 xrep <- rep(x, idx)
@@ -175,13 +180,15 @@ setMethod(scanVcf, c("connection", "missing"),
                            dimnames=list(NULL, NULL, colnames(x)))
                 x <- aperm(x, c(2, 3, 1))
             }
+            ## 1 and 0 
             switch(type, 
-                   Flag= !is.na(x),
+                   Flag=x,
                    Character=, String=x,
                    Integer={ mode(x) <- "integer"; x },
                    Float={ mode(x) <- "numeric"; x },
                    stop(sprintf("unhandled FORMAT type '%s'", type)))
         } else {
+            ## non-numeric
             x <- split(strsplit(x, ",", fixed=TRUE), seq_len(nrow(x)))
             x <- switch(type, 
                         Character=, String=x,
@@ -251,15 +258,20 @@ setMethod(unpackVcf, c("list", "missing"),
             elt[["GENO"]] <- .unpackVcfGeno(elt[["GENO"]], id, n, type)
             elt
         }, rownames(geno), geno$Number, geno$Type)
+
+    if (all(c(is.logical(info), is.logical(geno))))
+        warning("use unpackVcf(x, hdr) for complete parsing of INFO ",
+                "and GENO fields") 
     x
 })
 
 setMethod(unpackVcf, c("list", "character") ,
     function(x, hdr, ..., info=TRUE, geno=TRUE)
 {
+    hdr <- scanVcfHeader(hdr)
     if (info) {
         if (length(x[[1]]$INFO) != 0) {
-            info <- scanVcfHeader(hdr)[[1]][["Header"]][["INFO"]]
+            info <- hdr[[1]][["Header"]][["INFO"]]
             if (is.null(info)) {
                 msg <- sprintf("'INFO' vcf header info not found\n  path: %s",
                                hdr)
@@ -272,7 +284,7 @@ setMethod(unpackVcf, c("list", "character") ,
     }
     if (geno) {
         if (length(unlist(x[[1]]$GENO, use.names=FALSE)) != 0) {
-            geno <- scanVcfHeader(hdr)[[1]][["Header"]][["FORMAT"]]
+            geno <- hdr[[1]][["Header"]][["FORMAT"]]
             if (is.null(geno)) {
                 msg <- sprintf("'FORMAT' vcf header info not found\n  path: %s",
                                hdr)

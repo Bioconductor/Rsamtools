@@ -46,7 +46,8 @@ setMethod(isOpen, "BcfFile",
     rnms <- sapply(x, "[[", 1)
     if (is(rnms, "character")) {
         if (any(duplicated(rnms))) { 
-            warning("duplicate keys in header will be forced unique")
+            warning("duplicate keys in header will be forced to unique ",
+                    "rownames")
             rnms <- make.unique(rnms)
         }
     }

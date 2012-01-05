@@ -3,7 +3,6 @@ test_unpackVcfInfo <- function()
     .unpackVcfInfo <- Rsamtools:::.unpackVcfInfo
     fl <- system.file("extdata", "ex2.vcf", package="VariantAnnotation")
 
-    ## info
     fmt <- scanVcfHeader(fl)[[1]][["Header"]][["INFO"]]
     info <- scanVcf(fl)[[1]]$INFO
     res <- .unpackVcfInfo(info, rownames(fmt), fmt$Number, fmt$Type)
@@ -21,7 +20,6 @@ test_unpackVcfGeno <- function()
     .unpackVcfGeno <- Rsamtools:::.unpackVcfGeno
     fl <- system.file("extdata", "ex2.vcf", package="VariantAnnotation")
 
-    ## geno
     fmt <- scanVcfHeader(fl)[[1]][["Header"]][["FORMAT"]]
     geno <- scanVcf(fl)[[1]]$GENO
     res <- .unpackVcfGeno(geno, rownames(fmt), fmt$Number, fmt$Type)
