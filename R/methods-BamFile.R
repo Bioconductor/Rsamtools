@@ -289,17 +289,15 @@ setMethod(readBamGappedReads, "BamFile",
 }
 
 setMethod("summarizeOverlaps", c("GRanges", "BamFileList"),
-    function(features, reads, 
-             mode, 
-             ignore.strand = FALSE, ..., param = ScanBamParam())
+    function(features, reads, mode, ignore.strand = FALSE, 
+             ..., param = ScanBamParam())
 {
     .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
 })
 
 setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
-    function(features, reads, 
-             mode, 
-             ignore.strand = FALSE, ..., param = ScanBamParam())
+    function(features, reads, mode, ignore.strand = FALSE, 
+             ..., param = ScanBamParam())
 {
     .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
 })

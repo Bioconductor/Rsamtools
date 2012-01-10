@@ -262,29 +262,47 @@ setMethod(show, "BamViews", function(object) {
 
 ## summarizeOverlaps methods
 setMethod("summarizeOverlaps", c("GRanges", "BamViews"),
-    function(features, reads, 
-             mode, 
-             ignore.strand = FALSE, ..., param = ScanBamParam())
+    function(features, reads, mode, ignore.strand = FALSE, 
+             ..., param = ScanBamParam())
 {
-    reads <- BamFileList(bamPaths(reads))
-    .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
+    se <- .processBamFiles(features, BamFileList(bamPaths(reads)), mode, 
+                           ignore.strand, ..., param=param)
+    exptData(se) <- 
+        SimpleList(bamRanges=bamRanges(reads), 
+                   bamSamples=bamSamples(reads),
+                   bamExperiment=bamExperiment(reads), 
+                   bamIndicies=bamIndicies(reads),
+                   bamPaths=bamPaths(reads))
+    se 
 })
 
 setMethod("summarizeOverlaps", c("GRangesList", "BamViews"),
-    function(features, reads, 
-             mode, 
-             ignore.strand = FALSE, ..., param = ScanBamParam())
+    function(features, reads, mode, ignore.strand = FALSE, ..., 
+             param = ScanBamParam())
 {
-    reads <- BamFileList(bamPaths(reads))
-    .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
+    se <- .processBamFiles(features, BamFileList(bamPaths(reads)), mode, 
+                           ignore.strand, ..., param=param)
+    exptData(se) <- 
+        SimpleList(bamRanges=bamRanges(reads), 
+                   bamSamples=bamSamples(reads),
+                   bamExperiment=bamExperiment(reads), 
+                   bamIndicies=bamIndicies(reads),
+                   bamPaths=bamPaths(reads))
+    se 
 })
 
 setMethod("summarizeOverlaps", c("BamViews", "missing"),
-function(features, reads, 
-         mode, 
-         ignore.strand = FALSE, ..., param = ScanBamParam())
+function(features, reads, mode, ignore.strand = FALSE, 
+         ..., param = ScanBamParam())
 {
-  reads <- BamFileList(bamPaths(features))
-  features <- bamRanges(features)
-  .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
+    reads <- BamFileList(bamPaths(features))
+    se <- .processBamFiles(bamRanges(features), reads, mode, ignore.strand, 
+                           ..., param=param)
+    exptData(se) <- 
+        SimpleList(bamRanges=bamRanges(features), 
+                   bamSamples=bamSamples(features),
+                   bamExperiment=bamExperiment(features), 
+                   bamIndicies=bamIndicies(features),
+                   bamPaths=bamPaths(features))
+    se 
 })
