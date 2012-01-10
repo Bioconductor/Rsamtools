@@ -278,3 +278,13 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamViews"),
     reads <- BamFileList(bamPaths(reads))
     .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
 })
+
+setMethod("summarizeOverlaps", c("BamViews", "missing"),
+function(features, reads, 
+         mode, 
+         ignore.strand = FALSE, ..., param = ScanBamParam())
+{
+  reads <- BamFileList(bamPaths(features))
+  features <- bamRanges(features)
+  .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
+})
