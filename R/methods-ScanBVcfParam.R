@@ -1,61 +1,68 @@
 .ScanBcfParam <-
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             class="ScanBcfParam")
+             asGRanges=character(), class="ScanBcfParam")
 {
     if (1L == length(info) && is.na(info))
         info <- as.character(info)
     if (1L == length(geno) && is.na(geno))
         geno <- as.character(geno)
+    if (1L == length(asGRanges) && is.na(asGRanges))
+        asGRanges <- as.character(asGRanges)
+    else
+        stopifnot(asGRanges %in% c('info', 'geno'))
+
     new(class, which=which, info=info, geno=geno,
-        trimEmpty=trimEmpty)
+        trimEmpty=trimEmpty, asGRanges=asGRanges)
 }
 
 ## ScanBcfParam
 
 setMethod(ScanBcfParam, c(which="missing"),
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             ...)
+             asGRanges=character(), ...)
 {
     which <- IRangesList()
     names(which) <- character()
-    .ScanBcfParam(info, geno, trimEmpty, which, ...)
+    .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
 })
 
 setMethod(ScanBcfParam, c(which="RangesList"), 
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             ...)
+             asGRanges=character(), ...)
 {
-    .ScanBcfParam(info, geno, trimEmpty, which, ...)
+    .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
 })
 
 setMethod(ScanBcfParam, c(which="RangedData"),
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             ...)
+             asGRanges, ...)
 {
     which <- ranges(which)
-    .ScanBcfParam(info, geno, trimEmpty, which, ...)
+    .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
 })
 
 setMethod(ScanBcfParam, c(which="GRanges"),
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             ...)
+             asGRanges, ...)
 {
     which <- split(ranges(which), seqnames(which))
-    .ScanBcfParam(info, geno, trimEmpty, which, ...)
+    .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
 })
 
 ## ScanVcfParam
 
 setMethod(ScanVcfParam, "ANY",
-    function(info=character(), geno=character(), trimEmpty=TRUE, which, ...)
+    function(info=character(), geno=character(), trimEmpty=TRUE, which, 
+             asGRanges=character(), ...)
 {
-    ScanBcfParam(info, geno, trimEmpty, which, class="ScanVcfParam")
+    ScanBcfParam(info, geno, trimEmpty, which, asGRanges, class="ScanVcfParam")
 })
 
 setMethod(ScanVcfParam, "missing",
-    function(info=character(), geno=character(), trimEmpty=TRUE, which, ...)
+    function(info=character(), geno=character(), trimEmpty=TRUE, which, 
+             asGRanges=character(), ...)
 {
-    ScanBcfParam(info, geno, trimEmpty, class="ScanVcfParam")
+    ScanBcfParam(info, geno, trimEmpty, asGRanges=asGRanges, class="ScanVcfParam")
 })
 
 ## accessors
@@ -64,6 +71,7 @@ vcfInfo <- bcfInfo <- function(object) slot(object, "info")
 vcfGeno <- bcfGeno <- function(object) slot(object, "geno")
 vcfTrimEmpty <- bcfTrimEmpty <- function(object) slot(object, "trimEmpty")
 vcfWhich <- bcfWhich <- function(object) slot(object, "which")
+vcfAsGRanges <- function(object) slot(object, "asGRanges")
 
 setMethod(show, "ScanBVcfParam", function(object) 
 {
@@ -82,4 +90,5 @@ setMethod(show, "ScanBVcfParam", function(object)
                 length(bcfWhich(object))))
     cat(.clslbl("Info:"), .ptags(bcfInfo(object)), "\n")
     cat(.clslbl("Geno:"), .ptags(bcfGeno(object)), "\n")
+    cat(.clslbl("AsGRanges:"), .ptags(vcfAsGRanges(object)), "\n")
 })

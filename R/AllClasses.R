@@ -27,7 +27,8 @@ setClass("ScanBVcfParam",
       which="RangesList",
       info="character",
       geno="character",
-      trimEmpty="logical"),
+      trimEmpty="logical",
+      asGRanges="character"),
     prototype=prototype(
       trimEmpty=TRUE))
 

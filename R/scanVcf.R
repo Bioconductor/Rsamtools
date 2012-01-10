@@ -114,17 +114,18 @@ setMethod(scanVcf, c("TabixFile", "ScanVcfParam"),
 {
     ## no ranges
     if (length(vcfWhich(param)) == 0) 
-        res <- callGeneric(path(file), param=param)
+        result <- callGeneric(path(file), param=param)
     else 
     ## ranges
-        res <- scanVcf(file, ..., info=vcfInfo(param), geno=vcfGeno(param), 
+        result <- scanVcf(file, ..., info=vcfInfo(param), geno=vcfGeno(param), 
                        param=vcfWhich(param))
     if (vcfTrimEmpty(param))
-        lapply(res, function(rng) {
+        lapply(result, function(rng) {
             rng[["GENO"]] <- Filter(Negate(is.null), rng[["GENO"]])
             rng
         })
-    else res
+    else 
+        result
 })
 
 setMethod(scanVcf, c("TabixFile", "missing"),
@@ -189,7 +190,7 @@ setMethod(scanVcf, c("connection", "missing"),
                    stop(sprintf("unhandled FORMAT type '%s'", type)))
         } else {
             ## non-numeric
-            x <- split(strsplit(x, ",", fixed=TRUE), seq_len(nrow(x)))
+            x <- apply(x, 1, function(i) strsplit(i, ",", fixed=TRUE)) 
             x <- switch(type, 
                         Character=, String=x,
                         Integer=lapply(x, lapply, as.integer),
@@ -228,8 +229,8 @@ setMethod(scanVcf, c("connection", "missing"),
 .unpackVcfInfo <-
     function(info, id, n, type)
 {
-    res <- .unpackVcfTag(info, id, n, type)
-    lapply(res, function(elt) {
+    result <- .unpackVcfTag(info, id, n, type)
+    lapply(result, function(elt) {
         if (is(elt, "list"))
             unlist(elt, recursive=FALSE, use.names=FALSE)
         else if (is(elt, "matrix") & ncol(elt) == 1)
@@ -243,6 +244,12 @@ setMethod(scanVcf, c("connection", "missing"),
     function(geno, id, n, type)
 {
     .unpackVcfTag(geno, id, n, type)
+    #lapply(result, function(elt) {
+    #    if (is(elt, "list"))
+    #        unlist(elt, recursive=FALSE, use.names=FALSE)
+    #    else 
+    #        elt
+    #})
 }
  
 setMethod(unpackVcf, c("list", "missing"),

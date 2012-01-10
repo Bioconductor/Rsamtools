@@ -24,6 +24,7 @@
 \alias{vcfGeno}
 \alias{vcfTrimEmpty}
 \alias{vcfWhich}
+\alias{vcfAsGRanges}
 
 \alias{show,ScanBVcfParam-method}
 
@@ -40,18 +41,18 @@
 \usage{
 
 ScanBcfParam(info=character(), geno=character(), trimEmpty=TRUE,
-             which, ...)
+             which, asGRanges=character(), ...)
 \S4method{ScanBcfParam}{missing}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, ...)
+             which, asGRanges=character(), ...)
 \S4method{ScanBcfParam}{RangesList}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, ...)
+             which, asGRanges=character(), ...)
 \S4method{ScanBcfParam}{RangedData}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, ...)
+             which, asGRanges=character(), ...)
 \S4method{ScanBcfParam}{GRanges}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, ...)
+             which, asGRanges=character(), ...)
 
 ScanVcfParam(info=character(), geno=character(), trimEmpty=TRUE,
-             which, ...)
+             which, asGRanges=character(), ...)
 
 ## Accessors
 bcfInfo(object)
@@ -63,6 +64,7 @@ vcfInfo(object)
 vcfGeno(object)
 vcfTrimEmpty(object)
 vcfWhich(object)
+vcfAsGRanges(object)
 }
 
 \arguments{
@@ -83,6 +85,10 @@ vcfWhich(object)
     whose \code{POS} lies in the interval(s) \code{[start, end)} are
     returned. Methods defined for \code{ScanBcfParam} are available for
     \code{ScanVcfParam}.}
+
+  \item{asGRanges}{A character(1) indicating if \code{info} or \code{geno}
+    fields should be expanded into a long form \code{GRanges} object. Possible
+    values are 'info' or 'geno'. Currently only used with \code{readVcf}.}
 
   \item{object}{An instance of class \code{ScanBcfParam}.}
 
