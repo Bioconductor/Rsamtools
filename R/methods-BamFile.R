@@ -270,15 +270,15 @@ setMethod(readBamGappedReads, "BamFile",
 ## summarizeOverlaps methods
 .processBamFiles <- function(features, reads, mode, ignore.strand, ..., param){
     mode <- match.fun(mode)
-    if("package:parallel" %in% search() & .Platform$OS.type != "windows" ){
-      lapply <- mclapply}
+    if("package:parallel" %in% search() & .Platform$OS.type != "windows" )
+      lapply <- mclapply
     reads <- path(reads)
 
     lst <- lapply(reads,
                   function(bf) {
                     x <- readGappedAlignments(bf, param=param)
                     GenomicRanges:::.dispatch(x, features, mode=mode, 
-                              ignore.strand=ignore.strand)
+                        ignore.strand=ignore.strand)
                   }, ...)
 
     counts <- do.call(cbind, lst)

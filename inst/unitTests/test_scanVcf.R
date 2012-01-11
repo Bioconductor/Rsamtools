@@ -26,7 +26,7 @@ test_unpackVcfGeno <- function()
 
     checkEquals(typeof(unlist(res$GT)), "character")
     checkIdentical(lapply(res, class), list(GT="matrix", GQ="matrix",
-                   DP="matrix", HQ="array"))
+                   DP="matrix", HQ="list"))
     checkIdentical(as.integer(c(1, 3, 6, 7, 4, 8, 5, 0, 4, 2)),
                    as.vector(res$DP))
 } 

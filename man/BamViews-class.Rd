@@ -30,8 +30,6 @@
 \alias{readBamGappedAlignments,BamViews-method}
 \alias{show,BamViews-method}
 
-\alias{summarizeOverlaps,GRanges,BamViews-method}
-\alias{summarizeOverlaps,GRangesList,BamViews-method}
 \alias{summarizeOverlaps,BamViews,missing-method}
 
 
@@ -85,7 +83,7 @@ bamDirname(x, ...) <- value
 \S4method{show}{BamViews}(object)
 
 ## Counting
-\S4method{summarizeOverlaps}{GRanges,BamViews}(
+\S4method{summarizeOverlaps}{BamViews,missing}(
     features, reads, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
 
 }
@@ -145,23 +143,18 @@ bamDirname(x, ...) <- value
      then the returned object has no names.}
 
   \item{reads}{
-    A \code{\linkS4class{BamFileList}} that represents the data to be
-    counted by summarizeOverlaps. Metadata from the
-    \code{\linkS4class{BamFileList}} is stored in the \code{exptData}
-    slot of the \code{\linkS4class{SummarizedExperiment}}.
+    Missing when a \code{\linkS4class{BamViews}} is the only argument
+    supplied to \code{summarizeOverlaps}. \code{reads} are the files 
+    specified in \code{bamPaths} of the \code{\linkS4class{BamViews}} object.
   }
   \item{features}{
-    A \link{GRanges} or a \link{GRangesList} object of genomic regions of 
-    interest. When a \link{GRanges} is supplied, each row is considered a 
-    feature. When a \link{GRangesList} is supplied, each higher list-level is
-    considered a feature. This distinction is important when defining an overlap
-    between a read and a feature. See ?\code{summarizeOverlaps} for details.
+    A \code{\linkS4class{BamFileList}}. \code{features} are extracted from 
+    the \code{bamRanges} of the \code{\linkS4class{BamViews}} object.
 
-    When a \code{\linkS4class{BamFileList}} is the only argumnet provided to
-    \code{summarizeOverlaps} the \code{read} argument is taken from 
-    \code{bamPaths} and \code{features} from \code{bamRanges}. Metadata from
-    the \code{\linkS4class{BamFileList}} is stored in the \code{exptData}
-    slot of the \code{\linkS4class{SummarizedExperiment}}. 
+    Metadata from \code{bamPaths} and \code{bamSamples} are stored in the
+    \code{colData} slot of the \code{\linkS4class{SummarizedExperiment}} 
+    object. \code{bamExperiment} metadata are in the \code{exptData}
+    slot. 
   }
   \item{mode}{
     A function that defines the method to be used when a read overlaps
@@ -338,23 +331,17 @@ elementMetadata(aln)
 
 ##---------------------------------------------------------------------------##
 ## summarizeOverlaps with a BamViews object
-fls <- list.files(system.file("extdata", package="GenomicRanges"),
-    recursive=TRUE, pattern="*bam$", full=TRUE)
-bfs <- BamViews(fls)
 
-## 'features' are the annotations (GRanges or GRangesList)
-group_id <- c("A", "B", "C", "C", "D", "D", "E", "F", "G", "H", "H")
-features <- GRanges(
-    seqnames = Rle(c("chr2L", "chr2R", "chr2L", "chr2R", "chr2L", "chr2R", 
-        "chr2L", "chr2R", "chr2R", "chr3L", "chr3L")),
-    strand = strand(rep("+", length(group_id))),
-    ranges = IRanges(
-        start=c(1000, 2000, 3000, 3600, 7000, 7500, 4000, 4000, 3000, 5000, 5400),
-        width=c(500, 900, 500, 300, 600, 300, 500, 900, 500, 500, 500)),
-   DataFrame(group_id)
-)
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
 
-summarizeOverlaps(features, bfs, mode=Union, ignore.strand=TRUE)
+bv <- BamViews(fl, bamSamples=DataFrame(info="test", row.names="ex1"),
+               bamRanges=rng)
+se <- summarizeOverlaps(bv, mode=Union, ignore.strand=TRUE)
+
+## bamSamples and bamPaths metadata are in colData
+## bamExperiment metadata is in exptData 
+colData(se)
 
 }
 
