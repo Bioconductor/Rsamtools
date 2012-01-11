@@ -283,7 +283,11 @@ setMethod(readBamGappedReads, "BamFile",
 
     counts <- do.call(cbind, lst)
     colData <- DataFrame(fileName = reads)
-    rownames(colData) <- sub(".bai$", "", basename(reads))
+    if(!is.null(names(reads))){
+        rownames(colData) <- names(reads)
+    }else{
+        rownames(colData) <- sub(".bai$", "", basename(reads))
+    }
     SummarizedExperiment(assays=SimpleList(counts=as.matrix(counts)),
                          rowData=features, colData=colData)
 }
