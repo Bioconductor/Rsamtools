@@ -74,23 +74,6 @@ setGeneric("asBcf",
 setGeneric("indexBcf",
            function(file, ...) standardGeneric("indexBcf"))
 
-## vcf
-
-setGeneric("ScanVcfParam",
-           function(info=character(), geno=character(), trimEmpty=TRUE,
-                    which, asGRanges=character(), ...)
-           standardGeneric("ScanVcfParam"),
-           signature="which")
-
-setGeneric("scanVcfHeader",
-           function(file, ...) standardGeneric("scanVcfHeader"))
-
-setGeneric("scanVcf",
-           function(file, ..., param) standardGeneric("scanVcf"))
-
-setGeneric("unpackVcf", function(x, hdr, ..., info=TRUE, geno=TRUE)
-           standardGeneric("unpackVcf"),
-           signature=c("x", "hdr"))
 
 ## other
 

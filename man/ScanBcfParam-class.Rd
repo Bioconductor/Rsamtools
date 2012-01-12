@@ -16,19 +16,9 @@
 \alias{bcfTrimEmpty}
 \alias{bcfWhich}
 
-\alias{ScanVcfParam}
-\alias{ScanVcfParam-class}
-\alias{ScanVcfParam,missing-method}
-\alias{ScanVcfParam,ANY-method}
-\alias{vcfInfo}
-\alias{vcfGeno}
-\alias{vcfTrimEmpty}
-\alias{vcfWhich}
-\alias{vcfAsGRanges}
-
 \alias{show,ScanBVcfParam-method}
 
-\title{Parameters for scanning VCF / BCF files}
+\title{Parameters for scanning BCF files}
 \description{
 
   Use \code{ScanBcfParam()} to create a parameter object influencing the
@@ -45,13 +35,10 @@ ScanBcfParam(info=character(), geno=character(), trimEmpty=TRUE,
 \S4method{ScanBcfParam}{missing}(info=character(), geno=character(), trimEmpty=TRUE,
              which, asGRanges=character(), ...)
 \S4method{ScanBcfParam}{RangesList}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=character(), ...)
+             which,asGRanges=character(), ...)
 \S4method{ScanBcfParam}{RangedData}(info=character(), geno=character(), trimEmpty=TRUE,
              which, asGRanges=character(), ...)
 \S4method{ScanBcfParam}{GRanges}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=character(), ...)
-
-ScanVcfParam(info=character(), geno=character(), trimEmpty=TRUE,
              which, asGRanges=character(), ...)
 
 ## Accessors
@@ -60,21 +47,15 @@ bcfGeno(object)
 bcfTrimEmpty(object)
 bcfWhich(object)
 
-vcfInfo(object)
-vcfGeno(object)
-vcfTrimEmpty(object)
-vcfWhich(object)
-vcfAsGRanges(object)
 }
 
 \arguments{
 
   \item{info}{A character() vector of \sQuote{INFO} fields (see
-    \code{\link{scanVcfHeader}}) to be returned. Not currently
-    implemented.}
+    \link[VariantAnnotation]{scanVcfHeader}) to be returned.}
 
   \item{geno}{A character() vector of \sQuote{GENO} fields (see
-    \code{\link{scanVcfHeader}}) to be returned. \code{character(0)}
+    \link[VariantAnnotation]{scanVcfHeader}) to be returned. \code{character(0)}
     returns all fields, \code{NA_character_} returns none.}
 
   \item{trimEmpty}{A logical(1) indicating whether \sQuote{GENO} fields
@@ -83,12 +64,9 @@ vcfAsGRanges(object)
   \item{which}{An object, for which a method is defined (see usage,
     above), describing the sequences and ranges to be queried. Variants
     whose \code{POS} lies in the interval(s) \code{[start, end)} are
-    returned. Methods defined for \code{ScanBcfParam} are available for
-    \code{ScanVcfParam}.}
+    returned.} 
 
-  \item{asGRanges}{A character(1) indicating if \code{info} or \code{geno}
-    fields should be expanded into a long form \code{GRanges} object. Possible
-    values are 'info' or 'geno'. Currently only used with \code{readVcf}.}
+  \item{asGRanges}{For use with \code{ScanVcfParam} only.}
 
   \item{object}{An instance of class \code{ScanBcfParam}.}
 
@@ -113,16 +91,16 @@ vcfAsGRanges(object)
       whether empty \sQuote{GENO} fields are to be returned.}
   }
 }
-\section{Functionas and methods}{
+\section{Functions and methods}{
 
   See 'Usage' for details on invocation.
 
   Constructor:
   \describe{
 
-    \item{ScanVcfParam, ScanBcfParam:}{Returns a \code{ScanVcfParam} or
-      \code{ScanBcfParam} object. The \code{which} argument to the
-      constructor can be one of several types, as documented above.}  }
+    \item{ScanBcfParam:}{Returns a \code{ScanBcfParam} object. The 
+      \code{which} argument to the constructor can be one of several types, 
+      as documented above.}  }
 
   Accessors:
   \describe{
@@ -135,7 +113,7 @@ vcfAsGRanges(object)
   Methods:
   \describe{
 
-	\item{show}{Compactly display the object.}
+    \item{show}{Compactly display the object.}
 
   }
 }
@@ -144,21 +122,12 @@ vcfAsGRanges(object)
 }
 \seealso{
 
-  \code{\link{scanVcf}}
+  \link[VariantAnnotation]{scanVcf}
 
 }
 
 \examples{
-p0 <- ScanVcfParam()
-
-## subset of reads based on genomic coordinates
-which <- RangesList(seq1=IRanges(1000, 2000),
-                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
-p1 <- ScanVcfParam(which=which)
-
-## return only specified GENO field(s)
-p2 <- ScanVcfParam(geno="GT", which=which)
-
+## see ?ScanVcfParam examples
 }
 
 \keyword{classes}

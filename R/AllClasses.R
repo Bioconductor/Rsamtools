@@ -11,7 +11,7 @@ setClass("ScanBamParam",
            tag="character",
            what="character",
            which="RangesList"))
-         
+
 setClass("BamViews",
          representation=representation(
            bamPaths="character",
@@ -33,8 +33,6 @@ setClass("ScanBVcfParam",
       trimEmpty=TRUE))
 
 setClass("ScanBcfParam", contains="ScanBVcfParam")
-
-setClass("ScanVcfParam", contains="ScanBVcfParam")
 
 setClass("PileupParam",
     representation=representation(

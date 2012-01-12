@@ -16,13 +16,13 @@
 \alias{scanBcf,BcfFile-method}
 \alias{indexBcf,BcfFile-method}
 
-\title{Manipulate BCF or VCF files.}
+\title{Manipulate BCF files.}
 
 \description{
 
   Use \code{BcfFile()} to create a reference to a BCF (and optionally
-  its index) or VCF file. The reference remains open across calls to
-  methods, avoiding costly index re-loading.
+  its index). The reference remains open across calls to methods, 
+  avoiding costly index re-loading.
 
   \code{BcfFileList()} provides a convenient way of managing a list of
   \code{BcfFile} instances.
@@ -59,7 +59,7 @@ bcfMode(object)
 
   \item{con, object}{An instance of \code{BcfFile}.}
 
-  \item{file}{A character(1) vector of the VCF or BCF file path or, (for
+  \item{file}{A character(1) vector of the BCF file path or, (for
     indexBcf) an instance of \code{BcfFile} point to a BCF file.}
 
   \item{index}{A character(1) vector of the BCF index.}
@@ -71,7 +71,7 @@ bcfMode(object)
      further influence scanning.}
 
   \item{...}{Additional arguments. For \code{BcfFileList}, this can
-    either be a single character vector of paths to VCF / BCF files, or
+    either be a single character vector of paths to BCF files, or
     several instances of \code{BcfFile} objects.}
 
   \item{rw}{Mode of file; ignored.}

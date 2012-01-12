@@ -18,13 +18,6 @@
 \alias{scanTabix,TabixFile,GRanges-method}
 \alias{yieldTabix,TabixFile-method}
 
-\alias{scanVcfHeader,TabixFile-method}
-\alias{scanVcf,TabixFile,GRanges-method}
-\alias{scanVcf,TabixFile,RangedData-method}
-\alias{scanVcf,TabixFile,RangesList-method}
-\alias{scanVcf,TabixFile,ScanVcfParam-method}
-\alias{scanVcf,TabixFile,missing-method}
-
 \title{Manipulate tabix indexed tab-delimited files.}
 
 \description{
@@ -63,13 +56,6 @@ TabixFileList(...)
 \S4method{scanTabix}{TabixFile,RangedData}(file, ..., param)
 
 \S4method{yieldTabix}{TabixFile}(file, ..., yieldSize=1000000L)
-
-\S4method{scanVcfHeader}{TabixFile}(file, ...)
-\S4method{scanVcf}{TabixFile,missing}(file, ..., param)
-\S4method{scanVcf}{TabixFile,ScanVcfParam}(file, ..., param)
-\S4method{scanVcf}{TabixFile,GRanges}(file, ..., param)
-\S4method{scanVcf}{TabixFile,RangedData}(file, ..., param)
-\S4method{scanVcf}{TabixFile,RangesList}(file, ..., param)
 
 }
 
@@ -154,10 +140,6 @@ TabixFileList(...)
     \item{indexTabix}{This method operates on file paths, rather than
       \code{TabixFile} objects, to index tab-separated files. See
       \code{\link{indexTabix}}.}
-
-    \item{scanVcfHeader}{see \code{\link{scanVcfHeader}}}
-
-    \item{scanVcf}{see \code{\link{scanVcf}}}
 
     \item{show}{Compactly display the object.}
 

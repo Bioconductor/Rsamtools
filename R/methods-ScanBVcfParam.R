@@ -49,31 +49,14 @@ setMethod(ScanBcfParam, c(which="GRanges"),
     .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
 })
 
-## ScanVcfParam
-
-setMethod(ScanVcfParam, "ANY",
-    function(info=character(), geno=character(), trimEmpty=TRUE, which, 
-             asGRanges=character(), ...)
-{
-    ScanBcfParam(info, geno, trimEmpty, which, asGRanges, class="ScanVcfParam")
-})
-
-setMethod(ScanVcfParam, "missing",
-    function(info=character(), geno=character(), trimEmpty=TRUE, which, 
-             asGRanges=character(), ...)
-{
-    ScanBcfParam(info, geno, trimEmpty, asGRanges=asGRanges, class="ScanVcfParam")
-})
-
 ## accessors
 
-vcfInfo <- bcfInfo <- function(object) slot(object, "info")
-vcfGeno <- bcfGeno <- function(object) slot(object, "geno")
-vcfTrimEmpty <- bcfTrimEmpty <- function(object) slot(object, "trimEmpty")
-vcfWhich <- bcfWhich <- function(object) slot(object, "which")
-vcfAsGRanges <- function(object) slot(object, "asGRanges")
+bcfInfo <- function(object) slot(object, "info")
+bcfGeno <- function(object) slot(object, "geno")
+bcfTrimEmpty <- function(object) slot(object, "trimEmpty")
+bcfWhich <- function(object) slot(object, "which")
 
-setMethod(show, "ScanBVcfParam", function(object) 
+setMethod(show, "ScanBVcfParam", function(object)
 {
     .ptags <- function(tags) {
         if (length(tags))
@@ -81,7 +64,7 @@ setMethod(show, "ScanBVcfParam", function(object)
         else "character() [All]"
     }
     .clslbl <- function(lbl) {
-        cl <- 
+        cl <-
             if ("ScanBcfParam" == class(object)) "bcf" else "vcf"
         paste(cl, lbl, sep="")
     }
@@ -92,3 +75,4 @@ setMethod(show, "ScanBVcfParam", function(object)
     cat(.clslbl("Geno:"), .ptags(bcfGeno(object)), "\n")
     cat(.clslbl("AsGRanges:"), .ptags(vcfAsGRanges(object)), "\n")
 })
+
