@@ -270,7 +270,8 @@ function(features, reads, mode, ignore.strand = FALSE,
                            BamFileList(bamPaths(features)), mode, 
                            ignore.strand, ..., param=param)
     nms <- rownames(colData(se))
-    colData(se) <- cbind(colData(se), bamSamples(features))
+    colData(se) <- DataFrame(colData(se), bamSamples(features),
+                         bamIndicies(features))
     rownames(colData(se)) <- nms
     exptData(se) <- SimpleList(bamExperiment=bamExperiment(features)) 
     se 
