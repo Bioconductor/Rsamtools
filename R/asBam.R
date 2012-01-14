@@ -10,9 +10,9 @@ setMethod(asBam, "character",
     on.exit(unlink(ofl))
     tryCatch({
         if (!overwrite && file.exists(d0)) {
-            msg <-
-                sprintf("'destination' exists, 'overwrite' is FALSE\n  destination.bam: %s",
-                        "destination", "overwrite", d0)
+            msg <- sprintf("'%s' exists, '%s' is FALSE\n  %s: %s",
+                           "destination", "overwrite", "destination",
+                           d0)
             stop(msg)
         }
         result <- .Call(.as_bam, file, ofl)
