@@ -15,16 +15,20 @@
 \alias{filterBam,character-method}
 \alias{sortBam}
 \alias{sortBam,character-method}
+\alias{mergeBam}
+\alias{mergeBam,character-method}
+
 
 \title{
 
-  Import, count, index, and other operations on `BAM' (binary alignment)
+  Import, count, index, filter, sort, and merge `BAM' (binary alignment)
   files.
 
 }
 \description{
   Import binary `BAM' files into a list structure, with facilities for
-  selecting what fields and which records are imported.
+  selecting what fields and which records are imported, and other
+  operations to manipulate BAM files.
 }
 \usage{
 
@@ -49,6 +53,11 @@ sortBam(file, destination, ...)
 indexBam(files, ...)
 \S4method{indexBam}{character}(files, ...)
 
+mergeBam(files, destination, ...)
+\S4method{mergeBam}{character}(files, destination, region = RangedData(), ...,
+    overwrite = FALSE, header = character(), byQname = FALSE,
+    addRG = FALSE, compressLevel1 = FALSE, indexDestination = FALSE)
+
 }
 
 \arguments{
@@ -57,14 +66,19 @@ indexBam(files, ...)
     \code{asBam}) file to be processed.}
 
   \item{files}{The character() file names of the `BAM' file to be
-    processed.}
+    processed. For \code{mergeBam}, must satisfy \code{length(files) >=
+    2}.}
 
   \item{index}{The character(1) name of the index file of the 'BAM' file
     being processed; this is given \emph{without} the '.bai' extension.}
 
   \item{destination}{The character(1) file name of the location where
-    the sorted or filtered output file will be created. For \code{asBam}
-    and \code{sortBam} this is without the \dQuote{.bam} file suffix.}
+    the sorted, filtered, or merged output file will be created. For
+    \code{asBam} and \code{sortBam} this is without the \dQuote{.bam}
+    file suffix.}
+
+  \item{region}{A RangedData() instance with \code{>= 1} rows,
+    specifying the region of the BAM files to merged.}
 
   \item{\dots}{Additional arguments, passed to methods.}
 
@@ -77,6 +91,15 @@ indexBam(files, ...)
   \item{byQname}{A logical(1) indicating whether the sorted destination
     file should be sorted by Query-name (TRUE) or by mapping
     position (FALSE).}
+
+  \item{header}{A character(1) file path for the header information to
+    be used in the merged BAM file.}
+
+  \item{addRG}{A logical(1) indicating whether the file name should be
+    used as RG (read group) tag in the merged BAM file.}
+
+  \item{compressLevel1}{A logical(1) indicating whether the merged BAM
+    file should be compressed to zip level 1.}
     
   \item{maxMemory}{A numerical(1) indicating the maximal amount of
     memory (in MB) that the function is allowed to use.}
@@ -117,6 +140,10 @@ indexBam(files, ...)
 
   \code{indexBam} creates an index for each BAM file specified,
   analogous to the \sQuote{samtools index} function.
+
+  \code{mergeBam} merges 2 or more sorted BAM files. As with samtools,
+  the RG (read group) dictionary in the header of the BAM files is not
+  reconstructed.
   
   Details of the \code{ScanBamParam} class are provide on its help page;
   several salient points are reiterated here. \code{ScanBamParam} can

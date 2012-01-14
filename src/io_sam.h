@@ -8,6 +8,9 @@ SEXP scan_bam_template(SEXP tags);
 SEXP as_bam(SEXP fname, SEXP destination);
 SEXP sort_bam(SEXP fname, SEXP destinationPrefix, SEXP isByQname,
               SEXP maxMemory);
+SEXP merge_bam(SEXP fnames, SEXP destination, SEXP overwrite,
+               SEXP hname, SEXP regionStr, SEXP isByQname,
+               SEXP addRG, SEXP compressLevel1);
 SEXP index_bam(SEXP indexname);
 void scan_bam_cleanup();        /* error handling only */
 

@@ -27,6 +27,11 @@ setGeneric("sortBam",
            function(file, destination, ...)
            standardGeneric("sortBam"))
 
+setGeneric("mergeBam",
+           function(files, destination, ...)
+           standardGeneric("mergeBam"),
+           signature="files")
+
 setGeneric("indexBam",
            function(files, ...) standardGeneric("indexBam"))
 

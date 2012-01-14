@@ -22,6 +22,8 @@
 \alias{readBamGappedAlignments,BamFile-method}
 \alias{readBamGappedReads,BamFile-method}
 
+\alias{mergeBam,BamFileList-method}
+
 \alias{summarizeOverlaps,GRanges,BamFileList-method}
 \alias{summarizeOverlaps,GRangesList,BamFileList-method}
 
@@ -66,12 +68,13 @@ BamFileList(...)
     indexDestination=TRUE, param=ScanBamParam(what=scanBamWhat()))
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
+\S4method{mergeBam}{BamFileList}(files, destination, ...)
 \S4method{readBamGappedAlignments}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readBamGappedReads}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 
 ## counting
-\S4method{summarizeOverlaps}{GRanges,BamFileList}(
-    features, reads, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand = FALSE, ...,
+    param = ScanBamParam()) 
 }
 
 \arguments{
@@ -216,6 +219,11 @@ BamFileList(...)
     \item{sortBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{sortBam}} applied to the specified path.}
 
+    \item{mergeBam}{Merge several BAM files into a single BAM file. See
+      \code{\link{mergeBam}} for details; additional arguments supported
+      by \code{mergeBam,character-method} are also available for
+      \code{BamFileList}.}
+
     \item{readBamGappedAlignments, readBamGappedReads}{Visit
       the path in \code{path(file)}, returning the result of
       \code{readBamGappedAlignments} or \code{readBamGappedReads}
@@ -251,7 +259,7 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
 }, bf, rng)
 
 
-##---------------------------------------------------------------------------##
+##-----------------------------------------------------------------------##
 ## summarizeOverlaps with a BamFileList object
 fls <- list.files(system.file("extdata",package="GenomicRanges"),
     recursive=TRUE, pattern="*bam$", full=TRUE)
@@ -264,7 +272,8 @@ features <- GRanges(
         "chr2L", "chr2R", "chr2R", "chr3L", "chr3L")),
     strand = strand(rep("+", length(group_id))),
     ranges = IRanges(
-        start=c(1000, 2000, 3000, 3600, 7000, 7500, 4000, 4000, 3000, 5000, 5400),
+        start=c(1000, 2000, 3000, 3600, 7000, 7500, 4000, 4000, 3000,
+                5000, 5400),
         width=c(500, 900, 500, 300, 600, 300, 500, 900, 500, 500, 500)),
    DataFrame(group_id)
 )

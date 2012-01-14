@@ -1029,6 +1029,69 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
     return status < 0 ? R_NilValue : fout_name;
 }
 
+/* merge_bam */
+
+/* from bam_sort.c */
+
+#define MERGE_RG     1
+#define MERGE_LEVEL1 4
+#define MERGE_FORCE  8
+
+int bam_merge_core(int by_qname, const char *out, const char *headers,
+                   int n, char * const *fn, int flag, const char *reg);
+
+SEXP merge_bam(SEXP fnames, SEXP destination, SEXP overwrite,
+               SEXP hname, SEXP regionStr, SEXP isByQname,
+               SEXP addRG, SEXP compressLevel1)
+{
+    int i;
+
+    if (!IS_CHARACTER(fnames) || 2 > Rf_length(fnames))
+        Rf_error("'files' must be a character() with length >= 2");
+    if (!IS_CHARACTER(hname) || 1 <  Rf_length(hname))
+        Rf_error("'header' must be character() with length <= 1");
+    if (!IS_CHARACTER(destination) || 1 != Rf_length(destination))
+        Rf_error("'destination' must be character(1)");
+    if (!IS_LOGICAL(overwrite) || 1 != Rf_length(overwrite))
+        Rf_error("'overwrite' must be logical(1)");
+    if (!IS_CHARACTER(regionStr) || 1 <  Rf_length(regionStr))
+        Rf_error("'region' must define 0 or 1 regions");
+    if (!IS_LOGICAL(isByQname) || 1 != Rf_length(isByQname))
+        Rf_error("'isByQname' must be logical(1)");
+    if (!IS_LOGICAL(addRG) || 1 != Rf_length(addRG))
+        Rf_error("'addRG' must be logical(1)");
+    if (!IS_LOGICAL(compressLevel1) || 1 != Rf_length(compressLevel1))
+        Rf_error("'compressLevel1' must be logical(1)");
+
+    char ** fileNames = (char **)
+        R_alloc(sizeof(const char *), Rf_length(fnames));
+    for (i = 0; i < Rf_length(fnames); ++i)
+        fileNames[i] = (char *) translateChar(STRING_ELT(fnames, i));
+
+    const char *hfName = 0 == Rf_length(hname) ?
+        NULL : translateChar(STRING_ELT(hname, 0));
+
+    int flag = 0;
+    if (LOGICAL(addRG)[0])
+        flag |= MERGE_RG;
+    if (LOGICAL(overwrite)[0])
+        flag |= MERGE_FORCE;
+    if (LOGICAL(compressLevel1)[0])
+        flag |= MERGE_LEVEL1;
+
+    const char *region = 0 == Rf_length(regionStr) ?
+        NULL : translateChar(STRING_ELT(regionStr, 0));
+
+    int res = bam_merge_core(LOGICAL(isByQname)[0],
+                             translateChar(STRING_ELT(destination, 0)),
+                             hfName, Rf_length(fnames), fileNames,
+                             flag, region);
+    if (res < 0)
+        Rf_error("'mergeBam' failed with error code %d", res);
+
+    return destination;
+}
+
 /* sort_bam */
 
 SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname, SEXP maxMemory)

@@ -63,3 +63,10 @@ setMethod(countBam, "BamFileList",
     counts <- lapply(file, countBam, ..., param=param)
     do.call(rbind, counts)
 })
+
+setMethod(mergeBam, "BamFileList",
+    function(files, destination, ...)
+{
+    files <- sapply(files, path)
+    mergeBam(files, destination, ...)
+})
