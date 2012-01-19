@@ -105,7 +105,7 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
 setMethod(scanTabix, c("TabixFile", "RangesList"),
     function(file, ..., param)
 {
-    .tabix_scan(file, ..., space=space(param),
+    .tabix_scan(file, ..., space=as.character(space(param)),
                 start=.uunlist(start(param)),
                 end=.uunlist(end(param)))
 })
