@@ -81,7 +81,10 @@ setMethod(isOpen, "BcfFile",
             entries[[desc]] <- gsub("\"", "", entries[[desc]])
         id <- grep("ID", toupper(names(entries)))
         df <- do.call(DataFrame, entries[-id])
-        rownames(df) <- entries[[id]]
+        if (any(duplicated(entries[[id]]))) 
+            warning("duplicate ID's in header will be forced to unique ",
+                    "rownames")
+        rownames(df) <- make.unique(entries[[id]])
         df
     })
 
