@@ -54,7 +54,7 @@ indexBam(files, ...)
 \S4method{indexBam}{character}(files, ...)
 
 mergeBam(files, destination, ...)
-\S4method{mergeBam}{character}(files, destination, region = RangedData(), ...,
+\S4method{mergeBam}{character}(files, destination, ..., region = RangedData(),
     overwrite = FALSE, header = character(), byQname = FALSE,
     addRG = FALSE, compressLevel1 = FALSE, indexDestination = FALSE)
 
