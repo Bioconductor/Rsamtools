@@ -45,6 +45,15 @@ close.RsamtoolsFileList <-
     con
 }
 
+setMethod(names, "RsamtoolsFileList",
+    function(x)
+{
+    nms <- callNextMethod()
+    if (is.null(nms))
+        nms <- sapply(x, function(elt) basename(path(elt)))
+    nms
+})
+
 ## implementations
 
 BamFileList <- function(...) .RsamtoolsFileList(..., class="BamFile")

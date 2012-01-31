@@ -271,7 +271,7 @@ setMethod(readBamGappedReads, "BamFile",
 .processBamFiles <- function(features, reads, mode, ignore.strand, ..., param){
     mode <- match.fun(mode)
     if("package:parallel" %in% search() & .Platform$OS.type != "windows" )
-      lapply <- mclapply
+      lapply <- parallel::mclapply
     reads <- path(reads)
 
     lst <- lapply(reads,
