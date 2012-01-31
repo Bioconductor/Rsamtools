@@ -61,6 +61,17 @@ setMethod(scanFaIndex, "FaFile",
             seqlengths=structure(tbl[[2]], .Names=tbl[[1]]))
 })
 
+setMethod(scanFaIndex, "FaFileList",
+    function(file, ..., as=c("GRangesList", "GRanges"))
+{
+    lst <- lapply(file, scanFaIndex, ...)
+    switch(match.arg(as), GRanges={
+        unique(unlist(GRangesList(lst), use.names=FALSE))
+    }, GRangesList={
+        GRangesList(lst)
+    })
+})
+
 setMethod(countFa, "FaFile",
     function(file, ...)
 {

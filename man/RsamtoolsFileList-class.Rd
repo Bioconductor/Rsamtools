@@ -7,6 +7,7 @@
 \alias{isOpen,RsamtoolsFileList-method}
 \alias{open.RsamtoolsFileList}
 \alias{close.RsamtoolsFileList}
+\alias{names,RsamtoolsFileList-method}
 
 \title{A base class for managing lists of Rsamtools file references}
 
@@ -24,12 +25,13 @@
 \S4method{isOpen}{RsamtoolsFileList}(con, rw="")
 \S3method{open}{RsamtoolsFileList}(con, ...)
 \S3method{close}{RsamtoolsFileList}(con, ...)
+\S4method{names}{RsamtoolsFileList}(x)
 
 }
 
 \arguments{
 
-  \item{con, object}{An instance of a class derived from
+  \item{con, object, x}{An instance of a class derived from
     \code{RsamtoolsFileList}.}
 
   \item{rw}{Mode of file; ignored.}
@@ -59,6 +61,9 @@
     \item{open:}{Attempt to open each file in the list.}
 
     \item{close:}{Attempt to close each file in the list.}
+
+    \item{names:}{Names of each element of the list or, if names are
+      \code{NULL}, the basename of the path of each element.}
 
   }
 

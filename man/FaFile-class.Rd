@@ -13,6 +13,7 @@
 % methods
 \alias{indexFa,FaFile-method}
 \alias{scanFaIndex,FaFile-method}
+\alias{scanFaIndex,FaFileList-method}
 \alias{countFa,FaFile-method}
 \alias{scanFa,FaFile,GRanges-method}
 \alias{scanFa,FaFile,RangesList-method}
@@ -55,6 +56,7 @@ FaFileList(...)
 \S4method{indexFa}{FaFile}(file, ...)
 
 \S4method{scanFaIndex}{FaFile}(file, ...)
+\S4method{scanFaIndex}{FaFileList}(file, ..., as=c("GRangesList", "GRanges"))
 
 \S4method{countFa}{FaFile}(file, ...)
 
@@ -74,7 +76,7 @@ FaFileList(...)
 
   \item{file}{A character(1) vector of the fasta file path (for
     \code{FaFile}), or an instance of class \code{FaFile} or
-    \code{FaFileList} (for \code{getSeq}).}
+    \code{FaFileList} (for \code{scanFaIndex}, \code{getSeq}).}
 
   \item{param}{An optional \code{\linkS4class{GRanges}},
     \code{\linkS4class{RangesList}}, or \code{\linkS4class{RangedData}}
@@ -86,6 +88,12 @@ FaFileList(...)
     several instances of \code{FaFile} objects.}
 
   \item{rw}{Mode of file; ignored.}
+
+  \item{as}{character(1) specifying the return type, selected from
+  specified options. When \code{GRangesList}, index information from
+  each file is returned as an element of the list. When
+  \code{GRangesList}, index information is collapsed across files into
+  the unique index elements.}
 
 }
 
