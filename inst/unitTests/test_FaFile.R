@@ -8,6 +8,22 @@ test_FaFile_openclose <- function()
     checkIdentical(FALSE, isOpen(close(fa)))
 }
 
+test_FaFile_emptyfile <- function()
+{
+    fl <- tempfile()
+    file.create(fl)
+    checkException(suppressWarnings(open(fa <- FaFile(fl))),
+                   silent=TRUE)
+}
+    
+test_FaFile_emptyid <- function()
+{
+    fl <- tempfile()
+    cat(">\nACTA", file=fl)
+    open(fa <- FaFile(fl))
+    close(fa)
+}
+
 test_FaFile_scanFaIndex <- function()
 {
     .checkIdx <- function(idx) {

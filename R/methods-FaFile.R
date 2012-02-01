@@ -11,7 +11,7 @@ open.FaFile <-
     tryCatch({
         con$.extptr <- .Call(.fafile_open, path(con))
     }, error=function(err) {
-        stop(conditionMessage(err), "\n  file: ", path(file))
+        stop(conditionMessage(err), "\n  file: ", path(con))
     })
     invisible(con)
 }

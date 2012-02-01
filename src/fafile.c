@@ -43,7 +43,7 @@ SEXP fafile_init()
 SEXP fafile_open(SEXP filename)
 {
     if (!IS_CHARACTER(filename) || 1 != Rf_length(filename))
-        Rf_error("'filename' must be character(1)");
+        Rf_error("'file' must be character(1)");
 
     _FA_FILE *ffile = Calloc(1, _FA_FILE);
     const char *cfile = translateChar(STRING_ELT(filename, 0));
@@ -51,7 +51,7 @@ SEXP fafile_open(SEXP filename)
     ffile->index = _fa_tryopen(cfile);
     if (NULL == ffile->index) {
         Free(ffile);
-        Rf_error("'open' failed\n  filename: %s", cfile);
+        Rf_error("'open' index failed");
     }
 
     SEXP ext = PROTECT(R_MakeExternalPtr(ffile, FAFILE_TAG, filename));
@@ -84,12 +84,12 @@ SEXP fafile_isopen(SEXP ext)
 SEXP index_fa(SEXP filename)
 {
     if (!IS_CHARACTER(filename) || 1 != Rf_length(filename))
-        Rf_error("'filename' must be character(1)");
+        Rf_error("'file' must be character(1)");
 
     const char *cfile = translateChar(STRING_ELT(filename, 0));
     int err = fai_build(cfile);
     if (-1 == err)
-        Rf_error("'indexFa' failed\n  filename: %s", cfile);
+        Rf_error("'indexFa' build index failed");
 
     return filename;
 }

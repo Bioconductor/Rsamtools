@@ -94,6 +94,11 @@ faidx_t *fai_build_core(RAZF *rz)
 				}
 				name[l_name++] = c;
 			}
+			if (m_name < l_name + 2) { /* MTM: 0-length id */
+				m_name = l_name + 2;
+				kroundup32(m_name);
+				name = (char*)realloc(name, m_name);
+			}
 			name[l_name] = '\0';
 			if (ret == 0) {
 				fprintf(stderr, "[fai_build_core] the last entry has no sequence\n");
@@ -127,7 +132,12 @@ faidx_t *fai_build_core(RAZF *rz)
 			}
 		}
 	}
-	fai_insert_index(idx, name, len, line_len, line_blen, offset);
+	if (len < 0) {               /* MTM; should also check state */
+        fprintf(stderr, "[fai_build_core] no entries in file\n");
+        free(name); fai_destroy(idx);
+        return 0;
+    }
+    fai_insert_index(idx, name, len, line_len, line_blen, offset);
 	free(name);
 	return idx;
 }
@@ -200,6 +210,10 @@ int fai_build(const char *fn)
 		return -1;
 	}
 	fai = fai_build_core(rz);
+    if (fai == NULL) {          /* MTM */
+        free(str);
+        return -1;
+    }
 	razf_close(rz);
 	fp = fopen(str, "wb");
 	if (fp == 0) {

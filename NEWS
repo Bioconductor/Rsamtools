@@ -7,6 +7,8 @@ BUG FIXES
 
     o scanTabix would omit variants overlapping range ends
 
+    o scanFa would segfault on empty files or empty ids
+
 CHANGES IN VERSION 1.6.0
 ------------------------
 
