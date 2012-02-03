@@ -28,9 +28,10 @@ setClass("ScanBVcfParam",
       info="character",
       geno="character",
       trimEmpty="logical",
-      asGRanges="character"),
+      asGRanges="logical"),
     prototype=prototype(
-      trimEmpty=TRUE))
+      trimEmpty=TRUE,
+      asGRanges=FALSE))
 
 setClass("ScanBcfParam", contains="ScanBVcfParam")
 

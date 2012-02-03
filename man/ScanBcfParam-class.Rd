@@ -31,15 +31,15 @@
 \usage{
 
 ScanBcfParam(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=character(), ...)
+             which, asGRanges=FALSE, ...)
 \S4method{ScanBcfParam}{missing}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=character(), ...)
+             which, asGRanges=FALSE, ...)
 \S4method{ScanBcfParam}{RangesList}(info=character(), geno=character(), trimEmpty=TRUE,
-             which,asGRanges=character(), ...)
+             which, asGRanges=FALSE, ...)
 \S4method{ScanBcfParam}{RangedData}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=character(), ...)
+             which, asGRanges=FALSE, ...)
 \S4method{ScanBcfParam}{GRanges}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=character(), ...)
+             which, asGRanges=FALSE, ...)
 
 ## Accessors
 bcfInfo(object)
@@ -66,7 +66,7 @@ bcfWhich(object)
     whose \code{POS} lies in the interval(s) \code{[start, end)} are
     returned.} 
 
-  \item{asGRanges}{For use with \code{ScanVcfParam} only.}
+  \item{asGRanges}{A logical(1) for use with \code{ScanVcfParam} only.}
 
   \item{object}{An instance of class \code{ScanBcfParam}.}
 

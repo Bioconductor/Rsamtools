@@ -58,7 +58,7 @@ setGeneric("readPileup",
 
 setGeneric("ScanBcfParam",
            function(info=character(), geno=character(), trimEmpty=TRUE,
-                    which, asGRanges=character(), ...)
+                    which, asGRanges=FALSE, ...)
            standardGeneric("ScanBcfParam"),
            signature="which")
 

@@ -1,16 +1,22 @@
 .ScanBcfParam <-
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges=character(), class="ScanBcfParam")
+             asGRanges=FALSE, class="ScanBcfParam")
 {
     if (1L == length(info) && is.na(info))
         info <- as.character(info)
     if (1L == length(geno) && is.na(geno))
         geno <- as.character(geno)
-    if (1L == length(asGRanges) && is.na(asGRanges))
-        asGRanges <- as.character(asGRanges)
-    else
-        stopifnot(asGRanges %in% c('info', 'geno'))
-
+    if (asGRanges) {
+       if (length(geno) == 0 && length(info) == 0)
+           stop("when 'asGRanges=TRUE' one of 'geno' or 'info' ",
+                "must be specified")
+       if (length(geno) > 0 && length(info) > 0)
+           stop("when 'asGRanges=TRUE' only one of 'geno' or 'info' ",
+                "can be specified")
+       if (length(geno) > 1)
+           stop("when 'asGRanges=TRUE' only 1 element of 'geno' can ",
+                "be specified")
+    }
     new(class, which=which, info=info, geno=geno,
         trimEmpty=trimEmpty, asGRanges=asGRanges)
 }
@@ -19,7 +25,7 @@
 
 setMethod(ScanBcfParam, c(which="missing"),
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges=character(), ...)
+             asGRanges=FALSE, ...)
 {
     which <- IRangesList()
     names(which) <- character()
@@ -28,7 +34,7 @@ setMethod(ScanBcfParam, c(which="missing"),
 
 setMethod(ScanBcfParam, c(which="RangesList"), 
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges=character(), ...)
+             asGRanges=FALSE, ...)
 {
     .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
 })
@@ -43,7 +49,7 @@ setMethod(ScanBcfParam, c(which="RangedData"),
 
 setMethod(ScanBcfParam, c(which="GRanges"),
     function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges, ...)
+             asGRanges=FALSE, ...)
 {
     which <- split(ranges(which), seqnames(which))
     .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
