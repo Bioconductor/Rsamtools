@@ -211,10 +211,53 @@ SEXP header_tabix(SEXP ext)
     return result;
 }
 
-SEXP scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
+SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
+                        const int initial_size, SEXP state)
 {
-    const double REC_SCALE = 1.4;	/* scaling factor when pre-allocated
-	 * result needs to grow */
+    const double SCALE = 1.6;
+    int buflen = 4096;
+    char *buf = Calloc(buflen, char);
+
+    int linelen;
+    const char *line;
+
+    int irec = 0, nrec = initial_size, pidx;
+    SEXP record = NEW_CHARACTER(nrec);
+    PROTECT_WITH_INDEX(record, &pidx);
+
+    if (R_NilValue != state)
+        Rf_error("[internal] expected 'NULL' state in tabix_as_character");
+
+    while (NULL != (line = ti_read(tabix, iter, &linelen))) {
+
+        if (irec == nrec) {
+            record = Rf_lengthgets(record, nrec * SCALE);
+            REPROTECT(record, pidx);
+            nrec = Rf_length(record);
+        }
+
+        if (linelen + 1 > buflen) {
+            Free(buf);
+            buflen = 2 * linelen;
+            buf = Calloc(buflen, char);
+        }
+
+        memcpy(buf, line, linelen);
+        buf[linelen] = '\0';
+        SET_STRING_ELT(record, irec, mkChar(buf));
+
+        irec += 1;
+    }
+
+    Free(buf);
+    record = Rf_lengthgets(record, irec);
+    UNPROTECT(1);
+    return record;
+}
+
+SEXP scan_tabix(SEXP ext, SEXP space, SEXP yieldSize,
+                SEXP fun, SEXP state)
+{
     _scan_checkparams(space, R_NilValue, R_NilValue);
     if (!IS_INTEGER(yieldSize) || 1L != Rf_length(yieldSize))
         Rf_error("'yieldSize' must be integer(1)");
@@ -224,58 +267,35 @@ SEXP scan_tabix(SEXP ext, SEXP space, SEXP yieldSize)
     _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
 
     tabix_t *tabix = TABIXFILE(ext)->tabix;
+    SEXP spc = VECTOR_ELT(space, 0), result;
+    const int *start = INTEGER(VECTOR_ELT(space, 1)),
+        *end = INTEGER(VECTOR_ELT(space, 2)), nspc = Rf_length(spc);
+    SCAN_FUN *scan = (SCAN_FUN *) R_ExternalPtrAddr(fun);
+
+    PROTECT(result = NEW_LIST(nspc));
     if (0 != ti_lazy_index_load(tabix))
         Rf_error("'scanTabix' failed to load index");
 
-    SEXP spc = VECTOR_ELT(space, 0);
-    const int
-    *start = INTEGER(VECTOR_ELT(space, 1)),
-        *end = INTEGER(VECTOR_ELT(space, 2)), nspc = Rf_length(spc);
-
-    SEXP result = PROTECT(NEW_LIST(nspc));
-
-    int buflen = 4096;
-    char *buf = Calloc(buflen, char);
-
     for (int ispc = 0; ispc < nspc; ++ispc) {
-        int totrec = INTEGER(yieldSize)[0];
-        SEXP records = NEW_CHARACTER(totrec);
-        SET_VECTOR_ELT(result, ispc, records);	/* protect */
+        int ibeg, iend, tid;
+        ti_iter_t iter;
+        const char *tid_name;
+        SEXP elt;
 
-        int tid;
-        const char *s = CHAR(STRING_ELT(spc, ispc));
-        if (0 > (tid = ti_get_tid(tabix->idx, s)))
-            Rf_error("'%s' not present in tabix index", s);
-        int beg = start[ispc];
-        if (0 < beg) beg -= 1;
-        ti_iter_t iter = ti_queryi(tabix, tid, beg, end[ispc]);
+        ibeg = start[ispc] == 0 ? 0 : start[ispc] - 1;
+        iend = end[ispc];
+        tid_name = CHAR(STRING_ELT(spc, ispc));
+        tid = ti_get_tid(tabix->idx, tid_name);
+        if (0 > tid)
+            Rf_error("'%s' not present in tabix index", tid_name);
+        iter = ti_queryi(tabix, tid, ibeg, iend);
 
-        int linelen;
-        const char *line;
-        int irec = 0;
-        while (NULL != (line = ti_read(tabix, iter, &linelen))) {
-            if (totrec <= irec) {	/* grow */
-                totrec *= REC_SCALE;
-                records = Rf_lengthgets(records, totrec);
-                SET_VECTOR_ELT(result, ispc, records);
-            }
-            if (linelen + 1 > buflen) {
-                Free(buf);
-                buflen = 2 * linelen;
-                buf = Calloc(buflen, char);
-            }
-            memcpy(buf, line, linelen);
-            buf[linelen] = '\0';
-            SET_STRING_ELT(records, irec, mkChar(buf));
-            irec += 1;
-        }
+        elt = scan(tabix, iter, INTEGER(yieldSize)[0], state);
+        SET_VECTOR_ELT(result, ispc, elt);
 
         ti_iter_destroy(iter);
-        records = Rf_lengthgets(records, irec);
-        SET_VECTOR_ELT(result, ispc, records);
     }
 
-    Free(buf);
     UNPROTECT(1);
     return result;
 }

@@ -83,7 +83,9 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
 })
 
 .tabix_scan <-
-    function(file, ..., space, start, end)
+    function(file, ..., space, start, end,
+             tbxsym=getNativeSymbolInfo(".tabix_as_character",
+               "Rsamtools"))
 {
     tryCatch({
         if (!isOpen(file)) {
@@ -93,7 +95,8 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
 
         yieldSize <- 1000000L           # a guess, grows as necessary
         result <- .Call(.scan_tabix, .extptr(file),
-                        list(space, start, end), yieldSize)
+                        list(space, start, end), yieldSize,
+                        tbxsym$address, NULL)
         names(result) <- sprintf("%s:%d-%d", space, start, end)
         result
     }, error=function(err) {
