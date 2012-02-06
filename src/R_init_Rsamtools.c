@@ -59,7 +59,7 @@ static const R_CallMethodDef callMethods[] = {
     {".index_tabix", (DL_FUNC) & index_tabix, 8},
     {".header_tabix", (DL_FUNC) & header_tabix, 1},
     {".scan_tabix", (DL_FUNC) & scan_tabix, 5},
-    {".yield_tabix", (DL_FUNC) & yield_tabix, 2},
+    {".yield_tabix", (DL_FUNC) & yield_tabix, 5},
     {".tabix_as_character", (DL_FUNC) & tabix_as_character, 4},
     /* pileup */
     {".apply_pileups", (DL_FUNC) & apply_pileups, 5},

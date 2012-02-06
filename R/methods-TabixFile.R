@@ -93,9 +93,9 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
             on.exit(close(file))
         }
 
-        yieldSize <- 1000000L           # a guess, grows as necessary
+        yield <- 1000000L           # a guess, grows as necessary
         result <- .Call(.scan_tabix, .extptr(file),
-                        list(space, start, end), yieldSize,
+                        list(space, start, end), yield,
                         tbxsym$address, tbxstate)
         names(result) <- sprintf("%s:%d-%d", space, start, end)
         result
@@ -148,12 +148,16 @@ setMethod(scanTabix, c("character", "GRanges"),
 })
 
 .tabix_yield <-
-    function(file, ..., yieldSize)
+    function(file, ..., yieldSize, tbxgrow=FALSE,
+             tbxsym=getNativeSymbolInfo(".tabix_as_character",
+               "Rsamtools"), tbxstate=NULL)
+
 {
     tryCatch({
         if (!isOpen(file))
             open(file)
-        .Call(.yield_tabix, .extptr(file), as.integer(yieldSize))
+        .Call(.yield_tabix, .extptr(file), as.integer(yieldSize),
+              as.logical(tbxgrow), tbxsym$address, tbxstate)
     }, error=function(err) {
         stop("yield: ", conditionMessage(err), "\n  path: ",
              path(file), call.=FALSE)
