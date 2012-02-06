@@ -231,9 +231,9 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
     while (NULL != (line = ti_read(tabix, iter, &linelen))) {
 
         if (irec == nrec) {
-            record = Rf_lengthgets(record, nrec * SCALE);
+            nrec = nrec * SCALE;
+            record = Rf_lengthgets(record, nrec);
             REPROTECT(record, pidx);
-            nrec = Rf_length(record);
         }
 
         if (linelen + 1 > buflen) {
@@ -241,9 +241,9 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
             buflen = 2 * linelen;
             buf = Calloc(buflen, char);
         }
-
         memcpy(buf, line, linelen);
         buf[linelen] = '\0';
+
         SET_STRING_ELT(record, irec, mkChar(buf));
 
         irec += 1;

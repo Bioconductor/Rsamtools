@@ -45,6 +45,8 @@ libs: libs0
 	cp samtools/*.h "${R_PACKAGE_DIR}/include/samtools/"
 	cp samtools/bcftools/*h "${R_PACKAGE_DIR}/include/samtools/bcftools/"
 	cp tabix/*h "${R_PACKAGE_DIR}/include/tabix/"
+	cp samtools/bgzf.h samtools/kstring.h samtools/knetfile.h \
+		"${R_PACKAGE_DIR}/include/tabix/"
 	mkdir -p "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 	cp libbam.a libbcf.a libtabix.a "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 
