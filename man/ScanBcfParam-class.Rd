@@ -11,10 +11,12 @@
 \alias{ScanBcfParam,RangedData-method}
 \alias{ScanBcfParam,RangesList-method}
 \alias{ScanBcfParam,missing-method}
+\alias{bcfFixed}
 \alias{bcfInfo}
 \alias{bcfGeno}
 \alias{bcfTrimEmpty}
 \alias{bcfWhich}
+\alias{bcfAsGRanges}
 
 \alias{show,ScanBVcfParam-method}
 
@@ -30,26 +32,30 @@
 
 \usage{
 
-ScanBcfParam(info=character(), geno=character(), trimEmpty=TRUE,
+ScanBcfParam(fixed=character(), info=character(), geno=character(), trimEmpty=TRUE,
              which, asGRanges=FALSE, ...)
-\S4method{ScanBcfParam}{missing}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=FALSE, ...)
-\S4method{ScanBcfParam}{RangesList}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=FALSE, ...)
-\S4method{ScanBcfParam}{RangedData}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=FALSE, ...)
-\S4method{ScanBcfParam}{GRanges}(info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=FALSE, ...)
+\S4method{ScanBcfParam}{missing}(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
+\S4method{ScanBcfParam}{RangesList}(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
+\S4method{ScanBcfParam}{RangedData}(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
+\S4method{ScanBcfParam}{GRanges}(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
 
 ## Accessors
+bcfFixed(object)
 bcfInfo(object)
 bcfGeno(object)
 bcfTrimEmpty(object)
 bcfWhich(object)
+bcfAsGRanges(object)
 
 }
 
 \arguments{
+
+  \item{fixed}{A logical(1) for use with \code{ScanVcfParam} only.}
 
   \item{info}{A character() vector of \sQuote{INFO} fields (see
     \link[VariantAnnotation]{scanVcfHeader}) to be returned.}
@@ -89,6 +95,10 @@ bcfWhich(object)
       portions of \sQuote{GENO} to be returned. }
     \item{\code{trimEmpty}:}{Object of class \code{"logical"} indicating
       whether empty \sQuote{GENO} fields are to be returned.}
+    \item{\code{asGRanges}:}{Object of class \code{"logical"}. For use
+      with \code{ScanVcfParam} only.}
+    \item{\code{fixed}:}{Object of class \code{"character"}. For use
+      with \code{ScanVcfParam} only.}
   }
 }
 \section{Functions and methods}{
@@ -123,6 +133,7 @@ bcfWhich(object)
 \seealso{
 
   \link[VariantAnnotation]{scanVcf}
+  \link[VariantAnnotation]{ScanVcfParam}
 
 }
 

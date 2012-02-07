@@ -25,6 +25,7 @@ setClass("ScanBVcfParam",
     representation=representation(
       "VIRTUAL",
       which="RangesList",
+      fixed="character",
       info="character",
       geno="character",
       trimEmpty="logical",

@@ -1,7 +1,9 @@
 .ScanBcfParam <-
-    function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges=FALSE, class="ScanBcfParam")
+    function(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, class="ScanBcfParam")
 {
+    if (1L == length(fixed) && is.na(fixed))
+        fixed <- as.character(fixed)
     if (1L == length(info) && is.na(info))
         info <- as.character(info)
     if (1L == length(geno) && is.na(geno))
@@ -17,50 +19,52 @@
            stop("when 'asGRanges=TRUE' only 1 element of 'geno' can ",
                 "be specified")
     }
-    new(class, which=which, info=info, geno=geno,
+    new(class, which=which, fixed=fixed, info=info, geno=geno,
         trimEmpty=trimEmpty, asGRanges=asGRanges)
 }
 
 ## ScanBcfParam
 
 setMethod(ScanBcfParam, c(which="missing"),
-    function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges=FALSE, ...)
+    function(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
 {
     which <- IRangesList()
     names(which) <- character()
-    .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
+    .ScanBcfParam(fixed, info, geno, trimEmpty, which, asGRanges, ...)
 })
 
 setMethod(ScanBcfParam, c(which="RangesList"), 
-    function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges=FALSE, ...)
+    function(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
 {
-    .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
+    .ScanBcfParam(fixed, info, geno, trimEmpty, which, asGRanges, ...)
 })
 
 setMethod(ScanBcfParam, c(which="RangedData"),
-    function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges, ...)
+    function(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
 {
     which <- ranges(which)
-    .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
+    .ScanBcfParam(fixed, info, geno, trimEmpty, which, asGRanges, ...)
 })
 
 setMethod(ScanBcfParam, c(which="GRanges"),
-    function(info=character(), geno=character(), trimEmpty=TRUE, which,
-             asGRanges=FALSE, ...)
+    function(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
 {
     which <- split(ranges(which), seqnames(which))
-    .ScanBcfParam(info, geno, trimEmpty, which, asGRanges, ...)
+    .ScanBcfParam(fixed, info, geno, trimEmpty, which, asGRanges, ...)
 })
 
 ## accessors
 
+bcfFixed <- function(object) slot(object, "fixed")
 bcfInfo <- function(object) slot(object, "info")
 bcfGeno <- function(object) slot(object, "geno")
 bcfTrimEmpty <- function(object) slot(object, "trimEmpty")
 bcfWhich <- function(object) slot(object, "which")
+bcfAsGRanges <- function(object) slot(object, "asGRanges")
 
 setMethod(show, "ScanBVcfParam", function(object)
 {
@@ -77,8 +81,9 @@ setMethod(show, "ScanBVcfParam", function(object)
     cat("class:", class(object), "\n")
     cat(sprintf("%s: %d elements\n", .clslbl("Which"),
                 length(bcfWhich(object))))
+    cat(.clslbl("Fixed:"), .ptags(bcfFixed(object)), "\n")
     cat(.clslbl("Info:"), .ptags(bcfInfo(object)), "\n")
     cat(.clslbl("Geno:"), .ptags(bcfGeno(object)), "\n")
-    cat(.clslbl("AsGRanges:"), .ptags(vcfAsGRanges(object)), "\n")
+    cat(.clslbl("AsGRanges:"), .ptags(bcfAsGRanges(object)), "\n")
 })
 
