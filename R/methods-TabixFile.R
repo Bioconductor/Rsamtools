@@ -95,7 +95,7 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
         }
 
         tbxidx <- lapply(tbxidx, function(elt) {
-            if (is.null(elt)) elt else as.integer(elt)
+            if (is.null(elt)) elt else sort(unique(as.integer(elt)))
         })
         if (length(tbxidx) != length(space))
             stop("length(tbxidx) must equal length(space(param))")
@@ -153,7 +153,7 @@ setMethod(scanTabix, c("character", "GRanges"),
 })
 
 .tabix_yield <-
-    function(file, ..., yieldSize, tbxkeep=NULL, tbxgrow=FALSE,
+    function(file, ..., yieldSize, tbxidx=NULL, tbxgrow=FALSE,
              tbxsym=getNativeSymbolInfo(".tabix_as_character",
                "Rsamtools"), tbxstate=NULL)
 
@@ -161,9 +161,9 @@ setMethod(scanTabix, c("character", "GRanges"),
     tryCatch({
         if (!isOpen(file))
             open(file)
-        if (!is.null(tbxkeep))
-            tbxkeep <- as.integer(tbxkeep)
-        .Call(.yield_tabix, .extptr(file), tbxkeep,
+        if (!is.null(tbxidx))
+            tbxidx <- sort(unique(as.integer(tbxidx)))
+        .Call(.yield_tabix, .extptr(file), tbxidx,
               as.integer(yieldSize), as.logical(tbxgrow),
               tbxsym$address, tbxstate)
     }, error=function(err) {

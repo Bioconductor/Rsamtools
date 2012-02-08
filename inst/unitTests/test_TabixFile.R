@@ -58,3 +58,30 @@ test_TabixFile_header <- function()
     checkIdentical(hdr$seqnames, seqnamesTabix(fl))
     checkIdentical(character(), hdr$header)
 }
+
+test_TabixFile_scan_index <- function()
+{
+    tab <- open(TabixFile(fl))
+    param <- GRanges("chr1", IRanges(1, 10000))
+
+    exp <- scanTabix(tab, param=param)
+    obs <- scanTabix(tab, tbxidx=list(NULL), param=param)
+    checkIdentical(exp, obs)
+
+    idx <- list(c(1, 3, 5))
+    obs <- scanTabix(tab, tbxidx=idx, param=param)
+    checkIdentical(exp[[1]][idx[[1]]], obs[[1]])
+
+    idx <- list(integer())
+    obs <- scanTabix(tab, tbxidx=idx, param=param)
+    checkIdentical(character(), obs[[1]])
+
+    param <- GRanges(c("chr1", "chr2"),
+                     IRanges(c(1,1), width=100000))
+    exp <- scanTabix(tab, param=param)
+    idx <- list(NULL, c(1, 3, 5))
+    obs <- scanTabix(tab, tbxidx=idx, param=param)
+    checkIdentical(exp[[1]][[1]], obs[[1]][[1]])
+    checkIdentical(exp[[1]][idx[[2]]], obs[[1]][idx[[2]]])
+}
+
