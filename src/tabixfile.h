@@ -12,7 +12,8 @@ typedef struct {
 #define TABIXFILE(b) ((_TABIX_FILE *) R_ExternalPtrAddr(b))
 
 typedef SEXP SCAN_FUN(tabix_t *tabix, ti_iter_t iter,
-                      const int size, const Rboolean grow, SEXP state);
+                      const int *keep, const int size,
+                      const Rboolean grow, SEXP state);
 
 SCAN_FUN tabix_as_character;
 
@@ -25,7 +26,9 @@ SEXP index_tabix(SEXP filename, SEXP format,
                  SEXP seq, SEXP begin, SEXP end,
                  SEXP skip, SEXP comment, SEXP zeroBased);
 SEXP header_tabix(SEXP ext);
-SEXP scan_tabix(SEXP ext, SEXP space, SEXP yield, SEXP fun, SEXP state);
-SEXP yield_tabix(SEXP ext, SEXP yield, SEXP grow, SEXP fun, SEXP state);
+SEXP scan_tabix(SEXP ext, SEXP space, SEXP keep, SEXP yield,
+                SEXP fun, SEXP state);
+SEXP yield_tabix(SEXP ext, SEXP keep, SEXP yield, SEXP grow,
+                 SEXP fun, SEXP state);
 
 #endif
