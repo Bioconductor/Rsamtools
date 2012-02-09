@@ -84,7 +84,7 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
 
 .tabix_scan <-
     function(file, ..., space, start, end,
-             tbxidx=rep(list(NULL), length(space)), tbxyield=1000000L,
+             tbxidx=rep(list(NULL), length(space)), yieldSize=30000L,
              tbxsym=getNativeSymbolInfo(".tabix_as_character",
                "Rsamtools"), tbxstate=NULL)
 {
@@ -100,8 +100,9 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
         if (length(tbxidx) != length(space))
             stop("length(tbxidx) must equal length(space(param))")
         result <- .Call(.scan_tabix, .extptr(file),
-                        list(space, start, end), tbxidx, tbxyield,
-                        tbxsym$address, tbxstate)
+                        list(space, start, end), tbxidx,
+                        as.integer(yieldSize), tbxsym$address,
+                        tbxstate)
         names(result) <- sprintf("%s:%d-%d", space, start, end)
         result
     }, error=function(err) {
