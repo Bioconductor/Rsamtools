@@ -1,14 +1,32 @@
 ### =========================================================================
 ### findMateAlignment()
 ### -------------------------------------------------------------------------
-### Find the mate of each element in a GappedAlignments object 'x'.
-### 'x[i1]' and 'x[i2]' are considered mate iff:
-###   (A) names(x[i1]) == names(x[i2])
-###   (B) elementMetadata(x[i1])$mrnm == seqnames(x[i2])
-###   (C) elementMetadata(x[i1])$mpos == start(x[i2])
-###   (D) isFirstSegment(x[i1]) & isLastSegment(x[i2]) |
-###       isLastSegment(x[i1]) & isFirstSegment(x[i2])
+### For each element in GappedAlignments object 'x', finds its mate in
+### GappedAlignments object 'y'.
+### 'x[i1]' and 'y[i2]' are considered mate iff:
+###   (A) names(x[i1]) == names(y[i2])
+###   (B) elementMetadata(x[i1])$mrnm == seqnames(y[i2]) &
+###       elementMetadata(y[i2])$mrnm == seqnames(x[i1])
+###   (C) elementMetadata(x[i1])$mpos == start(y[i2]) &
+###       elementMetadata(y[i2])$mpos == start(x[i1])
+###   (D) isFirstSegment(x[i1]) & isLastSegment(y[i2]) |
+###       isFirstSegment(y[i2]) & isLastSegment(x[i1])
 ### We do NOT look at the "isize" column (TLEN field in SAM Spec).
+
+.checkElementMetadata <- function(arg, argname)
+{
+    if (!is(arg, "GappedAlignments"))
+        stop("'", argname, "' must be a GappedAlignments object")
+    eltmetadata <- elementMetadata(arg)
+    REQUIRED_COLNAMES <- c("flag", "mrnm", "mpos")
+    if (!all(REQUIRED_COLNAMES %in% colnames(eltmetadata))) {
+        colnames_in1string <- paste("\"", REQUIRED_COLNAMES, "\"", sep="",
+                                    collapse=", ")
+        stop("required columns in 'elementMetadata(", argname, ")': ",
+             colnames_in1string)
+    }
+    eltmetadata
+}
 
 ### TODO: Make isFirstSegment() an S4 generic function with methods for
 ### matrices, integer vectors, and GappedAlignments objects. Put this with the
@@ -92,70 +110,80 @@
                  check=FALSE)
 }
 
-### TODO: Maybe put this in IRanges. Maybe operate on a Hits object?
-.hasReverseHit <- function(query_hits, subject_hits)
+### Takes about 11 sec and 260MB of RAM to mate 1 million alignments.
+findMateAlignment <- function(x, y=NULL)
 {
-    if (!is.integer(query_hits) || !is.integer(subject_hits))
-        stop("'query_hits' and 'subject_hits' must be integer vectors")
-    if (length(query_hits) != length(subject_hits))
-        stop("'query_hits' and 'subject_hits' must have the same length")
-    is_dup <- IRanges:::duplicatedIntegerPairs(c(subject_hits, query_hits),
-                                               c(query_hits, subject_hits))
-    is_dup[length(query_hits)+seq_len(length(query_hits))]
-}
-
-### Takes about 10 sec and 250MB of RAM to mate 1 million alignments.
-findMateAlignment <- function(x)
-{
-    if (!is(x, "GappedAlignments"))
-        stop("'x' must be a GappedAlignments object")
-    x_eltmetadata <- elementMetadata(x)
-    X_REQUIRED_COLS <- c("flag", "mrnm", "mpos")
-    if (!all(X_REQUIRED_COLS %in% colnames(x_eltmetadata))) {
-        cols_in_1string <- paste("\"", X_REQUIRED_COLS, "\"", sep="",
-                                 collapse=", ")
-        stop("required columns in 'elementMetadata(x)': ", cols_in_1string)
-    }
-
+    x_eltmetadata <- .checkElementMetadata(x, "x")
     x_names <- names(x)
-    ## Before we pass 'x_names' to .findMatches() we inject NAs at positions
-    ## corresponding to alignments with an NA 'x_mpos' (i.e. PNEXT = 0), or to
-    ## unpaired reads, or to reads that are neither first or last mate.
-    x_mpos <- x_eltmetadata$mpos
+    x_seqnames <- as.character(seqnames(x))
+    x_start <- start(x)
     x_flag <- x_eltmetadata$flag
+    x_mrnm <- as.character(x_eltmetadata$mrnm)
+    x_mpos <- x_eltmetadata$mpos
+
+    ## Before we pass 'x_names' to .findMatches() we inject NAs at positions
+    ## corresponding to alignments with an NA in 'x_mrnm' or 'x_mpos' (i.e.
+    ## RNEXT = '*' or PNEXT = 0), or to unpaired reads, or to reads that are
+    ## neither first or last mate.
     x_flagbits <- bamFlagAsBitMatrix(x_flag)
     x_is_first <- .isFirstSegment.matrix(x_flagbits)
     x_is_last <- .isLastSegment.matrix(x_flagbits)
-    x_ignore <- which(is.na(x_mpos) | !(x_is_first | x_is_last))
+    x_ignore <- which(is.na(x_mrnm) |
+                      is.na(x_mpos) |
+                      !(x_is_first | x_is_last))
     x_names[x_ignore] <- NA_integer_
 
-    hits <- .findMatches(x_names, x_names, incomparables=NA_character_)
+    if (is.null(y)) {
+        y_names <- x_names
+        y_seqnames <- x_seqnames
+        y_start <- x_start
+        y_mrnm <- x_mrnm
+        y_mpos <- x_mpos
+        y_is_first <- x_is_first
+        y_is_last <- x_is_last
+    } else {
+        y_eltmetadata <- .checkElementMetadata(y, "y")
+        y_names <- names(y)
+        y_seqnames <- as.character(seqnames(y))
+        y_start <- start(y)
+        y_flag <- y_eltmetadata$flag
+        y_mrnm <- as.character(y_eltmetadata$mrnm)
+        y_mpos <- y_eltmetadata$mpos
+
+        ## Before we pass 'y_names' to .findMatches() we inject NAs at positions
+        ## corresponding to alignments with an NA in 'y_mrnm' or 'y_mpos' (i.e.
+        ## RNEXT = '*' or PNEXT = 0), or to unpaired reads, or to reads that are
+        ## neither first or last mate.
+        y_flagbits <- bamFlagAsBitMatrix(y_flag)
+        y_is_first <- .isFirstSegment.matrix(y_flagbits)
+        y_is_last <- .isLastSegment.matrix(y_flagbits)
+        y_ignore <- which(is.na(y_mrnm) |
+                          is.na(y_mpos) |
+                          !(y_is_first | y_is_last))
+        y_names[y_ignore] <- NA_integer_
+    }
+
+    hits <- .findMatches(x_names, y_names, incomparables=NA_character_)
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
 
     ## Keep hits that satisfy condition (C).
-    y_start <- start(x)
-    hit_is_C <- x_mpos[x_hits] == y_start[y_hits]
+    hit_is_C <- x_mpos[x_hits] == y_start[y_hits] &
+                y_mpos[y_hits] == x_start[x_hits]
     x_hits <- x_hits[hit_is_C]
     y_hits <- y_hits[hit_is_C]
 
     ## Keep hits that sattisfy condition (B).
-    x_mrnm <- as.character(x_eltmetadata$mrnm)
-    y_seqnames <- as.character(seqnames(x))
-    hit_is_B <- x_mrnm[x_hits] == y_seqnames[y_hits]
+    hit_is_B <- x_mrnm[x_hits] == y_seqnames[y_hits] &
+                y_mrnm[y_hits] == x_seqnames[x_hits]
     x_hits <- x_hits[hit_is_B]
     y_hits <- y_hits[hit_is_B]
 
     ## Keep hits that satisfy condition (D).
-    hit_is_D <- x_is_first[x_hits] & x_is_last[y_hits] |
-                x_is_last[x_hits] & x_is_first[y_hits]
+    hit_is_D <- x_is_first[x_hits] & y_is_last[y_hits] |
+                y_is_first[y_hits] & x_is_last[x_hits]
     x_hits <- x_hits[hit_is_D]
     y_hits <- y_hits[hit_is_D]
-
-    ## Keep hits that have a reverse hit.
-    has_rev_hit <- .hasReverseHit(x_hits, y_hits)
-    x_hits <- x_hits[has_rev_hit]
-    y_hits <- y_hits[has_rev_hit]
 
     is_dup <- duplicated(x_hits)
     if (any(is_dup)) {
