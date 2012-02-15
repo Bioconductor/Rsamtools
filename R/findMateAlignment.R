@@ -55,18 +55,21 @@
 ### .findMatches() is the same as match() except that it returns *all*
 ### the matches (in a Hits object, ordered by queryHits first, then by
 ### subjectHits).
-### TODO: Make findMatches() an S4 generic function with at least methods for
-### integer and character vectors. Like findOverlaps(), findMatches() could
-### support the 'select' arg (but with supported values "all", "first" and
-### "last" only, no need for "arbitrary") so that when used with
-### 'select="first"', it would be equivalent to match(). This stuff would go
-### in IRanges.
-.findMatches.integer <- function(query, subject, incomparables=NULL)
+### TODO: Make findMatches() an S4 generic function with at least a method for
+### vectors. Like findOverlaps(), findMatches() could support the 'select' arg
+### (but with supported values "all", "first" and "last" only, no need for
+### "arbitrary") so that when used with 'select="first"', it would be
+### equivalent to match(). This stuff would go in IRanges.
+.findMatches <- function(query, subject, incomparables=NULL)
 {
-    if (!is.integer(query) || !is.integer(subject))
-        stop("'query' and 'subject' must be integer vectors")
-    if (!is.null(incomparables) && !is.integer(incomparables))
-        stop("'incomparables' must be NULL or an integer vector")
+    if (!is.vector(query) || !is.vector(subject))
+        stop("'query' and 'subject' must be vectors")
+    if (class(query) != class(subject))
+        stop("'query' and 'subject' must be vectors of the same class")
+    if (!is.null(incomparables) && !(is.vector(incomparables) &&
+                                     class(incomparables) == class(query)))
+        stop("'incomparables' must be NULL or a vector ",
+             "of the same class as 'query' and 'subject'")
     m0 <- match(query, subject, incomparables=incomparables)
     query_hits0 <- which(!is.na(m0))
     if (length(query_hits0) == 0L) {
@@ -101,8 +104,7 @@
     is_dup[length(query_hits)+seq_len(length(query_hits))]
 }
 
-### Takes about 40 sec and 3.5GB to mate 1 million alignments :-/
-### TODO: Improve this!
+### Takes about 10 sec and 250MB of RAM to mate 1 million alignments.
 findMateAlignment <- function(x)
 {
     if (!is(x, "GappedAlignments"))
@@ -114,32 +116,28 @@ findMateAlignment <- function(x)
                                  collapse=", ")
         stop("required columns in 'elementMetadata(x)': ", cols_in_1string)
     }
-    x_mpos <- x_eltmetadata$mpos
-    y_start <- start(x)
 
-    ## Before we pass 'x_mpos' and 'y_start' to .findMatches.integer()
-    ## we inject NAs to positions corresponding to unpaired reads or to reads
-    ## that are neither first or last mate.
-    ## Note that doing this in 'x_mpos' should not be necessary because, IIUC,
-    ## according to SAM Spec, PNEXT should be 0 (i.e. mpos should be NA) for
-    ## unpaired reads. But doing this for 'y_start' is definitely needed.
+    x_names <- names(x)
+    ## Before we pass 'x_names' to .findMatches() we inject NAs at positions
+    ## corresponding to alignments with an NA 'x_mpos' (i.e. PNEXT = 0), or to
+    ## unpaired reads, or to reads that are neither first or last mate.
+    x_mpos <- x_eltmetadata$mpos
     x_flag <- x_eltmetadata$flag
     x_flagbits <- bamFlagAsBitMatrix(x_flag)
     x_is_first <- .isFirstSegment.matrix(x_flagbits)
     x_is_last <- .isLastSegment.matrix(x_flagbits)
-    x_ignore <- which(!(x_is_first | x_is_last))
-    x_mpos[x_ignore] <- NA_integer_
-    y_start[x_ignore] <- NA_integer_
+    x_ignore <- which(is.na(x_mpos) | !(x_is_first | x_is_last))
+    x_names[x_ignore] <- NA_integer_
 
-    hits <- .findMatches.integer(x_mpos, y_start, incomparables=NA_integer_)
+    hits <- .findMatches(x_names, x_names, incomparables=NA_character_)
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
 
-    ## Keep hits that satisfy condition (A).
-    x_names <- names(x)
-    hit_is_A <- x_names[x_hits] == x_names[y_hits]
-    x_hits <- x_hits[hit_is_A]
-    y_hits <- y_hits[hit_is_A]
+    ## Keep hits that satisfy condition (C).
+    y_start <- start(x)
+    hit_is_C <- x_mpos[x_hits] == y_start[y_hits]
+    x_hits <- x_hits[hit_is_C]
+    y_hits <- y_hits[hit_is_C]
 
     ## Keep hits that sattisfy condition (B).
     x_mrnm <- as.character(x_eltmetadata$mrnm)
