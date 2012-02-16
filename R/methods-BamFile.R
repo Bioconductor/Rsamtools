@@ -120,7 +120,8 @@ setMethod(sortBam, "BamFile",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "readBamGappedAlignments" and "readBamGappedReads" methods.
+### "readBamGappedAlignments", "readBamGappedReads" and
+### "readBamGappedAlignmentPairs" methods.
 ###
 
 ### A "flag filter" is represented as a 'flag' vector of length 2 with names
@@ -266,8 +267,25 @@ setMethod(readBamGappedReads, "BamFile",
     .bindExtraData(ans, use.names, param, bamcols)
 })
 
+setMethod(readBamGappedAlignmentPairs, "BamFile",
+          function(file, index=file, use.names=FALSE, param=NULL)
+{
+    if (!isTRUEorFALSE(use.names))
+        stop("'use.names' must be TRUE or FALSE")
+    if (!is.null(param))
+        stop("'param' not supported yet, sorry!\n",
+             "  You can request this feature on the bioc-devel mailing list.\n",
+             "  See: http://bioconductor.org/help/mailing-list/")
+    param <- ScanBamParam(what=c("flag", "mrnm", "mpos", "isize"))
+    galn <- readBamGappedAlignments(file, param=param, use.names=TRUE)
+    makeGappedAlignmentPairs(galn, use.names=use.names)
+})
 
-## summarizeOverlaps methods
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### "summarizeOverlaps" methods.
+###
+
 .processBamFiles <- function(features, reads, mode, ignore.strand, ..., param){
     mode <- match.fun(mode)
     if("package:parallel" %in% search() & .Platform$OS.type != "windows" )

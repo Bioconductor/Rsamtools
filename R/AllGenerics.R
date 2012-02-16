@@ -102,6 +102,11 @@ setGeneric("readBamGappedReads",
            standardGeneric("readBamGappedReads"),
            signature="file")
 
+setGeneric("readBamGappedAlignmentPairs",
+           function(file, index=file, use.names=FALSE, param=NULL)
+           standardGeneric("readBamGappedAlignmentPairs"),
+           signature="file")
+
 ## tabix
 
 setGeneric("seqnamesTabix", function(file, ...)
