@@ -8,17 +8,6 @@
         info <- as.character(info)
     if (1L == length(geno) && is.na(geno))
         geno <- as.character(geno)
-    if (asGRanges) {
-       if (length(geno) == 0 && length(info) == 0)
-           stop("when 'asGRanges=TRUE' one of 'geno' or 'info' ",
-                "must be specified")
-       if (length(geno) > 0 && length(info) > 0)
-           stop("when 'asGRanges=TRUE' only one of 'geno' or 'info' ",
-                "can be specified")
-       if (length(geno) > 1)
-           stop("when 'asGRanges=TRUE' only 1 element of 'geno' can ",
-                "be specified")
-    }
     new(class, which=which, fixed=fixed, info=info, geno=geno,
         trimEmpty=trimEmpty, asGRanges=asGRanges)
 }
