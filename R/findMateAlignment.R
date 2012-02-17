@@ -95,9 +95,9 @@
     if (length(query_hits0) == 0L) {
         query_hits <- subject_hits <- integer(0)
     } else {
+        subject_hits0 <- m0[query_hits0]
         subject_low2high <- IRanges:::.makeLow2highFromHigh2low(
                                 high2low(subject))
-        subject_hits0 <- m0[query_hits0]
         extra_hits <- subject_low2high[subject_hits0]
         query_nhits <- 1L + elementLengths(extra_hits)
         query_hits <- rep.int(query_hits0, query_nhits)
@@ -110,6 +110,29 @@
     new2("Hits", queryHits=query_hits, subjectHits=subject_hits,
                  queryLength=length(query), subjectLength=length(subject),
                  check=FALSE)
+}
+
+### Use to find all self matches in 'x'. A little bit faster than
+### 'findMatches(x, x, incomparables=NA_character_)' but not so much.
+.findMatches2.character <- function(x)
+{
+    xx <- match(x, x, nomatch=0L, incomparables=NA_character_)
+    xxo <- IRanges:::orderInteger(xx)
+    xx2 <- Rle(xx[xxo])
+    shift0 <- 0L
+    GS <- runLength(xx2)
+    if (runValue(xx2)[1L] == 0L) {
+        shift0 <- GS[1L]
+        GS <- GS[-1L]
+    }
+    ans <- IRanges:::makeAllGroupInnerHits(GS)
+    query_hits <- xxo[ans@queryHits + shift0]
+    subject_hits <- xxo[ans@subjectHits + shift0]
+    oo <- IRanges:::orderIntegerPairs(query_hits, subject_hits)
+    ans@queryHits <- query_hits[oo]
+    ans@subjectHits <- subject_hits[oo]
+    ans@queryLength <- ans@subjectLength <- length(x)
+    ans
 }
 
 ### Takes about 11 sec and 260MB of RAM to mate 1 million alignments.
@@ -136,13 +159,14 @@ findMateAlignment <- function(x, y=NULL)
     x_names[x_ignore] <- NA_integer_
 
     if (is.null(y)) {
-        y_names <- x_names
         y_seqnames <- x_seqnames
         y_start <- x_start
         y_mrnm <- x_mrnm
         y_mpos <- x_mpos
         y_is_first <- x_is_first
         y_is_last <- x_is_last
+        hits <- .findMatches(x_names, x_names, incomparables=NA_character_)
+        #hits <- .findMatches2.character(x_names)
     } else {
         y_eltmetadata <- .checkElementMetadata(y, "y")
         y_names <- names(y)
@@ -163,9 +187,9 @@ findMateAlignment <- function(x, y=NULL)
                           is.na(y_mpos) |
                           !(y_is_first | y_is_last))
         y_names[y_ignore] <- NA_integer_
+        hits <- .findMatches(x_names, y_names, incomparables=NA_character_)
     }
 
-    hits <- .findMatches(x_names, y_names, incomparables=NA_character_)
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
 

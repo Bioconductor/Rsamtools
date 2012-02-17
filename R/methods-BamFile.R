@@ -276,7 +276,9 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
         stop("'param' not supported yet, sorry!\n",
              "  You can request this feature on the bioc-devel mailing list.\n",
              "  See: http://bioconductor.org/help/mailing-list/")
-    param <- ScanBamParam(what=c("flag", "mrnm", "mpos", "isize"))
+    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
+    what <- c("flag", "mrnm", "mpos", "isize")
+    param <- ScanBamParam(flag=flag, what=what)
     galn <- readBamGappedAlignments(file, param=param, use.names=TRUE)
     makeGappedAlignmentPairs(galn, use.names=use.names)
 })
