@@ -11,7 +11,7 @@
 ###       elementMetadata(y[i2])$mpos == start(x[i1])
 ###   (D) isFirstSegment(x[i1]) & isLastSegment(y[i2]) |
 ###       isFirstSegment(y[i2]) & isLastSegment(x[i1])
-### We do NOT look at the "isize" column (TLEN field in SAM Spec).
+### TODO: We should also look at the 0x20 bit (isMateMinusStrand).
 
 .checkElementMetadata <- function(arg, argname)
 {
@@ -147,15 +147,24 @@ findMateAlignment <- function(x, y=NULL)
     x_mpos <- x_eltmetadata$mpos
 
     ## Before we pass 'x_names' to .findMatches() we inject NAs at positions
-    ## corresponding to alignments with an NA in 'x_mrnm' or 'x_mpos' (i.e.
-    ## RNEXT = '*' or PNEXT = 0), or to unpaired reads, or to reads that are
-    ## neither first or last mate.
+    ## corresponding to an alignment with any of these characteristics:
+    ##     1. Bit 0x1 (isPaired) is 0
+    ##     2. Read is neither first or last mate
+    ##     3. Bit 0x8 (hasUnmappedMate) is 1
+    ##     4. 'x_mrnm' is NA (i.e. RNEXT = '*')
+    ##     5. 'x_mpos' is NA (i.e. PNEXT = 0)
+    ## My understanding of the SAM Spec is that 3., 4. and 5. should happen
+    ## simultaneously but the Spec don't clearly state this.
     x_flagbits <- bamFlagAsBitMatrix(x_flag)
-    x_is_first <- .isFirstSegment.matrix(x_flagbits)
-    x_is_last <- .isLastSegment.matrix(x_flagbits)
-    x_ignore <- which(is.na(x_mrnm) |
-                      is.na(x_mpos) |
-                      !(x_is_first | x_is_last))
+    x_is_paired <- x_flagbits[ , "isPaired"]
+    x_is_first <- x_flagbits[ , "isFirstMateRead"]
+    x_is_last <- x_flagbits[ , "isSecondMateRead"]
+    x_has_unmappedmate <- x_flagbits[ , "hasUnmappedMate"]
+    x_ignore <- which(!x_is_paired |
+                      x_is_first == x_is_last |
+                      x_has_unmappedmate |
+                      is.na(x_mrnm) |
+                      is.na(x_mpos))
     x_names[x_ignore] <- NA_integer_
 
     if (is.null(y)) {
@@ -164,7 +173,7 @@ findMateAlignment <- function(x, y=NULL)
         y_mrnm <- x_mrnm
         y_mpos <- x_mpos
         y_is_first <- x_is_first
-        y_is_last <- x_is_last
+
         hits <- .findMatches(x_names, x_names, incomparables=NA_character_)
         #hits <- .findMatches2.character(x_names)
     } else {
@@ -176,17 +185,18 @@ findMateAlignment <- function(x, y=NULL)
         y_mrnm <- as.character(y_eltmetadata$mrnm)
         y_mpos <- y_eltmetadata$mpos
 
-        ## Before we pass 'y_names' to .findMatches() we inject NAs at positions
-        ## corresponding to alignments with an NA in 'y_mrnm' or 'y_mpos' (i.e.
-        ## RNEXT = '*' or PNEXT = 0), or to unpaired reads, or to reads that are
-        ## neither first or last mate.
         y_flagbits <- bamFlagAsBitMatrix(y_flag)
-        y_is_first <- .isFirstSegment.matrix(y_flagbits)
-        y_is_last <- .isLastSegment.matrix(y_flagbits)
-        y_ignore <- which(is.na(y_mrnm) |
-                          is.na(y_mpos) |
-                          !(y_is_first | y_is_last))
+        y_is_paired <- y_flagbits[ , "isPaired"]
+        y_is_first <- y_flagbits[ , "isFirstMateRead"]
+        y_is_last <- y_flagbits[ , "isSecondMateRead"]
+        y_has_unmappedmate <- y_flagbits[ , "hasUnmappedMate"]
+        y_ignore <- which(!y_is_paired |
+                          y_is_first == y_is_last |
+                          y_has_unmappedmate |
+                          is.na(y_mrnm) |
+                          is.na(y_mpos))
         y_names[y_ignore] <- NA_integer_
+
         hits <- .findMatches(x_names, y_names, incomparables=NA_character_)
     }
 
@@ -206,8 +216,7 @@ findMateAlignment <- function(x, y=NULL)
     y_hits <- y_hits[hit_is_B]
 
     ## Keep hits that satisfy condition (D).
-    hit_is_D <- x_is_first[x_hits] & y_is_last[y_hits] |
-                y_is_first[y_hits] & x_is_last[x_hits]
+    hit_is_D <- x_is_first[x_hits] != y_is_first[y_hits]
     x_hits <- x_hits[hit_is_D]
     y_hits <- y_hits[hit_is_D]
 
@@ -261,6 +270,7 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE)
     if (use.names)
         ans_names <- names(first)
     names(first) <- names(last) <- NULL
+    elementMetadata(first) <- elementMetadata(last) <- NULL
     GappedAlignmentPairs(first, last, first_is_proper, names=ans_names)
 }
 
