@@ -112,30 +112,26 @@
                  check=FALSE)
 }
 
-### Use to find all self matches in 'x'. A little bit faster than
-### 'findMatches(x, x, incomparables=NA_character_)' but not so much.
+### Use to find self matches in 'x'. Twice faster than
+### 'findMatches(x, x, incomparables=NA_character_)' and uses
+### twice less memory.
 .findMatches2.character <- function(x)
 {
-    xx <- match(x, x, nomatch=0L, incomparables=NA_character_)
+    xx <- match(x, x, nomatch=.Machine$integer.max, incomparables=NA_character_)
     xxo <- IRanges:::orderInteger(xx)
     xx2 <- Rle(xx[xxo])
-    shift0 <- 0L
-    GS <- runLength(xx2)
-    if (runValue(xx2)[1L] == 0L) {
-        shift0 <- GS[1L]
-        GS <- GS[-1L]
-    }
-    ans <- IRanges:::makeAllGroupInnerHits(GS)
-    query_hits <- xxo[ans@queryHits + shift0]
-    subject_hits <- xxo[ans@subjectHits + shift0]
-    oo <- IRanges:::orderIntegerPairs(query_hits, subject_hits)
-    ans@queryHits <- query_hits[oo]
-    ans@subjectHits <- subject_hits[oo]
+    GS <- runLength(xx2)  # group sizes
+    NG <- length(GS)  # nb of groups
+    if (runValue(xx2)[NG] == .Machine$integer.max)
+        GS <- GS[-NG]
+    ans <- IRanges:::makeAllGroupInnerHits(GS, hit.type=1L)
+    ans@queryHits <- xxo[ans@queryHits]
+    ans@subjectHits <- xxo[ans@subjectHits]
     ans@queryLength <- ans@subjectLength <- length(x)
     ans
 }
 
-### Takes about 11 sec and 260MB of RAM to mate 1 million alignments.
+### Takes about 6.5 sec and 300MB of RAM to mate 1 million alignments.
 findMateAlignment <- function(x, y=NULL)
 {
     x_eltmetadata <- .checkElementMetadata(x, "x")
@@ -174,8 +170,8 @@ findMateAlignment <- function(x, y=NULL)
         y_mpos <- x_mpos
         y_is_first <- x_is_first
 
-        hits <- .findMatches(x_names, x_names, incomparables=NA_character_)
-        #hits <- .findMatches2.character(x_names)
+        #hits <- .findMatches(x_names, x_names, incomparables=NA_character_)
+        hits <- .findMatches2.character(x_names)
     } else {
         y_eltmetadata <- .checkElementMetadata(y, "y")
         y_names <- names(y)
@@ -220,14 +216,29 @@ findMateAlignment <- function(x, y=NULL)
     x_hits <- x_hits[hit_is_D]
     y_hits <- y_hits[hit_is_D]
 
-    is_dup <- duplicated(x_hits)
-    if (any(is_dup)) {
-        have_more_than_one_mate <- unique(x_hits[is_dup])
-        stop("more than 1 mate found for elements ",
-             paste(have_more_than_one_mate, collapse=", "))
+    if (is.null(y)) {
+        x_hits_is_dup <- duplicated(x_hits)
+        y_hits_is_dup <- duplicated(y_hits)
+        is_dup <- x_hits_is_dup | y_hits_is_dup
+        if (any(is_dup)) {
+            have_more_than_one_mate <- unique(c(x_hits[x_hits_is_dup],
+                                                y_hits[y_hits_is_dup]))
+            stop("more than 1 mate found for elements ",
+                 paste(have_more_than_one_mate, collapse=", "))
+        }
+        ans <- rep.int(NA_integer_, length(x))
+        ans[x_hits] <- y_hits
+        ans[y_hits] <- x_hits
+    } else {
+        is_dup <- duplicated(x_hits)
+        if (any(is_dup)) {
+            have_more_than_one_mate <- unique(x_hits[is_dup])
+            stop("more than 1 mate found for elements ",
+                 paste(have_more_than_one_mate, collapse=", "))
+        }
+        ans <- rep.int(NA_integer_, length(x))
+        ans[x_hits] <- y_hits
     }
-    ans <- rep.int(NA_integer_, length(x))
-    ans[x_hits] <- y_hits
     ans
 }
 
