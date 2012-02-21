@@ -217,28 +217,18 @@ findMateAlignment <- function(x, y=NULL)
     y_hits <- y_hits[hit_is_D]
 
     if (is.null(y)) {
-        x_hits_is_dup <- duplicated(x_hits)
-        y_hits_is_dup <- duplicated(y_hits)
-        is_dup <- x_hits_is_dup | y_hits_is_dup
-        if (any(is_dup)) {
-            have_more_than_one_mate <- unique(c(x_hits[x_hits_is_dup],
-                                                y_hits[y_hits_is_dup]))
-            stop("more than 1 mate found for elements ",
-                 paste(have_more_than_one_mate, collapse=", "))
-        }
-        ans <- rep.int(NA_integer_, length(x))
-        ans[x_hits] <- y_hits
-        ans[y_hits] <- x_hits
-    } else {
-        is_dup <- duplicated(x_hits)
-        if (any(is_dup)) {
-            have_more_than_one_mate <- unique(x_hits[is_dup])
-            stop("more than 1 mate found for elements ",
-                 paste(have_more_than_one_mate, collapse=", "))
-        }
-        ans <- rep.int(NA_integer_, length(x))
-        ans[x_hits] <- y_hits
+        tmp <- x_hits
+        x_hits <- c(x_hits, y_hits)
+        y_hits <- c(y_hits, tmp)
     }
+    is_dup <- duplicated(x_hits)
+    if (any(is_dup)) {
+        have_more_than_one_mate <- unique(x_hits[is_dup])
+        stop("more than 1 mate found for elements ",
+             paste(have_more_than_one_mate, collapse=", "))
+    }
+    ans <- rep.int(NA_integer_, length(x))
+    ans[x_hits] <- y_hits
     ans
 }
 
