@@ -115,7 +115,7 @@
 ### Use to find self matches in 'x'. Twice faster than
 ### 'findMatches(x, x, incomparables=NA_character_)' and uses
 ### twice less memory.
-.findMatches2.character <- function(x)
+.findSelfMatches.character <- function(x)
 {
     xx <- match(x, x, nomatch=.Machine$integer.max, incomparables=NA_character_)
     xxo <- IRanges:::orderInteger(xx)
@@ -170,8 +170,7 @@ findMateAlignment <- function(x, y=NULL)
         y_mpos <- x_mpos
         y_is_first <- x_is_first
 
-        #hits <- .findMatches(x_names, x_names, incomparables=NA_character_)
-        hits <- .findMatches2.character(x_names)
+        hits <- .findSelfMatches.character(x_names)
     } else {
         y_eltmetadata <- .checkElementMetadata(y, "y")
         y_names <- names(y)
