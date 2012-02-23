@@ -139,11 +139,10 @@ setMethod(sortBam, "BamFile",
     ans
 }
 
-.normargParam <- function(param, what0)
+.normargParam <- function(param, flag0, what0)
 {
     if (is.null(param))
         param <- ScanBamParam()
-    flag0 <- scanBamFlag(isUnmappedQuery=FALSE)
     bamFlag(param) <-
         .combineBamFlagFilters(bamFlag(param, asInteger=TRUE), flag0)
     bamWhat(param) <- union(bamWhat(param), what0)
@@ -168,7 +167,8 @@ setMethod(sortBam, "BamFile",
 ### Returns a named list with 1 element per loaded column.
 .loadBamCols <- function(bamfile, param, what0)
 {
-    param <- .normargParam(param, what0)
+    flag0 <- scanBamFlag(isUnmappedQuery=FALSE)
+    param <- .normargParam(param, flag0, what0)
     res <- unname(scanBam(bamfile, param=param))
     if (length(res) == 0L)
         stop("scanBam() returned a list of length zero")
@@ -272,14 +272,10 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 {
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
-    if (!is.null(param))
-        stop("'param' not supported yet, sorry!\n",
-             "  You can request this feature on the bioc-devel mailing list.\n",
-             "  See: http://bioconductor.org/help/mailing-list/")
-    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
-    what <- c("flag", "mrnm", "mpos", "isize")
-    param <- ScanBamParam(flag=flag, what=what)
-    galn <- readBamGappedAlignments(file, param=param, use.names=TRUE)
+    flag0 <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
+    what0 <- c("flag", "mrnm", "mpos")
+    param <- .normargParam(param, flag0, what0)
+    galn <- readBamGappedAlignments(file, use.names=TRUE, param=param)
     makeGappedAlignmentPairs(galn, use.names=use.names)
 })
 

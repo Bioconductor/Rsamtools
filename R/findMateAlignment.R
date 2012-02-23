@@ -167,11 +167,15 @@ findMateAlignment <- function(x, verbose=FALSE)
         have_more_than_1_mate <- which(chunk.ans < 0L)
         if (length(have_more_than_1_mate) != 0L) {
             morethan1mate_idx <- chunk.idx[have_more_than_1_mate]
-            cat("\n-- More than 1 mate found in 'x' for elements: ",
+            cat("\n!! findMateAlignment() found more than 1 mate in 'x' ",
+                "for elements: ",
                 paste(morethan1mate_idx, collapse=", "),
-                ".\n-- See subsetted object below:\n", sep="")
-            show(x[morethan1mate_idx])
-            cat("-- Won't assign a mate to those elements.\n")
+                ".\n!! Details:\n!! ", sep="")
+            GenomicRanges:::showGappedAlignments(x[morethan1mate_idx],
+                                                 margin="!! ",
+                                                 with.classinfo=TRUE,
+                                                 print.seqlengths=FALSE)
+            cat("!! ==> won't assign a mate to those elements!\n")
             chunk.ans[have_more_than_1_mate] <- NA_integer_
         }
         if (verbose)
