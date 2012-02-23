@@ -82,8 +82,7 @@
                                       x_mrnm, x_seqnames,
                                       x_mpos, x_start,
                                       x_is_mate_minus, x_is_minus,
-                                      x_is_first,
-                                      chunk.offset=0L)
+                                      x_is_first)
 {
     hits <- IRanges:::makeAllGroupInnerHits(group.sizes, hit.type=1L)
     x_hits <- queryHits(hits)
@@ -104,14 +103,10 @@
     x_hits <- c(x_hits, y_hits)
     y_hits <- c(y_hits, tmp)
 
-    is_dup <- duplicated(x_hits)
-    if (any(is_dup)) {
-        have_more_than_one_mate <- unique(x_hits[is_dup] + chunk.offset)
-        stop("more than 1 mate found for elements ",
-             paste(have_more_than_one_mate, collapse=", "))
-    }
     ans <- rep.int(NA_integer_, length(x_start))
     ans[x_hits] <- y_hits
+    is_dup <- duplicated(x_hits)
+    ans[x_hits[is_dup]] <- -1L
     ans
 }
 
@@ -168,8 +163,17 @@ findMateAlignment <- function(x, verbose=FALSE)
                                                chunk.x_start,
                                                chunk.x_is_mate_minus,
                                                chunk.x_is_minus,
-                                               chunk.x_is_first,
-                                               chunk.offset)
+                                               chunk.x_is_first)
+        have_more_than_1_mate <- which(chunk.ans < 0L)
+        if (length(have_more_than_1_mate) != 0L) {
+            morethan1mate_idx <- chunk.idx[have_more_than_1_mate]
+            cat("\n-- More than 1 mate found in 'x' for elements: ",
+                paste(morethan1mate_idx, collapse=", "),
+                ".\n-- See subsetted object below:\n", sep="")
+            show(x[morethan1mate_idx])
+            cat("-- Won't assign a mate to those elements.\n")
+            chunk.ans[have_more_than_1_mate] <- NA_integer_
+        }
         if (verbose)
             message("OK")
         ans[chunk.idx] <- chunk.idx[chunk.ans]
