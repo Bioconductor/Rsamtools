@@ -30,47 +30,157 @@
     eltmetadata
 }
 
-### TODO: Make isFirstSegment() an S4 generic function with methods for
-### matrices, integer vectors, and GappedAlignments objects. Put this with the
-### flag utils in Rsamtools.
-.isFirstSegment.matrix <- function(x)
+### 'names', 'flagbits', 'mrnm' and 'mpos' must be the names (character vector),
+### flagbits (integer matrix), mrnm (character vector or factor) and mpos
+### (integer vector) associated with GappedAlignments object 'x'.
+### .makeGappedAlignmentsGNames() inject NAs in 'names' at positions
+### corresponding to an alignment with any of these characteristics:
+###     1. Bit 0x1 (isPaired) is 0
+###     2. Read is neither first or last mate
+###     3. Bit 0x8 (hasUnmappedMate) is 1
+###     4. 'mrnm' is NA (i.e. RNEXT = '*')
+###     5. 'mpos' is NA (i.e. PNEXT = 0)
+### My understanding of the SAM Spec is that 3., 4. and 5. should happen
+### simultaneously even though the Spec don't clearly state this.
+.makeGappedAlignmentsGNames <- function(names, flagbits, mrnm, mpos)
 {
-    is_paired <- as.logical(x[ , "isPaired"])
-    is_first0 <- as.logical(x[ , "isFirstMateRead"])
-    is_last0 <- as.logical(x[ , "isSecondMateRead"])
-    ## According to SAM Spec, bits 0x40 (isFirstMateRead) and 0x80
-    ## (isSecondMateRead) can both be set or unset, even when bit 0x1
-    ## (isPaired) is set. However we are not interested in those situations
-    ## (which have a special meaning).
-    is_paired & is_first0 & (!is_last0)
+    is_paired <- flagbits[ , "isPaired"]
+    is_first <- flagbits[ , "isFirstMateRead"]
+    is_last <- flagbits[ , "isSecondMateRead"]
+    has_unmappedmate <- flagbits[ , "hasUnmappedMate"]
+    alter_idx <- which(!is_paired |
+                       is_first == is_last |
+                       has_unmappedmate |
+                       is.na(mrnm) |
+                       is.na(mpos))
+    names[alter_idx] <- NA_integer_
+    names
 }
 
-.isFirstSegment.integer <- function(flag)
-    .isFirstSegment.matrix(bamFlagAsBitMatrix(flag))
-
-.isFirstSegment.GappedAlignments <- function(x)
-    .isFirstSegment.integer(elementMetadata(x)$flag)
-
-### TODO: Make isLastSegment() an S4 generic function with methods for
-### matrices, integer vectors, and GappedAlignments objects. Put this with the
-### flag utils in Rsamtools.
-.isLastSegment.matrix <- function(x)
+### Puts NAs last.
+.getCharacterOrderAndGroupSizes <- function(x)
 {
-    is_paired <- as.logical(x[ , "isPaired"])
-    is_first0 <- as.logical(x[ , "isFirstMateRead"])
-    is_last0 <- as.logical(x[ , "isSecondMateRead"])
-    ## According to SAM Spec, bits 0x40 (isFirstMateRead) and 0x80
-    ## (isSecondMateRead) can both be set or unset, even when bit 0x1
-    ## (isPaired) is set. However we are not interested in those situations
-    ## (which have a special meaning).
-    is_paired & is_last0 & (!is_first0)
+    x2 <- match(x, x,
+                nomatch=.Machine$integer.max,
+                incomparables=NA_character_)
+    xo <- IRanges:::orderInteger(x2)
+    ox2 <- Rle(x2[xo])
+    group.sizes <- runLength(ox2)
+    ngroup <- length(group.sizes)
+    if (ngroup != 0L && runValue(ox2)[ngroup] == .Machine$integer.max)
+        group.sizes <- group.sizes[-ngroup]
+    list(xo=xo, group.sizes=group.sizes)
 }
 
-.isLastSegment.integer <- function(flag)
-    .isLastSegment.matrix(bamFlagAsBitMatrix(flag))
+### Assumes that GappedAlignments object 'x':
+###   (1) has clean group names i.e. .makeGappedAlignmentsGNames() would not
+###       inject any NA in its names,
+###   (2) is already ordered by group names (which are the same as its names).
+### 'group.sizes' must be the same as 'runLength(Rle(names(x)))'.
+.findMateAlignmentInChunk <- function(group.sizes,
+                                      x_mrnm, x_mpos,
+                                      x_seqnames, x_start,
+                                      x_is_first,
+                                      chunk.offset=0L)
+{
+    hits <- IRanges:::makeAllGroupInnerHits(group.sizes, hit.type=1L)
+    x_hits <- queryHits(hits)
+    y_hits <- subjectHits(hits)
 
-.isLastSegment.GappedAlignments <- function(x)
-    .isLastSegment.integer(elementMetadata(x)$flag)
+    ## Keep hits that satisfy condition (C).
+    hit_is_C <- x_mpos[x_hits] == x_start[y_hits] &
+                x_mpos[y_hits] == x_start[x_hits]
+    x_hits <- x_hits[hit_is_C]
+    y_hits <- y_hits[hit_is_C]
+
+    ## Keep hits that sattisfy condition (B).
+    hit_is_B <- x_mrnm[x_hits] == x_seqnames[y_hits] &
+                x_mrnm[y_hits] == x_seqnames[x_hits]
+    x_hits <- x_hits[hit_is_B]
+    y_hits <- y_hits[hit_is_B]
+
+    ## Keep hits that satisfy condition (D).
+    hit_is_D <- x_is_first[x_hits] != x_is_first[y_hits]
+    x_hits <- x_hits[hit_is_D]
+    y_hits <- y_hits[hit_is_D]
+
+    tmp <- x_hits
+    x_hits <- c(x_hits, y_hits)
+    y_hits <- c(y_hits, tmp)
+
+    is_dup <- duplicated(x_hits)
+    if (any(is_dup)) {
+        have_more_than_one_mate <- unique(x_hits[is_dup] + chunk.offset)
+        stop("more than 1 mate found for elements ",
+             paste(have_more_than_one_mate, collapse=", "))
+    }
+    ans <- rep.int(NA_integer_, length(x_start))
+    ans[x_hits] <- y_hits
+    ans
+}
+
+### Takes about 5.41 sec and 296MB of RAM to mate 1 million alignments,
+### and about 25.12 sec and 1140MB of RAM to mate 5 million alignments.
+findMateAlignment <- function(x, verbose=FALSE)
+{
+    if (!isTRUEorFALSE(verbose))
+        stop("'verbose' must be TRUE or FALSE")
+    x_names <- names(x)
+    if (is.null(x_names))
+        stop("'x' must have names")
+    x_eltmetadata <- .checkElementMetadata(x, "x")
+    x_flag <- x_eltmetadata$flag
+    x_flagbits <- bamFlagAsBitMatrix(x_flag)
+    x_mrnm <- as.character(x_eltmetadata$mrnm)
+    x_mpos <- x_eltmetadata$mpos
+    x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
+                                            x_mrnm, x_mpos)
+    x_seqnames <- as.character(seqnames(x))
+    x_start <- start(x)
+    x_is_first <- x_flagbits[ , "isFirstMateRead"]
+
+    xo_and_GS <- .getCharacterOrderAndGroupSizes(x_gnames)
+    xo <- xo_and_GS$xo
+    GS <- xo_and_GS$group.sizes
+    ans <- rep.int(NA_integer_, length(x_gnames))
+    NGROUP_BY_CHUNK <- 100000L
+    chunk.GIDX <- seq_len(NGROUP_BY_CHUNK)
+    chunk.offset <- 0L
+    while (TRUE) {
+        chunk.GIDX <- chunk.GIDX[chunk.GIDX <= length(GS)]
+        if (length(chunk.GIDX) == 0L)
+            break
+        chunk.GS <- GS[chunk.GIDX]
+        chunk.length <- sum(chunk.GS)
+        if (verbose)
+            message("Processing chunk of length ", chunk.length,
+                    " ... ", appendLF=FALSE)
+        chunk.idx <- xo[chunk.offset + seq_len(chunk.length)]
+        chunk.x_mrnm <- x_mrnm[chunk.idx]
+        chunk.x_mpos <- x_mpos[chunk.idx]
+        chunk.x_seqnames <- x_seqnames[chunk.idx]
+        chunk.x_start <- x_start[chunk.idx]
+        chunk.x_is_first <- x_is_first[chunk.idx]
+        chunk.ans <- .findMateAlignmentInChunk(chunk.GS,
+                                               chunk.x_mrnm,
+                                               chunk.x_mpos,
+                                               chunk.x_seqnames,
+                                               chunk.x_start,
+                                               chunk.x_is_first,
+                                               chunk.offset)
+        ans[chunk.idx] <- chunk.idx[chunk.ans]
+        if (verbose)
+            message("OK")
+        chunk.GIDX <- chunk.GIDX + NGROUP_BY_CHUNK
+        chunk.offset <- chunk.offset + chunk.length
+    }
+    ans
+}
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### findMateAlignment2().
+###
 
 ### .findMatches() is the same as match() except that it returns *all*
 ### the matches (in a Hits object, ordered by queryHits first, then by
@@ -117,82 +227,58 @@
 ### twice less memory.
 .findSelfMatches.character <- function(x)
 {
-    xx <- match(x, x, nomatch=.Machine$integer.max, incomparables=NA_character_)
-    xxo <- IRanges:::orderInteger(xx)
-    xx2 <- Rle(xx[xxo])
-    GS <- runLength(xx2)  # group sizes
-    NG <- length(GS)  # nb of groups
-    if (runValue(xx2)[NG] == .Machine$integer.max)
-        GS <- GS[-NG]
+    xo_and_GS <- .getCharacterOrderAndGroupSizes(x)
+    xo <- xo_and_GS$xo
+    GS <- xo_and_GS$group.sizes
     ans <- IRanges:::makeAllGroupInnerHits(GS, hit.type=1L)
-    ans@queryHits <- xxo[ans@queryHits]
-    ans@subjectHits <- xxo[ans@subjectHits]
+    ans@queryHits <- xo[ans@queryHits]
+    ans@subjectHits <- xo[ans@subjectHits]
     ans@queryLength <- ans@subjectLength <- length(x)
     ans
 }
 
-### Takes about 6.5 sec and 300MB of RAM to mate 1 million alignments.
-findMateAlignment <- function(x, y=NULL)
+### Takes about 5.2 sec and 295MB of RAM to mate 1 million alignments,
+### and about 26.25 sec and 1242MB of RAM to mate 5 million alignments.
+findMateAlignment2 <- function(x, y=NULL)
 {
-    x_eltmetadata <- .checkElementMetadata(x, "x")
     x_names <- names(x)
-    x_seqnames <- as.character(seqnames(x))
-    x_start <- start(x)
+    if (is.null(x_names))
+        stop("'x' must have names")
+    x_eltmetadata <- .checkElementMetadata(x, "x")
     x_flag <- x_eltmetadata$flag
+    x_flagbits <- bamFlagAsBitMatrix(x_flag)
     x_mrnm <- as.character(x_eltmetadata$mrnm)
     x_mpos <- x_eltmetadata$mpos
-
-    ## Before we pass 'x_names' to .findMatches() we inject NAs at positions
-    ## corresponding to an alignment with any of these characteristics:
-    ##     1. Bit 0x1 (isPaired) is 0
-    ##     2. Read is neither first or last mate
-    ##     3. Bit 0x8 (hasUnmappedMate) is 1
-    ##     4. 'x_mrnm' is NA (i.e. RNEXT = '*')
-    ##     5. 'x_mpos' is NA (i.e. PNEXT = 0)
-    ## My understanding of the SAM Spec is that 3., 4. and 5. should happen
-    ## simultaneously but the Spec don't clearly state this.
-    x_flagbits <- bamFlagAsBitMatrix(x_flag)
-    x_is_paired <- x_flagbits[ , "isPaired"]
+    x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
+                                            x_mrnm, x_mpos)
+    x_seqnames <- as.character(seqnames(x))
+    x_start <- start(x)
     x_is_first <- x_flagbits[ , "isFirstMateRead"]
-    x_is_last <- x_flagbits[ , "isSecondMateRead"]
-    x_has_unmappedmate <- x_flagbits[ , "hasUnmappedMate"]
-    x_ignore <- which(!x_is_paired |
-                      x_is_first == x_is_last |
-                      x_has_unmappedmate |
-                      is.na(x_mrnm) |
-                      is.na(x_mpos))
-    x_names[x_ignore] <- NA_integer_
 
     if (is.null(y)) {
-        y_seqnames <- x_seqnames
-        y_start <- x_start
         y_mrnm <- x_mrnm
         y_mpos <- x_mpos
+        y_seqnames <- x_seqnames
+        y_start <- x_start
         y_is_first <- x_is_first
 
-        hits <- .findSelfMatches.character(x_names)
+        hits <- .findSelfMatches.character(x_gnames)
     } else {
-        y_eltmetadata <- .checkElementMetadata(y, "y")
         y_names <- names(y)
-        y_seqnames <- as.character(seqnames(y))
-        y_start <- start(y)
+        if (is.null(y_names))
+            stop("'y' must have names")
+        y_eltmetadata <- .checkElementMetadata(y, "y")
         y_flag <- y_eltmetadata$flag
+        y_flagbits <- bamFlagAsBitMatrix(y_flag)
         y_mrnm <- as.character(y_eltmetadata$mrnm)
         y_mpos <- y_eltmetadata$mpos
-
-        y_flagbits <- bamFlagAsBitMatrix(y_flag)
-        y_is_paired <- y_flagbits[ , "isPaired"]
+        y_gnames <- .makeGappedAlignmentsGNames(y_names, y_flagbits,
+                                                y_mrnm, y_mpos)
+        y_seqnames <- as.character(seqnames(y))
+        y_start <- start(y)
         y_is_first <- y_flagbits[ , "isFirstMateRead"]
-        y_is_last <- y_flagbits[ , "isSecondMateRead"]
-        y_has_unmappedmate <- y_flagbits[ , "hasUnmappedMate"]
-        y_ignore <- which(!y_is_paired |
-                          y_is_first == y_is_last |
-                          y_has_unmappedmate |
-                          is.na(y_mrnm) |
-                          is.na(y_mpos))
-        y_names[y_ignore] <- NA_integer_
 
-        hits <- .findMatches(x_names, y_names, incomparables=NA_character_)
+        hits <- .findMatches(x_gnames, y_gnames, incomparables=NA_character_)
     }
 
     x_hits <- queryHits(hits)
@@ -235,6 +321,48 @@ findMateAlignment <- function(x, y=NULL)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### makeGappedAlignmentPairs().
 ###
+
+### TODO: Make isFirstSegment() an S4 generic function with methods for
+### matrices, integer vectors, and GappedAlignments objects. Put this with the
+### flag utils in Rsamtools.
+.isFirstSegment.matrix <- function(x)
+{
+    is_paired <- as.logical(x[ , "isPaired"])
+    is_first0 <- as.logical(x[ , "isFirstMateRead"])
+    is_last0 <- as.logical(x[ , "isSecondMateRead"])
+    ## According to SAM Spec, bits 0x40 (isFirstMateRead) and 0x80
+    ## (isSecondMateRead) can both be set or unset, even when bit 0x1
+    ## (isPaired) is set. However we are not interested in those situations
+    ## (which have a special meaning).
+    is_paired & is_first0 & (!is_last0)
+}
+
+.isFirstSegment.integer <- function(flag)
+    .isFirstSegment.matrix(bamFlagAsBitMatrix(flag))
+
+.isFirstSegment.GappedAlignments <- function(x)
+    .isFirstSegment.integer(elementMetadata(x)$flag)
+
+### TODO: Make isLastSegment() an S4 generic function with methods for
+### matrices, integer vectors, and GappedAlignments objects. Put this with the
+### flag utils in Rsamtools.
+.isLastSegment.matrix <- function(x)
+{
+    is_paired <- as.logical(x[ , "isPaired"])
+    is_first0 <- as.logical(x[ , "isFirstMateRead"])
+    is_last0 <- as.logical(x[ , "isSecondMateRead"])
+    ## According to SAM Spec, bits 0x40 (isFirstMateRead) and 0x80
+    ## (isSecondMateRead) can both be set or unset, even when bit 0x1
+    ## (isPaired) is set. However we are not interested in those situations
+    ## (which have a special meaning).
+    is_paired & is_last0 & (!is_first0)
+}
+
+.isLastSegment.integer <- function(flag)
+    .isLastSegment.matrix(bamFlagAsBitMatrix(flag))
+
+.isLastSegment.GappedAlignments <- function(x)
+    .isLastSegment.integer(elementMetadata(x)$flag)
 
 makeGappedAlignmentPairs <- function(x, use.names=FALSE)
 {
