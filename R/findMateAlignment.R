@@ -9,9 +9,10 @@
 ###       elementMetadata(y[i2])$mrnm == seqnames(x[i1])
 ###   (C) elementMetadata(x[i1])$mpos == start(y[i2]) &
 ###       elementMetadata(y[i2])$mpos == start(x[i1])
-###   (D) isFirstSegment(x[i1]) & isLastSegment(y[i2]) |
+###   (D) isMateMinusStrand(x[i1]) == isMinusStrand(y[i2]) &
+###       isMateMinusStrand(y[i2]) == isMinusStrand(x[i1])
+###   (E) isFirstSegment(x[i1]) & isLastSegment(y[i2]) |
 ###       isFirstSegment(y[i2]) & isLastSegment(x[i1])
-### TODO: We should also look at the 0x20 bit (isMateMinusStrand).
 
 .checkElementMetadata <- function(arg, argname)
 {
@@ -78,8 +79,9 @@
 ###   (2) is already ordered by group names (which are the same as its names).
 ### 'group.sizes' must be the same as 'runLength(Rle(names(x)))'.
 .findMateAlignmentInChunk <- function(group.sizes,
-                                      x_mrnm, x_mpos,
-                                      x_seqnames, x_start,
+                                      x_mrnm, x_seqnames,
+                                      x_mpos, x_start,
+                                      x_is_mate_minus, x_is_minus,
                                       x_is_first,
                                       chunk.offset=0L)
 {
@@ -87,22 +89,16 @@
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
 
-    ## Keep hits that satisfy condition (C).
-    hit_is_C <- x_mpos[x_hits] == x_start[y_hits] &
-                x_mpos[y_hits] == x_start[x_hits]
-    x_hits <- x_hits[hit_is_C]
-    y_hits <- y_hits[hit_is_C]
-
-    ## Keep hits that sattisfy condition (B).
-    hit_is_B <- x_mrnm[x_hits] == x_seqnames[y_hits] &
-                x_mrnm[y_hits] == x_seqnames[x_hits]
-    x_hits <- x_hits[hit_is_B]
-    y_hits <- y_hits[hit_is_B]
-
-    ## Keep hits that satisfy condition (D).
-    hit_is_D <- x_is_first[x_hits] != x_is_first[y_hits]
-    x_hits <- x_hits[hit_is_D]
-    y_hits <- y_hits[hit_is_D]
+    ## Keep hits that satisfy conditions (B), (C), (D) and (E).
+    valid_hits <- x_mrnm[x_hits] == x_seqnames[y_hits] &  # (B)
+                  x_mrnm[y_hits] == x_seqnames[x_hits] &  # (B)
+                  x_mpos[x_hits] == x_start[y_hits] &  # (C)
+                  x_mpos[y_hits] == x_start[x_hits] &  # (C)
+                  x_is_mate_minus[x_hits] == x_is_minus[y_hits] &  # (D)
+                  x_is_mate_minus[y_hits] == x_is_minus[x_hits] &  # (D)
+                  x_is_first[x_hits] != x_is_first[y_hits]  # (E)
+    x_hits <- x_hits[valid_hits]
+    y_hits <- y_hits[valid_hits]
 
     tmp <- x_hits
     x_hits <- c(x_hits, y_hits)
@@ -119,8 +115,8 @@
     ans
 }
 
-### Takes about 5.41 sec and 296MB of RAM to mate 1 million alignments,
-### and about 25.12 sec and 1140MB of RAM to mate 5 million alignments.
+### Takes about 5.74 sec and 296MB of RAM to mate 1 million alignments,
+### and about 28.13 sec and 1143MB of RAM to mate 5 million alignments.
 findMateAlignment <- function(x, verbose=FALSE)
 {
     if (!isTRUEorFALSE(verbose))
@@ -137,13 +133,15 @@ findMateAlignment <- function(x, verbose=FALSE)
                                             x_mrnm, x_mpos)
     x_seqnames <- as.character(seqnames(x))
     x_start <- start(x)
+    x_is_mate_minus <- x_flagbits[ , "isMateMinusStrand"]
+    x_is_minus <- x_flagbits[ , "isMinusStrand"]
     x_is_first <- x_flagbits[ , "isFirstMateRead"]
 
     xo_and_GS <- .getCharacterOrderAndGroupSizes(x_gnames)
     xo <- xo_and_GS$xo
     GS <- xo_and_GS$group.sizes
     ans <- rep.int(NA_integer_, length(x_gnames))
-    NGROUP_BY_CHUNK <- 100000L
+    NGROUP_BY_CHUNK <- 25000L
     chunk.GIDX <- seq_len(NGROUP_BY_CHUNK)
     chunk.offset <- 0L
     while (TRUE) {
@@ -152,25 +150,29 @@ findMateAlignment <- function(x, verbose=FALSE)
             break
         chunk.GS <- GS[chunk.GIDX]
         chunk.length <- sum(chunk.GS)
-        if (verbose)
-            message("Processing chunk of length ", chunk.length,
-                    " ... ", appendLF=FALSE)
         chunk.idx <- xo[chunk.offset + seq_len(chunk.length)]
         chunk.x_mrnm <- x_mrnm[chunk.idx]
-        chunk.x_mpos <- x_mpos[chunk.idx]
         chunk.x_seqnames <- x_seqnames[chunk.idx]
+        chunk.x_mpos <- x_mpos[chunk.idx]
         chunk.x_start <- x_start[chunk.idx]
+        chunk.x_is_mate_minus <- x_is_mate_minus[chunk.idx]
+        chunk.x_is_minus <- x_is_minus[chunk.idx]
         chunk.x_is_first <- x_is_first[chunk.idx]
+        if (verbose)
+            message("Finding mates in chunk of ", chunk.length,
+                    " alignments ... ", appendLF=FALSE)
         chunk.ans <- .findMateAlignmentInChunk(chunk.GS,
                                                chunk.x_mrnm,
-                                               chunk.x_mpos,
                                                chunk.x_seqnames,
+                                               chunk.x_mpos,
                                                chunk.x_start,
+                                               chunk.x_is_mate_minus,
+                                               chunk.x_is_minus,
                                                chunk.x_is_first,
                                                chunk.offset)
-        ans[chunk.idx] <- chunk.idx[chunk.ans]
         if (verbose)
             message("OK")
+        ans[chunk.idx] <- chunk.idx[chunk.ans]
         chunk.GIDX <- chunk.GIDX + NGROUP_BY_CHUNK
         chunk.offset <- chunk.offset + chunk.length
     }
@@ -237,8 +239,8 @@ findMateAlignment <- function(x, verbose=FALSE)
     ans
 }
 
-### Takes about 5.2 sec and 295MB of RAM to mate 1 million alignments,
-### and about 26.25 sec and 1242MB of RAM to mate 5 million alignments.
+### Takes about 5.47 sec and 295MB of RAM to mate 1 million alignments,
+### and about 32.26 sec and 1330MB of RAM to mate 5 million alignments.
 findMateAlignment2 <- function(x, y=NULL)
 {
     x_names <- names(x)
@@ -253,13 +255,17 @@ findMateAlignment2 <- function(x, y=NULL)
                                             x_mrnm, x_mpos)
     x_seqnames <- as.character(seqnames(x))
     x_start <- start(x)
+    x_is_mate_minus <- x_flagbits[ , "isMateMinusStrand"]
+    x_is_minus <- x_flagbits[ , "isMinusStrand"]
     x_is_first <- x_flagbits[ , "isFirstMateRead"]
 
     if (is.null(y)) {
         y_mrnm <- x_mrnm
-        y_mpos <- x_mpos
         y_seqnames <- x_seqnames
+        y_mpos <- x_mpos
         y_start <- x_start
+        y_is_mate_minus <- x_is_mate_minus
+        y_is_minus <- x_is_minus
         y_is_first <- x_is_first
 
         hits <- .findSelfMatches.character(x_gnames)
@@ -276,6 +282,8 @@ findMateAlignment2 <- function(x, y=NULL)
                                                 y_mrnm, y_mpos)
         y_seqnames <- as.character(seqnames(y))
         y_start <- start(y)
+        y_is_mate_minus <- y_flagbits[ , "isMateMinusStrand"]
+        y_is_minus <- y_flagbits[ , "isMinusStrand"]
         y_is_first <- y_flagbits[ , "isFirstMateRead"]
 
         hits <- .findMatches(x_gnames, y_gnames, incomparables=NA_character_)
@@ -284,22 +292,16 @@ findMateAlignment2 <- function(x, y=NULL)
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
 
-    ## Keep hits that satisfy condition (C).
-    hit_is_C <- x_mpos[x_hits] == y_start[y_hits] &
-                y_mpos[y_hits] == x_start[x_hits]
-    x_hits <- x_hits[hit_is_C]
-    y_hits <- y_hits[hit_is_C]
-
-    ## Keep hits that sattisfy condition (B).
-    hit_is_B <- x_mrnm[x_hits] == y_seqnames[y_hits] &
-                y_mrnm[y_hits] == x_seqnames[x_hits]
-    x_hits <- x_hits[hit_is_B]
-    y_hits <- y_hits[hit_is_B]
-
-    ## Keep hits that satisfy condition (D).
-    hit_is_D <- x_is_first[x_hits] != y_is_first[y_hits]
-    x_hits <- x_hits[hit_is_D]
-    y_hits <- y_hits[hit_is_D]
+    ## Keep hits that satisfy conditions (B), (C), (D) and (E).
+    valid_hits <- x_mrnm[x_hits] == y_seqnames[y_hits] &  # (B)
+                  y_mrnm[y_hits] == x_seqnames[x_hits] &  # (B)
+                  x_mpos[x_hits] == y_start[y_hits] &  # (C)
+                  y_mpos[y_hits] == x_start[x_hits] &  # (C)
+                  x_is_mate_minus[x_hits] == y_is_minus[y_hits] &  # (D)
+                  y_is_mate_minus[y_hits] == x_is_minus[x_hits] &  # (D)
+                  x_is_first[x_hits] != y_is_first[y_hits]  # (E)
+    x_hits <- x_hits[valid_hits]
+    y_hits <- y_hits[valid_hits]
 
     if (is.null(y)) {
         tmp <- x_hits
