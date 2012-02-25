@@ -664,8 +664,9 @@ static int _scan_bam_parse1(const bam1_t * bam, void *data)
                 NA_INTEGER : bam_cigar2qlen(&bam->core, bam1_cigar(bam));
             break;
         case MAPQ_IDX:
-            sbd->mapq[idx] = bam->core.flag & BAM_FUNMAP ?
-                NA_INTEGER : bam->core.qual;
+            if ((bam->core.flag & BAM_FUNMAP) || (255 == bam->core.qual))
+                sbd->mapq[idx] = NA_INTEGER;
+            else sbd->mapq[idx] = bam->core.qual;
             break;
         case CIGAR_IDX:
             if (bam->core.flag & BAM_FUNMAP)
@@ -804,6 +805,8 @@ static void _scan_bam_finish1range(_BAM_DATA * bd)
     SEXP r, s, strand_lvls;
     bam_header_t *header = bd->bfile->file->header;
     _SCAN_BAM_DATA *sbd = (_SCAN_BAM_DATA *) bd->extra;
+
+    /* FIXME: replace mrnm '=' with rname */
 
     r = VECTOR_ELT(sbd->result, bd->irange);
     for (i = 0; i < LENGTH(r); ++i) {
