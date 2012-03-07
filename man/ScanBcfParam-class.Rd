@@ -16,7 +16,6 @@
 \alias{bcfGeno}
 \alias{bcfTrimEmpty}
 \alias{bcfWhich}
-\alias{bcfAsGRanges}
 
 \alias{show,ScanBVcfParam-method}
 
@@ -33,15 +32,15 @@
 \usage{
 
 ScanBcfParam(fixed=character(), info=character(), geno=character(), trimEmpty=TRUE,
-             which, asGRanges=FALSE, ...)
+             which, ...)
 \S4method{ScanBcfParam}{missing}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
+             trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{RangesList}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
+             trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{RangedData}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
+             trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{GRanges}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, asGRanges=FALSE, ...)
+             trimEmpty=TRUE, which, ...)
 
 ## Accessors
 bcfFixed(object)
@@ -49,7 +48,6 @@ bcfInfo(object)
 bcfGeno(object)
 bcfTrimEmpty(object)
 bcfWhich(object)
-bcfAsGRanges(object)
 
 }
 
@@ -72,8 +70,6 @@ bcfAsGRanges(object)
     whose \code{POS} lies in the interval(s) \code{[start, end)} are
     returned.} 
 
-  \item{asGRanges}{A logical(1) for use with \code{ScanVcfParam} only.}
-
   \item{object}{An instance of class \code{ScanBcfParam}.}
 
   \item{\dots}{Arguments used internally.}
@@ -95,8 +91,6 @@ bcfAsGRanges(object)
       portions of \sQuote{GENO} to be returned. }
     \item{\code{trimEmpty}:}{Object of class \code{"logical"} indicating
       whether empty \sQuote{GENO} fields are to be returned.}
-    \item{\code{asGRanges}:}{Object of class \code{"logical"}. For use
-      with \code{ScanVcfParam} only.}
     \item{\code{fixed}:}{Object of class \code{"character"}. For use
       with \code{ScanVcfParam} only.}
   }
