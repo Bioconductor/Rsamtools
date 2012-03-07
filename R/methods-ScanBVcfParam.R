@@ -72,6 +72,5 @@ setMethod(show, "ScanBVcfParam", function(object)
     cat(.clslbl("Fixed:"), .ptags(bcfFixed(object)), "\n")
     cat(.clslbl("Info:"), .ptags(bcfInfo(object)), "\n")
     cat(.clslbl("Geno:"), .ptags(bcfGeno(object)), "\n")
-    cat(.clslbl("AsGRanges:"), .ptags(bcfAsGRanges(object)), "\n")
 })
 
