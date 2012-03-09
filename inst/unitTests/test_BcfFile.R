@@ -47,6 +47,17 @@ test_BcfFile_scanBcfHeader <- function()
     checkTrue(validObject(Rsamtools:::.bcfHeaderAsSimpleList(header)))
 }
 
+test_BcfFile_scanBcfHeader_no_SAMPLE_header <- function()
+{
+    fl <- system.file(package="Rsamtools", "unitTests", "cases",
+                      "no_SAMPLE_header.vcf")
+    bf <- open(BcfFile(fl, character(0)))
+    on.exit(close(bf))
+    sample <- scanBcfHeader(bf)[["Sample"]]
+    exp <- c("NA00001", "NA00002", "NA00003")
+    checkIdentical(exp, sample)
+}
+
 test_BcfFile_scan_noindex <- function()
 {
     bf <- open(BcfFile(fl, character(0)))
