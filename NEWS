@@ -1,6 +1,11 @@
 CHANGES IN VERSION 1.8.0
 ------------------------
 
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o update samtools to github commit
+    dc27682f70713a70d4f31bca652cf78e00757da2
+
 BUG FIXES
 
     o readBamGappedAlignments handles empty 'tag' fields
