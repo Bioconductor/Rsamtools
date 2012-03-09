@@ -29,7 +29,11 @@ Author: Martin Morgan
 Maintainer: Biocore Team c/o BioC user list <bioconductor@stat.math.ethz.ch>
 }
 \references{
-  \url{http://samtools.sourceforge.net/}
+
+  The current source code for samtools and bcftools is from
+  \url{https://github.com/samtools/samtools}.  Additional material is at
+  \url{http://samtools.sourceforge.net/}.
+
 }
 \note{
 
