@@ -218,7 +218,8 @@ setMethod(show, "ScanBamParam",
 ## Explode the bits of a 'flag' vector into a matrix.
 bamFlagAsBitMatrix <- function(flag)
 {
-    ans <- IRanges:::explodeIntBits(flag, length(.FLAG_BITNAMES))
+    bitpos <- seq_len(length(.FLAG_BITNAMES))
+    ans <- IRanges:::explodeIntBits(flag, bitpos=bitpos)
     dimnames(ans) <- list(names(flag), .FLAG_BITNAMES)
     ans
 }

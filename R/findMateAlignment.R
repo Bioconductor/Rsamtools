@@ -3,7 +3,7 @@
 ### -------------------------------------------------------------------------
 ### For each element in GappedAlignments object 'x', finds its mate in
 ### GappedAlignments object 'y'.
-### 'x[i1]' and 'y[i2]' are considered mate iff:
+### 'x[i1]' and 'y[i2]' are considered mates iff:
 ###   (A) names(x[i1]) == names(y[i2])
 ###   (B) elementMetadata(x[i1])$mrnm == seqnames(y[i2]) &
 ###       elementMetadata(y[i2])$mrnm == seqnames(x[i1])
@@ -31,11 +31,15 @@
     eltmetadata
 }
 
-### 'names', 'flagbits', 'mrnm' and 'mpos' must be the names (character vector),
-### flagbits (integer matrix), mrnm (character vector or factor) and mpos
-### (integer vector) associated with GappedAlignments object 'x'.
-### .makeGappedAlignmentsGNames() inject NAs in 'names' at positions
-### corresponding to an alignment with any of these characteristics:
+### 'names', 'flagbits', 'mrnm', and 'mpos', must all come from the same
+### GappedAlignments object x.
+### 'names': names(x).
+### 'flagbits': integer matrix (of 0's and 1's) obtained with
+###     bamFlagAsBitMatrix(elementMetadata(x)$flag)
+### 'mrnm': character vector or factor obtained with elementMetadata(x)$mrnm
+### 'mpos': integer vector obtained with elementMetadata(x)$mpos
+### Returns 'names' with NAs injected at positions corresponding to alignments
+### that satisfy at least one of following conditions:
 ###     1. Bit 0x1 (isPaired) is 0
 ###     2. Read is neither first or last mate
 ###     3. Bit 0x8 (hasUnmappedMate) is 1
@@ -110,8 +114,8 @@
     ans
 }
 
-### Takes about 5.74 sec and 296MB of RAM to mate 1 million alignments,
-### and about 28.13 sec and 1143MB of RAM to mate 5 million alignments.
+### Takes about 6 sec and 294MB of RAM to mate 1 million alignments,
+### and about 27 sec and 1178MB of RAM to mate 5 million alignments.
 findMateAlignment <- function(x, verbose=FALSE)
 {
     if (!isTRUEorFALSE(verbose))
