@@ -35,7 +35,8 @@
 ### GappedAlignments object x.
 ### 'names': names(x).
 ### 'flagbits': integer matrix (of 0's and 1's) obtained with
-###     bamFlagAsBitMatrix(elementMetadata(x)$flag)
+###     bamFlagAsBitMatrix(elementMetadata(x)$flag,
+###                        bitnames=.MATING_FLAG_BITNAMES)
 ### 'mrnm': character vector or factor obtained with elementMetadata(x)$mrnm
 ### 'mpos': integer vector obtained with elementMetadata(x)$mpos
 ### Returns 'names' with NAs injected at positions corresponding to alignments
@@ -47,6 +48,10 @@
 ###     5. 'mpos' is NA (i.e. PNEXT = 0)
 ### My understanding of the SAM Spec is that 3., 4. and 5. should happen
 ### simultaneously even though the Spec don't clearly state this.
+
+.MATING_FLAG_BITNAMES <- c("isPaired", "hasUnmappedMate",
+                           "isFirstMateRead", "isSecondMateRead")
+
 .makeGappedAlignmentsGNames <- function(names, flagbits, mrnm, mpos)
 {
     is_paired <- flagbits[ , "isPaired"]
@@ -114,8 +119,8 @@
     ans
 }
 
-### Takes about 6 sec and 294MB of RAM to mate 1 million alignments,
-### and about 27 sec and 1178MB of RAM to mate 5 million alignments.
+### Takes about 6 sec and 274MB of RAM to mate 1 million alignments,
+### and about 26.3 sec and 1022MB of RAM to mate 5 million alignments.
 findMateAlignment <- function(x, verbose=FALSE)
 {
     if (!isTRUEorFALSE(verbose))
@@ -125,7 +130,8 @@ findMateAlignment <- function(x, verbose=FALSE)
         stop("'x' must have names")
     x_eltmetadata <- .checkElementMetadata(x, "x")
     x_flag <- x_eltmetadata$flag
-    x_flagbits <- bamFlagAsBitMatrix(x_flag)
+    bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
+    x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
     x_mrnm <- as.character(x_eltmetadata$mrnm)
     x_mpos <- x_eltmetadata$mpos
     x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
@@ -260,7 +266,8 @@ findMateAlignment2 <- function(x, y=NULL)
         stop("'x' must have names")
     x_eltmetadata <- .checkElementMetadata(x, "x")
     x_flag <- x_eltmetadata$flag
-    x_flagbits <- bamFlagAsBitMatrix(x_flag)
+    bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
+    x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
     x_mrnm <- as.character(x_eltmetadata$mrnm)
     x_mpos <- x_eltmetadata$mpos
     x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
@@ -287,7 +294,7 @@ findMateAlignment2 <- function(x, y=NULL)
             stop("'y' must have names")
         y_eltmetadata <- .checkElementMetadata(y, "y")
         y_flag <- y_eltmetadata$flag
-        y_flagbits <- bamFlagAsBitMatrix(y_flag)
+        y_flagbits <- bamFlagAsBitMatrix(y_flag, bitnames=bitnames)
         y_mrnm <- as.character(y_eltmetadata$mrnm)
         y_mpos <- y_eltmetadata$mpos
         y_gnames <- .makeGappedAlignmentsGNames(y_names, y_flagbits,
@@ -352,7 +359,10 @@ findMateAlignment2 <- function(x, y=NULL)
 }
 
 .isFirstSegment.integer <- function(flag)
-    .isFirstSegment.matrix(bamFlagAsBitMatrix(flag))
+{
+    bitnames <- c("isPaired", "isFirstMateRead", "isSecondMateRead")
+    .isFirstSegment.matrix(bamFlagAsBitMatrix(flag, bitnames=bitnames))
+}
 
 .isFirstSegment.GappedAlignments <- function(x)
     .isFirstSegment.integer(elementMetadata(x)$flag)
@@ -373,7 +383,10 @@ findMateAlignment2 <- function(x, y=NULL)
 }
 
 .isLastSegment.integer <- function(flag)
-    .isLastSegment.matrix(bamFlagAsBitMatrix(flag))
+{
+    bitnames <- c("isPaired", "isFirstMateRead", "isSecondMateRead")
+    .isLastSegment.matrix(bamFlagAsBitMatrix(flag, bitnames=bitnames))
+}
 
 .isLastSegment.GappedAlignments <- function(x)
     .isLastSegment.integer(elementMetadata(x)$flag)
@@ -403,8 +416,8 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE)
         stop("findMateAlignment() returned an invalid 'mate' vector")
 
     ## Check the 0x2 bit (isProperPair).
-    x_flagbits <- bamFlagAsBitMatrix(elementMetadata(x)$flag)
-    x_is_proper <- as.logical(x_flagbits[ , "isProperPair"])
+    x_is_proper <- as.logical(bamFlagAsBitMatrix(elementMetadata(x)$flag,
+                                                 bitnames="isProperPair"))
     first_is_proper <- x_is_proper[first_idx]
     last_is_proper <- x_is_proper[last_idx]
     if (!identical(first_is_proper, last_is_proper))

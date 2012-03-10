@@ -30,6 +30,7 @@
 % methods
 \alias{show,ScanBamParam-method}
 % flag utils
+\alias{FLAG_BITNAMES}
 \alias{bamFlagAsBitMatrix}
 \alias{bamFlagAND}
 \alias{bamFlagTest}
@@ -75,7 +76,7 @@ bamWhich(object) <- value
 \S4method{show}{ScanBamParam}(object)
 
 # Flag utils
-bamFlagAsBitMatrix(flag)
+bamFlagAsBitMatrix(flag, bitnames=FLAG_BITNAMES)
 bamFlagAND(flag1, flag2)
 bamFlagTest(flag, value)
 }
@@ -178,6 +179,9 @@ bamFlagTest(flag, value)
   \item{asInteger}{logical(1) indicating whether \sQuote{flag} should be
     returned as an encoded integer vector (\code{TRUE}) or
     human-readable form (\code{FALSE}).}
+
+  \item{bitnames}{Names of the flag bits to extract. Will be the colnames
+    of the returned matrix.}
 
   \item{flag1, flag2}{Integer vectors containing \sQuote{flag} entries.}
 }
@@ -297,6 +301,6 @@ flag <- scanBamFlag(isUnmappedQuery=FALSE, isMinusStrand=TRUE)
 flag
 bamFlagAsBitMatrix(flag)
 flag4 <- bam4[[1]][["flag"]]
-bamFlagAsBitMatrix(flag4[1:9])
+bamFlagAsBitMatrix(flag4[1:9], bitnames=c("isUnmappedQuery", "isMinusStrand"))
 }
 \keyword{classes}
