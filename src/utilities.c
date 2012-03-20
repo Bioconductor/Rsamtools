@@ -101,6 +101,17 @@ void _reverseComplement(char *buf, int len)
         buf[i] = map[(int) buf[i]];
 }
 
+char *_rtrim(char *s)
+{
+    int i = strlen(s) - 1;
+    while (i >= 0) {
+        if (s[i] != '\r')
+            break;
+        s[i--] = '\0';
+    }
+    return s;
+}
+
 /* scan-related */
 
 void _scan_checkext(SEXP ext, SEXP tag, const char *lbl)
