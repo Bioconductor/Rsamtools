@@ -47,11 +47,11 @@ readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
     By default (i.e. \code{param=NULL}), no additional field is loaded and
     the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE)} for
     \code{readBamGappedAlignments} and \code{readBamGappedReads}
-    (i.e. only records corresponding to mapped reads are loaded)},
+    (i.e. only records corresponding to mapped reads are loaded),
     and \code{scanBamFlag(isUnmappedQuery=FALSE, isPaired=TRUE,
     hasUnmappedMate=FALSE)} for \code{readBamGappedAlignmentPairs}
     (i.e. only records corresponding to paired-end reads with both ends
-    mapped are loaded).
+    mapped are loaded).}
 }
 
 \details{
