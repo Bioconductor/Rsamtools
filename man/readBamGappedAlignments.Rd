@@ -172,13 +172,19 @@ greads1
 names(greads1)
 qseq(greads1)
 greads2 <- readBamGappedReads(bamfile, use.names=TRUE)
-greads2
+head(greads2)
 head(names(greads2))
 
 ## ---------------------------------------------------------------------
 ## C. readBamGappedAlignmentPairs()
 ## ---------------------------------------------------------------------
-galp <- readBamGappedAlignmentPairs(bamfile)
+galp1 <- readBamGappedAlignmentPairs(bamfile)
+head(galp1)
+names(galp1)
+galp2 <- readBamGappedAlignmentPairs(bamfile, use.names=TRUE)
+galp2
+head(galp2)
+head(names(galp2))
 }
 
 \keyword{methods}
