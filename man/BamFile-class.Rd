@@ -21,6 +21,7 @@
 \alias{sortBam,BamFile-method}
 \alias{readBamGappedAlignments,BamFile-method}
 \alias{readBamGappedReads,BamFile-method}
+\alias{readBamGappedAlignmentPairs,BamFile-method}
 
 \alias{mergeBam,BamFileList-method}
 
@@ -71,6 +72,7 @@ BamFileList(...)
 \S4method{mergeBam}{BamFileList}(files, destination, ...)
 \S4method{readBamGappedAlignments}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readBamGappedReads}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
+\S4method{readBamGappedAlignmentPairs}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 
 ## counting
 \S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand = FALSE, ...,
@@ -224,10 +226,11 @@ BamFileList(...)
       by \code{mergeBam,character-method} are also available for
       \code{BamFileList}.}
 
-    \item{readBamGappedAlignments, readBamGappedReads}{Visit
-      the path in \code{path(file)}, returning the result of
-      \code{readBamGappedAlignments} or \code{readBamGappedReads}
-      applied to the specified path.
+    \item{readBamGappedAlignments, readBamGappedReads,
+          readBamGappedAlignmentPairs}{
+      Visit the path in \code{path(file)}, returning the result of
+      \code{readBamGappedAlignments}, \code{readBamGappedReads},
+      or \code{readBamGappedAlignmentPairs} applied to the specified path.
       See \code{\link{readBamGappedAlignments}}.}
 
     \item{show}{Compactly display the object.}
