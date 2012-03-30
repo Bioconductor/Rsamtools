@@ -261,7 +261,7 @@ setMethod(readBamGappedReads, "BamFile",
         what0 <- c(what0, "qname")
     bamcols <- .loadBamCols(file, param, what0)
     seqlengths <- .loadBamSeqlengths(file, levels(bamcols[["rname"]]))
-    ans <- GappedReads(rname=bamcols$rname, pos=bamcols$pos,
+    ans <- GappedReads(seqnames=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
                        qseq=bamcols$seq, seqlengths=seqlengths)
     .bindExtraData(ans, use.names, param, bamcols)
