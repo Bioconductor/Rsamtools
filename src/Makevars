@@ -7,10 +7,10 @@ libs0: libbam.a libbcf.a libtabix.a
 	cp ../Rsamtools.mk "${R_PACKAGE_DIR}/usretc${R_ARCH}"
 
 libbam.a: $(BAMOBJ)
-	$(AR) -crus $@ $^
+	$(AR) -crus $@ $(BAMOBJ)
 
 libbcf.a: $(BCFOBJ)
-	$(AR) -crus $@ $^
+	$(AR) -crus $@ $(BCFOBJ)
 
 libtabix.a: $(TABIXOBJ)
-	$(AR) -crus $@ $^
+	$(AR) -crus $@ $(TABIXOBJ)
