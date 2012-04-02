@@ -1,10 +1,21 @@
 CHANGES IN VERSION 1.8.0
 ------------------------
 
+NEW FEATURES
+
+    o Add readBamGappedAlignmentPairs() (plus related utilities
+      findMateAlignment() and makeGappedAlignmentPairs()) to read a BAM
+      file into a GappedAlignmentPairs object.
+
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o update samtools to github commit
     dc27682f70713a70d4f31bca652cf78e00757da2
+
+    o Add 'bitnames' arg to bamFlagAsBitMatrix() utility.
+
+    o By default readBamGappedAlignments() and readBamGappedReads() don't
+      drop PCR or optical duplicates anymore.
 
 BUG FIXES
 
