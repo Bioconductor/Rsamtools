@@ -89,14 +89,14 @@ setMethod(countFa, "FaFile",
         open(file)
         on.exit(close(file))
     }
+
     lkup <- Biostrings:::get_xsbasetypes_conversion_lookup("B", "DNA")
     tryCatch({
         spc <- .asSpace(param)
         dna <- .Call2(.scan_fa, .extptr(file),
                       spc[[1]], spc[[2]], spc[[3]], lkup,
                       PACKAGE="Rsamtools")
-        names(dna) <- spc[[1]]
-        dna
+        setNames(dna, spc[[1]])
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(file))
     })
@@ -158,23 +158,23 @@ setMethod(countFa, "character",
 setMethod(scanFa, c("character", "GRanges"),
     function(file, param, ...)
 {
-    scanFa(open(FaFile(file)), param, ...)
+    scanFa(FaFile(file), param, ...)
 })
 
 setMethod(scanFa, c("character", "RangesList"),
     function(file, param, ...)
 {
-    scanFa(open(FaFile(file)), param, ...)
+    scanFa(FaFile(file), param, ...)
 })
 
 setMethod(scanFa, c("character", "RangedData"),
     function(file, param, ...)
 {
-    scanFa(open(FaFile(file)), param, ...)
+    scanFa(FaFile(file), param, ...)
 })
 
 setMethod(scanFa, c("character", "missing"),
     function(file, param, ...)
 {
-    scanFa(open(FaFile(file)), ...)
+    scanFa(FaFile(file), ...)
 })

@@ -186,9 +186,9 @@ fl <- system.file("extdata", "ce2dict1.fa", package="Rsamtools")
 fa <- open(FaFile(fl))                   # open
 countFa(fa)
 (idx <- scanFaIndex(fa))
-(dna <- scanFa(fa, idx[1:2]))
+(dna <- scanFa(fa, param=idx[1:2]))
 ranges(idx) <- narrow(ranges(idx), -10)  # last 10 nucleotides
-(dna <- scanFa(fa, idx[1:2]))
+(dna <- scanFa(fa, param=idx[1:2]))
 
 }
 
