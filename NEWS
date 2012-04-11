@@ -1,3 +1,10 @@
+CHANGES IN VERSION 1.10.0
+-------------------------
+
+BUG FIXES
+
+    o close razip, bgzip files when done
+
 CHANGES IN VERSION 1.8.0
 ------------------------
 
@@ -10,7 +17,7 @@ NEW FEATURES
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o update samtools to github commit
-    dc27682f70713a70d4f31bca652cf78e00757da2
+      dc27682f70713a70d4f31bca652cf78e00757da2
 
     o Add 'bitnames' arg to bamFlagAsBitMatrix() utility.
 

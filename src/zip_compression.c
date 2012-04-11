@@ -22,8 +22,20 @@ void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
 
     /* we overwrite existing files here */
     *outfd = open(translateChar(STRING_ELT(dest, 0)), oflag, 0666);
-    if (0 > *outfd)
+    if (0 > *outfd) {
+        close(infd);
         Rf_error("opening 'dest': %s", strerror(errno));
+    }
+}
+
+void _zip_close(int *infd, int *outfd)
+{
+    if (-1L == close(infd))
+        _zip_error("closing input after compression: %s",
+                   strerror(errno), infd, outfd);
+    if (-1L == close(outfd))
+        Rf_error("closing output after compression: %s",
+                 strerror(errno));
 }
 
 void _zip_error(const char *txt, const char *err, int infd, int outfd)
@@ -56,9 +68,7 @@ SEXP bgzip(SEXP file, SEXP dest)
 
     if (0 > bgzf_close(outp))
         Rf_error("closing compressed output");
-    if (-1L == close(infd))
-        _zip_error("closing input after compression: %s",
-                   strerror(errno), infd, outfd);
+    _zip_close(infd, outfd);
 
     return dest;
 }
@@ -85,8 +95,7 @@ SEXP razip(SEXP file, SEXP dest)
                    strerror(errno), infd, outfd);
 
     razf_close(outp);
-    if (-1L == close(infd))
-        Rf_error("closing input after compression: %s", strerror(errno));
+    _zip_close(infd, outfd);
 
     return dest;
 }
