@@ -5,6 +5,8 @@ BUG FIXES
 
     o close razip, bgzip files when done
 
+    o bamReverseComplement<- failed to return the updated object
+
 CHANGES IN VERSION 1.8.0
 ------------------------
 

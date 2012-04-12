@@ -101,6 +101,7 @@ bamReverseComplement <-
 "bamReverseComplement<-" <- function(object, value)
 {
     slot(object, "reverseComplement") <- value
+    object
 }
 bamTag <- function(object) slot(object, "tag")
 "bamTag<-" <- function(object, value)
