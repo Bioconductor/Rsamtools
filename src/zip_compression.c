@@ -4,6 +4,13 @@
 #include "bgzf.h"
 #include "razf.h"
 
+void _zip_error(const char *txt, const char *err, int infd, int outfd)
+{
+    close(infd);
+    close(outfd);
+    err ? Rf_error(txt, err) : Rf_error(txt);
+}
+
 void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
 {
     int oflag = O_WRONLY | O_CREAT | O_TRUNC;
@@ -23,12 +30,12 @@ void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
     /* we overwrite existing files here */
     *outfd = open(translateChar(STRING_ELT(dest, 0)), oflag, 0666);
     if (0 > *outfd) {
-        close(infd);
+        close(*infd);
         Rf_error("opening 'dest': %s", strerror(errno));
     }
 }
 
-void _zip_close(int *infd, int *outfd)
+void _zip_close(int infd, int outfd)
 {
     if (-1L == close(infd))
         _zip_error("closing input after compression: %s",
@@ -36,13 +43,6 @@ void _zip_close(int *infd, int *outfd)
     if (-1L == close(outfd))
         Rf_error("closing output after compression: %s",
                  strerror(errno));
-}
-
-void _zip_error(const char *txt, const char *err, int infd, int outfd)
-{
-    close(infd);
-    close(outfd);
-    err ? Rf_error(txt, err) : Rf_error(txt);
 }
 
 SEXP bgzip(SEXP file, SEXP dest)

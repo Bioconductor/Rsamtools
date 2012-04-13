@@ -8,5 +8,5 @@ test_bgzip_openclose <- function()
     bgzip(fin, fout)
     checkIdentical(TRUE, file.remove(fin))
     checkIdentical(TRUE, file.remove(fout))
-    checkIdentical(TRUE, file.remove(d))
+    checkIdentical(0L, unlink(d, recursive=TRUE))
 }
