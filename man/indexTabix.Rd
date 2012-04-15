@@ -83,7 +83,6 @@ zipped <- bgzip(from, to)
 idx <- indexTabix(zipped, "sam")
 
 tab <- TabixFile(zipped, idx) 
-res <- yieldTabix(tab)
 }
 
 \keyword{ manip }

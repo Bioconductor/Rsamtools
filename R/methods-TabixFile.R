@@ -1,12 +1,13 @@
 TabixFile <-
-    function(file, index=paste(file, "tbi", sep="."), ...)
+    function(file, index=paste(file, "tbi", sep="."), ...,
+             yieldSize=NA_integer_)
 {
     tryCatch({
         .io_check_exists(c(file, index))
     }, error=function(err) {
         stop(sprintf("TabixFile: %s", conditionMessage(err)), call.=FALSE)
     })
-    .RsamtoolsFile(.TabixFile, file, index)
+    .RsamtoolsFile(.TabixFile, file, index, yieldSize=yieldSize, ...)
 }
 
 open.TabixFile <-
@@ -84,7 +85,6 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
 
 .tabix_scan <-
     function(file, ..., space, start, end,
-             tbxidx=rep(list(NULL), length(space)), yieldSize=30000L,
              tbxsym=getNativeSymbolInfo(".tabix_as_character",
                "Rsamtools"), tbxstate=NULL)
 {
@@ -94,22 +94,29 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
             on.exit(close(file))
         }
 
-        tbxidx <- lapply(tbxidx, function(elt) {
-            if (is.null(elt)) elt else sort(unique(as.integer(elt)))
-        })
-        if (length(tbxidx) != length(space))
-            stop("length(tbxidx) must equal length(space(param))")
+        if (0L != length(start) && !is.na(yieldSize(file))) {
+            msg <- sprintf("'%s' must be '%s' when '%s'",
+                           "yieldSize(file)", "NA_integer_",
+                           "0 != length(start(param))")
+            stop(msg)
+        }
+
         result <- .Call(.scan_tabix, .extptr(file),
-                        list(space, start, end), tbxidx,
-                        as.integer(yieldSize), tbxsym$address,
-                        tbxstate)
-        names(result) <- sprintf("%s:%d-%d", space, start, end)
-        result
+                        list(space, start, end), yieldSize(file),
+                        tbxsym$address, tbxstate)
+        setNames(result, sprintf("%s:%d-%d", space, start, end))
     }, error=function(err) {
         stop("scanTabix: ", conditionMessage(err), "\n  path: ",
              path(file), call.=FALSE)
     })
 }
+
+setMethod(scanTabix, c("TabixFile", "missing"),
+    function(file, ..., param)
+{
+    .tabix_scan(file, ..., space=character(), start=integer(),
+                end=integer())
+})
 
 setMethod(scanTabix, c("TabixFile", "RangesList"),
     function(file, ..., param)
@@ -132,50 +139,21 @@ setMethod(scanTabix, c("TabixFile", "GRanges"),
                 start=start(param), end=end(param))
 })
 
-setMethod(scanTabix, c("character", "RangesList"),
+setMethod(scanTabix, c("character", "missing"),
     function(file, ..., param)
 {
-    file <- TabixFile(file)
-    callGeneric(file, ..., param=param)
+    callGeneric(TabixFile(file), ...)
 })
 
-setMethod(scanTabix, c("character", "RangedData"),
+setMethod(scanTabix, c("character", "ANY"),
     function(file, ..., param)
 {
-    file <- TabixFile(file)
-    callGeneric(file, ..., param=param)
+    callGeneric(TabixFile(file), ..., param=param)
 })
-
-setMethod(scanTabix, c("character", "GRanges"),
-    function(file, ..., param)
-{
-    file <- TabixFile(file)
-    callGeneric(file, ..., param=param)
-})
-
-.tabix_yield <-
-    function(file, ..., yieldSize, tbxidx=NULL, tbxgrow=FALSE,
-             tbxsym=getNativeSymbolInfo(".tabix_as_character",
-               "Rsamtools"), tbxstate=NULL)
-
-{
-    tryCatch({
-        if (!isOpen(file))
-            open(file)
-        if (!is.null(tbxidx))
-            tbxidx <- sort(unique(as.integer(tbxidx)))
-        .Call(.yield_tabix, .extptr(file), tbxidx,
-              as.integer(yieldSize), as.logical(tbxgrow),
-              tbxsym$address, tbxstate)
-    }, error=function(err) {
-        stop("yield: ", conditionMessage(err), "\n  path: ",
-             path(file), call.=FALSE)
-    })
-}
 
 setMethod(yieldTabix, "TabixFile",
     function(file, ..., yieldSize=1000000L)
 {
-    .tabix_yield(file, ..., yieldSize=yieldSize)
+    .Deprecated("scanTabix")
+    scanTabix(file, ..., yieldSize=yieldSize)[[1]]
 })
-

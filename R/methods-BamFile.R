@@ -7,10 +7,11 @@ setMethod(isOpen, "BamFile",
 })
 
 BamFile <-
-    function(file, index=file)
+    function(file, index=file, ..., yieldSize=NA_integer_)
 {
     .RsamtoolsFile(.BamFile, .normalizePath(file),
-                   .normalizePath(index))
+                   .normalizePath(index), yieldSize=yieldSize,
+                   ...)
 }
 
 open.BamFile <-
@@ -70,10 +71,16 @@ setMethod(scanBam, "BamFile",
                        "param", "ScanBamParam", class(param))
         stop(msg)
     }
+    if (0L != length(bamWhich(param)) && !is.na(yieldSize(file))) {
+        msg <- sprintf("'%s' must be '%s' when '%s'",
+                       "yieldSize(file)", "NA_integer_",
+                       "0 != length(bamWhich(param))")
+        stop(msg)
+    }
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
-    x <- .io_bam(.scan_bamfile, file, param=param, reverseComplement,
-                 tmpl)
+    x <- .io_bam(.scan_bamfile, file, reverseComplement,
+                 yieldSize(file), tmpl, param=param)
     .scanBam_postprocess(x, param)
 })
 
@@ -272,6 +279,10 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 {
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
+    if (!is.na(yieldSize(file))) {
+        warning("'yieldSize' set to 'NA'")
+        yieldSize(file) <- NA_integer_
+    }
     flag0 <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
     what0 <- c("flag", "mrnm", "mpos")
     param <- .normargParam(param, flag0, what0)

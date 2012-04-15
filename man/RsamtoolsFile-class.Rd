@@ -4,6 +4,8 @@
 \alias{RsamtoolsFile-class}
 \alias{index}
 \alias{path}
+\alias{yieldSize}
+\alias{yieldSize<-}
 \alias{path,RsamtoolsFile-method}
 \alias{isOpen,RsamtoolsFile-method}
 \alias{show,RsamtoolsFile-method}
@@ -24,6 +26,8 @@
 index(object)
 \S4method{path}{RsamtoolsFile}(object, ...)
 \S4method{isOpen}{RsamtoolsFile}(con, rw="")
+yieldSize(object)
+yieldSize(object, ...) <- value
 \S4method{show}{RsamtoolsFile}(object)
 
 }
@@ -36,6 +40,7 @@ index(object)
 
   \item{\dots}{Additional arguments, unused.}
 
+  \item{value}{Replacement value.}
 }
 
 \section{Objects from the Class}{
@@ -59,6 +64,9 @@ index(object)
 
     \item{index}{A character(1) vector of the index file name.}
 
+    \item{yieldSize}{An integer(1) vector of the number of records to
+      yield.} 
+
   }
 }
 
@@ -67,10 +75,12 @@ index(object)
   Accessors:
   \describe{
 
-    \item{path}{Returns a character(1) vector of BAM path names.}
+    \item{path}{Returns a character(1) vector of path names.}
 
-    \item{index}{Returns a character(1) vector of BAM index path
-      names.}
+    \item{index}{Returns a character(1) vector of index path names.}
+
+    \item{yieldSize, yieldSize<-}{Return or set an integer(1) vector
+      indicating yield size.}
 
   }
 

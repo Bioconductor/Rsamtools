@@ -22,7 +22,7 @@ static const R_CallMethodDef callMethods[] = {
     {".bamfile_close", (DL_FUNC) & bamfile_close, 1},
     {".bamfile_isopen", (DL_FUNC) & bamfile_isopen, 1},
     {".read_bamfile_header", (DL_FUNC) & read_bamfile_header, 1},
-    {".scan_bamfile", (DL_FUNC) & scan_bamfile, 6},
+    {".scan_bamfile", (DL_FUNC) & scan_bamfile, 7},
     {".count_bamfile", (DL_FUNC) & count_bamfile, 4},
     {".filter_bamfile", (DL_FUNC) & filter_bamfile, 6},
     /* as_bam.c */
@@ -58,8 +58,7 @@ static const R_CallMethodDef callMethods[] = {
     {".tabixfile_isopen", (DL_FUNC) & tabixfile_isopen, 1},
     {".index_tabix", (DL_FUNC) & index_tabix, 8},
     {".header_tabix", (DL_FUNC) & header_tabix, 1},
-    {".scan_tabix", (DL_FUNC) & scan_tabix, 6},
-    {".yield_tabix", (DL_FUNC) & yield_tabix, 6},
+    {".scan_tabix", (DL_FUNC) & scan_tabix, 5},
     {".tabix_as_character", (DL_FUNC) & tabix_as_character, 4},
     /* pileup */
     {".apply_pileups", (DL_FUNC) & apply_pileups, 5},
@@ -76,8 +75,9 @@ void R_init_Rsamtools(DllInfo * info)
     R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 }
 
-void R_unload_Rsamtools(DllInfo * info)
+void R_unload_Rsamtools(DllInfo *info)
 {
+    (void) info;
 #ifdef _WIN32
     knet_win32_destroy();
 #endif

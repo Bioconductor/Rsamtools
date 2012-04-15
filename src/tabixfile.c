@@ -3,6 +3,8 @@
 
 static SEXP TABIXFILE_TAG = NULL;
 
+static const int TBX_INIT_SIZE = 32767;
+
 static void _tabixfile_close(SEXP ext)
 {
     _TABIX_FILE *tfile = TABIXFILE(ext);
@@ -212,8 +214,7 @@ SEXP header_tabix(SEXP ext)
 }
 
 SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
-                        const int *keep, const int size,
-                        Rboolean grow, SEXP state)
+                        const int size, SEXP state)
 {
     const double SCALE = 1.6;
     const ti_conf_t *conf = ti_get_conf(tabix->idx);
@@ -224,24 +225,18 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
     int linelen;
     const char *line;
 
-    int irec = 0, trec=1, nrec = size, pidx;
+    int irec = 0, nrec, pidx;
+    nrec = NA_INTEGER == size ? TBX_INIT_SIZE : size;
     SEXP record = NEW_CHARACTER(nrec);
     PROTECT_WITH_INDEX(record, &pidx);
 
     if (R_NilValue != state)
         Rf_error("[internal] expected 'NULL' state in tabix_as_character");
 
-    while (grow || irec < nrec) {
-        if (NULL == (line = ti_read(tabix, iter, &linelen)))
-            break;
-
+    while (NULL != (line = ti_read(tabix, iter, &linelen)))
+    {
         if (conf->meta_char == *line)
             continue;
-
-        if (NULL != keep) {
-            if (trec++ != *keep) continue;
-            keep++;
-        }
 
         if (irec == nrec) {
             nrec = nrec * SCALE;
@@ -260,6 +255,9 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
         SET_STRING_ELT(record, irec, mkChar(buf));
 
         irec += 1;
+
+        if (NA_INTEGER != size && irec == nrec)
+            break;
     }
 
     Free(buf);
@@ -268,87 +266,57 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
     return record;
 }
 
-SEXP scan_tabix(SEXP ext, SEXP space, SEXP keep, SEXP yield,
-                SEXP fun, SEXP state)
+SEXP scan_tabix(SEXP ext, SEXP space, SEXP yield, SEXP fun, SEXP state)
 {
     _scan_checkparams(space, R_NilValue, R_NilValue);
     if (!IS_INTEGER(yield) || 1L != Rf_length(yield))
-        Rf_error("'yield' must be integer(1)");
-    if (!R_finite(INTEGER(yield)[0]) || 0L > INTEGER(yield)[0])
-        Rf_error("'yield' must be >=0 and <.Machine$integer.max");
+        Rf_error("'yieldSize' must be integer(1)");
     _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
 
     tabix_t *tabix = TABIXFILE(ext)->tabix;
-    SEXP spc = VECTOR_ELT(space, 0), result;
-    const int *start = INTEGER(VECTOR_ELT(space, 1)),
-        *end = INTEGER(VECTOR_ELT(space, 2)), nspc = Rf_length(spc);
     SCAN_FUN *scan = (SCAN_FUN *) R_ExternalPtrAddr(fun);
 
-    PROTECT(result = NEW_LIST(nspc));
-    if (0 != ti_lazy_index_load(tabix))
-        Rf_error("'scanTabix' failed to load index");
+    SEXP spc = VECTOR_ELT(space, 0);
+    const int nspc = Rf_length(spc);
+    SEXP result, elt;
 
-    for (int ispc = 0; ispc < nspc; ++ispc) {
-        int yield_size;
-        const int *keep_idx;
-        Rboolean grow_flag;
-        int ibeg, iend, tid;
-        ti_iter_t iter;
-        const char *tid_name;
-        SEXP elt;
+    PROTECT(result = NEW_LIST(nspc == 0 ? 1 : nspc));
+    if (0 == nspc) {
+        ti_iter_t iter = TABIXFILE(ext)->iter;
+        if (NULL == iter) {
+            if (0 != ti_lazy_index_load(tabix))
+                Rf_error("'scanTabix' failed to load index");
+            iter = TABIXFILE(ext)->iter = ti_iter_first();
+        }
+        elt = scan(tabix, iter, INTEGER(yield)[0], state);
+        SET_VECTOR_ELT(result, 0, elt);
+    } else {
+        const int
+            *start = INTEGER(VECTOR_ELT(space, 1)),
+            *end = INTEGER(VECTOR_ELT(space, 2));
+        if (0 != ti_lazy_index_load(tabix))
+            Rf_error("'scanTabix' failed to load index");
 
-        ibeg = start[ispc] == 0 ? 0 : start[ispc] - 1;
-        iend = end[ispc];
-        tid_name = CHAR(STRING_ELT(spc, ispc));
-        tid = ti_get_tid(tabix->idx, tid_name);
-        if (0 > tid)
-            Rf_error("'%s' not present in tabix index", tid_name);
-        iter = ti_queryi(tabix, tid, ibeg, iend);
+        for (int ispc = 0; ispc < nspc; ++ispc) {
+            int ibeg, iend, tid;
+            ti_iter_t iter;
+            const char *tid_name;
 
-        keep_idx = R_NilValue == VECTOR_ELT(keep, ispc) ?
-            NULL : INTEGER(VECTOR_ELT(keep, ispc));
-        yield_size = NULL == keep_idx ?
-            INTEGER(yield)[0] : Rf_length(VECTOR_ELT(keep, ispc));
-        grow_flag = NULL == keep_idx ? TRUE : FALSE;
-        elt = scan(tabix, iter, keep_idx, yield_size, grow_flag,
-                   state);
-        SET_VECTOR_ELT(result, ispc, elt);
+            ibeg = start[ispc] == 0 ? 0 : start[ispc] - 1;
+            iend = end[ispc];
+            tid_name = CHAR(STRING_ELT(spc, ispc));
+            tid = ti_get_tid(tabix->idx, tid_name);
+            if (0 > tid)
+                Rf_error("'%s' not present in tabix index", tid_name);
+            iter = ti_queryi(tabix, tid, ibeg, iend);
 
-        ti_iter_destroy(iter);
+            elt = scan(tabix, iter, NA_INTEGER, state);
+            SET_VECTOR_ELT(result, ispc, elt);
+
+            ti_iter_destroy(iter);
+        }
     }
 
     UNPROTECT(1);
     return result;
-}
-
-SEXP yield_tabix(SEXP ext, SEXP keep, SEXP yield, SEXP grow,
-                 SEXP fun, SEXP state)
-{
-    if (!IS_INTEGER(yield) || 1L != Rf_length(yield))
-        Rf_error("'yield' must be integer(1)");
-    if (!R_finite(INTEGER(yield)[0]) || 0L > INTEGER(yield)[0])
-        Rf_error("'yield' must be >=0 and <.Machine$integer.max");
-    if (!IS_LOGICAL(grow) || 1L != Rf_length(grow))
-        Rf_error("'grow' must be logical(1)");
-    _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
-
-    tabix_t *tabix = TABIXFILE(ext)->tabix;
-    ti_iter_t iter = TABIXFILE(ext)->iter;
-    SCAN_FUN *scan = (SCAN_FUN *) R_ExternalPtrAddr(fun);
-    int yield_size;
-    const int *keep_idx;
-    Rboolean grow_flag;
-
-    if (NULL == iter) {
-        if (0 != ti_lazy_index_load(tabix))
-            Rf_error("'scanTabix' failed to load index");
-        iter = TABIXFILE(ext)->iter = ti_iter_first();
-    }
-
-    keep_idx = R_NilValue == keep ? NULL : INTEGER(keep);
-    yield_size =
-        NULL == keep_idx ? INTEGER(yield)[0] : Rf_length(keep);
-    grow_flag = NULL == keep_idx ? LOGICAL(grow)[0] : FALSE;
-    return scan(tabix, iter, keep_idx, yield_size, grow_flag,
-                state);
 }

@@ -26,6 +26,7 @@ typedef struct {
     int irec, iparsed, irange, nrange;
     uint32_t keep_flag[2], cigar_flag;
     Rboolean reverseComplement;
+    int yieldSize;
 
     void *extra;
 } _BAM_DATA;
@@ -60,6 +61,8 @@ enum {
 
 enum { CIGAR_SIMPLE = 1 };
 
+static const int BAM_INIT_SIZE = 1048576;
+
 /* utility */
 
 void _bam_check_template_list(SEXP template_list)
@@ -86,11 +89,14 @@ static _BAM_DATA *_Calloc_BAM_DATA(int blocksize, int cigar_buf_sz)
 }
 
 static _BAM_DATA *_init_BAM_DATA(SEXP ext, SEXP space, SEXP flag,
-                                 SEXP isSimpleCigar, Rboolean reverseComplement)
+                                 SEXP isSimpleCigar,
+                                 Rboolean reverseComplement,
+                                 int yieldSize)
 {
     int nrange = R_NilValue == space ? 1 : LENGTH(VECTOR_ELT(space, 0));
     _BAM_DATA *bd =
-        _Calloc_BAM_DATA(1 == nrange ? 5 * 1048576 : 1048576, 32768);
+        _Calloc_BAM_DATA(1 == nrange ?
+                         5 * BAM_INIT_SIZE : BAM_INIT_SIZE, 32768);
     bd->parse_status = 0;
     bd->bfile = BAMFILE(ext);
     bd->irange = 0;
@@ -100,6 +106,7 @@ static _BAM_DATA *_init_BAM_DATA(SEXP ext, SEXP space, SEXP flag,
     bd->keep_flag[1] = INTEGER(flag)[1];
     bd->cigar_flag = LOGICAL(isSimpleCigar)[0];
     bd->reverseComplement = reverseComplement;
+    bd->yieldSize = yieldSize;
     return bd;
 }
 
@@ -568,9 +575,12 @@ static int _scan_bam_all(_BAM_DATA * bd, _PARSE1_FUNC parse1,
             _grow_SCAN_BAM_DATA(bd, 0);
             return result;
         }
+        if (NA_INTEGER != bd->yieldSize && bd->yieldSize == bd->iparsed)
+            break;
     }
     if (NULL != finish1)
         (*finish1) (bd);
+    bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
     return bd->iparsed;
 }
 
@@ -920,11 +930,12 @@ static void _scan_bam_finish1range(_BAM_DATA * bd)
 }
 
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-               SEXP reverseComplement, SEXP template_list)
+               SEXP reverseComplement, SEXP yieldSize, SEXP template_list)
 {
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
     _BAM_DATA *bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
-                                   LOGICAL(reverseComplement)[0]);
+                                   LOGICAL(reverseComplement)[0],
+                                   INTEGER(yieldSize)[0]);
     SEXP result = _scan_bam_result_init(template_list, names, space);
     PROTECT(result);
     _SCAN_BAM_DATA *sbd = _Calloc_SCAN_BAM_DATA();
@@ -966,7 +977,8 @@ static int _count_bam1(const bam1_t * bam, void *data)
 SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
     _BAM_DATA *bd =
-        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, FALSE);
+        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, FALSE,
+                       NA_INTEGER);
     SEXP result = PROTECT(NEW_LIST(2));
     bd->extra = result;
 
@@ -1015,7 +1027,8 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
 {
     /* open destination */
     _BAM_DATA *bd =
-        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, FALSE);
+        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, FALSE,
+                       NA_INTEGER);
     /* FIXME: this just copies the header... */
     bam_header_t *header = BAMFILE(bfile)->file->header;
     samfile_t *f_out = _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),

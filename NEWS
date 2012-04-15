@@ -1,6 +1,13 @@
 CHANGES IN VERSION 1.10.0
 -------------------------
 
+NEW FEATURES
+
+    o BamFile and TabixFile accept argument yieldSize; repeated calls
+      to scanBam and scanTabix return successive yieldSize chunks of
+      the file. readBamGappedAlignments, VariantAnnotation::readVcf
+      automatically gain support for yield'ing through files.
+
 BUG FIXES
 
     o close razip, bgzip files when done

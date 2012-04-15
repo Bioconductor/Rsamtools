@@ -2,10 +2,24 @@
 
 index <- function(object) object$index
 
-.RsamtoolsFile <-
-    function(g, path, index, ...)
+yieldSize <- function(object) object$yieldSize
+
+`yieldSize<-` <-
+    function(object, ..., value)
 {
-    g$new(path=.normalizePath(path), index=.normalizePath(index), ...)
+    if (1L != length(value))
+        stop("'value' must be length 1")
+    object$yieldSize <- as.integer(value)
+    object
+}
+
+.RsamtoolsFile <-
+    function(g, path, index, ..., yieldSize=NA_integer_)
+{
+    if (1L != length(yieldSize))
+        stop("'yieldSize' must be length 1")
+    g$new(path=.normalizePath(path), index=.normalizePath(index), ...,
+          yieldSize=as.integer(yieldSize), ...)
 }
 
 setMethod(path, "RsamtoolsFile", function(object, ...) object$path)
@@ -17,4 +31,5 @@ setMethod(show, "RsamtoolsFile", function(object) {
     cat(.ppath("path", path(object)))
     cat(.ppath("index", index(object)))
     cat("isOpen:", isOpen(object), "\n")
+    cat("yieldSize:", yieldSize(object), "\n")
 })

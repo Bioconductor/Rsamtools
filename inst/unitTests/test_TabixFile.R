@@ -39,11 +39,17 @@ test_TabixFile_scan <- function()
 
 test_TabixFile_yield <- function()
 {
-    tab <- open(TabixFile(fl))
+    tab <- open(TabixFile(fl, yieldSize=100))
     it <- integer()
-    while(length(res <- yieldTabix(tab, yieldSize=100)))
+    while(length(res <- scanTabix(tab)[[1]]))
         it <- append(it, length(res))
+    close(tab)
     checkIdentical(c(100L, 100L, 37L), it)
+
+    rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
+    open(tab)
+    checkException(scanTabix(tab, param=rng), silent=TRUE)
+    close(tab)
 }
 
 test_TabixFile_header <- function()
@@ -61,6 +67,7 @@ test_TabixFile_header <- function()
 
 test_TabixFile_scan_index <- function()
 {
+    DEACTIVATED("index never publically supported; removed")
     tab <- open(TabixFile(fl))
     param <- GRanges("chr1", IRanges(1, 10000))
 

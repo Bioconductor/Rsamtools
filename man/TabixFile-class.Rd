@@ -16,7 +16,9 @@
 \alias{scanTabix,TabixFile,RangesList-method}
 \alias{scanTabix,TabixFile,RangedData-method}
 \alias{scanTabix,TabixFile,GRanges-method}
-\alias{yieldTabix,TabixFile-method}
+\alias{scanTabix,TabixFile,missing-method}
+\alias{scanTabix,character,ANY-method}
+\alias{scanTabix,character,missing-method}
 
 \title{Manipulate tabix indexed tab-delimited files.}
 
@@ -35,7 +37,8 @@
 
 ## Constructors
 
-TabixFile(file, index = paste(file, "tbi", sep="."), ...)
+TabixFile(file, index = paste(file, "tbi", sep="."), ...,
+          yieldSize=NA_integer_)
 TabixFileList(...)
 
 ## Opening / closing
@@ -54,8 +57,9 @@ TabixFileList(...)
 \S4method{scanTabix}{TabixFile,GRanges}(file, ..., param)
 \S4method{scanTabix}{TabixFile,RangesList}(file, ..., param)
 \S4method{scanTabix}{TabixFile,RangedData}(file, ..., param)
-
-\S4method{yieldTabix}{TabixFile}(file, ..., yieldSize=1000000L)
+\S4method{scanTabix}{TabixFile,missing}(file, ..., param)
+\S4method{scanTabix}{character,ANY}(file, ..., param)
+\S4method{scanTabix}{character,missing}(file, ..., param)
 
 }
 
@@ -69,11 +73,12 @@ TabixFileList(...)
 
   \item{index}{A character(1) vector of the tabix file index.}
 
+  \item{yieldSize}{Number of records to yield each time the file is read
+    from using \code{scanTabix}. Only valid when \code{param} is
+    unspecified.}
+
   \item{param}{An instance of GRanges, IRangedData, or RangesList, used
     to select which records to scan.}
-
-  \item{yieldSize}{integer(1) indicating the maximum number of records
-    to retreieve.}
 
   \item{...}{Additional arguments. For \code{TabixFileList}, this can
     either be a single character vector of paths to tabix files, or
@@ -105,7 +110,10 @@ TabixFileList(...)
   \describe{
 
     \item{open.TabixFile}{Opens the (local or remote) \code{path} and
-      \code{index}. Returns a \code{TabixFile} instance.}
+      \code{index}. Returns a \code{TabixFile} instance. 
+      \code{yieldSize} determines the number of records parsed during
+      each call to \code{scanTabix}; \code{NA} indicates that all
+      records are to be parsed.}
 
     \item{close.TabixFile}{Closes the \code{TabixFile} \code{con}; returning
 	  (invisibly) the updated \code{TabixFile}. The instance may be
@@ -119,6 +127,9 @@ TabixFileList(...)
     \item{path}{Returns a character(1) vector of the tabix path name.}
 
     \item{index}{Returns a character(1) vector of tabix index name.}
+
+    \item{yieldSize, yieldSize<-}{Return or set an integer(1) vector
+      indicating yield size.}
 
   }
 
@@ -134,8 +145,11 @@ TabixFileList(...)
       while indexing, and the header (preceeded by comment character, at
       start of file) lines.}
 
-    \item{scanTabix}{Visit the path in \code{path(file)}, returning the
-      result of \code{\link{scanTabix}} applied to the specified path.}
+    \item{scanTabix}{For \code{signature(file="TabixFile")}, Visit the
+      path in \code{path(file)}, returning the result of
+      \code{\link{scanTabix}} applied to the specified path. For
+      \code{signature(file="character")}, call the corresponding method
+      after coercing \code{file} to \code{TabixFile}.}
 
     \item{indexTabix}{This method operates on file paths, rather than
       \code{TabixFile} objects, to index tab-separated files. See
@@ -155,12 +169,19 @@ tbx <- TabixFile(fl)
 
 param <- GRanges(c("chr1", "chr2"), IRanges(c(1, 1), width=100000))
 res <- scanTabix(tbx, param=param)
-names(res)
+sapply(res, length)
 res[["chr1:1-100000"]][1:2]
 
+## parse to list of data.frame's
+dff <- Map(function(elt) {
+    read.csv(textConnection(elt), sep="\t", header=FALSE)
+}, res)
+dff[["chr1:1-100000"]][1:5,1:8]
+
 ## parse 100 records at a time
-tbx <- open(TabixFile(fl))
-while(length(res <- yieldTabix(tbx, yieldSize=100L)))
+length(scanTabix(tbx)[[1]]) # total number of records
+tbx <- open(TabixFile(fl, yieldSize=100))
+while(length(res <- scanTabix(tbx)[[1]]))
    cat("records read:", length(res), "\n")
 close(tbx)
 

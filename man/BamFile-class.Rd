@@ -46,7 +46,7 @@
 
 ## Constructors
 
-BamFile(file, index=file)
+BamFile(file, index=file, ..., yieldSize=NA_integer_)
 BamFileList(...)
 
 ## Opening / closing
@@ -92,6 +92,10 @@ BamFileList(...)
 
   \item{index}{A character vector of indices (for \code{BamFile});
     ignored for all other methods on this page.}
+
+  \item{yieldSize}{Number of records to yield each time the file is read
+    from using \code{scanBam}. Only valid when
+    \code{length(bamWhich(param)) == 0}.}
 
   \item{destination}{character(1) file path to write filtered reads to.}
 
@@ -190,6 +194,9 @@ BamFileList(...)
     \item{index}{Returns a character(1) vector of BAM index path
       names.}
 
+    \item{yieldSize, yieldSize<-}{Return or set an integer(1) vector
+      indicating yield size.}
+
   }
 
   Methods:
@@ -248,18 +255,28 @@ BamFileList(...)
 \examples{
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+length(scanBam(fl)[[1]][[1]])  # all records
+
 bf <- open(BamFile(fl))        # implicit index
 bf
 identical(scanBam(bf), scanBam(fl))
 
+## chunks of size 1000
+bf <- open(BamFile(fl, yieldSize=1000))  
+while (nrec <- length(scanBam(bf)[[1]][[1]]))
+    cat("records:", nrec, "\n")
+close(bf)
+
 rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
 
 ## repeatedly visit 'bf'
+bf <- open(BamFile(fl))
 sapply(seq_len(length(rng)), function(i, bamFile, rng) {
     param <- ScanBamParam(which=rng[i], what="seq")
     bam <- scanBam(bamFile, param=param)[[1]]
     alphabetFrequency(bam[["seq"]], baseOnly=TRUE, collapse=TRUE)
 }, bf, rng)
+close(bf)
 
 
 ##-----------------------------------------------------------------------##
@@ -280,9 +297,7 @@ features <- GRanges(
         width=c(500, 900, 500, 300, 600, 300, 500, 900, 500, 500, 500)),
    DataFrame(group_id)
 )
-
 summarizeOverlaps(features, bfs, mode=Union, ignore.strand=TRUE)
-
 
 }
 
