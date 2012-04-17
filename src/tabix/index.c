@@ -286,7 +286,8 @@ static inline uint64_t insert_offset2(ti_lidx_t *index2, int _beg, int _end, uin
 static void merge_chunks(ti_index_t *idx)
 {
 	khash_t(i) *index;
-	int i, l, m;
+	int i, m;
+	uint32_t l;
 	khint_t k;
 	for (i = 0; i < idx->n; ++i) {
 		index = idx->index[i];
