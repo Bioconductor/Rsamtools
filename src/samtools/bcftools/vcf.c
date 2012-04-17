@@ -16,7 +16,7 @@ typedef struct{
 
 typedef vcffile_t *vcfFile;
 
-vcfFile _vcf_open(const char *fn, const char *__restrict mode)
+static vcfFile vcfFile_open(const char *fn, const char *__restrict mode)
 {
 	vcfFile vcf = (vcfFile) malloc(sizeof(vcffile_t));
 	vcf->is_bgzf = bgzf_check_bgzf(fn);
@@ -29,7 +29,19 @@ vcfFile _vcf_open(const char *fn, const char *__restrict mode)
 	return vcf;
 }
 
-int _vcf_read(vcfFile vcf, void *data, int length)
+static vcfFile vcfFile_fdopen(int fd, const char *__restrict mode)
+{
+    vcfFile vcf = NULL;
+    gzFile gz = gzdopen(fd, mode);
+    if (NULL != gz) {
+        vcf = malloc(sizeof(vcffile_t));
+        vcf->is_bgzf = 0;
+        vcf->fp.gz = gz;
+    }
+    return vcf;
+}
+
+static int vcfFile_read(vcfFile vcf, void *data, int length)
 {
 	int res;
 	if (vcf->is_bgzf)
@@ -39,16 +51,19 @@ int _vcf_read(vcfFile vcf, void *data, int length)
 	return res;
 }
 
-int _vcf_close(vcfFile vcf)
+static int vcfFile_close(vcfFile vcf)
 {
 	int res;
 	if (vcf->is_bgzf)
 		res = bgzf_close(vcf->fp.bgzf);
 	else
 		res = gzclose(vcf->fp.gz);
-	return res;
+    if (0 == res)
+        free(vcf);
+    return res;
 }
-KSTREAM_INIT(vcfFile, _vcf_read, 4096)
+
+KSTREAM_INIT(vcfFile, vcfFile_read, 4096)
 
 typedef struct {
  	vcfFile fp;
@@ -108,7 +123,8 @@ bcf_t *vcf_open(const char *fn, const char *mode)
 	bp->v = v;
 	v->refhash = bcf_str2id_init();
 	if (strchr(mode, 'r')) {
-		v->fp = _vcf_open(fn, "r");
+		v->fp = strcmp(fn, "-") ? vcfFile_open(fn, "r") :
+			vcfFile_fdopen(fileno(stdin), "r");
 		v->ks = ks_init(v->fp);
 	} else if (strchr(mode, 'w'))
 		v->fpout = strcmp(fn, "-")? fopen(fn, "w") : stdout;
@@ -127,7 +143,7 @@ int vcf_dictread(bcf_t *bp, bcf_hdr_t *h, const char *fn)
 	s.l = s.m = 0; s.s = 0;
 	rn.m = rn.l = h->l_nm; rn.s = h->name;
 	v = (vcf_t*)bp->v;
-	fp = _vcf_open(fn, "r");
+	fp = vcfFile_open(fn, "r");
 	ks = ks_init(fp);
 	while (ks_getuntil(ks, 0, &s, &dret) >= 0) {
 		bcf_str2id_add(v->refhash, strdup(s.s));
@@ -135,7 +151,7 @@ int vcf_dictread(bcf_t *bp, bcf_hdr_t *h, const char *fn)
 		if (dret != '\n') ks_getuntil(ks, '\n', &s, &dret);
 	}
 	ks_destroy(ks);
-	_vcf_close(fp);
+	vcfFile_close(fp);
 	h->l_nm = rn.l; h->name = rn.s;
 	bcf_hdr_sync(h);
 	free(s.s);
@@ -150,7 +166,7 @@ int vcf_close(bcf_t *bp)
 	v = (vcf_t*)bp->v;
 	if (v->fp) {
 		ks_destroy(v->ks);
-		_vcf_close(v->fp);
+		vcfFile_close(v->fp);
 	}
 	if (v->fpout) fclose(v->fpout);
 	free(v->line.s);
