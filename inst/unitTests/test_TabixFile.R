@@ -65,6 +65,18 @@ test_TabixFile_header <- function()
     checkIdentical(character(), hdr$header)
 }
 
+test_TabixFile_header_remote <- function()
+{
+    fl <- "http://1000genomes.s3.amazonaws.com/release/20110521/ALL.chr22.phase1_integrated_calls.20101123.snps_indels_svs.genotypes.vcf.gz"
+    obs <- headerTabix(fl)
+    checkIdentical("22", obs$seqnames)
+    exp <- structure(c(1L, 2L, 0L), .Names = c("seq", "start", "end"))
+    checkIdentical(exp, obs$indexColumns)
+    checkIdentical(0L, obs$skip)
+    checkIdentical("#", obs$comment)
+    checkIdentical(29L, length(obs$header))
+}
+
 test_TabixFile_scan_index <- function()
 {
     DEACTIVATED("index never publically supported; removed")
