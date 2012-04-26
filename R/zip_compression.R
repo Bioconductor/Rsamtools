@@ -2,8 +2,7 @@ bgzipTabix <-
     function(fromFname, toFname = paste(fromFname, "gz", sep="."),
              overwrite=FALSE)
 {
-    .Deprecated("bgzip", package="Rsamtools")
-    bgzip(fromFname, toFname, overwrite)
+    .Defunct("bgzip", package="Rsamtools")
 }
 
 .zip <-

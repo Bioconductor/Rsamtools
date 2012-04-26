@@ -1,7 +1,6 @@
 \name{Compression}
 \Rdversion{1.1}
 
-\alias{bgzipTabix}
 \alias{bgzip}
 \alias{razip}
 
