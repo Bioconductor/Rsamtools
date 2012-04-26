@@ -111,7 +111,7 @@ setMethod(scanFa, c("FaFile", "RangedData"), .scanFa)
 setMethod(scanFa, c("FaFile", "missing"),
     function(file, param, ...)
 {
-    read.DNAStringSet(path(file))
+    readDNAStringSet(path(file))
 })
 
 setMethod(getSeq, "FaFile",

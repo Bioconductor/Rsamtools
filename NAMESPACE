@@ -23,7 +23,7 @@ importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
 importClassesFrom(BiocGenerics, url, gzfile, unz, pipe)
 
-importFrom(Biostrings, DNA_ALPHABET, read.DNAStringSet,
+importFrom(Biostrings, DNA_ALPHABET, readDNAStringSet,
            DNAStringSet, BStringSet, PhredQuality,
            getSeq, reverseComplement)
 
