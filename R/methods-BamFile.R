@@ -285,9 +285,15 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     }
     flag0 <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
     what0 <- c("flag", "mrnm", "mpos")
-    param <- .normargParam(param, flag0, what0)
-    galn <- readBamGappedAlignments(file, use.names=TRUE, param=param)
-    makeGappedAlignmentPairs(galn, use.names=use.names)
+    param2 <- .normargParam(param, flag0, what0)
+    galn <- readBamGappedAlignments(file, use.names=TRUE, param=param2)
+    if (is.null(param)) {
+        keep.colnames <- NULL
+    } else {
+        keep.colnames <- c(bamWhat(param), bamTag(param))
+    }
+    makeGappedAlignmentPairs(galn, use.names=use.names,
+                                   keep.colnames=keep.colnames)
 })
 
 
