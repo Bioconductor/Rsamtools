@@ -67,6 +67,10 @@ test_TabixFile_header <- function()
 
 test_TabixFile_header_remote <- function()
 {
+    if ("windows" == .Platform$OS.type) {
+        DEACTIVATED("remote tabix not supported on Windows")
+        return(TRUE)
+    }
     fl <- "http://1000genomes.s3.amazonaws.com/release/20110521/ALL.chr22.phase1_integrated_calls.20101123.snps_indels_svs.genotypes.vcf.gz"
     obs <- headerTabix(fl)
     checkIdentical("22", obs$seqnames)
