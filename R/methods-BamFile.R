@@ -288,12 +288,11 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     param2 <- .normargParam(param, flag0, what0)
     galn <- readBamGappedAlignments(file, use.names=TRUE, param=param2)
     if (is.null(param)) {
-        keep.colnames <- NULL
+        keep.cols <- NULL
     } else {
-        keep.colnames <- c(bamWhat(param), bamTag(param))
+        keep.cols <- c(bamWhat(param), bamTag(param))
     }
-    makeGappedAlignmentPairs(galn, use.names=use.names,
-                                   keep.colnames=keep.colnames)
+    makeGappedAlignmentPairs(galn, use.names=use.names, keep.cols=keep.cols)
 })
 
 

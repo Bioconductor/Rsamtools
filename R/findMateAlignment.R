@@ -392,15 +392,15 @@ findMateAlignment2 <- function(x, y=NULL)
     .isLastSegment.integer(elementMetadata(x)$flag)
 
 ### 'x' must be a GappedAlignments objects.
-makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.colnames=NULL)
+makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.cols=NULL)
 {
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
-    if (!is.null(keep.colnames)) {
-        if (!is.character(keep.colnames) || any(is.na(keep.colnames)))
-            stop("'keep.colnames' must be a character vector with no NAs")
-        if (!all(keep.colnames %in% colnames(elementMetadata(x))))
-            stop("'keep.colnames' must be a subset ",
+    if (!is.null(keep.cols)) {
+        if (!is.character(keep.cols) || any(is.na(keep.cols)))
+            stop("'keep.cols' must be a character vector with no NAs")
+        if (!all(keep.cols %in% colnames(elementMetadata(x))))
+            stop("'keep.cols' must be a subset ",
                  "of 'colnames(elementMetadata(x))'")
     }
     mate <- findMateAlignment(x)
@@ -460,8 +460,8 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.colnames=NULL)
     if (use.names)
         ans_names <- names(first)
     names(first) <- names(last) <- NULL
-    elementMetadata(first) <- elementMetadata(first)[keep.colnames]
-    elementMetadata(last) <- elementMetadata(last)[keep.colnames]
+    elementMetadata(first) <- elementMetadata(first)[keep.cols]
+    elementMetadata(last) <- elementMetadata(last)[keep.cols]
     GappedAlignmentPairs(first, last, first_is_proper, names=ans_names)
 }
 

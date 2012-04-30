@@ -13,7 +13,7 @@ object.
 
 \usage{
 findMateAlignment(x, verbose=FALSE)
-makeGappedAlignmentPairs(x, use.names=FALSE)
+makeGappedAlignmentPairs(x, use.names=FALSE, keep.cols=NULL)
 }
 
 \arguments{
@@ -27,6 +27,10 @@ makeGappedAlignmentPairs(x, use.names=FALSE)
   \item{use.names}{
     Whether the names on the input object should be propagated to the
     returned object or not.
+  }
+  \item{keep.cols}{
+    Names of the metadata columns to keep in the returned
+    \link{GappedAlignmentPairs} object.
   }
 }
 
