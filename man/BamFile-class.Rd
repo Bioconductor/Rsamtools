@@ -47,14 +47,14 @@
 ## Constructors
 
 BamFile(file, index=file, ..., yieldSize=NA_integer_)
-BamFileList(...)
+BamFileList(..., yieldSize=NA_integer_)
 
 ## Opening / closing
 
 \S3method{open}{BamFile}(con, ...)
 \S3method{close}{BamFile}(con, ...)
 
-## accessors; also path(), index()
+## accessors; also path(), index(), yieldSize()
 
 \S4method{isOpen}{BamFile}(con, rw="")
 
@@ -95,7 +95,9 @@ BamFileList(...)
 
   \item{yieldSize}{Number of records to yield each time the file is read
     from using \code{scanBam}. Only valid when
-    \code{length(bamWhich(param)) == 0}.}
+    \code{length(bamWhich(param)) == 0}. \code{yieldSize} does not alter
+    existing yield sizes, include \code{NA}, when creating a
+    \code{BamFileList} from \code{BamFile} instances.}
 
   \item{destination}{character(1) file path to write filtered reads to.}
 

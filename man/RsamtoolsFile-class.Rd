@@ -9,6 +9,7 @@
 \alias{path,RsamtoolsFile-method}
 \alias{isOpen,RsamtoolsFile-method}
 \alias{show,RsamtoolsFile-method}
+\alias{yieldSize,RsamtoolsFile-method}
 
 \title{A base class for managing file references in Rsamtools}
 
@@ -26,7 +27,7 @@
 index(object)
 \S4method{path}{RsamtoolsFile}(object, ...)
 \S4method{isOpen}{RsamtoolsFile}(con, rw="")
-yieldSize(object)
+\S4method{yieldSize}{RsamtoolsFile}(object, ...)
 yieldSize(object, ...) <- value
 \S4method{show}{RsamtoolsFile}(object)
 

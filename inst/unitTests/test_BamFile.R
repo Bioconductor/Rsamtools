@@ -1,4 +1,3 @@
-library(Rsamtools); library(RUnit)
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
 test_BamFile_openclose <- function()
@@ -32,4 +31,21 @@ test_BamFile_yield <- function()
     param <- ScanBamParam(which=rng)
     checkException(scanBam(bf, param=param), silent=TRUE)
     close(bf)
+}
+
+test_BamFileList_yield <- function()
+{
+    bfl <- BamFileList(c(fl, fl), yieldSize=100)
+    checkIdentical(c(100L, 100L), sapply(bfl, yieldSize))
+
+    bfl <- BamFileList(c(fl, fl))
+    checkIdentical(c(NA_integer_, NA_integer_), sapply(bfl, yieldSize))
+
+    ## yieldSize, even implicit on BamFile wins out
+    bfl <- BamFileList(BamFile(fl, yieldSize=10), BamFile(fl, yieldSize=20),
+                       yieldSize=100)
+    checkIdentical(c(10L, 20L), sapply(bfl, yieldSize))
+
+    bfl <- BamFileList(BamFile(fl), BamFile(fl), yieldSize=100)
+    checkIdentical(c(NA_integer_, NA_integer_), sapply(bfl, yieldSize))
 }

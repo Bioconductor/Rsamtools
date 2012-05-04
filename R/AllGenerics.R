@@ -134,4 +134,8 @@ setGeneric("applyPileups", function(files, FUN, ..., param)
 
 setGeneric("path",
            function(object, ...) standardGeneric("path"))
+
+setGeneric("yieldSize",
+           function(object, ...) standardGeneric("yieldSize"))
+
 setGeneric("isOpen")

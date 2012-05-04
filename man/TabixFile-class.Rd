@@ -39,14 +39,14 @@
 
 TabixFile(file, index = paste(file, "tbi", sep="."), ...,
           yieldSize=NA_integer_)
-TabixFileList(...)
+TabixFileList(..., yieldSize=NA_integer_)
 
 ## Opening / closing
 
 \S3method{open}{TabixFile}(con, ...)
 \S3method{close}{TabixFile}(con, ...)
 
-## accessors; also path(), index()
+## accessors; also path(), index(), yieldSize()
 
 \S4method{isOpen}{TabixFile}(con, rw="")
 
@@ -75,7 +75,9 @@ TabixFileList(...)
 
   \item{yieldSize}{Number of records to yield each time the file is read
     from using \code{scanTabix}. Only valid when \code{param} is
-    unspecified.}
+    unspecified.  \code{yieldSize} does not alter existing yield sizes,
+    include \code{NA}, when creating a \code{TabixFileList} from
+    \code{TabixFile} instances.}
 
   \item{param}{An instance of GRanges, IRangedData, or RangesList, used
     to select which records to scan.}

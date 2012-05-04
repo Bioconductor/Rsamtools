@@ -8,6 +8,7 @@
 \alias{open.RsamtoolsFileList}
 \alias{close.RsamtoolsFileList}
 \alias{names,RsamtoolsFileList-method}
+\alias{yieldSize,RsamtoolsFileList-method}
 
 \title{A base class for managing lists of Rsamtools file references}
 
@@ -26,6 +27,7 @@
 \S3method{open}{RsamtoolsFileList}(con, ...)
 \S3method{close}{RsamtoolsFileList}(con, ...)
 \S4method{names}{RsamtoolsFileList}(x)
+\S4method{yieldSize}{RsamtoolsFileList}(object, ...)
 
 }
 

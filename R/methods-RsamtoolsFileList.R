@@ -1,18 +1,19 @@
 setGeneric(".RsamtoolsFileList",
-           function(..., class) standardGeneric(".RsamtoolsFileList"),
+           function(..., yieldSize=NA_integer_, class)
+               standardGeneric(".RsamtoolsFileList"),
            signature="...")
 
 setMethod(.RsamtoolsFileList, "character",
-    function(..., class)
+    function(..., yieldSize=NA_integer_, class)
 {
-    listData <-
-        lapply(..1, function(elt, class) do.call(class, list(elt)),
-               class)
+    listData <- lapply(..1, function(elt, yieldSize, class) {
+        do.call(class, list(elt, yieldSize=yieldSize))
+    }, yieldSize, class)
     new(paste(class, "List", sep=""), listData=listData)
 })
 
 setMethod(.RsamtoolsFileList, "ANY",
-    function(..., class)
+    function(..., yieldSize=NA_integer_, class)
 {
     new(paste(class, "List", sep=""), listData=list(...))
 })
@@ -21,6 +22,12 @@ setMethod(path, "RsamtoolsFileList",
     function(object, ...)
 {
     sapply(as.list(object), path)
+})
+
+setMethod(yieldSize, "RsamtoolsFileList",
+    function(object, ...)
+{
+    sapply(as.list(object), yieldSize)
 })
 
 setMethod(isOpen, "RsamtoolsFileList", 
@@ -56,11 +63,19 @@ setMethod(names, "RsamtoolsFileList",
 
 ## implementations
 
-BamFileList <- function(...) .RsamtoolsFileList(..., class="BamFile")
+BamFileList <-
+    function(..., yieldSize=NA_integer_)
+{
+    .RsamtoolsFileList(..., yieldSize=yieldSize, class="BamFile")
+}
 
 BcfFileList <- function(...) .RsamtoolsFileList(..., class="BcfFile")
 
-TabixFileList <- function(...) .RsamtoolsFileList(..., class="TabixFile")
+TabixFileList <-
+    function(..., yieldSize=NA_integer_)
+{
+    .RsamtoolsFileList(..., yieldSize=yieldSize, class="TabixFile")
+}
 
 FaFileList <- function(...) .RsamtoolsFileList(..., class="FaFile")
 

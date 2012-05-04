@@ -2,7 +2,11 @@
 
 index <- function(object) object$index
 
-yieldSize <- function(object) object$yieldSize
+setMethod(yieldSize, "RsamtoolsFile",
+    function(object, ...)
+{
+    object$yieldSize
+})
 
 `yieldSize<-` <-
     function(object, ..., value)
