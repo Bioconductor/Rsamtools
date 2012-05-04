@@ -71,7 +71,15 @@ test_TabixFile_header_remote <- function()
         DEACTIVATED("remote tabix not supported on Windows")
         return(TRUE)
     }
-    fl <- "http://1000genomes.s3.amazonaws.com/release/20110521/ALL.chr22.phase1_integrated_calls.20101123.snps_indels_svs.genotypes.vcf.gz"
+
+    fl <- sprintf("%s/%s",
+                  "http://1000genomes.s3.amazonaws.com/release",
+                  "20110521/ALL.chr22.phase1_release_v2.20101123.snps_indels_svs.vcf.gz")
+
+    if (!tryCatch({ open(con <- url(fl)); close(con) },
+                  error=function(...) FALSE))
+        return(TRUE)
+
     obs <- headerTabix(fl)
     checkIdentical("22", obs$seqnames)
     exp <- structure(c(1L, 2L, 0L), .Names = c("seq", "start", "end"))
