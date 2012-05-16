@@ -54,9 +54,11 @@ ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
 
 # Constructor helpers
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
-    hasUnmappedMate = NA, isMinusStrand = NA, isMateMinusStrand = NA, 
-    isFirstMateRead = NA, isSecondMateRead = NA, isNotPrimaryRead = NA, 
-    isValidVendorRead = NA, isDuplicate = NA) 
+    hasUnmappedMate = NA, isMinusStrand = NA, isMateMinusStrand = NA,
+    isFirstMateRead = NA, isSecondMateRead = NA, isNotPrimaryRead = NA,
+    isNotPassingQualityControls = NA, isDuplicate = NA,
+    isValidVendorRead = NA)
+
 scanBamWhat()
 
 # Accessors
@@ -159,10 +161,12 @@ bamFlagTest(flag, value)
     when portions of a read aligns to multiple locations, e.g., when
     spanning splice junctions).}
 
-  \item{isValidVendorRead}{A logical(1) indicating whether invalid
-    (FALSE), valid (TRUE), or any (NA) read should be returned. A
-    'valid' read is one flagged by the vendor as passing quality control
-    criteria.}
+  \item{isNotPassingQualityControls}{A logical(1) indicating whether
+    reads passing quality controls (FALSE), reads not passing quality
+    controls (TRUE), or any (NA) read should be returned.}
+
+  \item{isValidVendorRead}{Deprecated; use
+    \code{isNotPassingQualityControls}.}
 
   \item{isDuplicate}{A logical(1) indicating that un-duplicated (FALSE),
     duplicated (TRUE), or any (NA) reads should be

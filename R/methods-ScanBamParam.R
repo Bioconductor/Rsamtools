@@ -159,15 +159,18 @@ FLAG_BITNAMES <- c(
     "isFirstMateRead",
     "isSecondMateRead",
     "isNotPrimaryRead",
-    "isValidVendorRead",
+    "isNotPassingQualityControls",
     "isDuplicate"
 )
 
 scanBamFlag <-
     function(isPaired=NA, isProperPair=NA, isUnmappedQuery=NA,
-             hasUnmappedMate=NA, isMinusStrand=NA, isMateMinusStrand=NA,
-             isFirstMateRead=NA, isSecondMateRead=NA, # redundant
-             isNotPrimaryRead=NA, isValidVendorRead=NA, isDuplicate=NA)
+             hasUnmappedMate=NA, isMinusStrand=NA,
+             isMateMinusStrand=NA, isFirstMateRead=NA,
+             isSecondMateRead=NA, # redundant
+             isNotPrimaryRead=NA, isNotPassingQualityControls=NA,
+             isDuplicate=NA, isValidVendorRead=NA)
+
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
 {
     flag <- IRanges:::makePowersOfTwo(length(FLAG_BITNAMES))
@@ -175,11 +178,25 @@ scanBamFlag <-
     args <- lapply(as.list(match.call())[-1], eval, parent.frame())
     if (any(sapply(args, length) > 1L))
         stop("all arguments must be logical(1)")
-    if (length(args) > 0) {
-        ## toggle meaning of isValidVendorRead
-        if ("isValidVendorRead" %in% names(args) &&
-            !is.na(args[["isValidVendorRead"]]))
-            args[["isValidVendorRead"]] <- !args[["isValidVendorRead"]]
+    if (length(args) > 0)
+    {
+        ## deprecate isValidVendorRead
+        if ("isValidVendorRead" %in% names(args))
+        {
+            .Deprecated("isNotPassingQualityControls",
+                        old="isValidVendorRead")
+            old <- !args[["isValidVendorRead"]]
+            args[["isValidVendorRead"]] <- NULL
+            if (("isNotPassingQualityControls" %in% names(args)) &&
+                !identical(args[["isNotPassingQualityControls"]], old))
+            {
+                msg <- sprintf("'%s' inconsistent with '%s', using '%s'",
+                    "isValidVendorRead", "isNotPassingQualityControls",
+                     "isNotPassingQualityControls")
+                warning(paste(strwrap(msg, exdent=2), collapse="\n"))
+            }
+            args[["isNotPassingQualityControls"]] <- old
+        }
         ## keep0: NA | FALSE --> drop !NA & TRUE
         idx <- names(args[sapply(args, function(x) !is.na(x) && x)])
         keep0 <- Reduce("+", flag[ !names(flag) %in% idx ], 0L)

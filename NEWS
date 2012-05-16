@@ -16,6 +16,9 @@ BUG FIXES
 
     o scanBcfHeader works on remote files
 
+    o scanBamFlag isValidVendorRead deprecated in favor of
+      isNotPassingQualityControls
+
 CHANGES IN VERSION 1.8.0
 ------------------------
 
