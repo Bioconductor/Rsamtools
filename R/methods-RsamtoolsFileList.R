@@ -4,18 +4,27 @@ setGeneric(".RsamtoolsFileList",
            signature="...")
 
 setMethod(.RsamtoolsFileList, "character",
-    function(..., yieldSize=NA_integer_, class)
+    function(file, index=file, ..., yieldSize=NA_integer_, class)
 {
-    listData <- lapply(..1, function(elt, yieldSize, class) {
-        do.call(class, list(elt, yieldSize=yieldSize))
-    }, yieldSize, class)
+    fun <- function(elt, idx=character(), yieldSize, class) {
+        do.call(class, list(elt, index=idx, yieldSize=yieldSize))
+    }
+    listData <- if (0L == length(index)) {
+        Map(fun, file, MoreArgs=list(yieldSize=yieldSize, class=class))
+    } else {
+        Map(fun, file, index,
+            MoreArgs=list(yieldSize=yieldSize, class=class))
+    }
     new(paste(class, "List", sep=""), listData=listData)
 })
 
 setMethod(.RsamtoolsFileList, "ANY",
     function(..., yieldSize=NA_integer_, class)
 {
-    new(paste(class, "List", sep=""), listData=list(...))
+    list <- list(...)
+    if (length(list) == 1 && is.list(list[[1L]])) 
+        list <- list[[1L]]
+    new(paste(class, "List", sep=""), listData=list)
 })
 
 setMethod(path, "RsamtoolsFileList",

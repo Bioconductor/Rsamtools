@@ -35,10 +35,10 @@ test_BamFile_yield <- function()
 
 test_BamFileList_yield <- function()
 {
-    bfl <- BamFileList(c(fl, fl), yieldSize=100)
+    bfl <- unname(BamFileList(c(fl, fl), yieldSize=100))
     checkIdentical(c(100L, 100L), sapply(bfl, yieldSize))
 
-    bfl <- BamFileList(c(fl, fl))
+    bfl <- unname(BamFileList(c(fl, fl)))
     checkIdentical(c(NA_integer_, NA_integer_), sapply(bfl, yieldSize))
 
     ## yieldSize, even implicit on BamFile wins out

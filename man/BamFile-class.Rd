@@ -83,7 +83,12 @@ BamFileList(..., yieldSize=NA_integer_)
 
   \item{...}{Additional arguments. For \code{BamFileList}, this can
     either be a single character vector of paths to BAM files, or
-    several instances of \code{BamFile} objects.}
+    several instances of \code{BamFile} objects. When a character vector
+    of paths, a second named argument \sQuote{index} can be a
+    \code{character()} vector of length equal to the first argument
+    specifying the paths to the index files, or \code{character()} to
+    indicate that no index file is available. See
+    \code{\link{BamFile}}.}
 
   \item{con}{An instance of \code{BamFile}.}
 
@@ -284,8 +289,9 @@ close(bf)
 ##-----------------------------------------------------------------------##
 ## summarizeOverlaps with a BamFileList object
 fls <- list.files(system.file("extdata",package="GenomicRanges"),
-    recursive=TRUE, pattern="*bam$", full=TRUE)
-bfs <- BamFileList(fls)
+    pattern="*bam$", full=TRUE)
+names(fls) <- basename(fls)
+bfs <- BamFileList(fls, index=character())
 
 ## 'features' are the annotations (GRanges or GRangesList)
 group_id <- c("A", "B", "C", "C", "D", "D", "E", "F", "G", "H", "H")
@@ -300,7 +306,6 @@ features <- GRanges(
    DataFrame(group_id)
 )
 summarizeOverlaps(features, bfs, mode=Union, ignore.strand=TRUE)
-
 }
 
 \keyword{classes}
