@@ -304,14 +304,20 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     mode <- match.fun(mode)
     if("package:parallel" %in% search() & .Platform$OS.type != "windows" )
       lapply <- parallel::mclapply
-    reads <- path(reads)
 
-    lst <- lapply(reads,
-                  function(bf) {
-                    x <- readGappedAlignments(bf, param=param)
-                    GenomicRanges:::.dispatch(x, features, mode=mode, 
-                        ignore.strand=ignore.strand)
-                  }, ...)
+    lst <- lapply(seq_along(reads), function(i, reads) {
+        bf <- reads[[i]]
+        if (!isOpen(bf)) {
+            open(bf)
+            on.exit(close(bf))
+        }
+        cnt <- integer(length(features))
+        while(length(x <- readBamGappedAlignments(bf, param=param))) {
+            cnt <- cnt + GenomicRanges:::.dispatch(x, features,
+                mode=mode, ignore.strand=ignore.strand)
+        }
+        cnt
+    }, reads)
 
     counts <- do.call(cbind, lst)
     colData <- DataFrame(fileName = reads)
