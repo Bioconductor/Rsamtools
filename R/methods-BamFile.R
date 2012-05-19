@@ -300,10 +300,14 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 ### "summarizeOverlaps" methods.
 ###
 
-.processBamFiles <- function(features, reads, mode, ignore.strand, ..., param){
+.processBamFiles <-
+    function(features, reads, mode, ignore.strand, ..., param)
+{
     mode <- match.fun(mode)
-    if("package:parallel" %in% search() & .Platform$OS.type != "windows" )
-      lapply <- parallel::mclapply
+
+    if ("package:parallel" %in% search() & .Platform$OS.type !=
+        "windows" )
+        lapply <- parallel::mclapply
 
     lst <- lapply(seq_along(reads), function(i, reads) {
         bf <- reads[[i]]
@@ -312,18 +316,18 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
             on.exit(close(bf))
         }
         cnt <- integer(length(features))
-        while(length(x <- readBamGappedAlignments(bf, param=param))) {
-            cnt <- cnt + GenomicRanges:::.dispatch(x, features,
-                mode=mode, ignore.strand=ignore.strand)
+        while (length(x <- readBamGappedAlignments(bf, param=param))) {
+            cnt <- cnt + GenomicRanges:::.dispatchOverlaps(x,
+                features, mode=mode, ignore.strand=ignore.strand)
         }
         cnt
     }, reads)
 
     counts <- do.call(cbind, lst)
     colData <- DataFrame(fileName = reads)
-    if(!is.null(names(reads))){
+    if (!is.null(names(reads))) {
         rownames(colData) <- names(reads)
-    }else{
+    } else {
         rownames(colData) <- sub(".bai$", "", basename(reads))
     }
     SummarizedExperiment(assays=SimpleList(counts=as.matrix(counts)),
@@ -334,14 +338,16 @@ setMethod("summarizeOverlaps", c("GRanges", "BamFileList"),
     function(features, reads, mode, ignore.strand = FALSE, 
              ..., param = ScanBamParam())
 {
-    .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
+    .processBamFiles(features, reads, mode, ignore.strand, ...,
+        param=param)
 })
 
 setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
     function(features, reads, mode, ignore.strand = FALSE, 
              ..., param = ScanBamParam())
 {
-    .processBamFiles(features, reads, mode, ignore.strand, ..., param=param)
+    .processBamFiles(features, reads, mode, ignore.strand, ...,
+        param=param)
 })
 
 
