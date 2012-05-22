@@ -121,10 +121,11 @@
                           N_unmapped_rec_per_uqname)
 }
 
-quickBamCounts <- function(filepath, param=NULL, main.summary.only=FALSE)
+quickBamCounts <- function(file, index=file, param=NULL,
+                           main.groups.only=FALSE)
 {
     what0 <- c("qname", "flag")
-    if (isSingleString(filepath)) {
+    if (isSingleString(file)) {
         if (is.null(param)) {
             param <- ScanBamParam(what=what0)
         } else {
@@ -132,20 +133,20 @@ quickBamCounts <- function(filepath, param=NULL, main.summary.only=FALSE)
                 warning("bamWhat component of supplied 'param' was ignored")
             bamWhat(param) <- what0
         }
-        res <- scanBam(filepath, param=param)
+        res <- scanBam(file, index=index, param=param)
         res0 <- res[[1L]]
         if (length(res) != 1L) {
             res0[["qname"]] <- do.call(c, lapply(res, "[[", "qname"))
             res0[["flag"]] <- do.call(c, lapply(res, "[[", "flag"))
         } 
-    } else if (is.list(filepath) && all(what0 %in% names(filepath))) {
-        res0 <- filepath
+    } else if (is.list(file) && all(what0 %in% names(file))) {
+        res0 <- file
     } else {
-        stop("'filepath' must be a single string")
+        stop("'file' must be a single string")
     }
 
-    if (!isTRUEorFALSE(main.summary.only))
-        stop("'main.summary.only' must be TRUE or FALSE")
+    if (!isTRUEorFALSE(main.groups.only))
+        stop("'main.groups.only' must be TRUE or FALSE")
 
     ## Order records by QNAME.
     qname0 <- res0[["qname"]]
@@ -189,7 +190,7 @@ quickBamCounts <- function(filepath, param=NULL, main.summary.only=FALSE)
                       N_last_rec_per_uqname,
                       N_other_rec_per_uqname)
 
-    if (main.summary.only)
+    if (main.groups.only)
         return(invisible(NULL))
     if (length(N_1seg_rec_per_uqname) != 0L &&
         length(N_mseg_rec_per_uqname != 0L))
