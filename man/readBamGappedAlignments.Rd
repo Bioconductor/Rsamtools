@@ -187,5 +187,4 @@ head(galp2)
 head(names(galp2))
 }
 
-\keyword{methods}
-\keyword{classes}
+\keyword{manip}
