@@ -286,26 +286,24 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
 close(bf)
 
 
-##-----------------------------------------------------------------------##
-## summarizeOverlaps with a BamFileList object
+##------------------------------------------------------------------------
+## summarizeOverlaps() with a BamFileList
+##
+
 fls <- list.files(system.file("extdata",package="GenomicRanges"),
     pattern="*bam$", full=TRUE)
 names(fls) <- basename(fls)
-bfs <- BamFileList(fls, index=character())
+
+bfl <- BamFileList(fls, index=character())
 
 ## 'features' are the annotations (GRanges or GRangesList)
-group_id <- c("A", "B", "C", "C", "D", "D", "E", "F", "G", "H", "H")
-features <- GRanges(
-    seqnames = Rle(c("chr2L", "chr2R", "chr2L", "chr2R", "chr2L", "chr2R", 
-        "chr2L", "chr2R", "chr2R", "chr3L", "chr3L")),
-    strand = strand(rep("+", length(group_id))),
-    ranges = IRanges(
-        start=c(1000, 2000, 3000, 3600, 7000, 7500, 4000, 4000, 3000,
-                5000, 5400),
-        width=c(500, 900, 500, 300, 600, 300, 500, 900, 500, 500, 500)),
-   DataFrame(group_id)
-)
-summarizeOverlaps(features, bfs, mode=Union, ignore.strand=TRUE)
+features <- GRanges(c(rep("chr2L", 4), rep("chr2R", 5), rep("chr3L", 2)),
+    IRanges(c(1000, 3000, 4000, 7000, 2000, 3000, 3600, 4000, 7500,
+              5000, 5400), width=c(rep(500, 3), 600, 900, 500, 300, 900, 
+              300, 500, 500)), "-",
+    group_id=c(rep("A", 4), rep("B", 5), rep("C", 2)))
+
+summarizeOverlaps(features, bfl, ignore.strand=TRUE)
 }
 
 \keyword{classes}
