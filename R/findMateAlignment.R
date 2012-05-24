@@ -187,6 +187,7 @@ findMateAlignment <- function(x, verbose=FALSE)
                                                  print.seqlengths=FALSE)
             cat("!! ==> won't assign a mate to those elements!\n")
             chunk.ans[have_more_than_1_mate] <- NA_integer_
+            chunk.ans[chunk.ans %in% have_more_than_1_mate] <- NA_integer_
         }
         if (verbose)
             message("OK")
