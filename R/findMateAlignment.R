@@ -82,6 +82,16 @@
     list(xo=xo, group.sizes=group.sizes)
 }
 
+### Equivalent to 'x %in% x[duplicated(x)]' but a little bit more efficient
+### on very long vectors (> 20M elements).
+.hasDuplicates <- function(x)
+{
+    xx <- match(x, x)
+    ans <- xx != seq_along(xx)
+    ans[xx] <- ans
+    ans
+} 
+
 ### Assumes that GappedAlignments object 'x':
 ###   (1) has clean group names i.e. .makeGappedAlignmentsGNames() would not
 ###       inject any NA in its names,
@@ -112,11 +122,27 @@
     x_hits <- c(x_hits, y_hits)
     y_hits <- c(y_hits, tmp)
 
+    idx1 <- which(.hasDuplicates(y_hits))
+    y_hits[idx1] <- - y_hits[idx1]
+    idx2 <- which(.hasDuplicates(x_hits))
+    y_hits[idx2] <- 0L
     ans <- rep.int(NA_integer_, length(x_start))
     ans[x_hits] <- y_hits
-    is_dup <- duplicated(x_hits)
-    ans[x_hits[is_dup]] <- -1L
     ans
+}
+
+showGappedAlignmentsEltsWithMoreThan1Mate <- function(x, more_than_1_mate_idx)
+{
+    if (length(more_than_1_mate_idx) == 0L)
+        return()
+    cat("\n!! Found more than 1 mate for the following elements in 'x': ",
+        paste(more_than_1_mate_idx, collapse=", "),
+        ".\n!! Details:\n!! ", sep="")
+    GenomicRanges:::showGappedAlignments(x[more_than_1_mate_idx],
+                                         margin="!! ",
+                                         with.classinfo=TRUE,
+                                         print.seqlengths=FALSE)
+    cat("!! ==> won't assign a mate to them!\n")
 }
 
 ### Takes about 6 sec and 274MB of RAM to mate 1 million alignments,
@@ -174,20 +200,11 @@ findMateAlignment <- function(x, verbose=FALSE)
                                                chunk.x_is_mate_minus,
                                                chunk.x_is_minus,
                                                chunk.x_is_first)
-        have_more_than_1_mate <- which(chunk.ans < 0L)
-        if (length(have_more_than_1_mate) != 0L) {
-            morethan1mate_idx <- chunk.idx[have_more_than_1_mate]
-            cat("\n!! findMateAlignment() found more than 1 mate in 'x' ",
-                "for elements: ",
-                paste(morethan1mate_idx, collapse=", "),
-                ".\n!! Details:\n!! ", sep="")
-            GenomicRanges:::showGappedAlignments(x[morethan1mate_idx],
-                                                 margin="!! ",
-                                                 with.classinfo=TRUE,
-                                                 print.seqlengths=FALSE)
-            cat("!! ==> won't assign a mate to those elements!\n")
-            chunk.ans[have_more_than_1_mate] <- NA_integer_
-            chunk.ans[chunk.ans %in% have_more_than_1_mate] <- NA_integer_
+        if (any(chunk.ans <= 0L)) {
+            have_more_than_1_mate <- which(chunk.ans == 0L)
+            more_than_1_mate_idx <- chunk.idx[have_more_than_1_mate]
+            showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
+            chunk.ans[chunk.ans <= 0L] <- NA_integer_
         }
         if (verbose)
             message("OK")
@@ -328,14 +345,17 @@ findMateAlignment2 <- function(x, y=NULL)
         x_hits <- c(x_hits, y_hits)
         y_hits <- c(y_hits, tmp)
     }
-    is_dup <- duplicated(x_hits)
-    if (any(is_dup)) {
-        have_more_than_one_mate <- unique(x_hits[is_dup])
-        stop("more than 1 mate found for elements ",
-             paste(have_more_than_one_mate, collapse=", "))
-    }
+    idx1 <- which(.hasDuplicates(y_hits))
+    y_hits[idx1] <- - y_hits[idx1]
+    idx2 <- which(.hasDuplicates(x_hits))
+    y_hits[idx2] <- 0L
     ans <- rep.int(NA_integer_, length(x))
     ans[x_hits] <- y_hits
+    if (any(ans <= 0L)) {
+        more_than_1_mate_idx <- which(ans == 0L)
+        showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
+        ans[ans <= 0L] <- NA_integer_
+    }
     ans
 }
 
