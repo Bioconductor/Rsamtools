@@ -76,7 +76,8 @@ BamFileList(..., yieldSize=NA_integer_)
 
 ## counting
 
-\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand = FALSE, single.end = TRUE, ..., param = ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., param=ScanBamParam(), single.end=TRUE) 
+\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., param=ScanBamParam(), single.end=TRUE) 
 }
 
 \arguments{
@@ -291,7 +292,7 @@ close(bf)
 
 
 ##------------------------------------------------------------------------
-## summarizeOverlaps() with a BamFileList
+## summarizeOverlaps with a BamFileList
 ##
 
 ## single-end reads

@@ -304,10 +304,6 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     function(features, reads, mode, ignore.strand, ..., param, single.end=TRUE)
 {
     mode <- match.fun(mode)
-    if (single.end)
-        readfunc <- readBamGappedAlignments
-    else
-        readfunc <- readBamGappedAlignmentPairs
 
     if ("package:parallel" %in% search() & .Platform$OS.type !=
         "windows" )
@@ -320,9 +316,17 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
             on.exit(close(bf))
         }
         cnt <- integer(length(features))
-        while (length(x <- readfunc(bf, param=param))) {
-            cnt <- cnt + GenomicRanges:::.dispatchOverlaps(x,
-                features, mode=mode, ignore.strand=ignore.strand)
+        if (single.end) {
+            while (length(x <- readBamGappedAlignments(bf, param=param))) {
+                cnt <- cnt + GenomicRanges:::.dispatchOverlaps(x,
+                    features, mode=mode, ignore.strand=ignore.strand)
+            }
+        } else {
+            while (length(x <- readBamGappedAlignmentPairs(bf, param=param))) {
+                x <- grglist(x)
+                cnt <- cnt + GenomicRanges:::.dispatchOverlaps(x,
+                    features, mode=mode, ignore.strand=ignore.strand)
+            }
         }
         cnt
     }, reads)

@@ -84,7 +84,7 @@ bamDirname(x, ...) <- value
 
 ## Counting
 \S4method{summarizeOverlaps}{BamViews,missing}(
-    features, reads, mode, ignore.strand = FALSE, ..., param = ScanBamParam()) 
+    features, reads, mode, ignore.strand=FALSE, ..., param=ScanBamParam(), single.end=TRUE) 
 
 }
 
@@ -145,8 +145,8 @@ bamDirname(x, ...) <- value
   \item{reads}{
     Missing when a \code{\linkS4class{BamViews}} is the only argument
     supplied to \code{summarizeOverlaps}. \code{reads} are the files 
-    specified in \code{bamPaths} of the \code{\linkS4class{BamViews}} object.
-  }
+    specified in \code{bamPaths} of the \code{\linkS4class{BamViews}} object.}
+
   \item{features}{
     A \code{\linkS4class{BamFileList}}. \code{features} are extracted from 
     the \code{bamRanges} of the \code{\linkS4class{BamViews}} object.
@@ -154,8 +154,8 @@ bamDirname(x, ...) <- value
     Metadata from \code{bamPaths} and \code{bamSamples} are stored in the
     \code{colData} slot of the \code{\linkS4class{SummarizedExperiment}} 
     object. \code{bamExperiment} metadata are in the \code{exptData}
-    slot. 
-  }
+    slot. }
+
   \item{mode}{
     A function that defines the method to be used when a read overlaps
     more than one feature. Pre-defined options are "Union",
@@ -178,12 +178,14 @@ bamDirname(x, ...) <- value
             only the unique disjoint regions. If the read overlaps one of 
             these remaining regions, it is assigned to the feature the
             unique disjoint region came from.
-   }
-  }
+   }}
 
   \item{ignore.strand}{
-    A logical value indicating if strand should be considered when matching.
-  }
+    A logical value indicating if strand should be considered when matching.}
+
+  \item{single.end}{
+    A logical value indicating if the bam files contain single or paired-end
+    reads.}
 
 }
 
@@ -329,20 +331,19 @@ aln[[1]]
 aln[colnames(bv)]
 elementMetadata(aln)
 
-##---------------------------------------------------------------------------##
-## summarizeOverlaps with a BamViews object
+##---------------------------------------------------------------------------
+## summarizeOverlaps with BamViews
+##
 
+## bamSamples and bamPaths metadata are put into the colData
+## and the bamExperiment metadat is put into the exptData slot
+## of the resulting SummarizedExperiment.
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
-
 bv <- BamViews(fl, bamSamples=DataFrame(info="test", row.names="ex1"),
                bamRanges=rng)
 se <- summarizeOverlaps(bv, mode=Union, ignore.strand=TRUE)
-
-## bamSamples and bamPaths metadata are in colData
-## bamExperiment metadata is in exptData 
 colData(se)
-
 }
 
 \keyword{classes}
