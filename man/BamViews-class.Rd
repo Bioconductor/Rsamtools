@@ -84,7 +84,7 @@ bamDirname(x, ...) <- value
 
 ## Counting
 \S4method{summarizeOverlaps}{BamViews,missing}(
-    features, reads, mode, ignore.strand=FALSE, ..., param=ScanBamParam(), single.end=TRUE) 
+    features, reads, mode, ignore.strand=FALSE, ..., single.end=TRUE, param=ScanBamParam()) 
 
 }
 

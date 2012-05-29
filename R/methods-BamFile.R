@@ -301,7 +301,7 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 ###
 
 .processBamFiles <-
-    function(features, reads, mode, ignore.strand, ..., param, single.end=TRUE)
+    function(features, reads, mode, ignore.strand, ..., single.end=TRUE, param)
 {
     mode <- match.fun(mode)
 
@@ -344,18 +344,18 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 
 setMethod("summarizeOverlaps", c("GRanges", "BamFileList"),
     function(features, reads, mode, ignore.strand=FALSE, ..., 
-             param=ScanBamParam(), single.end=TRUE)
+             single.end=TRUE, param=ScanBamParam())
 {
     .processBamFiles(features, reads, mode, ignore.strand, 
-        ..., param=param, single.end=single.end)
+        ..., single.end=single.end, param=param)
 })
 
 setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
     function(features, reads, mode, ignore.strand=FALSE, ..., 
-             param=ScanBamParam(), single.end=TRUE)
+             single.end=TRUE, param=ScanBamParam())
 {
     .processBamFiles(features, reads, mode, ignore.strand, 
-        ..., param=param, single.end=single.end)
+        ..., single.end=single.end, param=param)
 })
 
 

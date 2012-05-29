@@ -76,8 +76,8 @@ BamFileList(..., yieldSize=NA_integer_)
 
 ## counting
 
-\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., param=ScanBamParam(), single.end=TRUE) 
-\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., param=ScanBamParam(), single.end=TRUE) 
+\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., single.end=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., single.end=TRUE, param=ScanBamParam()) 
 }
 
 \arguments{
@@ -123,15 +123,15 @@ BamFileList(..., yieldSize=NA_integer_)
 
   \item{reads}{
     A \code{\linkS4class{BamFileList}} that represents the data to be
-    counted by \code{summarizeOverlaps}.
-  }
+    counted by \code{summarizeOverlaps}.}
+
   \item{features}{
     A \link{GRanges} or a \link{GRangesList} object of genomic regions of 
     interest. When a \link{GRanges} is supplied, each row is considered a 
     feature. When a \link{GRangesList} is supplied, each higher list-level is
     considered a feature. This distinction is important when defining an overlap
-    between a read and a feature. See ?\code{summarizeOverlaps} for details. 
-  }
+    between a read and a feature. See ?\code{summarizeOverlaps} for details.}
+
   \item{mode}{
     A function that defines the method to be used when a read overlaps
     more than one feature. Pre-defined options are "Union",
@@ -154,17 +154,13 @@ BamFileList(..., yieldSize=NA_integer_)
             only the unique disjoint regions. If the read overlaps one of 
             these remaining regions, it is assigned to the feature the
             unique disjoint region came from.
-   }
-  }
+   }}
 
   \item{ignore.strand}{
-    A logical value indicating if strand should be considered when matching.
-  }
+    A logical value indicating if strand should be considered when matching.}
 
   \item{single.end}{
-    A logical value indicating if reads are single or paired-end.
-  }
-  
+    A logical value indicating if reads are single or paired-end.}
 }
 
 \section{Objects from the Class}{
@@ -292,7 +288,7 @@ close(bf)
 
 
 ##------------------------------------------------------------------------
-## summarizeOverlaps with a BamFileList
+## summarizeOverlaps with BamFileList
 ##
 
 ## single-end reads
