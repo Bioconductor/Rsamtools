@@ -75,8 +75,8 @@ BamFileList(..., yieldSize=NA_integer_)
 \S4method{readBamGappedAlignmentPairs}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 
 ## counting
-\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand = FALSE, ...,
-    param = ScanBamParam()) 
+
+\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand = FALSE, single.end = TRUE, ..., param = ScanBamParam()) 
 }
 
 \arguments{
@@ -158,6 +158,10 @@ BamFileList(..., yieldSize=NA_integer_)
 
   \item{ignore.strand}{
     A logical value indicating if strand should be considered when matching.
+  }
+
+  \item{single.end}{
+    A logical value indicating if reads are single or paired-end.
   }
   
 }
@@ -290,20 +294,25 @@ close(bf)
 ## summarizeOverlaps() with a BamFileList
 ##
 
-fls <- list.files(system.file("extdata",package="GenomicRanges"),
-    pattern="*bam$", full=TRUE)
-names(fls) <- basename(fls)
+## single-end reads
+library("TxDb.Dmelanogaster.UCSC.dm3.ensGene")
+exbygene <- exonsBy(TxDb.Dmelanogaster.UCSC.dm3.ensGene, "gene")
+fl <- system.file("extdata", "untreated1_chr4.bam", 
+    package="pasillaBamSubset") 
+## When 'yieldSize' is specified the file is processed by chunks. 
+## Otherwise the complete file is read into memory.
+bfl <- BamFileList(fl, yieldSize=50000)
+trace(readBamGappedAlignments)
+counts <- assays(summarizeOverlaps(exbygene, bfl, single.end=TRUE))$counts
+untrace(readBamGappedAlignments)
 
-bfl <- BamFileList(fls, index=character())
-
-## 'features' are the annotations (GRanges or GRangesList)
-features <- GRanges(c(rep("chr2L", 4), rep("chr2R", 5), rep("chr3L", 2)),
-    IRanges(c(1000, 3000, 4000, 7000, 2000, 3000, 3600, 4000, 7500,
-              5000, 5400), width=c(rep(500, 3), 600, 900, 500, 300, 900, 
-              300, 500, 500)), "-",
-    group_id=c(rep("A", 4), rep("B", 5), rep("C", 2)))
-
-summarizeOverlaps(features, bfl, ignore.strand=TRUE)
+## paired-end reads
+fl <- system.file("extdata", "untreated3_chr4.bam", 
+    package="pasillaBamSubset") 
+## Complete file is read into memory.
+bfl <- BamFileList(fl, index=character())
+res <- summarizeOverlaps(exbygene, bfl, single.end=FALSE)
+stopifnot(length(assays(res)$counts) == length(exbygene))
 }
 
 \keyword{classes}

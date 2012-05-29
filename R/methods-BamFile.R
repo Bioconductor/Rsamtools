@@ -301,9 +301,13 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 ###
 
 .processBamFiles <-
-    function(features, reads, mode, ignore.strand, ..., param)
+    function(features, reads, mode, ignore.strand, ..., param, single.end=TRUE)
 {
     mode <- match.fun(mode)
+    if (single.end)
+        readfunc <- readBamGappedAlignments
+    else
+        readfunc <- readBamGappedAlignmentPairs
 
     if ("package:parallel" %in% search() & .Platform$OS.type !=
         "windows" )
@@ -316,7 +320,7 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
             on.exit(close(bf))
         }
         cnt <- integer(length(features))
-        while (length(x <- readBamGappedAlignments(bf, param=param))) {
+        while (length(x <- readfunc(bf, param=param))) {
             cnt <- cnt + GenomicRanges:::.dispatchOverlaps(x,
                 features, mode=mode, ignore.strand=ignore.strand)
         }
@@ -335,19 +339,19 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 }
 
 setMethod("summarizeOverlaps", c("GRanges", "BamFileList"),
-    function(features, reads, mode, ignore.strand = FALSE, 
-             ..., param = ScanBamParam())
+    function(features, reads, mode, ignore.strand=FALSE, ..., 
+             param=ScanBamParam(), single.end=TRUE)
 {
-    .processBamFiles(features, reads, mode, ignore.strand, ...,
-        param=param)
+    .processBamFiles(features, reads, mode, ignore.strand, 
+        ..., param=param, single.end=single.end)
 })
 
 setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
-    function(features, reads, mode, ignore.strand = FALSE, 
-             ..., param = ScanBamParam())
+    function(features, reads, mode, ignore.strand=FALSE, ..., 
+             param=ScanBamParam(), single.end=TRUE)
 {
-    .processBamFiles(features, reads, mode, ignore.strand, ...,
-        param=param)
+    .processBamFiles(features, reads, mode, ignore.strand, 
+        ..., param=param, single.end=single.end)
 })
 
 
