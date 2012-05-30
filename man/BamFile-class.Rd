@@ -76,8 +76,8 @@ BamFileList(..., yieldSize=NA_integer_)
 
 ## counting
 
-\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., single.end=TRUE, param=ScanBamParam()) 
-\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., single.end=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 }
 
 \arguments{
@@ -159,7 +159,7 @@ BamFileList(..., yieldSize=NA_integer_)
   \item{ignore.strand}{
     A logical value indicating if strand should be considered when matching.}
 
-  \item{single.end}{
+  \item{singleEnd}{
     A logical value indicating if reads are single or paired-end.}
 }
 
@@ -300,7 +300,7 @@ fl <- system.file("extdata", "untreated1_chr4.bam",
 ## Otherwise the complete file is read into memory.
 bfl <- BamFileList(fl, yieldSize=50000)
 trace(readBamGappedAlignments)
-counts <- assays(summarizeOverlaps(exbygene, bfl, single.end=TRUE))$counts
+counts <- assays(summarizeOverlaps(exbygene, bfl, singleEnd=TRUE))$counts
 untrace(readBamGappedAlignments)
 
 ## paired-end reads
@@ -308,7 +308,7 @@ fl <- system.file("extdata", "untreated3_chr4.bam",
     package="pasillaBamSubset") 
 ## Complete file is read into memory.
 bfl <- BamFileList(fl, index=character())
-res <- summarizeOverlaps(exbygene, bfl, single.end=FALSE)
+res <- summarizeOverlaps(exbygene, bfl, singleEnd=FALSE)
 stopifnot(length(assays(res)$counts) == length(exbygene))
 }
 

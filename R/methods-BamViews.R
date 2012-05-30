@@ -264,10 +264,10 @@ setMethod(show, "BamViews", function(object) {
 
 setMethod("summarizeOverlaps", c("BamViews", "missing"),
 function(features, reads, mode, ignore.strand=FALSE, 
-         ..., single.end=TRUE, param=ScanBamParam())
+         ..., singleEnd=TRUE, param=ScanBamParam())
 {
     se <- .processBamFiles(bamRanges(features), BamFileList(bamPaths(features)), 
-        mode, ignore.strand, ..., single.end=single.end, param=param)
+        mode, ignore.strand, ..., singleEnd=singleEnd, param=param)
     nms <- rownames(colData(se))
     colData(se) <- DataFrame(colData(se), bamSamples(features),
         bamIndicies(features))

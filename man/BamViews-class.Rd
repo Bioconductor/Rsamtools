@@ -84,7 +84,7 @@ bamDirname(x, ...) <- value
 
 ## Counting
 \S4method{summarizeOverlaps}{BamViews,missing}(
-    features, reads, mode, ignore.strand=FALSE, ..., single.end=TRUE, param=ScanBamParam()) 
+    features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 
 }
 
@@ -183,7 +183,7 @@ bamDirname(x, ...) <- value
   \item{ignore.strand}{
     A logical value indicating if strand should be considered when matching.}
 
-  \item{single.end}{
+  \item{singleEnd}{
     A logical value indicating if the bam files contain single or paired-end
     reads.}
 
