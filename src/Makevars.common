@@ -13,11 +13,6 @@ TABIXOBJ = \
   samtools/bgzf.o samtools/kstring.o samtools/knetfile.o \
   tabix/index.o tabix/bedidx.o $(PATCH_O)
 
-PKG_OBJECTS = \
-  fafile.o bamfile.o io_sam.o as_bam.o utilities.o encode.o \
-  Biostrings_stubs.o IRanges_stubs.o bcffile.o \
-  R_init_Rsamtools.o
-
 DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
   -Dfprintf=_samtools_fprintf \
   -Dexit=_samtools_exit \
