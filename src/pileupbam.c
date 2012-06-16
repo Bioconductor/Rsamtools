@@ -201,7 +201,7 @@ static int _mplp_read_bam(void *data, bam1_t * b)
     do {
         result = mdata->iter ?
             bam_iter_read(mdata->fp, mdata->iter, b) : bam_read1(mdata->fp, b);
-        if (0 == result)
+        if (0 >= result)
             break;
 
         skip = FALSE;
