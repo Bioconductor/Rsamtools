@@ -200,7 +200,7 @@ findMateAlignment <- function(x, verbose=FALSE)
                                                chunk.x_is_mate_minus,
                                                chunk.x_is_minus,
                                                chunk.x_is_first)
-        if (any(chunk.ans <= 0L, na.rm = TRUE)) {
+        if (any(chunk.ans <= 0L, na.rm=TRUE)) {
             have_more_than_1_mate <- which(chunk.ans == 0L)
             more_than_1_mate_idx <- chunk.idx[have_more_than_1_mate]
             showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
@@ -351,7 +351,7 @@ findMateAlignment2 <- function(x, y=NULL)
     y_hits[idx2] <- 0L
     ans <- rep.int(NA_integer_, length(x))
     ans[x_hits] <- y_hits
-    if (any(ans <= 0L)) {
+    if (any(ans <= 0L, na.rm=TRUE)) {
         more_than_1_mate_idx <- which(ans == 0L)
         showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
         ans[ans <= 0L] <- NA_integer_
