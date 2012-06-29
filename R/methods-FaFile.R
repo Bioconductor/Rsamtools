@@ -90,7 +90,7 @@ setMethod(countFa, "FaFile",
         on.exit(close(file))
     }
 
-    lkup <- Biostrings:::get_xsbasetypes_conversion_lookup("B", "DNA")
+    lkup <- Biostrings:::get_seqtype_conversion_lookup("B", "DNA")
     tryCatch({
         spc <- .asSpace(param)
         dna <- .Call2(.scan_fa, .extptr(file),

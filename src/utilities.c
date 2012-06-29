@@ -23,7 +23,7 @@ SEXP _get_encoding_lookup(const char *from, const char *to)
 {
     SEXP nmspc, fun, f, t, call, ans;
     nmspc = PROTECT(_get_namespace("Biostrings"));
-    fun = findFun(install("get_xsbasetypes_conversion_lookup"), nmspc);
+    fun = findFun(install("get_seqtype_conversion_lookup"), nmspc);
     f = PROTECT(mkString(from));
     t = PROTECT(mkString(to));
     call = PROTECT(lang3(fun, f, t));
