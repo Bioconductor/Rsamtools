@@ -15,7 +15,8 @@ import(IRanges)
 importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo, Union, 
            IntersectionNotEmpty, IntersectionStrict)
 
-importMethodsFrom(GenomicRanges, seqnames, strand, summarizeOverlaps)
+importMethodsFrom(GenomicRanges, seqnames, strand, summarizeOverlaps,
+                  findSpliceOverlaps)
 
 importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
 
@@ -32,7 +33,7 @@ exportPattern("^[^\\.]")
 export(path)
 
 exportMethods(length, names, "[", "[[", show, getSeq, seqinfo,
-              summarizeOverlaps)
+              summarizeOverlaps, findSpliceOverlaps)
 
 S3method(close, BamFile)
 S3method(close, BcfFile)

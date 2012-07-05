@@ -27,6 +27,10 @@
 
 \alias{summarizeOverlaps,GRanges,BamFileList-method}
 \alias{summarizeOverlaps,GRangesList,BamFileList-method}
+\alias{findSpliceOverlaps,character,TranscriptDb-method}
+\alias{findSpliceOverlaps,BamFile,TranscriptDb-method}
+\alias{findSpliceOverlaps,character,GRangesList-method}
+\alias{findSpliceOverlaps,BamFile,GRangesList-method}
 
 
 \title{Maintain SAM and BAM files}
@@ -78,6 +82,12 @@ BamFileList(..., yieldSize=NA_integer_)
 
 \S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 \S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
+
+\S4method{findSpliceOverlaps}{character,GRangesList}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
+\S4method{findSpliceOverlaps}{BamFile,GRangesList}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
+\S4method{findSpliceOverlaps}{character,TranscriptDb}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE)
+\S4method{findSpliceOverlaps}{BamFile,TranscriptDb}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE)
+
 }
 
 \arguments{
@@ -161,6 +171,28 @@ BamFileList(..., yieldSize=NA_integer_)
 
   \item{singleEnd}{
     A logical value indicating if reads are single or paired-end.}
+
+  \item{cds}{
+    Optional \link[GenomicRanges]{GRangesList} of coding regions for each transcript
+    in the \code{subject}. If provided, the "coding" output column
+    will contain \code{logical} values indicating if the read falls
+    in a coding region.}
+
+  \item{query}{
+    \code{character} name of a Bam file, a \link[Rsamtools]{BamFile},
+    \linkS4class{GappedAlignments}, \linkS4class{GappedAlignmentPairs}
+    or a \linkS4class{GRangesList} object containing the reads.
+
+    Single or paired-end reads are specified with the \code{singleEnd}
+    argument (default TRUE). Paired-end reads can be supplied in a Bam
+    file or \linkS4class{GappedAlignmentPairs} object. Single-end may
+    be in a Bam file, \linkS4class{GappedAlignments} or \linkS4class{GRanges}
+    object.}
+
+  \item{subject}{
+    A \link[GenomicFeatures]{TranscriptDb}, or \link{GRangesList} containing
+    the annotations.}
+
 }
 
 \section{Objects from the Class}{
@@ -310,6 +342,11 @@ fl <- system.file("extdata", "untreated3_chr4.bam",
 bfl <- BamFileList(fl, index=character())
 res <- summarizeOverlaps(exbygene, bfl, singleEnd=FALSE)
 stopifnot(length(assays(res)$counts) == length(exbygene))
+##------------------------------------------------------------------------
+## summarizeOverlaps with BamFileList
+##
+
+## See ?findSpliceOverlaps man page in GenomicRanges for examples
 }
 
 \keyword{classes}

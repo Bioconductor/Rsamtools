@@ -359,3 +359,38 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
 })
 
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### "findSpliceOverlaps" methods.
+###
+.readRanges <- GenomicRanges:::.readRanges
+setMethod("findSpliceOverlaps", c("character", "TranscriptDb"),
+          function(query, subject, ignore.strand=FALSE, ...,
+                   param=ScanBamParam(), singleEnd=TRUE)
+{
+    callGeneric(BamFile(query), subject, ignore.strand, ...,
+                param=param, singleEnd=singleEnd)
+})
+
+setMethod("findSpliceOverlaps", c("BamFile", "TranscriptDb"),
+    function(query, subject, ignore.strand=FALSE, ...,
+             param=ScanBamParam(), singleEnd=TRUE)
+{
+    callGeneric(.readRanges(query, param, singleEnd), subject,
+                ignore.strand, ...)
+})
+
+setMethod("findSpliceOverlaps", c("character", "GRangesList"),
+          function(query, subject, ignore.strand=FALSE, ...,
+                   param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
+{
+    callGeneric(BamFile(query), subject, ignore.strand, ...,
+                param=param, singleEnd=singleEnd, cds=cds)
+})
+
+setMethod("findSpliceOverlaps", c("BamFile", "GRangesList"),
+    function(query, subject, ignore.strand=FALSE, ...,
+             param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
+{
+    callGeneric(.readRanges(query, param, singleEnd), subject,
+                ignore.strand, ..., cds=cds)
+})
