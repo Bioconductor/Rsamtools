@@ -24,13 +24,14 @@
 \alias{readBamGappedAlignmentPairs,BamFile-method}
 
 \alias{mergeBam,BamFileList-method}
-
+% counting 
 \alias{summarizeOverlaps,GRanges,BamFileList-method}
 \alias{summarizeOverlaps,GRangesList,BamFileList-method}
-\alias{findSpliceOverlaps,character,TranscriptDb-method}
-\alias{findSpliceOverlaps,BamFile,TranscriptDb-method}
-\alias{findSpliceOverlaps,character,GRangesList-method}
-\alias{findSpliceOverlaps,BamFile,GRangesList-method}
+\alias{findSpliceOverlaps}
+\alias{findSpliceOverlaps,character-method}
+\alias{findSpliceOverlaps,BamFile-method}
+\alias{findSpliceOverlaps,character,ANY-method}
+\alias{findSpliceOverlaps,BamFile,ANY-method}
 
 
 \title{Maintain SAM and BAM files}
@@ -83,10 +84,8 @@ BamFileList(..., yieldSize=NA_integer_)
 \S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 \S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 
-\S4method{findSpliceOverlaps}{character,GRangesList}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
-\S4method{findSpliceOverlaps}{BamFile,GRangesList}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
-\S4method{findSpliceOverlaps}{character,TranscriptDb}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE)
-\S4method{findSpliceOverlaps}{BamFile,TranscriptDb}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE)
+\S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
+\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
 
 }
 
@@ -342,11 +341,13 @@ fl <- system.file("extdata", "untreated3_chr4.bam",
 bfl <- BamFileList(fl, index=character())
 res <- summarizeOverlaps(exbygene, bfl, singleEnd=FALSE)
 stopifnot(length(assays(res)$counts) == length(exbygene))
+
 ##------------------------------------------------------------------------
-## summarizeOverlaps with BamFileList
+## findSpliceOverlaps 
 ##
 
-## See ?findSpliceOverlaps man page in GenomicRanges for examples
+## See ?'findSpliceOverlaps,GRangesList,GRangesList-method' man page in 
+## the GenomicFeatures package for examples
 }
 
 \keyword{classes}

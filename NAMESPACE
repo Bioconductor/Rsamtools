@@ -15,8 +15,7 @@ import(IRanges)
 importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo, Union, 
            IntersectionNotEmpty, IntersectionStrict)
 
-importMethodsFrom(GenomicRanges, seqnames, strand, summarizeOverlaps,
-                  findSpliceOverlaps)
+importMethodsFrom(GenomicRanges, seqnames, strand, summarizeOverlaps)
 
 importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
 
@@ -30,7 +29,7 @@ importFrom(Biostrings, DNA_ALPHABET, readDNAStringSet,
 
 exportPattern("^[^\\.]")
 
-export(path)
+export(path, findSpliceOverlaps)
 
 exportMethods(length, names, "[", "[[", show, getSeq, seqinfo,
               summarizeOverlaps, findSpliceOverlaps)

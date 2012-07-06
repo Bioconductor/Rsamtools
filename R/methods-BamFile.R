@@ -362,8 +362,8 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "findSpliceOverlaps" methods.
 ###
-.readRanges <- GenomicRanges:::.readRanges
-setMethod("findSpliceOverlaps", c("character", "TranscriptDb"),
+
+setMethod("findSpliceOverlaps", c("character", "ANY"),
           function(query, subject, ignore.strand=FALSE, ...,
                    param=ScanBamParam(), singleEnd=TRUE)
 {
@@ -371,7 +371,7 @@ setMethod("findSpliceOverlaps", c("character", "TranscriptDb"),
                 param=param, singleEnd=singleEnd)
 })
 
-setMethod("findSpliceOverlaps", c("BamFile", "TranscriptDb"),
+setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
     function(query, subject, ignore.strand=FALSE, ...,
              param=ScanBamParam(), singleEnd=TRUE)
 {
@@ -379,18 +379,19 @@ setMethod("findSpliceOverlaps", c("BamFile", "TranscriptDb"),
                 ignore.strand, ...)
 })
 
-setMethod("findSpliceOverlaps", c("character", "GRangesList"),
-          function(query, subject, ignore.strand=FALSE, ...,
-                   param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
+.readRanges <- function(bam, param, singleEnd)
 {
-    callGeneric(BamFile(query), subject, ignore.strand, ...,
-                param=param, singleEnd=singleEnd, cds=cds)
-})
+    if (!"XS" %in% bamTag(param))
+        bamTag(param) <- c(bamTag(param), "XS")
+    if (singleEnd)
+        reads <- readGappedAlignments(path(bam), param=param)
+    else
+        reads <- readGappedAlignmentPairs(path(bam), param=param)
 
-setMethod("findSpliceOverlaps", c("BamFile", "GRangesList"),
-    function(query, subject, ignore.strand=FALSE, ...,
-             param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
-{
-    callGeneric(.readRanges(query, param, singleEnd), subject,
-                ignore.strand, ..., cds=cds)
-})
+    metadata(reads)$bamfile <- bam
+    ## adjust strand based on 'XS'
+    if (!is.null(xs <- values(reads)$XS))
+        strand(reads) <- ifelse(!is.na(xs) & xs != "?", xs, "*")
+    reads
+}
+
