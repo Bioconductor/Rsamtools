@@ -83,8 +83,8 @@ BamFileList(..., yieldSize=NA_integer_)
 \S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 \S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 
-\S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
-\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
+\S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE)
+\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE)
 
 }
 
@@ -169,12 +169,6 @@ BamFileList(..., yieldSize=NA_integer_)
 
   \item{singleEnd}{
     A logical value indicating if reads are single or paired-end.}
-
-  \item{cds}{
-    Optional \link[GenomicRanges]{GRangesList} of coding regions for each transcript
-    in the \code{subject}. If provided, the "coding" output column
-    will contain \code{logical} values indicating if the read falls
-    in a coding region.}
 
   \item{query}{
     \code{character} name of a Bam file, a \link[Rsamtools]{BamFile},
