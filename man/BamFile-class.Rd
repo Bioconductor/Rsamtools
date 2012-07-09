@@ -27,7 +27,6 @@
 % counting 
 \alias{summarizeOverlaps,GRanges,BamFileList-method}
 \alias{summarizeOverlaps,GRangesList,BamFileList-method}
-\alias{findSpliceOverlaps}
 \alias{findSpliceOverlaps,character-method}
 \alias{findSpliceOverlaps,BamFile-method}
 \alias{findSpliceOverlaps,character,ANY-method}
@@ -346,8 +345,7 @@ stopifnot(length(assays(res)$counts) == length(exbygene))
 ## findSpliceOverlaps 
 ##
 
-## See ?'findSpliceOverlaps,GRangesList,GRangesList-method' man page in 
-## the GenomicFeatures package for examples
+## See ?'findSpliceOverlapsd' for examples 
 }
 
 \keyword{classes}

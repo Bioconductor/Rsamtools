@@ -365,18 +365,18 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
 
 setMethod("findSpliceOverlaps", c("character", "ANY"),
           function(query, subject, ignore.strand=FALSE, ...,
-                   param=ScanBamParam(), singleEnd=TRUE)
+                   param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
 {
     callGeneric(BamFile(query), subject, ignore.strand, ...,
-                param=param, singleEnd=singleEnd)
+                param=param, singleEnd=singleEnd, cds=cds)
 })
 
 setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
     function(query, subject, ignore.strand=FALSE, ...,
-             param=ScanBamParam(), singleEnd=TRUE)
+             param=ScanBamParam(), singleEnd=TRUE, cds=NULL)
 {
     callGeneric(.readRanges(query, param, singleEnd), subject,
-                ignore.strand, ...)
+                ignore.strand, ..., cds=cds)
 })
 
 .readRanges <- function(bam, param, singleEnd)
@@ -394,4 +394,3 @@ setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
         strand(reads) <- ifelse(!is.na(xs) & xs != "?", xs, "*")
     reads
 }
-

@@ -139,11 +139,3 @@ setGeneric("yieldSize",
            function(object, ...) standardGeneric("yieldSize"))
 
 setGeneric("isOpen")
-
-## findSpliceOverlaps
-
-setGeneric("findSpliceOverlaps", signature=c("query", "subject"),
-    function(query, subject, ignore.strand=FALSE, ...)
-{
-    standardGeneric("findSpliceOverlaps")
-})
