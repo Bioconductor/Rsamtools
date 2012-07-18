@@ -121,16 +121,29 @@ sapply(bam[[1]], class)
 %% 
 A paradigm for collapsing the list-of-lists into a single list is
 <<scanBam-to-IRanges>>=
-lst <- lapply(names(bam[[1]]), function(elt) {
-    do.call(c, unname(lapply(bam, "[[", elt)))
-})
-names(lst) <- names(bam[[1]])
+.unlist <- function (x)
+{
+    ## do.call(c, ...) coerces factor to integer, which is undesired
+    x1 <- x[[1L]]
+    if (is.factor(x1)) {
+        structure(unlist(x), class = "factor", levels = levels(x1))
+    } else {
+        do.call(c, x)
+    }
+}
+bam <- unname(bam) # names not useful in unlisted result
+elts <- setNames(bamWhat(param), bamWhat(param))
+lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
 @ 
 %% 
 This might be further transformed, e.g., to a \Rclass{DataFrame}, with
 <<lst-to-DataFrame>>=
 head(do.call("DataFrame", lst))
 @ 
+Often, an alternative is to use a \Rclass{ScanBamParam} object with
+desired fields specified in \Rfunarg{what} as an argument to
+\Rfunction{GenomicRanges::readGappedAlignments}; the specified fields
+are added as columns to the returned \Rclass{GappedAlignments}.
 
 The \bam{} file in the previous example includes an index, represented
 by a separate file with extension \texttt{.bai}:
@@ -267,7 +280,7 @@ library(GenomicFeatures)
 bamRanges <- local({
     fl <- system.file("extdata", "CaffeineTxdb.sqlite", 
                       package="Rsamtools")
-    transcripts(loadFeatures(fl))
+    transcripts(loadDb(fl))
 })
 slxMaq09 <- local({
     fl <- system.file("extdata", "slxMaq09_urls.txt", 
@@ -434,7 +447,7 @@ txdb <- makeTranscriptDbFromBiomart(transcript_ids=ensid)
 library(GenomicFeatures)
 fl <- system.file("extdata", "CaffeineTxdb.sqlite", 
                   package="Rsamtools")
-txdb <- loadFeatures(fl)
+txdb <- loadDb(fl)
 @ 
 %% 
 Transcript genomic locations are contained in \Robject{txdb}; we will
