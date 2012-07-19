@@ -385,9 +385,17 @@ setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
         bamTag(param) <- c(bamTag(param), "XS")
     if (singleEnd)
         reads <- readGappedAlignments(path(bam), param=param)
-    else
+    else {
         reads <- readGappedAlignmentPairs(path(bam), param=param)
-
+        first_xs <- values(first(reads))$XS
+        last_xs <- values(last(reads))$XS
+        if (!is.null(first_xs) && !is.null(last_xs)) {
+            xs <- first_xs
+            xs[is.na(xs)] <- last_xs[is.na(xs)]
+            values(reads)$XS <- xs
+        }
+    }
+    
     metadata(reads)$bamfile <- bam
     ## adjust strand based on 'XS'
     if (!is.null(xs <- values(reads)$XS))
