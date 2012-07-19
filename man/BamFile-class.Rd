@@ -83,8 +83,8 @@ BamFileList(..., yieldSize=NA_integer_)
 \S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 \S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
 
-\S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE)
-\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), singleEnd=TRUE)
+\S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), pairedEnd=FALSE)
+\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), pairedEnd=FALSE)
 
 }
 
@@ -116,7 +116,7 @@ BamFileList(..., yieldSize=NA_integer_)
   \item{destination}{character(1) file path to write filtered reads to.}
 
   \item{indexDestination}{logical(1) indicating whether the destination
-	file should also be indexed.}
+    file should also be indexed.}
 
   \item{byQname, maxMemory}{See \code{\link{sortBam}}.}
 
@@ -170,14 +170,16 @@ BamFileList(..., yieldSize=NA_integer_)
   \item{singleEnd}{
     A logical value indicating if reads are single or paired-end.}
 
+  \item{pairedEnd}{
+    A logical value indicating if reads are single or paired-end.}
+
   \item{query}{
     \code{character} name of a Bam file, a \link[Rsamtools]{BamFile},
     \linkS4class{GappedAlignments}, \linkS4class{GappedAlignmentPairs}
     or a \linkS4class{GRangesList} object containing the reads.
 
-    Single or paired-end reads are specified with the \code{singleEnd}
-    argument (default TRUE). Paired-end reads can be supplied in a Bam
-    file or \linkS4class{GappedAlignmentPairs} object. Single-end may
+    Paired-end reads can be supplied in a Bam file or 
+    \linkS4class{GappedAlignmentPairs} object. Single-end may
     be in a Bam file, \linkS4class{GappedAlignments} or \linkS4class{GRanges}
     object.}
 
