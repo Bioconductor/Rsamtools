@@ -397,8 +397,6 @@ setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
     }
  
     metadata(reads)$bamfile <- bam
-    ## adjust strand based on 'XS'
-    if (!is.null(xs <- values(reads)$XS))
-        strand(reads) <- ifelse(!is.na(xs) & xs != "?", xs, "*")
+    
     reads
 }
