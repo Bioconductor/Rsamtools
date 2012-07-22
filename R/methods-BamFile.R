@@ -367,16 +367,16 @@ setMethod("findSpliceOverlaps", c("character", "ANY"),
           function(query, subject, ignore.strand=FALSE, ...,
                    param=ScanBamParam(), pairedEnd=FALSE)
 {
-    callGeneric(BamFile(query), subject, ignore.strand, ...,
-                param=param, pairedEnd=pairedEnd)
+    findSpliceOverlaps(BamFile(query), subject, ignore.strand, ...,
+                       param=param, pairedEnd=pairedEnd)
 })
 
 setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
     function(query, subject, ignore.strand=FALSE, ...,
              param=ScanBamParam(), pairedEnd=FALSE)
 {
-    callGeneric(.readRanges(query, param, pairedEnd), subject,
-                ignore.strand, ...)
+    findSpliceOverlaps(.readRanges(query, param, pairedEnd), subject,
+                       ignore.strand, ...)
 })
 
 .readRanges <- function(bam, param, pairedEnd)
