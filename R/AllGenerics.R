@@ -138,4 +138,7 @@ setGeneric("path",
 setGeneric("yieldSize",
            function(object, ...) standardGeneric("yieldSize"))
 
+setGeneric("yieldSize<-",
+           function(object, ..., value) standardGeneric("yieldSize<-"))
+
 setGeneric("isOpen")

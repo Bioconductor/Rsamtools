@@ -39,6 +39,14 @@ setMethod(yieldSize, "RsamtoolsFileList",
     sapply(as.list(object), yieldSize)
 })
 
+setReplaceMethod("yieldSize", "RsamtoolsFileList", 
+    function(object, ..., value)
+{
+    for (i in seq_along(object))
+      yieldSize(object[[i]]) <- value
+    object
+})
+
 setMethod(isOpen, "RsamtoolsFileList", 
     function(con, rw="") 
 {

@@ -8,14 +8,14 @@ setMethod(yieldSize, "RsamtoolsFile",
     object$yieldSize
 })
 
-`yieldSize<-` <-
+setReplaceMethod("yieldSize", "RsamtoolsFile", 
     function(object, ..., value)
 {
     if (1L != length(value))
         stop("'value' must be length 1")
     object$yieldSize <- as.integer(value)
     object
-}
+})
 
 .RsamtoolsFile <-
     function(g, path, index, ..., yieldSize=NA_integer_)
