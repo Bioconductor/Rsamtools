@@ -121,7 +121,7 @@ setMethod(indexBam, "BamFile", function(files, ...) {
 setMethod(sortBam, "BamFile",
     function(file, destination, ..., byQname=FALSE, maxMemory=512)
 {
-    callGeneric(path(files), destination, ...,
+    callGeneric(path(file), destination, ...,
                 byQname=byQname, maxMemory=maxMemory)
 })
 
