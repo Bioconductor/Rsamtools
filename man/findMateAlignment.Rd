@@ -63,6 +63,8 @@ Here is roughly how it works:
           \item (C) POS, PNEXT
           \item (D) Flag bits Ox10 and 0x20
           \item (E) Flag bits 0x40 and 0x80
+          \item (F) Flag bit 0x2
+          \item (G) Flag bit 0x100
         }
         2 records rec(i) and rec(j) are considered mates iff all the following
         conditions are satisfied:
@@ -76,6 +78,8 @@ Here is roughly how it works:
                     rec(j) corresponds to the last segment in the template, OR,
                     rec(j) corresponds to the first segment in the template and
                     rec(i) corresponds to the last segment in the template
+          \item (F) rec(i) and rec(j) have same flag bit 0x2
+          \item (G) rec(i) and rec(j) have same flag bit 0x100
         }
 }
 
@@ -83,10 +87,10 @@ This algorithm will find almost all pairs unambiguously, even when
 the same pair of reads maps to several places in the genome. Note
 that when a given pair maps to a single place in the genome, looking
 at (A) is enough to pair the 2 corresponding records. The additional
-conditions (B), (C), (D) and (E) are only here to help in the situation
-where more than 2 records share the same QNAME. And that works most
-of the times but there are still situations where this is not enough
-to solve the pairing problem unambiguously.
+conditions (B), (C), (D), (E), (F), and (G), are only here to help in
+the situation where more than 2 records share the same QNAME. And that
+works most of the times but there are still situations where this is
+not enough to solve the pairing problem unambiguously.
 
 For example, here are 4 records (loaded in a GappedAlignments object)
 that cannot be paired with the above algorithm:
@@ -141,12 +145,10 @@ Now showing the corresponding flag bits:
 }
 
 As you can see, rec(1) and rec(2) are second mates, rec(3) and rec(4)
-are both first mates. But looking at (A), (B), (C), (D) and (E), the
-pairs could be rec(1) <-> rec(3) and rec(2) <-> rec(4), or they could
+are both first mates. But looking at (A), (B), (C), (D), (E), (F), and (G),
+the pairs could be rec(1) <-> rec(3) and rec(2) <-> rec(4), or they could
 be rec(1) <-> rec(4) and rec(2) <-> rec(3). There is no way to
-disambiguate! Also note that everything is tagged as proper pair (flag
-bit 0x2 is set to 1) and primary read (flag bit 0x100 is set to 0), so
-using this information would not help disambiguate here.
+disambiguate!
 
 \code{findMateAlignment} is just ignoring those ambiguous pairings (with
 a warning) i.e. records that cannot be paired unambiguously are not paired
