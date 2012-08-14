@@ -1,18 +1,29 @@
 ### =========================================================================
 ### findMateAlignment()
 ### -------------------------------------------------------------------------
+###
 ### For each element in GappedAlignments object 'x', finds its mate in
 ### GappedAlignments object 'y'.
-### 'x[i1]' and 'y[i2]' are considered mates iff:
+###
+### Alignments 'x[i1]' and 'y[i2]' are considered mates iff:
+###
 ###   (A) names(x[i1]) == names(y[i2])
+###
 ###   (B) elementMetadata(x[i1])$mrnm == seqnames(y[i2]) &
 ###       elementMetadata(y[i2])$mrnm == seqnames(x[i1])
+###
 ###   (C) elementMetadata(x[i1])$mpos == start(y[i2]) &
 ###       elementMetadata(y[i2])$mpos == start(x[i1])
+###
 ###   (D) isMateMinusStrand(x[i1]) == isMinusStrand(y[i2]) &
 ###       isMateMinusStrand(y[i2]) == isMinusStrand(x[i1])
+###
 ###   (E) isFirstSegment(x[i1]) & isLastSegment(y[i2]) |
 ###       isFirstSegment(y[i2]) & isLastSegment(x[i1])
+###
+###   (F) isProperPair(x[i1]) == isProperPair(y[i2])
+###
+###   (G) isNotPrimaryRead(x[i1]) == isNotPrimaryRead(y[i2])
 
 .checkElementMetadata <- function(arg, argname)
 {
@@ -92,29 +103,58 @@
     ans
 } 
 
+### Should return the same as:
+###   args <- as.list(setNames(rep(TRUE, length(bitnames)), bitnames))
+###   tmp <- do.call(scanBamFlag, args)
+###   tmp[[2L]] - tmp[[1L]]
+.makeFlagBitmask <- function(bitnames)
+{
+    bitpos <- match(bitnames, FLAG_BITNAMES)
+    sum(as.integer(2L ^ (bitpos-1L)))
+}
+
+### All arguments must be atomic vectors of the same length N.
+### The arguments prefixed with 'x_' describe a vector 'x' of N alignments.
+### The arguments prefixed with 'y_' describe a vector 'y' of N alignments.
+### Performs element-wise comparison of the N alignments in 'x' with the N
+### alignments in 'y', and returns a logical vector of length N indicating
+### whether conditions (B), (C), (D), (E), (F), and (G), are satisfied.
+.isValidHit <- function(x_seqnames, x_start, x_mrnm, x_mpos, x_flag,
+                        y_seqnames, y_start, y_mrnm, y_mpos, y_flag)
+{
+    D1_bitmask <- .makeFlagBitmask("isMateMinusStrand")
+    D2_bitmask <- .makeFlagBitmask("isMinusStrand")
+    E_bitmask <- .makeFlagBitmask("isFirstMateRead")
+    FG_bitmask <- .makeFlagBitmask(c("isProperPair", "isNotPrimaryRead"))
+    ## (B)
+    x_mrnm == y_seqnames & y_mrnm == x_seqnames &
+    ## (C)
+      x_mpos == y_start & y_mpos == x_start &
+    ## (D)
+      (bitAnd(x_flag, D1_bitmask) != 0L) == (bitAnd(y_flag, D2_bitmask) != 0L) &
+      (bitAnd(y_flag, D1_bitmask) != 0L) == (bitAnd(x_flag, D2_bitmask) != 0L) &
+    ## (E)
+      bitAnd(x_flag, E_bitmask) != bitAnd(y_flag, E_bitmask) &
+    ## (F) & (G)
+      bitAnd(x_flag, FG_bitmask) == bitAnd(y_flag, FG_bitmask)
+}
+
 ### Assumes that GappedAlignments object 'x':
 ###   (1) has clean group names i.e. .makeGappedAlignmentsGNames() would not
 ###       inject any NA in its names,
 ###   (2) is already ordered by group names (which are the same as its names).
 ### 'group.sizes' must be the same as 'runLength(Rle(names(x)))'.
 .findMateAlignmentInChunk <- function(group.sizes,
-                                      x_mrnm, x_seqnames,
-                                      x_mpos, x_start,
-                                      x_is_mate_minus, x_is_minus,
-                                      x_is_first)
+                                      x_seqnames, x_start,
+                                      x_mrnm, x_mpos, x_flag)
 {
     hits <- IRanges:::makeAllGroupInnerHits(group.sizes, hit.type=1L)
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
-
-    ## Keep hits that satisfy conditions (B), (C), (D) and (E).
-    valid_hits <- x_mrnm[x_hits] == x_seqnames[y_hits] &  # (B)
-                  x_mrnm[y_hits] == x_seqnames[x_hits] &  # (B)
-                  x_mpos[x_hits] == x_start[y_hits] &  # (C)
-                  x_mpos[y_hits] == x_start[x_hits] &  # (C)
-                  x_is_mate_minus[x_hits] == x_is_minus[y_hits] &  # (D)
-                  x_is_mate_minus[y_hits] == x_is_minus[x_hits] &  # (D)
-                  x_is_first[x_hits] != x_is_first[y_hits]  # (E)
+    valid_hits <- .isValidHit(x_seqnames[x_hits], x_start[x_hits],
+                              x_mrnm[x_hits], x_mpos[x_hits], x_flag[x_hits],
+                              x_seqnames[y_hits], x_start[y_hits],
+                              x_mrnm[y_hits], x_mpos[y_hits], x_flag[y_hits])
     x_hits <- x_hits[valid_hits]
     y_hits <- y_hits[valid_hits]
 
@@ -145,8 +185,10 @@ showGappedAlignmentsEltsWithMoreThan1Mate <- function(x, more_than_1_mate_idx)
     cat("!! ==> won't assign a mate to them!\n")
 }
 
-### Takes about 6 sec and 274MB of RAM to mate 1 million alignments,
-### and about 26.3 sec and 1022MB of RAM to mate 5 million alignments.
+### Takes about 2.3 s and 170MB of RAM to mate 1 million alignments,
+### and about 13 s and 909MB of RAM to mate 5 million alignments.
+### So it's a little bit faster and more memory efficient than
+### findMateAlignment2().
 findMateAlignment <- function(x, verbose=FALSE)
 {
     if (!isTRUEorFALSE(verbose))
@@ -164,9 +206,6 @@ findMateAlignment <- function(x, verbose=FALSE)
                                             x_mrnm, x_mpos)
     x_seqnames <- as.character(seqnames(x))
     x_start <- start(x)
-    x_is_mate_minus <- x_flagbits[ , "isMateMinusStrand"]
-    x_is_minus <- x_flagbits[ , "isMinusStrand"]
-    x_is_first <- x_flagbits[ , "isFirstMateRead"]
 
     xo_and_GS <- .getCharacterOrderAndGroupSizes(x_gnames)
     xo <- xo_and_GS$xo
@@ -182,24 +221,20 @@ findMateAlignment <- function(x, verbose=FALSE)
         chunk.GS <- GS[chunk.GIDX]
         chunk.length <- sum(chunk.GS)
         chunk.idx <- xo[chunk.offset + seq_len(chunk.length)]
-        chunk.x_mrnm <- x_mrnm[chunk.idx]
         chunk.x_seqnames <- x_seqnames[chunk.idx]
-        chunk.x_mpos <- x_mpos[chunk.idx]
         chunk.x_start <- x_start[chunk.idx]
-        chunk.x_is_mate_minus <- x_is_mate_minus[chunk.idx]
-        chunk.x_is_minus <- x_is_minus[chunk.idx]
-        chunk.x_is_first <- x_is_first[chunk.idx]
+        chunk.x_mrnm <- x_mrnm[chunk.idx]
+        chunk.x_mpos <- x_mpos[chunk.idx]
+        chunk.x_flag <- x_flag[chunk.idx]
         if (verbose)
             message("Finding mates in chunk of ", chunk.length,
                     " alignments ... ", appendLF=FALSE)
         chunk.ans <- .findMateAlignmentInChunk(chunk.GS,
-                                               chunk.x_mrnm,
                                                chunk.x_seqnames,
-                                               chunk.x_mpos,
                                                chunk.x_start,
-                                               chunk.x_is_mate_minus,
-                                               chunk.x_is_minus,
-                                               chunk.x_is_first)
+                                               chunk.x_mrnm,
+                                               chunk.x_mpos,
+                                               chunk.x_flag)
         if (any(chunk.ans <= 0L, na.rm=TRUE)) {
             have_more_than_1_mate <- which(chunk.ans == 0L)
             more_than_1_mate_idx <- chunk.idx[have_more_than_1_mate]
@@ -275,35 +310,30 @@ findMateAlignment <- function(x, verbose=FALSE)
     ans
 }
 
-### Takes about 5.47 sec and 295MB of RAM to mate 1 million alignments,
-### and about 32.26 sec and 1330MB of RAM to mate 5 million alignments.
+### Takes about 2.8 s and 196MB of RAM to mate 1 million alignments,
+### and about 19 s and 1754MB of RAM to mate 5 million alignments.
 findMateAlignment2 <- function(x, y=NULL)
 {
     x_names <- names(x)
     if (is.null(x_names))
         stop("'x' must have names")
     x_eltmetadata <- .checkElementMetadata(x, "x")
+    x_seqnames <- as.character(seqnames(x))
+    x_start <- start(x)
+    x_mrnm <- as.character(x_eltmetadata$mrnm)
+    x_mpos <- x_eltmetadata$mpos
     x_flag <- x_eltmetadata$flag
     bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
     x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
-    x_mrnm <- as.character(x_eltmetadata$mrnm)
-    x_mpos <- x_eltmetadata$mpos
     x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
                                             x_mrnm, x_mpos)
-    x_seqnames <- as.character(seqnames(x))
-    x_start <- start(x)
-    x_is_mate_minus <- x_flagbits[ , "isMateMinusStrand"]
-    x_is_minus <- x_flagbits[ , "isMinusStrand"]
-    x_is_first <- x_flagbits[ , "isFirstMateRead"]
 
     if (is.null(y)) {
-        y_mrnm <- x_mrnm
         y_seqnames <- x_seqnames
-        y_mpos <- x_mpos
         y_start <- x_start
-        y_is_mate_minus <- x_is_mate_minus
-        y_is_minus <- x_is_minus
-        y_is_first <- x_is_first
+        y_mrnm <- x_mrnm
+        y_mpos <- x_mpos
+        y_flag <- x_flag
 
         hits <- .findSelfMatches.character(x_gnames)
     } else {
@@ -311,32 +341,24 @@ findMateAlignment2 <- function(x, y=NULL)
         if (is.null(y_names))
             stop("'y' must have names")
         y_eltmetadata <- .checkElementMetadata(y, "y")
-        y_flag <- y_eltmetadata$flag
-        y_flagbits <- bamFlagAsBitMatrix(y_flag, bitnames=bitnames)
-        y_mrnm <- as.character(y_eltmetadata$mrnm)
-        y_mpos <- y_eltmetadata$mpos
-        y_gnames <- .makeGappedAlignmentsGNames(y_names, y_flagbits,
-                                                y_mrnm, y_mpos)
         y_seqnames <- as.character(seqnames(y))
         y_start <- start(y)
-        y_is_mate_minus <- y_flagbits[ , "isMateMinusStrand"]
-        y_is_minus <- y_flagbits[ , "isMinusStrand"]
-        y_is_first <- y_flagbits[ , "isFirstMateRead"]
+        y_mrnm <- as.character(y_eltmetadata$mrnm)
+        y_mpos <- y_eltmetadata$mpos
+        y_flag <- y_eltmetadata$flag
+        y_flagbits <- bamFlagAsBitMatrix(y_flag, bitnames=bitnames)
+        y_gnames <- .makeGappedAlignmentsGNames(y_names, y_flagbits,
+                                                y_mrnm, y_mpos)
 
         hits <- .findMatches(x_gnames, y_gnames, incomparables=NA_character_)
     }
 
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
-
-    ## Keep hits that satisfy conditions (B), (C), (D) and (E).
-    valid_hits <- x_mrnm[x_hits] == y_seqnames[y_hits] &  # (B)
-                  y_mrnm[y_hits] == x_seqnames[x_hits] &  # (B)
-                  x_mpos[x_hits] == y_start[y_hits] &  # (C)
-                  y_mpos[y_hits] == x_start[x_hits] &  # (C)
-                  x_is_mate_minus[x_hits] == y_is_minus[y_hits] &  # (D)
-                  y_is_mate_minus[y_hits] == x_is_minus[x_hits] &  # (D)
-                  x_is_first[x_hits] != y_is_first[y_hits]  # (E)
+    valid_hits <- .isValidHit(x_seqnames[x_hits], x_start[x_hits],
+                              x_mrnm[x_hits], x_mpos[x_hits], x_flag[x_hits],
+                              y_seqnames[y_hits], y_start[y_hits],
+                              y_mrnm[y_hits], y_mpos[y_hits], y_flag[y_hits])
     x_hits <- x_hits[valid_hits]
     y_hits <- y_hits[valid_hits]
 
@@ -447,13 +469,7 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.cols=NULL)
     ## Check the 0x2 bit (isProperPair).
     x_is_proper <- as.logical(bamFlagAsBitMatrix(elementMetadata(x)$flag,
                                                  bitnames="isProperPair"))
-    first_is_proper <- x_is_proper[first_idx]
-    last_is_proper <- x_is_proper[last_idx]
-    if (!identical(first_is_proper, last_is_proper))
-        stop("for some pairs, the 2 mates don't have ",
-             "the same \"isProperPair\" bit.\n",
-             "  Maybe the BAM file they are coming from was corrupted or ",
-             "generated by\n  an aligner that doesn't follow the SAM Spec?")
+    ans_is_proper <- x_is_proper[first_idx]
 
     ## Drop pairs with discordant seqnames or strand.
     idx_is_discordant <- (as.character(seqnames(x)[first_idx]) !=
@@ -461,7 +477,7 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.cols=NULL)
                          (as.character(strand(x)[first_idx]) ==
                           as.character(strand(x)[last_idx]))
     if (any(idx_is_discordant) != 0L) {
-        nb_discordant_proper <- sum(first_is_proper[idx_is_discordant])
+        nb_discordant_proper <- sum(ans_is_proper[idx_is_discordant])
         if (nb_discordant_proper != 0L) {
             ratio <- 100.0 * nb_discordant_proper / sum(idx_is_discordant)
             warning(ratio, "% of the pairs with discordant seqnames or ",
@@ -471,18 +487,18 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.cols=NULL)
         keep <- -which(idx_is_discordant)
         first_idx <- first_idx[keep]
         last_idx <- last_idx[keep]
-        first_is_proper <- first_is_proper[keep]
+        ans_is_proper <- ans_is_proper[keep]
     }
 
     ## The big split!
-    first <- x[first_idx]
-    last <- x[last_idx]
+    ans_first <- x[first_idx]
+    ans_last <- x[last_idx]
     ans_names <- NULL
     if (use.names)
-        ans_names <- names(first)
-    names(first) <- names(last) <- NULL
-    elementMetadata(first) <- elementMetadata(first)[keep.cols]
-    elementMetadata(last) <- elementMetadata(last)[keep.cols]
-    GappedAlignmentPairs(first, last, first_is_proper, names=ans_names)
+        ans_names <- names(ans_first)
+    names(ans_first) <- names(ans_last) <- NULL
+    elementMetadata(ans_first) <- elementMetadata(ans_first)[keep.cols]
+    elementMetadata(ans_last) <- elementMetadata(ans_last)[keep.cols]
+    GappedAlignmentPairs(ans_first, ans_last, ans_is_proper, names=ans_names)
 }
 
