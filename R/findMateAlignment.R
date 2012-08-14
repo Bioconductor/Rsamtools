@@ -93,16 +93,6 @@
     list(xo=xo, group.sizes=group.sizes)
 }
 
-### Equivalent to 'x %in% x[duplicated(x)]' but a little bit more efficient
-### on very long vectors (> 20M elements).
-.hasDuplicates <- function(x)
-{
-    xx <- match(x, x)
-    ans <- xx != seq_along(xx)
-    ans[xx] <- ans
-    ans
-} 
-
 ### Should return the same as:
 ###   args <- as.list(setNames(rep(TRUE, length(bitnames)), bitnames))
 ###   tmp <- do.call(scanBamFlag, args)
@@ -139,6 +129,41 @@
       bitAnd(x_flag, FG_bitmask) == bitAnd(y_flag, FG_bitmask)
 }
 
+### 3 equivalent implementation for this:
+###   (a) x %in% x[duplicated(x)]
+###   (b) duplicated(x) | duplicated(x, fromLast=TRUE)
+###   (c) xx <- match(x, x); ans <- xx != seq_along(xx); ans[xx] <- ans; ans
+### Comparing the 3 implementations on an integer vector of length 12 millions:
+###   (a) is the most memory efficient;
+###   (b) is a little bit faster than (a) (by only 8%) but uses between 12-14%
+###       more memory;
+###   (c) is as fast as (a) but uses about 30% more memory.
+.hasDuplicates <- function(x)
+{
+    x %in% x[duplicated(x)]
+}
+
+### 'x_hits' and 'y_hits' must be 2 integer vectors of the same length N
+### representing the N edges of a bipartite graph between the [1, x_len] and
+### [1, y_len] intervals (the i-th edge being represented by (x[i], y[i])).
+### Returns an integer vector F of length 'x_len' where F[k] is defined by:
+###   - If there is no occurence of k in 'x', then F[k] = NA.
+###   - If there is more than 1 occurence of k in 'x', then F[k] = 0.
+###   - If there is exactly 1 occurence of k in 'x', at index i_k, then
+###     F[k] = y[i_k].
+### In addition, if more than valule of index k is associated to F[k], then
+### F[k] is replaced by -F[k].
+.makeMateIdx <- function(x_hits, y_hits, x_len)
+{
+    idx1 <- which(.hasDuplicates(y_hits))
+    y_hits[idx1] <- - y_hits[idx1]
+    idx2 <- which(.hasDuplicates(x_hits))
+    y_hits[idx2] <- 0L
+    ans <- rep.int(NA_integer_, x_len)
+    ans[x_hits] <- y_hits
+    ans
+}
+
 ### Assumes that GappedAlignments object 'x':
 ###   (1) has clean group names i.e. .makeGappedAlignmentsGNames() would not
 ###       inject any NA in its names,
@@ -162,13 +187,7 @@
     x_hits <- c(x_hits, y_hits)
     y_hits <- c(y_hits, tmp)
 
-    idx1 <- which(.hasDuplicates(y_hits))
-    y_hits[idx1] <- - y_hits[idx1]
-    idx2 <- which(.hasDuplicates(x_hits))
-    y_hits[idx2] <- 0L
-    ans <- rep.int(NA_integer_, length(x_start))
-    ans[x_hits] <- y_hits
-    ans
+    .makeMateIdx(x_hits, y_hits, length(x_start))
 }
 
 showGappedAlignmentsEltsWithMoreThan1Mate <- function(x, more_than_1_mate_idx)
@@ -367,12 +386,7 @@ findMateAlignment2 <- function(x, y=NULL)
         x_hits <- c(x_hits, y_hits)
         y_hits <- c(y_hits, tmp)
     }
-    idx1 <- which(.hasDuplicates(y_hits))
-    y_hits[idx1] <- - y_hits[idx1]
-    idx2 <- which(.hasDuplicates(x_hits))
-    y_hits[idx2] <- 0L
-    ans <- rep.int(NA_integer_, length(x))
-    ans[x_hits] <- y_hits
+    ans <- .makeMateIdx(x_hits, y_hits, length(x))
     if (any(ans <= 0L, na.rm=TRUE)) {
         more_than_1_mate_idx <- which(ans == 0L)
         showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
