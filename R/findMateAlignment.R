@@ -253,11 +253,15 @@ findMateAlignment <- function(x, verbose=FALSE)
 {
     if (!isTRUEorFALSE(verbose))
         stop("'verbose' must be TRUE or FALSE")
-    flushDumpedAlignments()
     x_names <- names(x)
     if (is.null(x_names))
         stop("'x' must have names")
     x_eltmetadata <- .checkElementMetadata(x, "x")
+    ## flushDumpedAlignments() must be placed *after* the first reference to
+    ## 'x', otherwise, when doing 'findMateAlignment(getDumpedAlignments())',
+    ## the flushing would happen before 'x' is evaluated, causing 'x' to be
+    ## evaluated to NULL.
+    flushDumpedAlignments()
     x_flag <- x_eltmetadata$flag
     bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
     x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
