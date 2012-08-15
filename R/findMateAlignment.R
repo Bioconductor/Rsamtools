@@ -143,6 +143,14 @@
     x %in% x[duplicated(x)]
 }
 
+.makeMateIdx <- function(x_hits, y_hits, x_len)
+{
+    oo <- IRanges:::orderInteger(y_hits, decreasing=TRUE)
+    ans <- rep.int(NA_integer_, x_len)
+    ans[x_hits[oo]] <- y_hits[oo]
+    ans
+}
+
 ### 'x_hits' and 'y_hits' must be 2 integer vectors of the same length N
 ### representing the N edges of a bipartite graph between the [1, x_len] and
 ### [1, y_len] intervals (the i-th edge being represented by (x[i], y[i])).
@@ -153,7 +161,7 @@
 ###     F[k] = y[i_k].
 ### In addition, if more than valule of index k is associated to F[k], then
 ### F[k] is replaced by -F[k].
-.makeMateIdx <- function(x_hits, y_hits, x_len)
+.makeMateIdx2 <- function(x_hits, y_hits, x_len)
 {
     idx1 <- which(.hasDuplicates(y_hits))
     y_hits[idx1] <- - y_hits[idx1]
@@ -186,22 +194,50 @@
     tmp <- x_hits
     x_hits <- c(x_hits, y_hits)
     y_hits <- c(y_hits, tmp)
-
     .makeMateIdx(x_hits, y_hits, length(x_start))
 }
 
-showGappedAlignmentsEltsWithMoreThan1Mate <- function(x, more_than_1_mate_idx)
+.showGappedAlignmentsEltsWithMoreThan1Mate <- function(x, idx)
 {
-    if (length(more_than_1_mate_idx) == 0L)
+    if (length(idx) == 0L)
         return()
     cat("\n!! Found more than 1 mate for the following elements in 'x': ",
-        paste(more_than_1_mate_idx, collapse=", "),
+        paste(idx, collapse=", "),
         ".\n!! Details:\n!! ", sep="")
-    GenomicRanges:::showGappedAlignments(x[more_than_1_mate_idx],
+    GenomicRanges:::showGappedAlignments(x[idx],
                                          margin="!! ",
                                          with.classinfo=TRUE,
                                          print.seqlengths=FALSE)
     cat("!! ==> won't assign a mate to them!\n")
+}
+
+.dumped_alignments <- new.env(hash=TRUE, parent=emptyenv())
+
+dumpedAlignments <- function()
+{
+    .dumped_alignments
+}
+
+flushDumpedAlignments <- function()
+{
+    rm(list=ls(envir=dumpedAlignments()), envir=dumpedAlignments())
+}
+
+.dumpAlignmentsWithMoreThan1Mate <- function(x, idx)
+{
+    objnames <- ls(envir=dumpedAlignments())
+    if (length(objnames) == 0L) {
+        objname <- 1L
+    } else {
+        objname <- max(as.integer(objnames)) + 1L
+    }
+    objname <- sprintf("%08d", objname)
+    assign(objname, x[idx], envir=dumpedAlignments())
+}
+
+.countDumpedAlignments <- function()
+{
+    sum(unlist(eapply(dumpedAlignments(), length, USE.NAMES=FALSE)))
 }
 
 ### Takes about 2.3 s and 170MB of RAM to mate 1 million alignments,
@@ -212,6 +248,7 @@ findMateAlignment <- function(x, verbose=FALSE)
 {
     if (!isTRUEorFALSE(verbose))
         stop("'verbose' must be TRUE or FALSE")
+    flushDumpedAlignments()
     x_names <- names(x)
     if (is.null(x_names))
         stop("'x' must have names")
@@ -254,11 +291,10 @@ findMateAlignment <- function(x, verbose=FALSE)
                                                chunk.x_mrnm,
                                                chunk.x_mpos,
                                                chunk.x_flag)
-        if (any(chunk.ans <= 0L, na.rm=TRUE)) {
-            have_more_than_1_mate <- which(chunk.ans == 0L)
-            more_than_1_mate_idx <- chunk.idx[have_more_than_1_mate]
-            showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
-            chunk.ans[chunk.ans <= 0L] <- NA_integer_
+        has_dups <- !is.na(chunk.ans) & .hasDuplicates(chunk.ans)
+        if (any(has_dups)) {
+            .dumpAlignmentsWithMoreThan1Mate(x, chunk.idx[has_dups])
+            chunk.ans[has_dups] <- NA_integer_
         }
         if (verbose)
             message("OK")
@@ -266,6 +302,11 @@ findMateAlignment <- function(x, verbose=FALSE)
         chunk.GIDX <- chunk.GIDX + NGROUP_BY_CHUNK
         chunk.offset <- chunk.offset + chunk.length
     }
+    dump_count <- .countDumpedAlignments()
+    if (dump_count != 0L)
+        warning("  ", dump_count, " alignments with more than 1 mate ",
+                "were dumped.\n  Use 'dumpedAlignments()' to get the dump ",
+                "environment.")
     ans
 }
 
@@ -386,10 +427,10 @@ findMateAlignment2 <- function(x, y=NULL)
         x_hits <- c(x_hits, y_hits)
         y_hits <- c(y_hits, tmp)
     }
-    ans <- .makeMateIdx(x_hits, y_hits, length(x))
+    ans <- .makeMateIdx2(x_hits, y_hits, length(x))
     if (any(ans <= 0L, na.rm=TRUE)) {
         more_than_1_mate_idx <- which(ans == 0L)
-        showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
+        .showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
         ans[ans <= 0L] <- NA_integer_
     }
     ans
