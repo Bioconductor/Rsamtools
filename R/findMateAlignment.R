@@ -129,7 +129,7 @@
       bitAnd(x_flag, FG_bitmask) == bitAnd(y_flag, FG_bitmask)
 }
 
-### 3 equivalent implementation for this:
+### 3 equivalent implementations for this:
 ###   (a) x %in% x[duplicated(x)]
 ###   (b) duplicated(x) | duplicated(x, fromLast=TRUE)
 ###   (c) xx <- match(x, x); ans <- xx != seq_along(xx); ans[xx] <- ans; ans
@@ -194,7 +194,7 @@
     tmp <- x_hits
     x_hits <- c(x_hits, y_hits)
     y_hits <- c(y_hits, tmp)
-    .makeMateIdx(x_hits, y_hits, length(x_start))
+    .makeMateIdx2(x_hits, y_hits, length(x_start))
 }
 
 .showGappedAlignmentsEltsWithMoreThan1Mate <- function(x, idx)
@@ -211,33 +211,38 @@
     cat("!! ==> won't assign a mate to them!\n")
 }
 
-.dumped_alignments <- new.env(hash=TRUE, parent=emptyenv())
-
-dumpedAlignments <- function()
-{
-    .dumped_alignments
-}
+.dump_envir <- new.env(hash=TRUE, parent=emptyenv())
+.dumpEnvir <- function() .dump_envir
 
 flushDumpedAlignments <- function()
 {
-    rm(list=ls(envir=dumpedAlignments()), envir=dumpedAlignments())
+    objnames <- ls(envir=.dumpEnvir())
+    rm(list=objnames, envir=.dumpEnvir())
 }
 
-.dumpAlignmentsWithMoreThan1Mate <- function(x, idx)
+.dumpAlignments <- function(x, idx)
 {
-    objnames <- ls(envir=dumpedAlignments())
-    if (length(objnames) == 0L) {
-        objname <- 1L
+    objnames <- ls(envir=.dumpEnvir())
+    nobj <- length(objnames)
+    if (nobj == 0L) {
+        new_objname <- 1L
     } else {
-        objname <- max(as.integer(objnames)) + 1L
+        new_objname <- as.integer(objnames[nobj]) + 1L
     }
-    objname <- sprintf("%08d", objname)
-    assign(objname, x[idx], envir=dumpedAlignments())
+    new_objname <- sprintf("%08d", new_objname)
+    assign(new_objname, x[idx], envir=.dumpEnvir())
 }
 
 countDumpedAlignments <- function()
 {
-    sum(unlist(eapply(dumpedAlignments(), length, USE.NAMES=FALSE)))
+    sum(unlist(eapply(.dumpEnvir(), length, USE.NAMES=FALSE)))
+}
+
+getDumpedAlignments <- function()
+{
+    objnames <- ls(envir=.dumpEnvir())
+    args <- unname(mget(objnames, envir=.dumpEnvir()))
+    do.call(c, args)
 }
 
 ### Takes about 2.3 s and 170MB of RAM to mate 1 million alignments,
@@ -291,10 +296,10 @@ findMateAlignment <- function(x, verbose=FALSE)
                                                chunk.x_mrnm,
                                                chunk.x_mpos,
                                                chunk.x_flag)
-        has_dups <- !is.na(chunk.ans) & .hasDuplicates(chunk.ans)
-        if (any(has_dups)) {
-            .dumpAlignmentsWithMoreThan1Mate(x, chunk.idx[has_dups])
-            chunk.ans[has_dups] <- NA_integer_
+        dumpme_idx <- which(chunk.ans <= 0L)
+        if (length(dumpme_idx) != 0L) {
+            .dumpAlignments(x, chunk.idx[dumpme_idx])
+            chunk.ans[dumpme_idx] <- NA_integer_
         }
         if (verbose)
             message("OK")
@@ -304,9 +309,9 @@ findMateAlignment <- function(x, verbose=FALSE)
     }
     dump_count <- countDumpedAlignments()
     if (dump_count != 0L)
-        warning("  ", dump_count, " alignments with more than 1 mate ",
-                "were dumped.\n  Use 'dumpedAlignments()' to get the dump ",
-                "environment.")
+        warning("  ", dump_count, " alignments with ambiguous pairing ",
+                "were dumped.\n  Use 'getDumpedAlignments()' to retrieve ",
+                "them from the dump environment.")
     ans
 }
 
