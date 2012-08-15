@@ -235,7 +235,7 @@ flushDumpedAlignments <- function()
     assign(objname, x[idx], envir=dumpedAlignments())
 }
 
-.countDumpedAlignments <- function()
+countDumpedAlignments <- function()
 {
     sum(unlist(eapply(dumpedAlignments(), length, USE.NAMES=FALSE)))
 }
@@ -302,7 +302,7 @@ findMateAlignment <- function(x, verbose=FALSE)
         chunk.GIDX <- chunk.GIDX + NGROUP_BY_CHUNK
         chunk.offset <- chunk.offset + chunk.length
     }
-    dump_count <- .countDumpedAlignments()
+    dump_count <- countDumpedAlignments()
     if (dump_count != 0L)
         warning("  ", dump_count, " alignments with more than 1 mate ",
                 "were dumped.\n  Use 'dumpedAlignments()' to get the dump ",
