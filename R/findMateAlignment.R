@@ -310,7 +310,7 @@ findMateAlignment <- function(x, verbose=FALSE)
     dump_count <- countDumpedAlignments()
     if (dump_count != 0L)
         warning("  ", dump_count, " alignments with ambiguous pairing ",
-                "were dumped.\n  Use 'getDumpedAlignments()' to retrieve ",
+                "were dumped.\n    Use 'getDumpedAlignments()' to retrieve ",
                 "them from the dump environment.")
     ans
 }
