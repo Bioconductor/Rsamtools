@@ -236,7 +236,7 @@ setMethod(sortBam, "BamFile",
         ## that we cannot use "colnames<-" for this because it's broken,
         ## but "names<-" seems to work as expected.
         names(df) <- colnames
-        elementMetadata(x) <- df
+        mcols(x) <- df
     }
     x
 }
@@ -288,11 +288,11 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     param2 <- .normargParam(param, flag0, what0)
     galn <- readBamGappedAlignments(file, use.names=TRUE, param=param2)
     if (is.null(param)) {
-        keep.cols <- NULL
+        use.mcols <- FALSE
     } else {
-        keep.cols <- c(bamWhat(param), bamTag(param))
+        use.mcols <- c(bamWhat(param), bamTag(param))
     }
-    makeGappedAlignmentPairs(galn, use.names=use.names, keep.cols=keep.cols)
+    makeGappedAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
 })
 
 
@@ -387,12 +387,12 @@ setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
         reads <- readBamGappedAlignments(bam, param=param)
     else {
         reads <- readGappedAlignmentPairs(path(bam), param=param)
-        first_xs <- values(first(reads))$XS
-        last_xs <- values(last(reads))$XS
+        first_xs <- mcols(first(reads))$XS
+        last_xs <- mcols(last(reads))$XS
         if (!is.null(first_xs) && !is.null(last_xs)) {
             xs <- first_xs
             xs[is.na(xs)] <- last_xs[is.na(xs)]
-            values(reads)$XS <- xs
+            mcols(reads)$XS <- xs
         }
     }
  

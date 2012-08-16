@@ -360,7 +360,7 @@ head(t(sapply(olaps, function(elt) range(qwidth(elt)))))
 
 Suppose we were particularly interested in the first transcript, which
 has a transcript id
-\Sexpr{elementMetadata(bamRanges(bv))[["tx_name"]][1]}. Here we
+\Sexpr{mcols(bamRanges(bv))[["tx_name"]][1]}. Here we
 extract reads overlapping this transcript from each of our samples. As
 a consequence of the protocol used, reads aligning to either strand
 could be derived from this transcript. For this reason, we set the

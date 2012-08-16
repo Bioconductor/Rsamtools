@@ -290,8 +290,8 @@ bamDirname(x, ...) <- value
       precedence over \code{bamWhich(param)}).
       The return value is a \code{\linkS4class{SimpleList}}, with elements
       of the list corresponding to each path. \code{bamSamples(file)} is
-      available as \code{elementMetadata} of the returned
-      \code{SimpleList}.}
+      available as metadata columns (accessed with \code{mcols}) of the
+      returned \code{SimpleList}.}
 
     \item{show}{Compactly display the object.}
 
@@ -329,14 +329,14 @@ aln <- readBamGappedAlignments(bv)
 aln
 aln[[1]]
 aln[colnames(bv)]
-elementMetadata(aln)
+mcols(aln)
 
 ##---------------------------------------------------------------------------
 ## summarizeOverlaps with BamViews
 ##
 
 ## bamSamples and bamPaths metadata are put into the colData
-## and the bamExperiment metadat is put into the exptData slot
+## and the bamExperiment metadata is put into the exptData slot
 ## of the resulting SummarizedExperiment.
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))

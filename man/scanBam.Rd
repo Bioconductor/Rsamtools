@@ -282,11 +282,11 @@ length(scanBam(fl, param=p3)[[1]])
 
 sorted <- sortBam(fl, tempfile())
 
-## map values(which) to output, e.g., of countBam
+## map mcols(gwhich) to output, e.g., of countBam
 gwhich <- as(which, "GRanges")[c(2, 1, 3)]
-values(gwhich)[["OriginalOrder"]] <- 1:3
+mcols(gwhich)[["OriginalOrder"]] <- 1:3
 cnt <- countBam(fl, param=ScanBamParam(which=gwhich))
-cntVals <- unlist(split(values(gwhich), seqnames(gwhich)))
+cntVals <- unlist(split(mcols(gwhich), seqnames(gwhich)))
 cbind(cnt, as.data.frame(cntVals))
 
 }

@@ -10,7 +10,7 @@ nostarsFile <- file.path(src, "pileup-no-stars.txt")
     checkIdentical(tbl[[2]], start(rdf))
     for (i in 3:8)
         checkIdentical(as.character(tbl[[i]]),
-                       as.character(elementMetadata(rdf)[[i-2]]))
+                       as.character(mcols(rdf)[[i-2]]))
 }
 
 test_readPileup <- function()

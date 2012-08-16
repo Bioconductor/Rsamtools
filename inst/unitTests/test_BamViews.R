@@ -42,7 +42,7 @@ test_BamViews_subset <- function()
     ni2 <- length(rl2)
 
     rd2 <- rl2
-    elementMetadata(rd2)[["Count"]] <- rev(seq_len(ni2))
+    mcols(rd2)[["Count"]] <- rev(seq_len(ni2))
     ## rows
     v <- BamViews(bamPaths=fls1, bamRanges=rd2, bamSamples=sd1)
     .BamViews_ok(v, c(ni2, nj1), bamRanges=rd2, bamSamples=sd1)

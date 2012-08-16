@@ -9,11 +9,11 @@
 ###
 ###   (A) names(x[i1]) == names(y[i2])
 ###
-###   (B) elementMetadata(x[i1])$mrnm == seqnames(y[i2]) &
-###       elementMetadata(y[i2])$mrnm == seqnames(x[i1])
+###   (B) mcols(x[i1])$mrnm == seqnames(y[i2]) &
+###       mcols(y[i2])$mrnm == seqnames(x[i1])
 ###
-###   (C) elementMetadata(x[i1])$mpos == start(y[i2]) &
-###       elementMetadata(y[i2])$mpos == start(x[i1])
+###   (C) mcols(x[i1])$mpos == start(y[i2]) &
+###       mcols(y[i2])$mpos == start(x[i1])
 ###
 ###   (D) isMateMinusStrand(x[i1]) == isMinusStrand(y[i2]) &
 ###       isMateMinusStrand(y[i2]) == isMinusStrand(x[i1])
@@ -25,31 +25,30 @@
 ###
 ###   (G) isNotPrimaryRead(x[i1]) == isNotPrimaryRead(y[i2])
 
-.checkElementMetadata <- function(arg, argname)
+.checkMetadatacols <- function(arg, argname)
 {
     if (!is(arg, "GappedAlignments"))
         stop("'", argname, "' must be a GappedAlignments object")
     if (is.null(names(arg)))
         stop("'", argname, "' must have names")
-    eltmetadata <- elementMetadata(arg)
+    arg_mcols <- mcols(arg)
     REQUIRED_COLNAMES <- c("flag", "mrnm", "mpos")
-    if (!all(REQUIRED_COLNAMES %in% colnames(eltmetadata))) {
+    if (!all(REQUIRED_COLNAMES %in% colnames(arg_mcols))) {
         colnames_in1string <- paste("\"", REQUIRED_COLNAMES, "\"", sep="",
                                     collapse=", ")
-        stop("required columns in 'elementMetadata(", argname, ")': ",
+        stop("required columns in 'mcols(", argname, ")': ",
              colnames_in1string)
     }
-    eltmetadata
+    arg_mcols
 }
 
 ### 'names', 'flagbits', 'mrnm', and 'mpos', must all come from the same
 ### GappedAlignments object x.
 ### 'names': names(x).
 ### 'flagbits': integer matrix (of 0's and 1's) obtained with
-###     bamFlagAsBitMatrix(elementMetadata(x)$flag,
-###                        bitnames=.MATING_FLAG_BITNAMES)
-### 'mrnm': character vector or factor obtained with elementMetadata(x)$mrnm
-### 'mpos': integer vector obtained with elementMetadata(x)$mpos
+###     bamFlagAsBitMatrix(mcols(x)$flag, bitnames=.MATING_FLAG_BITNAMES)
+### 'mrnm': character vector or factor obtained with mcols(x)$mrnm
+### 'mpos': integer vector obtained with mcols(x)$mpos
 ### Returns 'names' with NAs injected at positions corresponding to alignments
 ### that satisfy at least one of following conditions:
 ###     1. Bit 0x1 (isPaired) is 0
@@ -256,17 +255,17 @@ findMateAlignment <- function(x, verbose=FALSE)
     x_names <- names(x)
     if (is.null(x_names))
         stop("'x' must have names")
-    x_eltmetadata <- .checkElementMetadata(x, "x")
+    x_mcols <- .checkMetadatacols(x, "x")
     ## flushDumpedAlignments() must be placed *after* the first reference to
     ## 'x', otherwise, when doing 'findMateAlignment(getDumpedAlignments())',
     ## the flushing would happen before 'x' is evaluated, causing 'x' to be
     ## evaluated to NULL.
     flushDumpedAlignments()
-    x_flag <- x_eltmetadata$flag
+    x_flag <- x_mcols$flag
     bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
     x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
-    x_mrnm <- as.character(x_eltmetadata$mrnm)
-    x_mpos <- x_eltmetadata$mpos
+    x_mrnm <- as.character(x_mcols$mrnm)
+    x_mpos <- x_mcols$mpos
     x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
                                             x_mrnm, x_mpos)
     x_seqnames <- as.character(seqnames(x))
@@ -386,12 +385,12 @@ findMateAlignment2 <- function(x, y=NULL)
     x_names <- names(x)
     if (is.null(x_names))
         stop("'x' must have names")
-    x_eltmetadata <- .checkElementMetadata(x, "x")
+    x_mcols <- .checkMetadatacols(x, "x")
     x_seqnames <- as.character(seqnames(x))
     x_start <- start(x)
-    x_mrnm <- as.character(x_eltmetadata$mrnm)
-    x_mpos <- x_eltmetadata$mpos
-    x_flag <- x_eltmetadata$flag
+    x_mrnm <- as.character(x_mcols$mrnm)
+    x_mpos <- x_mcols$mpos
+    x_flag <- x_mcols$flag
     bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
     x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
     x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
@@ -409,12 +408,12 @@ findMateAlignment2 <- function(x, y=NULL)
         y_names <- names(y)
         if (is.null(y_names))
             stop("'y' must have names")
-        y_eltmetadata <- .checkElementMetadata(y, "y")
+        y_mcols <- .checkMetadatacols(y, "y")
         y_seqnames <- as.character(seqnames(y))
         y_start <- start(y)
-        y_mrnm <- as.character(y_eltmetadata$mrnm)
-        y_mpos <- y_eltmetadata$mpos
-        y_flag <- y_eltmetadata$flag
+        y_mrnm <- as.character(y_mcols$mrnm)
+        y_mpos <- y_mcols$mpos
+        y_flag <- y_mcols$flag
         y_flagbits <- bamFlagAsBitMatrix(y_flag, bitnames=bitnames)
         y_gnames <- .makeGappedAlignmentsGNames(y_names, y_flagbits,
                                                 y_mrnm, y_mpos)
@@ -472,7 +471,7 @@ findMateAlignment2 <- function(x, y=NULL)
 }
 
 .isFirstSegment.GappedAlignments <- function(x)
-    .isFirstSegment.integer(elementMetadata(x)$flag)
+    .isFirstSegment.integer(mcols(x)$flag)
 
 ### TODO: Make isLastSegment() an S4 generic function with methods for
 ### matrices, integer vectors, and GappedAlignments objects. Put this with the
@@ -496,19 +495,19 @@ findMateAlignment2 <- function(x, y=NULL)
 }
 
 .isLastSegment.GappedAlignments <- function(x)
-    .isLastSegment.integer(elementMetadata(x)$flag)
+    .isLastSegment.integer(mcols(x)$flag)
 
 ### 'x' must be a GappedAlignments objects.
-makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.cols=NULL)
+makeGappedAlignmentPairs <- function(x, use.names=FALSE, use.mcols=FALSE)
 {
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
-    if (!is.null(keep.cols)) {
-        if (!is.character(keep.cols) || any(is.na(keep.cols)))
-            stop("'keep.cols' must be a character vector with no NAs")
-        if (!all(keep.cols %in% colnames(elementMetadata(x))))
-            stop("'keep.cols' must be a subset ",
-                 "of 'colnames(elementMetadata(x))'")
+    if (!isTRUEorFALSE(use.mcols)) {
+        if (!is.character(use.mcols))
+            stop("'use.mcols' must be TRUE or FALSE or a character vector ",
+                 "specifying the metadata columns to propagate")
+        if (!all(use.mcols %in% colnames(mcols(x))))
+            stop("'use.mcols' must be a subset of 'colnames(mcols(x))'")
     }
     mate <- findMateAlignment(x)
     x_is_first <- .isFirstSegment.GappedAlignments(x)
@@ -531,7 +530,7 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.cols=NULL)
         stop("findMateAlignment() returned an invalid 'mate' vector")
 
     ## Check the 0x2 bit (isProperPair).
-    x_is_proper <- as.logical(bamFlagAsBitMatrix(elementMetadata(x)$flag,
+    x_is_proper <- as.logical(bamFlagAsBitMatrix(mcols(x)$flag,
                                                  bitnames="isProperPair"))
     ans_is_proper <- x_is_proper[first_idx]
 
@@ -561,8 +560,12 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE, keep.cols=NULL)
     if (use.names)
         ans_names <- names(ans_first)
     names(ans_first) <- names(ans_last) <- NULL
-    elementMetadata(ans_first) <- elementMetadata(ans_first)[keep.cols]
-    elementMetadata(ans_last) <- elementMetadata(ans_last)[keep.cols]
+    if (is.character(use.mcols)) {
+        mcols(ans_first) <- mcols(ans_first)[use.mcols]
+        mcols(ans_last) <- mcols(ans_last)[use.mcols]
+    } else if (!use.mcols) {
+        mcols(ans_first) <- mcols(ans_last) <- NULL
+    }
     GappedAlignmentPairs(ans_first, ans_last, ans_is_proper, names=ans_names)
 }
 

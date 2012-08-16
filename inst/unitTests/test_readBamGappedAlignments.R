@@ -42,10 +42,10 @@ test_readBamGappedAlignments_tag <- function()
     ## valid
     param <- ScanBamParam(tag=("NM"))
     aln <- readBamGappedAlignments(fl, param=param)
-    checkIdentical(924L, sum(values(aln)[["NM"]]))
+    checkIdentical(924L, sum(mcols(aln)[["NM"]]))
 
     ## empty
     param <- ScanBamParam(tag=("FO"))
     aln <- readBamGappedAlignments(fl, param=param)
-    checkIdentical(rep.int(NA, length(aln)), values(aln)[["FO"]])
+    checkIdentical(rep.int(NA, length(aln)), mcols(aln)[["FO"]])
 }

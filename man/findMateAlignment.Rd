@@ -13,14 +13,14 @@ object.
 
 \usage{
 findMateAlignment(x, verbose=FALSE)
-makeGappedAlignmentPairs(x, use.names=FALSE, keep.cols=NULL)
+makeGappedAlignmentPairs(x, use.names=FALSE, use.mcols=FALSE)
 }
 
 \arguments{
   \item{x}{
-    A named \link[GenomicRanges]{GappedAlignments} object with meta columns
-    \code{flag}, \code{mrnm}, and \code{mpos}. Typically obtained by loading
-    aligned paired-end reads from a BAM file with:
+    A named \link[GenomicRanges]{GappedAlignments} object with metadata
+    columns \code{flag}, \code{mrnm}, and \code{mpos}. Typically obtained
+    by loading aligned paired-end reads from a BAM file with:
     \preformatted{
     param <- ScanBamParam(what=c("flag", "mrnm", "mpos"))
     x <- readBamGappedAlignments(..., use.names=TRUE, param=param)
@@ -34,8 +34,8 @@ makeGappedAlignmentPairs(x, use.names=FALSE, keep.cols=NULL)
     Whether the names on the input object should be propagated to the
     returned object or not.
   }
-  \item{keep.cols}{
-    Names of the metadata columns to keep in the returned
+  \item{use.mcols}{
+    Names of the metadata columns to propagate to the returned
     \link[GenomicRanges]{GappedAlignmentPairs} object.
   }
 }
@@ -97,7 +97,7 @@ that cannot be paired with the above algorithm:
 
 Showing the 4 records as a GappedAlignments object of length 4:
 \preformatted{
-GappedAlignments with 4 alignments and 2 elementMetadata cols:
+GappedAlignments with 4 alignments and 2 metadata columns:
                     seqnames strand       cigar    qwidth     start    end
                        <Rle>  <Rle> <character> <integer> <integer> <integer>
   SRR031714.2658602    chr2R      +  21M384N16M        37   6983850 6984270
@@ -191,11 +191,11 @@ mate <- findMateAlignment(x)
 head(mate)
 table(is.na(mate))
 galp0 <- makeGappedAlignmentPairs(x)
-galp <- makeGappedAlignmentPairs(x, use.name=TRUE, keep.cols="flag")
+galp <- makeGappedAlignmentPairs(x, use.name=TRUE, use.mcols="flag")
 galp
-colnames(elementMetadata(galp))
-colnames(elementMetadata(first(galp)))
-colnames(elementMetadata(last(galp)))
+colnames(mcols(galp))
+colnames(mcols(first(galp)))
+colnames(mcols(last(galp)))
 }
 
 \keyword{manip}

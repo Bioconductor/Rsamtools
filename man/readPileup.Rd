@@ -87,7 +87,7 @@ readPileup(file, ...)
 
 fl <- system.file("extdata", "pileup.txt", package="Rsamtools")
 (res <- readPileup(fl))
-xtabs(~referenceBase + consensusBase, elementMetadata(res))[DNA_BASES,]
+xtabs(~referenceBase + consensusBase, mcols(res))[DNA_BASES,]
 
 \dontrun{## uses a pipe, and arguments passed to read.table
 ## three successive piles of 100 records each

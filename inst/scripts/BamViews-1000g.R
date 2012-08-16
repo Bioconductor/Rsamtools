@@ -69,5 +69,5 @@ library(multicore)
 bv <- BamViews(fls, sub(".bai", "", indexFiles),
                bamRanges=GRanges(seqnames=seqnames(rng),
                  ranges=ranges(rng),
-                 EntrezId=elementMetadata(rng)[["EntrezId"]]))
+                 EntrezId=mcols(rng)[["EntrezId"]]))
 gapped <- readBamGappedAlignments(bv[1:2,1:3])

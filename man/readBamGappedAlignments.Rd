@@ -40,9 +40,9 @@ readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
     \emph{in addition} to any field required for generating the returned
     object (\link[GenomicRanges]{GappedAlignments},
     \link[ShortRead]{GappedReads}, or
-    \link[GenomicRanges]{GappedAlignmentPairs} object) but only the fields
-    requested by the user will actually be returned in its elementMetadata
-    part.
+    \link[GenomicRanges]{GappedAlignmentPairs} object), but only the fields
+    requested by the user will actually be kept as metadata columns of the
+    object.
 
     By default (i.e. \code{param=NULL}), no additional field is loaded and
     the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE)} for
@@ -137,7 +137,7 @@ param <- ScanBamParam(flag=scanBamFlag(isDuplicate=FALSE),
                       what=c("qual", "flag"))
 gal3 <- readBamGappedAlignments(bamfile, param=param)
 gal3
-elementMetadata(gal3)
+mcols(gal3)
 
 ## Using the 'param' arg to load reads from particular regions.
 ## Note that if we weren't providing a 'what' argument here, all the
@@ -162,7 +162,7 @@ gal5
 param <- ScanBamParam(tag=c("MF", "Aq", "NM", "UQ", "H0", "H1"),
                       what="isize")
 gal6 <- readBamGappedAlignments(bamfile, param=param)
-elementMetadata(gal6)  # "tag" cols always after "what" cols
+mcols(gal6)  # "tag" cols always after "what" cols
 
 ## ---------------------------------------------------------------------
 ## B. readBamGappedReads()

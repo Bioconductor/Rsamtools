@@ -19,12 +19,7 @@ setMethod(BamViews, c(bamRanges="RangedData"),
                    bamRanges,
                    bamExperiment=list(), ...)
 {
-    bamRanges <- local({
-        gd <- GRanges(seqnames=space(bamRanges),
-                      IRanges(start(bamRanges), end(bamRanges)))
-        elementMetadata(gd) <- values(bamRanges)
-        gd
-    })
+    bamRanges <- as(bamRanges, "GRanges")
     callGeneric(bamPaths=bamPaths, bamIndicies=bamIndicies,
                 bamSamples=bamSamples, bamRanges=bamRanges,
                 bamExperiment=bamExperiment, ...)
