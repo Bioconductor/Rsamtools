@@ -60,7 +60,7 @@ test_BcfFile_scanBcfHeader_no_SAMPLE_header <- function()
 
 test_BcfFile_scanBcfHeader_remote <- function()
 {
-    fl <- "http://1000genomes.s3.amazonaws.com/release/20110521/ALL.chr22.phase1_integrated_calls.20101123.snps_indels_svs.genotypes.vcf.gz"
+    fl <- "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20110521/ALL.chr22.phase1_release_v3.20101123.snps_indels_svs.genotypes.vcf.gz"
     file <- tryCatch({
         open(BcfFile(fl))
     }, warning=function(w) {
@@ -73,7 +73,7 @@ test_BcfFile_scanBcfHeader_remote <- function()
 
     obs <- .Call(Rsamtools:::.scan_bcf_header, Rsamtools:::.extptr(file))
     close(file)
-    exp <- setNames(c(0L, 1092L, 28L), c("Reference", "Sample", "Header"))
+    exp <- setNames(c(0L, 1092L, 29L), c("Reference", "Sample", "Header"))
     checkIdentical(exp, sapply(obs, length))
 }
 
