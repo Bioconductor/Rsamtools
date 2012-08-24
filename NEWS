@@ -19,6 +19,8 @@ BUG FIXES
     o scanBamFlag isValidVendorRead deprecated in favor of
       isNotPassingQualityControls
 
+    o allow asBam to work without warnings on header-only SAM files
+
 CHANGES IN VERSION 1.8.0
 ------------------------
 
