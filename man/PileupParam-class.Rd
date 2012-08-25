@@ -3,7 +3,7 @@
 \docType{class}
 \alias{PileupParam-class}
 \alias{PileupParam}
-% accessors: filters
+% accessors
 \alias{plpFlag<-}
 \alias{plpFlag}
 \alias{plpMaxDepth<-}
@@ -24,15 +24,6 @@
 \alias{plpYieldBy}
 \alias{plpYieldSize<-}
 \alias{plpYieldSize}
-% accessors: bins
-\alias{plpHow<-}
-\alias{plpHow}
-\alias{plpCycleBin<-}
-\alias{plpCycleBin}
-\alias{plpQualityBin<-}
-\alias{plpQualityBin}
-\alias{plpStrandBin<-}
-\alias{plpStrandBin}
 % methods
 \alias{show,PileupParam-method}
 
@@ -49,19 +40,12 @@
 
 # Constructor
 PileupParam(flag = scanBamFlag(),
-    ## filters
     minBaseQuality = 13L, minMapQuality = 0L,
     minDepth = 0L, maxDepth = 250L,
     yieldSize = 1L, yieldBy = c("range", "position"), yieldAll = FALSE,
-    which = GRanges()
-    ## bins
-    how = c("wide", "long"),
-    ## how == "wide"
-    what = c("seq", "qual"),
-    ## how == "long"
-    strandBin = NA, cycleBin = NA_integer_, qualityBin = NA_integer_)
+    which = GRanges(), what = c("seq", "qual"))
 
-# Accessors: filters
+# Accessors
 plpFlag(object)
 plpFlag(object) <- value
 plpMaxDepth(object)
@@ -72,6 +56,8 @@ plpMinDepth(object)
 plpMinDepth(object) <- value
 plpMinMapQuality(object)
 plpMinMapQuality(object) <- value
+plpWhat(object)
+plpWhat(object) <- value
 plpWhich(object)
 plpWhich(object) <- value
 plpYieldAll(object)
@@ -80,18 +66,6 @@ plpYieldBy(object)
 plpYieldBy(object) <- value
 plpYieldSize(object)
 plpYieldSize(object) <- value
-
-# Accessors: bins
-plpHow(object) <- value
-plpHow(object)
-plpCycleBin(object) <- value
-plpCycleBin(object)
-plpQualityBin(object) <- value
-plpQualityBin(object)
-plpStrandBin(object) <- value
-plpStrandBin(object)
-plpWhat(object)
-plpWhat(object) <- value
 
 \S4method{show}{PileupParam}(object)
 
@@ -115,7 +89,7 @@ plpWhat(object) <- value
   \item{maxDepth}{The maximum depth of reads considered at any position;
     this can be used to limit memory consumption.}
 
-  \item{yieldSize}{The number of ranges or positions to include in each call to
+  \item{yieldSize}{The number of records to include in each call to
     \code{FUN}.}
 
   \item{yieldBy}{How records are to be counted. By range (in which case
@@ -133,25 +107,6 @@ plpWhat(object) <- value
   \item{which}{A \code{GRanges} or \code{RangesList} instance
     restricting pileup calculations to the corresponding genomic
     locations.}
-
-  \item{how}{A \code{character(1)} indicating whether results should be
-    returned as a list and \code{matrix} (\code{how="wide"}, default) or
-    \code{data.frame} (\code{how="long"}). Format of results is
-    documented on the \code{\link{applyPileups}} help page. NOTE:
-    \sQuote{*Bin} arguments are ignored wieh \code{how="wide"}.}
-
-  \item{strandBin}{A \code{logical(1)} indicating whether counts should
-    be binned by strand. \code{NA} indicates that strand is not included
-    in the result.}
-
-  \item{cycleBin}{An \code{integer()} indicating breaks to summarize
-    cycles by. Breaks specify intervals closed on the right, open on the
-    left. \code{NA} indicates that cycle is not included in the result.}
-
-  \item{qualtyBin}{An \code{integer()} indicating breaks to summarize
-    quality by. Breaks specify intervals closed on the right, open on
-    the left. \code{NA} indicates that quality is not included in the
-    result.}
 
   \item{what}{A \code{character()} instance indicating what values are
     to be returned. One or more of \code{c("seq", "qual")}.}
@@ -193,14 +148,6 @@ plpWhat(object) <- value
     \item{\code{yieldAll}}{A \code{logical(1)}.}
 
     \item{\code{which}}{A \code{GRanges} or \code{RangesList} instance.}
-
-    \item{\code{how}}{A \code{character(1)}.}
-
-    \item{\code{strandBin}}{A \code{logical(1)}.}
-
-    \item{\code{cycleBin}}{An \code{integer()}.}
-
-    \item{\code{qualityBin}}{An \code{integer()}.}
 
     \item{\code{what}}{A \code{character()}.}
 
@@ -252,20 +199,6 @@ plpWhat(object) <- value
 
     \item{plpWhich, plpWhich<-}{Returns or sets the object influencing
       which locations pileups are calculated over.}
-
-    \item{plpHow, plpHow<-}{Returns or sets the object influencing how
-      pileups are returned; either a list-with-matrix, or
-      \code{data.frame} as documented on \code{\link{applyPileups}};
-      \code{*bin} arguments are ignored  when \code{how="wide"}.}
-
-    \item{strandBin, strandBin<-}{Returns or sets whether counts are
-      binned by strand (when \code{how="long"}).}
-
-    \item{cycleBin, cycleBin<-}{Returns or sets whether breaks for
-      binning by cycle (when \code{how="long"}).}
-
-    \item{qualityBin, qualityBin<-}{Returns or sets whether breaks for
-      binning by quality (when \code{how="long"}).}
 
     \item{plpWhat, plpWhat<-}{Returns or sets the \code{character}
       vector describing what summaries are returned by pileup.}
