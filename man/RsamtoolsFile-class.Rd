@@ -6,6 +6,7 @@
 \alias{path}
 \alias{yieldSize}
 \alias{yieldSize<-}
+\alias{yieldSize<-,RsamtoolsFile-method}
 \alias{path,RsamtoolsFile-method}
 \alias{isOpen,RsamtoolsFile-method}
 \alias{show,RsamtoolsFile-method}

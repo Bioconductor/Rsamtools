@@ -7,7 +7,7 @@
 \alias{BamFile}
 \alias{BamFileList}
 \alias{open.BamFile}
-\alias{close.BamFile }
+\alias{close.BamFile}
 % accessors
 \alias{isOpen,BamFile-method}
 % methods

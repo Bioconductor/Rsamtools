@@ -9,6 +9,7 @@
 \alias{close.RsamtoolsFileList}
 \alias{names,RsamtoolsFileList-method}
 \alias{yieldSize,RsamtoolsFileList-method}
+\alias{yieldSize<-,RsamtoolsFileList-method}
 
 \title{A base class for managing lists of Rsamtools file references}
 
