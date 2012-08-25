@@ -308,9 +308,7 @@ bamDirname(x, ...) <- value
 
 
 \examples{
-
-fls <- list.files(system.file("extdata", package="Rsamtools"),
-                  "\\\\.bam$", full=TRUE)
+fls <- system.file("extdata", "ex1.bam", package="Rsamtools")
 rngs <- GRanges(seqnames = Rle(c("chr1", "chr2"), c(9, 9)),
                 ranges = c(IRanges(seq(10000, 90000, 10000), width=500),
                            IRanges(seq(100000, 900000, 100000), width=5000)),
