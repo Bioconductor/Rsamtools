@@ -34,8 +34,8 @@
     arg_mcols <- mcols(arg)
     REQUIRED_COLNAMES <- c("flag", "mrnm", "mpos")
     if (!all(REQUIRED_COLNAMES %in% colnames(arg_mcols))) {
-        colnames_in1string <- paste("\"", REQUIRED_COLNAMES, "\"", sep="",
-                                    collapse=", ")
+        colnames_in1string <-
+            paste0("\"", REQUIRED_COLNAMES, "\"", collapse=", ")
         stop("required columns in 'mcols(", argname, ")': ",
              colnames_in1string)
     }

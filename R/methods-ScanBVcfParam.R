@@ -64,7 +64,7 @@ setMethod(show, "ScanBVcfParam", function(object)
     .clslbl <- function(lbl) {
         cl <-
             if ("ScanBcfParam" == class(object)) "bcf" else "vcf"
-        paste(cl, lbl, sep="")
+        paste0(cl, lbl)
     }
     cat("class:", class(object), "\n")
     cat(sprintf("%s: %d elements\n", .clslbl("Which"),

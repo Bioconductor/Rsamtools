@@ -146,8 +146,7 @@ setMethod(show, "PileupParam", function(object) {
         cat(sprintf("%s: %s",
                     sub("([[:alpha:]])", "plp\\U\\1", elt, perl=TRUE),
                     slot(object, elt)), "\n")
-    cat("plpWhat: '", paste(object@what, collapse="' '"), "'\n",
-        sep="")
+    cat("plpWhat: '", paste(object@what, collapse="' '"), "'\n", sep="")
     cat(sprintf("plpWhich: %s (length %d)\n", class(object@which),
                 length(object@which)))
 })

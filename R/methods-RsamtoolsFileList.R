@@ -15,7 +15,7 @@ setMethod(.RsamtoolsFileList, "character",
         Map(fun, file, index,
             MoreArgs=list(yieldSize=yieldSize, class=class))
     }
-    new(paste(class, "List", sep=""), listData=listData)
+    new(paste0(class, "List"), listData=listData)
 })
 
 setMethod(.RsamtoolsFileList, "ANY",
@@ -24,7 +24,7 @@ setMethod(.RsamtoolsFileList, "ANY",
     list <- list(...)
     if (length(list) == 1 && is.list(list[[1L]])) 
         list <- list[[1L]]
-    new(paste(class, "List", sep=""), listData=list)
+    new(paste0(class, "List"), listData=list)
 })
 
 setMethod(path, "RsamtoolsFileList",

@@ -20,8 +20,8 @@
     which <- bamWhich(param)
     if (0L != length(space(which)))
         names(x) <-
-            paste(space(which), ":", .uunlist(start(which)), "-",
-                  .uunlist(end(which)), sep="")
+            paste0(space(which), ":", .uunlist(start(which)), "-",
+                   .uunlist(end(which)))
     lapply(x, Filter, f=Negate(is.null))
 }
 
