@@ -400,3 +400,13 @@ setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
     
     reads
 }
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### "coverage" methods.
+###
+
+setMethod("coverage", "BamFile",
+          function(x, shift=0L, width=NULL, weight=1L, ...)
+          coverage(readBamGappedAlignments(x),
+                   shift=shift, width=width, weight=weight, ...)
+          )

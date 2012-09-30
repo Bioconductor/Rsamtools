@@ -22,6 +22,7 @@
 \alias{readBamGappedAlignments,BamFile-method}
 \alias{readBamGappedReads,BamFile-method}
 \alias{readBamGappedAlignmentPairs,BamFile-method}
+\alias{coverage,BamFile-method}
 
 \alias{mergeBam,BamFileList-method}
 % counting 
@@ -86,6 +87,7 @@ BamFileList(..., yieldSize=NA_integer_)
 \S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), pairedEnd=FALSE)
 \S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), pairedEnd=FALSE)
 
+\S4method{coverage}{BamFile}(x, shift=0L, width=NULL, weight=1L, ...)
 }
 
 \arguments{
@@ -97,7 +99,10 @@ BamFileList(..., yieldSize=NA_integer_)
     \code{character()} vector of length equal to the first argument
     specifying the paths to the index files, or \code{character()} to
     indicate that no index file is available. See
-    \code{\link{BamFile}}.}
+    \code{\link{BamFile}}. For \code{coverage}, the arguments are passed
+    to the
+    \code{\link[GenomicRanges:coverage,GappedAlignments-method]{coverage}}
+    method for \code{GappedAlignments} objects.}
 
   \item{con}{An instance of \code{BamFile}.}
 
@@ -187,6 +192,7 @@ BamFileList(..., yieldSize=NA_integer_)
     A \link[GenomicFeatures]{TranscriptDb}, or \link{GRangesList} containing
     the annotations.}
 
+  \item{shift, width, weight}{See \code{\link[IRanges:coverage]{coverage}}.}
 }
 
 \section{Objects from the Class}{
