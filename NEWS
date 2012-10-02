@@ -8,6 +8,21 @@ NEW FEATURES
       the file. readBamGappedAlignments, VariantAnnotation::readVcf
       automatically gain support for yield'ing through files.
 
+    o Add getDumpedAlignments(), countDumpedAlignments(), and
+      flushDumpedAlignments() low-level utilities for manipulating
+      alignments dumped by findMateAlignment().
+
+    o Add quickBamCounts() utility for classifying the records in a BAM file
+      according to a set of predefined groups (based on the flag bits) and
+      for counting the nb of records in each group.
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o scanBamFlag isValidVendorRead deprecated in favor of
+      isNotPassingQualityControls
+
+    o Rename makeGappedAlignmentPairs() arg 'keep.colnames' -> 'use.mcols'.
+
 BUG FIXES
 
     o close razip, bgzip files when done
@@ -16,10 +31,14 @@ BUG FIXES
 
     o scanBcfHeader works on remote files
 
-    o scanBamFlag isValidVendorRead deprecated in favor of
-      isNotPassingQualityControls
-
     o allow asBam to work without warnings on header-only SAM files
+
+    o some bug fixes and and small performance improvements to
+      findMateAlignment()
+
+    o fix bug in readBamGappedAlignmentPairs() where fields and tags
+      specified by the user were not propagated to the returned
+      GappedAlignmentPairs object
 
 CHANGES IN VERSION 1.8.0
 ------------------------

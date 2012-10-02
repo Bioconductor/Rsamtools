@@ -4,6 +4,10 @@
 \alias{findMateAlignment2}
 \alias{makeGappedAlignmentPairs}
 
+\alias{getDumpedAlignments}
+\alias{countDumpedAlignments}
+\alias{flushDumpedAlignments}
+
 \title{Pairing the elements of a GappedAlignments object}
 
 \description{
@@ -14,6 +18,11 @@ object.
 \usage{
 findMateAlignment(x, verbose=FALSE)
 makeGappedAlignmentPairs(x, use.names=FALSE, use.mcols=FALSE)
+
+## Related low-level utilities:
+getDumpedAlignments()
+countDumpedAlignments()
+flushDumpedAlignments()
 }
 
 \arguments{
@@ -41,12 +50,13 @@ makeGappedAlignmentPairs(x, use.names=FALSE, use.mcols=FALSE)
 }
 
 \details{
+\subsection{Pairing algorithm used by findMateAlignment}{
 \code{findMateAlignment} is the power horse used by higher-level
 functions like \code{makeGappedAlignmentPairs} and
 \code{\link{readBamGappedAlignmentPairs}} for pairing the records
 loaded from a BAM file containing aligned paired-end reads.
 
-Here is roughly how it works:
+It implements the following pairing algorithm:
 \itemize{
   \item First only records with flag bit 0x1 set to 1, flag bit 0x4 set to 0,
         and flag bit 0x8 set to 0 are candidates for pairing (see the SAM
@@ -82,15 +92,17 @@ Here is roughly how it works:
           \item (G) rec(i) and rec(j) have same flag bit 0x100
         }
 }
+}
 
-This algorithm will find almost all pairs unambiguously, even when
+\subsection{Ambiguous pairing}{
+The above algorithm will find almost all pairs unambiguously, even when
 the same pair of reads maps to several places in the genome. Note
-that when a given pair maps to a single place in the genome, looking
+that, when a given pair maps to a single place in the genome, looking
 at (A) is enough to pair the 2 corresponding records. The additional
 conditions (B), (C), (D), (E), (F), and (G), are only here to help in
 the situation where more than 2 records share the same QNAME. And that
-works most of the times but there are still situations where this is
-not enough to solve the pairing problem unambiguously.
+works most of the times. Unfortunately there are still situations where
+this is not enough to solve the pairing problem unambiguously.
 
 For example, here are 4 records (loaded in a GappedAlignments object)
 that cannot be paired with the above algorithm:
@@ -150,13 +162,29 @@ the pairs could be rec(1) <-> rec(3) and rec(2) <-> rec(4), or they could
 be rec(1) <-> rec(4) and rec(2) <-> rec(3). There is no way to
 disambiguate!
 
-\code{findMateAlignment} is just ignoring those ambiguous pairings (with
-a warning) i.e. records that cannot be paired unambiguously are not paired
-at all. Concretely that means that \code{\link{readGappedAlignmentPairs}}
+So \code{findMateAlignment} is just ignoring (with a warning) those alignments
+with ambiguous pairing, and dumping them in a place from which they can be
+retrieved later (i.e. after \code{findMateAlignment} has returned) for
+further examination (see "Dumped alignments" subsection below for the details).
+In other words, alignments that cannot be paired unambiguously are not paired
+at all. Concretely, this means that \code{\link{readGappedAlignmentPairs}}
 is guaranteed to return a \link[GenomicRanges]{GappedAlignmentPairs} object
-where every pair was formed in an non-ambiguous way. Note that in practice
+where every pair was formed in an non-ambiguous way. Note that, in practice,
 this approach doesn't seem to leave aside a lot of records because ambiguous
 pairing events seem pretty rare.
+}
+
+\subsection{Dumped alignments}{
+Alignments with ambiguous pairing are dumped in a place ("the dump
+environment") from which they can be retrieved with
+\code{getDumpedAlignments()} after \code{findMateAlignment} has returned.
+
+Two additional utilities are provided for manipulation of the dumped
+alignments: \code{countDumpedAlignments} for counting them (a fast equivalent
+to \code{length(getDumpedAlignments())}), and \code{flushDumpedAlignments} to
+flush "the dump environment". Note that "the dump environment" is
+automatically flushed at the beginning of a call to \code{findMateAlignment}.
+}
 }
 
 \value{
@@ -172,6 +200,15 @@ pairing events seem pretty rare.
   For \code{makeGappedAlignmentPairs}: A
   \link[GenomicRanges]{GappedAlignmentPairs} object where the pairs
   are formed internally by calling \code{findMateAlignment} on \code{x}.
+
+  For \code{getDumpedAlignments}: \code{NULL} or a
+  \link[GenomicRanges]{GappedAlignments} object containing the dumped
+  alignments. See "Dumped alignments" subsection in the "Details" section
+  above for the details.
+
+  For \code{countDumpedAlignments}: The number of dumped alignments.
+
+  Nothing for \code{flushDumpedAlignments}.
 }
 
 \author{H. Pages}
