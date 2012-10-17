@@ -18,7 +18,8 @@ open.BamFile <-
     function(con, ...)
 {
     .io_check_exists(path(con))
-    con$.extptr <- .Call(.bamfile_open, path(con), index(con), "rb")
+    index <- sub("\\.bai$", "", index(con))
+    con$.extptr <- .Call(.bamfile_open, path(con), index, "rb")
     invisible(con)
 }
 

@@ -27,7 +27,8 @@
     function(path)
 {
     idx <- !grepl("^(ftp)|(http)://", path)
-    path[idx] <- normalizePath(path.expand(path[idx]), mustWork=FALSE)
+    ## expand ~/, but don't chase links (i.e., don't normalizePath())
+    path[idx] <- path.expand(path[idx])
     path
 }
 
