@@ -20,9 +20,9 @@ setMethod(BamViews, c(bamRanges="RangedData"),
                    bamExperiment=list(), ...)
 {
     bamRanges <- as(bamRanges, "GRanges")
-    callGeneric(bamPaths=bamPaths, bamIndicies=bamIndicies,
-                bamSamples=bamSamples, bamRanges=bamRanges,
-                bamExperiment=bamExperiment, ...)
+    BamViews(bamPaths=bamPaths, bamIndicies=bamIndicies,
+             bamSamples=bamSamples, bamRanges=bamRanges,
+             bamExperiment=bamExperiment, ...)
 })
 
 setMethod(BamViews, c(bamRanges="missing"), 
@@ -60,7 +60,7 @@ setMethod(BamViews, c(bamRanges="missing"),
     } else {
         bamRanges <- GRanges()
     }
-    callGeneric(bamPaths=bamPaths, bamIndicies=bamIndicies,
+    BamViews(bamPaths=bamPaths, bamIndicies=bamIndicies,
         bamSamples=bamSamples, bamRanges=bamRanges,
         bamExperiment=bamExperiment, ...)
 })

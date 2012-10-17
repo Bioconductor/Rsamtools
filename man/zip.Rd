@@ -59,7 +59,8 @@ razip(file, dest=sprintf("\%s.rz", file), overwrite = FALSE)
 
 \examples{
 
-from <- system.file("extdata", "ex1.sam", package="Rsamtools")
+from <- system.file("extdata", "ex1.sam", package="Rsamtools",
+                    mustWork=TRUE)
 to <- tempfile()
 zipped <- bgzip(from, to)
 

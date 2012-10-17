@@ -33,5 +33,5 @@ setMethod(scanBam, "character",
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    callGeneric(bam, ..., param=param)
+    scanBam(bam, ..., param=param)
 })

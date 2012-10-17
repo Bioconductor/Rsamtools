@@ -308,7 +308,8 @@ bamDirname(x, ...) <- value
 
 
 \examples{
-fls <- system.file("extdata", "ex1.bam", package="Rsamtools")
+fls <- system.file("extdata", "ex1.bam", package="Rsamtools",
+                   mustWork=TRUE)
 rngs <- GRanges(seqnames = Rle(c("chr1", "chr2"), c(9, 9)),
                 ranges = c(IRanges(seq(10000, 90000, 10000), width=500),
                            IRanges(seq(100000, 900000, 100000), width=5000)),
@@ -336,7 +337,8 @@ mcols(aln)
 ## bamSamples and bamPaths metadata are put into the colData
 ## and the bamExperiment metadata is put into the exptData slot
 ## of the resulting SummarizedExperiment.
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
+                  mustWork=TRUE)
 rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
 bv <- BamViews(fl, bamSamples=DataFrame(info="test", row.names="ex1"),
                bamRanges=rng)

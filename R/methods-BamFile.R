@@ -116,13 +116,13 @@ setMethod(filterBam, "BamFile",
 })
 
 setMethod(indexBam, "BamFile", function(files, ...) {
-    callGeneric(path(files), ...)
+    indexBam(path(files), ...)
 })
 
 setMethod(sortBam, "BamFile",
     function(file, destination, ..., byQname=FALSE, maxMemory=512)
 {
-    callGeneric(path(file), destination, ...,
+    sortBam(path(file), destination, ...,
                 byQname=byQname, maxMemory=maxMemory)
 })
 
@@ -411,3 +411,25 @@ setMethod("coverage", "BamFile",
           coverage(readBamGappedAlignments(x),
                    shift=shift, width=width, weight=weight, ...)
           )
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### "quickCountBam" methods.
+###
+
+setMethod(quickCountBam, "BamFile",
+    function(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
+{
+    what0 <- c("qname", "flag")
+    if (length(bamWhat(param)) != 0L)
+        warning("bamWhat component of supplied 'param' was ignored")
+    bamWhat(param) <- what0
+
+    res <- scanBam(file, param=param)
+    res0 <- res[[1L]]
+    if (length(res) != 1L) {
+        res0[["qname"]] <- do.call(c, lapply(res, "[[", "qname"))
+        res0[["flag"]] <- do.call(c, lapply(res, "[[", "flag"))
+    } 
+
+    quickCountBam(res0, param=param, mainGroupsOnly=mainGroupsOnly)
+})

@@ -41,6 +41,6 @@ setMethod(filterBam, "character",
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    callGeneric(bam, destination, ...,
-                indexDestination=indexDestination, param=param)
+    filterBam(bam, destination, ...,
+              indexDestination=indexDestination, param=param)
 })

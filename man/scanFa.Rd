@@ -90,7 +90,8 @@ scanFa(file, param, ...)
 }
 
 \examples{
-fa <- system.file("extdata", "ce2dict1.fa", package="Rsamtools")
+fa <- system.file("extdata", "ce2dict1.fa", package="Rsamtools",
+                  mustWork=TRUE)
 countFa(fa)
 (idx <- scanFaIndex(fa))
 (dna <- scanFa(fa, idx[1:2]))

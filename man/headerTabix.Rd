@@ -47,7 +47,8 @@ headerTabix(file, ...)
 }
 
 \examples{
-fl <- system.file("extdata", "example.gtf.gz", package="Rsamtools")
+fl <- system.file("extdata", "example.gtf.gz", package="Rsamtools",
+                  mustWork=TRUE)
 headerTabix(fl)
 }
 

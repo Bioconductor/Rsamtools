@@ -25,7 +25,7 @@ setMethod(ScanBamParam, c(which="RangedData"),
                    reverseComplement=FALSE, tag=character(0),
                    what=character(0), which)
 {
-    callGeneric(flag=flag, simpleCigar=simpleCigar,
+    ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                 reverseComplement=reverseComplement, tag=tag, what=what,
                 which=ranges(which))
 })
@@ -35,7 +35,7 @@ setMethod(ScanBamParam, c(which="GRanges"),
                    reverseComplement=FALSE, tag=character(0),
                    what=character(0), which)
 {
-    callGeneric(flag=flag, simpleCigar=simpleCigar,
+    ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                 reverseComplement=reverseComplement, tag=tag, what=what,
                 which=split(ranges(which), seqnames(which)))
 })
@@ -125,19 +125,22 @@ setReplaceMethod("bamWhich", c("ScanBamParam", "RangesList"),
 setReplaceMethod("bamWhich", c("ScanBamParam", "GRanges"),
     function(object, value) 
 {
-    callGeneric(object, split(ranges(value), seqnames(value)))
+    bamWhich(object) <- split(ranges(value), seqnames(value))
+    object
 })
         
 setReplaceMethod("bamWhich", c("ScanBamParam", "RangedData"),
     function(object, value) 
 {
-    callGeneric(object, ranges(value))
+    bamWhich(object) <- ranges(value)
+    object
 })
         
 setReplaceMethod("bamWhich", c("ScanBamParam", "ANY"),
     function(object, value) 
 {
-    callGeneric(object, as(value, "RangesList"))
+    bamWhich(object) <-  as(value, "RangesList")
+    object
 })
 
 bamWhat <- function(object) slot(object, "what")

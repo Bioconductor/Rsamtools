@@ -182,7 +182,8 @@ FaFileList(...)
 
 \examples{
 
-fl <- system.file("extdata", "ce2dict1.fa", package="Rsamtools")
+fl <- system.file("extdata", "ce2dict1.fa", package="Rsamtools",
+                  mustWork=TRUE)
 fa <- open(FaFile(fl))                   # open
 countFa(fa)
 (idx <- scanFaIndex(fa))

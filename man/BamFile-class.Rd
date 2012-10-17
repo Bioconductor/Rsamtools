@@ -22,7 +22,6 @@
 \alias{readBamGappedAlignments,BamFile-method}
 \alias{readBamGappedReads,BamFile-method}
 \alias{readBamGappedAlignmentPairs,BamFile-method}
-\alias{coverage,BamFile-method}
 
 \alias{mergeBam,BamFileList-method}
 % counting 
@@ -32,9 +31,10 @@
 \alias{findSpliceOverlaps,BamFile-method}
 \alias{findSpliceOverlaps,character,ANY-method}
 \alias{findSpliceOverlaps,BamFile,ANY-method}
+\alias{quickCountBam,BamFile-method}
+\alias{coverage,BamFile-method}
 
-
-\title{Maintain SAM and BAM files}
+\title{Maintain and use BAM files}
 
 \description{
 
@@ -88,6 +88,8 @@ BamFileList(..., yieldSize=NA_integer_)
 \S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), pairedEnd=FALSE)
 
 \S4method{coverage}{BamFile}(x, shift=0L, width=NULL, weight=1L, ...)
+
+\S4method{quickCountBam}{BamFile}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
 }
 
 \arguments{
@@ -193,6 +195,8 @@ BamFileList(..., yieldSize=NA_integer_)
     the annotations.}
 
   \item{shift, width, weight}{See \code{\link[IRanges:coverage]{coverage}}.}
+
+  \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
 }
 
 \section{Objects from the Class}{
@@ -294,7 +298,8 @@ BamFileList(..., yieldSize=NA_integer_)
 
 \examples{
 
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
+                  mustWork=TRUE)
 length(scanBam(fl)[[1]][[1]])  # all records
 
 bf <- open(BamFile(fl))        # implicit index
@@ -327,7 +332,7 @@ close(bf)
 library("TxDb.Dmelanogaster.UCSC.dm3.ensGene")
 exbygene <- exonsBy(TxDb.Dmelanogaster.UCSC.dm3.ensGene, "gene")
 fl <- system.file("extdata", "untreated1_chr4.bam", 
-    package="pasillaBamSubset") 
+    package="pasillaBamSubset", mustWork=TRUE) 
 ## When 'yieldSize' is specified the file is processed by chunks. 
 ## Otherwise the complete file is read into memory.
 bfl <- BamFileList(fl, yieldSize=50000)
@@ -337,7 +342,7 @@ untrace(readBamGappedAlignments)
 
 ## paired-end reads
 fl <- system.file("extdata", "untreated3_chr4.bam", 
-    package="pasillaBamSubset") 
+    package="pasillaBamSubset", mustWork=TRUE) 
 ## Complete file is read into memory.
 bfl <- BamFileList(fl, index=character())
 res <- summarizeOverlaps(exbygene, bfl, singleEnd=FALSE)

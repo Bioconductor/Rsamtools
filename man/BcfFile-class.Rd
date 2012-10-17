@@ -135,7 +135,8 @@ bcfMode(object)
 
 \examples{
 
-fl <- system.file("extdata", "ex1.bcf", package="Rsamtools")
+fl <- system.file("extdata", "ex1.bcf", package="Rsamtools",
+                  mustWork=TRUE)
 bf <- BcfFile(fl)        # implicit index
 bf
 identical(scanBcf(bf), scanBcf(fl))

@@ -1,5 +1,5 @@
 ### =========================================================================
-### quickBamCounts()
+### quickCountBam()
 ### -------------------------------------------------------------------------
 
 .runlen <- function(x) runLength(Rle(x))
@@ -124,33 +124,27 @@
 quickBamCounts <- function(file, index=file, param=NULL,
                            main.groups.only=FALSE)
 {
+    .Deprecated("quickCountBam", "Rsamtools")
+    if (is.null(param))
+        param <- ScanBamParam()
+    file = BamFile(file, index)
+    quickCountBam(file, param=param, mainGroupsOnly=main.groups.only)
+}
+    
+setMethod(quickCountBam, "list",
+    function(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
+{
     what0 <- c("qname", "flag")
-    if (isSingleString(file)) {
-        if (is.null(param)) {
-            param <- ScanBamParam(what=what0)
-        } else {
-            if (length(bamWhat(param)) != 0L)
-                warning("bamWhat component of supplied 'param' was ignored")
-            bamWhat(param) <- what0
-        }
-        res <- scanBam(file, index=index, param=param)
-        res0 <- res[[1L]]
-        if (length(res) != 1L) {
-            res0[["qname"]] <- do.call(c, lapply(res, "[[", "qname"))
-            res0[["flag"]] <- do.call(c, lapply(res, "[[", "flag"))
-        } 
-    } else if (is.list(file) && all(what0 %in% names(file))) {
-        res0 <- file
-    } else {
-        stop("'file' must be a single string")
+    if (!isTRUEorFALSE(mainGroupsOnly)) {
+        stop("'mainGroupsOnly' must be TRUE or FALSE")
+    } else if (!all(what0 %in% names(file))) {
+        stop("'file' must contain elements ",
+             paste(sQuote(what0), collapse=" "))
     }
 
-    if (!isTRUEorFALSE(main.groups.only))
-        stop("'main.groups.only' must be TRUE or FALSE")
-
     ## Order records by QNAME.
-    qname0 <- res0[["qname"]]
-    flag0 <- res0[["flag"]]
+    qname0 <- file[["qname"]]
+    flag0 <- file[["flag"]]
     qnameid0 <- match(qname0, qname0)  # assign unique id to each unique QNAME
     oo <- order(qnameid0)
     qnameid <- qnameid0[oo]
@@ -190,7 +184,7 @@ quickBamCounts <- function(file, index=file, param=NULL,
                       N_last_rec_per_uqname,
                       N_other_rec_per_uqname)
 
-    if (main.groups.only)
+    if (mainGroupsOnly)
         return(invisible(NULL))
     if (length(N_1seg_rec_per_uqname) != 0L &&
         length(N_mseg_rec_per_uqname != 0L))
@@ -205,6 +199,13 @@ quickBamCounts <- function(file, index=file, param=NULL,
         .detailedSummary("L", qnameid[rec_is_last], flag[rec_is_last])
     if (length(N_other_rec_per_uqname) != 0L)
         .detailedSummary("O", qnameid[rec_is_other], flag[rec_is_other])
-    return(invisible(NULL))
-}
+    invisible(NULL)
+})
 
+setMethod(quickCountBam, "character",
+    function(file, index=file, ..., param=ScanBamParam(),
+             mainGroupsOnly=FALSE)
+{
+    file <- BamFile(index)
+    quickCountBam(file, param=param, mainGroupsOnly=mainGroupsOnly)
+})

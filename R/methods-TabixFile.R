@@ -142,13 +142,13 @@ setMethod(scanTabix, c("TabixFile", "GRanges"),
 setMethod(scanTabix, c("character", "missing"),
     function(file, ..., param)
 {
-    callGeneric(TabixFile(file), ...)
+    scanTabix(TabixFile(file), ...)
 })
 
 setMethod(scanTabix, c("character", "ANY"),
     function(file, ..., param)
 {
-    callGeneric(TabixFile(file), ..., param=param)
+    scanTabix(TabixFile(file), ..., param=param)
 })
 
 setMethod(yieldTabix, "TabixFile",

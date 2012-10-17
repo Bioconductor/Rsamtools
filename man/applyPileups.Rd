@@ -85,7 +85,8 @@ applyPileups(files, FUN, ..., param)
 
 \examples{
 
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
+                  mustWork=TRUE)
 
 fls <- PileupFiles(c(fl, fl))
 

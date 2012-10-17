@@ -166,7 +166,8 @@ TabixFileList(..., yieldSize=NA_integer_)
 
 \examples{
 
-fl <- system.file("extdata", "example.gtf.gz", package="Rsamtools")
+fl <- system.file("extdata", "example.gtf.gz", package="Rsamtools",
+                  mustWork=TRUE)
 tbx <- TabixFile(fl)
 
 param <- GRanges(c("chr1", "chr2"), IRanges(c(1, 1), width=100000))

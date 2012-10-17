@@ -3,5 +3,5 @@ setMethod(scanBcf, "character",
 {
     bcf <- open(BcfFile(file, index))
     on.exit(close(bcf))
-    callGeneric(bcf, ..., param=param)
+    scanBcf(bcf, ..., param=param)
 })

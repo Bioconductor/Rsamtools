@@ -85,7 +85,8 @@ readPileup(file, ...)
 
 \examples{
 
-fl <- system.file("extdata", "pileup.txt", package="Rsamtools")
+fl <- system.file("extdata", "pileup.txt", package="Rsamtools",
+                  mustWork=TRUE)
 (res <- readPileup(fl))
 xtabs(~referenceBase + consensusBase, mcols(res))[DNA_BASES,]
 

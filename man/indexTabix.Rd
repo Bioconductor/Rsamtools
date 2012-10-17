@@ -77,7 +77,8 @@ indexTabix(file,
 }
 
 \examples{
-from <- system.file("extdata", "ex1.sam", package="Rsamtools")
+from <- system.file("extdata", "ex1.sam", package="Rsamtools",
+                    mustWork=TRUE)
 to <- tempfile()
 zipped <- bgzip(from, to)
 idx <- indexTabix(zipped, "sam")

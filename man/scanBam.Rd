@@ -255,7 +255,8 @@ mergeBam(files, destination, ...)
 }
 \examples{
 
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
+                  mustWork=TRUE)
 
 res0 <- scanBam(fl)[[1]] # always list-of-lists
 names(res0)

@@ -24,5 +24,5 @@ setMethod(countBam, "character",
         else .normalizePath(index)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    callGeneric(bam, ..., param=param)
+    countBam(bam, ..., param=param)
 })

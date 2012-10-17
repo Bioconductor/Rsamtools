@@ -80,5 +80,5 @@ setMethod(readPileup, "character", function(file, ...)
 {
     conn <- file(file, "r")
     on.exit(close(conn))
-    callGeneric(conn, ...)
+    readPileup(conn, ...)
 })

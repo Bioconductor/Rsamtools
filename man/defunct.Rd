@@ -1,18 +1,14 @@
-\name{defunct}
-\Rdversion{1.1}
+\name{Deprecated and Defunct}
+\title{Rsamtools Deprecated and Defunct}
+
+\alias{quickBamCounts}
 \alias{bgzipTabix}
-\title{Defunct functions}
-\description{Functions listed on this page have been removed.}
-\details{
 
-  For \code{bgzipTabix}, use \code{bgzip}.
+\description{
 
-}
-
-\author{
-
-  Martin Morgan <mtmorgan@fhcrc.org>.
+   The function, class, or data object you have asked for has been
+   deprecated or made defunct.
 
 }
 
-\keyword{ manip }
+\keyword{internal}

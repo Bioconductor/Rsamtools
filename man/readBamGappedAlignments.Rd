@@ -121,7 +121,8 @@ readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
 ## ---------------------------------------------------------------------
 
 ## Simple use:
-bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
+bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools",
+                       mustWork=TRUE)
 gal1 <- readBamGappedAlignments(bamfile)
 gal1
 names(gal1)

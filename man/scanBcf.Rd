@@ -131,7 +131,8 @@ indexBcf(file, ...)
 }
 
 \examples{
-fl <- system.file("extdata", "ex1.bcf", package="Rsamtools")
+fl <- system.file("extdata", "ex1.bcf", package="Rsamtools",
+                  mustWork=TRUE)
 scanBcfHeader(fl)
 bcf <- scanBcf(fl)
 ## value: list-of-lists

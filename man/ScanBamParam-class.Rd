@@ -291,7 +291,8 @@ p2 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))
 p3 <- ScanBamParam(what=c("rname", "strand", "pos", "qwidth"))
                 
 ## use
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
+                  mustWork=TRUE)
 res <- scanBam(fl, param=p2)[[1]]
 lapply(res, head)
 

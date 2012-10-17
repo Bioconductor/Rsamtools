@@ -5,7 +5,8 @@ setMethod(readBamGappedAlignments, "character",
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    callGeneric(bam, character(), use.names=use.names, param=param)
+    readBamGappedAlignments(bam, character(), use.names=use.names,
+                            param=param)
 })
 
 setMethod(readBamGappedReads, "character",
@@ -15,7 +16,7 @@ setMethod(readBamGappedReads, "character",
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    callGeneric(bam, character(), use.names=use.names, param=param)
+    readBamGappedReads(bam, character(), use.names=use.names, param=param)
 })
 
 setMethod(readBamGappedAlignmentPairs, "character",
@@ -25,6 +26,7 @@ setMethod(readBamGappedAlignmentPairs, "character",
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    callGeneric(bam, character(), use.names=use.names, param=param)
+    readBamGappedAlignmentPairs(bam, character(), use.names=use.names,
+                                param=param)
 })
 

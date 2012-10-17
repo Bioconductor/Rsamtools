@@ -221,7 +221,8 @@ automatically flushed at the beginning of a call to \code{findMateAlignment}.
 }
 
 \examples{
-bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
+bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools",
+                       mustWork=TRUE)
 param <- ScanBamParam(what=c("flag", "mrnm", "mpos"))
 x <- readBamGappedAlignments(bamfile, use.names=TRUE, param=param)
 mate <- findMateAlignment(x)
