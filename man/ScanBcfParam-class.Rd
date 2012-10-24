@@ -8,6 +8,7 @@
 \alias{ScanBcfParam-class}
 
 \alias{ScanBcfParam,GRanges-method}
+\alias{ScanBcfParam,GRangesList-method}
 \alias{ScanBcfParam,RangedData-method}
 \alias{ScanBcfParam,RangesList-method}
 \alias{ScanBcfParam,missing-method}
@@ -40,6 +41,8 @@ ScanBcfParam(fixed=character(), info=character(), geno=character(), trimEmpty=TR
 \S4method{ScanBcfParam}{RangedData}(fixed=character(), info=character(), geno=character(), 
              trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{GRanges}(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, ...)
+\S4method{ScanBcfParam}{GRangesList}(fixed=character(), info=character(), geno=character(), 
              trimEmpty=TRUE, which, ...)
 
 ## Accessors

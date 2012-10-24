@@ -23,6 +23,13 @@ setMethod(ScanBcfParam, c(which="missing"),
     .ScanBcfParam(fixed, info, geno, trimEmpty, which, ...)
 })
 
+setMethod(ScanBcfParam, c(which="GRangesList"), 
+    function(fixed=character(), info=character(), geno=character(), 
+             trimEmpty=TRUE, which, ...)
+{
+    .ScanBcfParam(fixed, info, geno, trimEmpty, which=ranges(which), ...)
+})
+
 setMethod(ScanBcfParam, c(which="RangesList"), 
     function(fixed=character(), info=character(), geno=character(), 
              trimEmpty=TRUE, which, ...)
