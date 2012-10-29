@@ -66,17 +66,19 @@ test_BamViews_subset <- function()
 test_BamViews_bamIndicies <- function()
 {
     bv <- BamViews()
-    checkIdentical(character(0), bamIndicies(bv))
+    checkIdentical(setNames(character(0), character(0)), bamIndicies(bv))
 
     ## copy fls as bamIndicies
     fls <- c(tempfile(), tempfile())    # does not exist
     bv <- BamViews(fls)
+    fls <- setNames(fls, names(bv))
     checkIdentical(fls, bamPaths(bv))
     checkIdentical(fls, bamIndicies(bv))
 
     ## keep bamPaths, bamIndicies separate
     ifls <- c(tempfile(), tempfile())    # does not exist
     bv <- BamViews(fls, ifls)
+    ifls <- setNames(ifls, names(bv))
     checkIdentical(fls, bamPaths(bv))
     checkIdentical(ifls, bamIndicies(bv))
 

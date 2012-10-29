@@ -77,10 +77,10 @@ setMethod(.validity, "BamViews", function(object) {
 })
 
 bamPaths <-
-    function(x) slot(x, "bamPaths")
+    function(x) setNames(slot(x, "bamPaths"), names(x))
 
 bamIndicies <-
-    function(x) slot(x, "bamIndicies")
+    function(x) setNames(slot(x, "bamIndicies"), names(x))
 
 `bamDirname<-` <-
     function(x, ..., value)

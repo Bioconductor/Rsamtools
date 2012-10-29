@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.12.0
+-------------------------
+
+USER-VISIBLE CHANGES
+
+    o bamPath and bamIndicies applied to BamViews returns named
+      vectors.
+
 CHANGES IN VERSION 1.10.0
 -------------------------
 
