@@ -38,12 +38,12 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/select.h>
 
 #ifndef _WIN32
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #endif
 
 #include "knetfile.h"
