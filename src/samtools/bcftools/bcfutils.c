@@ -1,7 +1,9 @@
 #define _SVID_SOURCE            /* Rsamtools: c99 drand48 */
+#ifndef _WIN32
+#include <alloca.h>		/* Rsamtools */
+#endif
 #include <string.h>
 #include <math.h>
-#include <alloca.h>
 #include "bcf.h"
 #include "kstring.h"
 #include "khash.h"

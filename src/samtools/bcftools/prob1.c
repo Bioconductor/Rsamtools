@@ -1,5 +1,7 @@
 #define _POSIX_C_SOURCE 200112L /* Rsamtools: c99 fileno */
+#ifndef _WIN32
 #include <alloca.h>             /* Rsamtools */
+#endif
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
