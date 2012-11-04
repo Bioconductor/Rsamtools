@@ -8,9 +8,9 @@ typedef enum {
     YIELDBY_RANGE = 0, YIELDBY_POSITION
 } YIELDBY;
 
-typedef enum {
-    WHAT_SEQ = 1, WHAT_QUAL = 2
-} WHAT;
+#define WHAT_OK 0
+#define WHAT_SEQ 1
+#define WHAT_QUAL 2
 
 typedef struct {
     _BAM_FILE *bfile;
@@ -52,7 +52,7 @@ typedef struct {
     uint32_t keep_flag[2];
     int yieldSize, yieldAll;
     YIELDBY yieldBy;
-    WHAT what;
+    int what;
 } PILEUP_PARAM_T;
 
 /* from bam_aux.c; should really be exported part of library? */
@@ -687,7 +687,7 @@ SEXP apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
     p.yieldAll = LOGICAL(_lst_elt(param, "yieldAll", "param"))[0];
 
     int *what = LOGICAL(_lst_elt(param, "what", "param"));
-    p.what = 0;
+    p.what = WHAT_OK;
     if (what[0])
         p.what |= WHAT_SEQ;
     if (what[1])

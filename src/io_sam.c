@@ -11,21 +11,20 @@
 void bam_sort_core(int is_by_qname, const char *fn, const char *prefix,
                    size_t max_mem);
 
-typedef enum {
-    OK = 0, SEQUENCE_BUFFER_ALLOCATION_ERROR = 1,
-    CIGAR_BUFFER_OVERFLOW_ERROR = 2
-} _BAM_PARSE_STATUS;
+#define BAM_PARSE_STATUS_OK 0
+#define SEQUENCE_BUFFER_ALLOCATION_ERROR 1
+#define CIGAR_BUFFER_OVERFLOW_ERROR 2
 
 typedef struct {
     int BLOCKSIZE;              /* size to grow vectors */
     char *CIGAR_BUF;            /* string representation of CIGAR */
     uint32_t CIGAR_BUF_SZ;
 
-    _BAM_PARSE_STATUS parse_status;
+    int parse_status;
     _BAM_FILE *bfile;
     int irec, iparsed, irange, nrange;
     uint32_t keep_flag[2], cigar_flag;
-    Rboolean reverseComplement;
+    int reverseComplement;
     int yieldSize;
 
     void *extra;
@@ -90,14 +89,14 @@ static _BAM_DATA *_Calloc_BAM_DATA(int blocksize, int cigar_buf_sz)
 
 static _BAM_DATA *_init_BAM_DATA(SEXP ext, SEXP space, SEXP flag,
                                  SEXP isSimpleCigar,
-                                 Rboolean reverseComplement,
+                                 int reverseComplement,
                                  int yieldSize)
 {
     int nrange = R_NilValue == space ? 1 : LENGTH(VECTOR_ELT(space, 0));
     _BAM_DATA *bd =
         _Calloc_BAM_DATA(1 == nrange ?
                          5 * BAM_INIT_SIZE : BAM_INIT_SIZE, 32768);
-    bd->parse_status = 0;
+    bd->parse_status = BAM_PARSE_STATUS_OK;
     bd->bfile = BAMFILE(ext);
     bd->irange = 0;
     bd->nrange = nrange;
@@ -128,11 +127,12 @@ static _SCAN_BAM_DATA *_Calloc_SCAN_BAM_DATA()
 static void _Free_strhash(khash_t(str) * h)
 {
     khiter_t k;
+    char *buf;
     for (k = kh_begin(h); kh_end(h) != k; ++k)
-        if (kh_exist(h, k))
-            /* strdup, so free not Free; hash key is const char *, so
-             * cast (yuck) */
-            free((char *) kh_key(h, k));
+        if (kh_exist(h, k)) {
+            buf = (char *) kh_key(h, k);
+            Free(buf);
+        }
     kh_destroy(str, h);
 }
 
@@ -368,7 +368,11 @@ static const char *_map(khash_t(str) * h, const char *s)
     khiter_t k = kh_get(str, h, s);
     if (kh_end(h) == k) {
         int ret;
-        k = kh_put(str, h, strdup(s), &ret);
+        char *buf = Calloc(strlen(s) + 1, char);
+        if (!buf)
+            Rf_error("_map: failed to allocate memory");
+        strcpy(buf, s);
+        k = kh_put(str, h, buf, &ret);
     }
     return kh_key(h, k);
 }
@@ -523,7 +527,7 @@ SEXP _read_bam_header(SEXP ext)
 
 /* scan_bam auxiliary */
 
-static Rboolean _bam_filter(const bam1_t * bam, _BAM_DATA * bd)
+static int _bam_filter(const bam1_t * bam, _BAM_DATA * bd)
 {
     /*
        flag : 1101
@@ -548,16 +552,16 @@ static Rboolean _bam_filter(const bam1_t * bam, _BAM_DATA * bd)
     uint32_t test = (bd->keep_flag[0] & ~bam->core.flag) |
         (bd->keep_flag[1] & bam->core.flag);
     if (~test & 2047u)
-        return FALSE;
+        return 0;
 
     uint32_t *cigar = bam1_cigar(bam);
     uint32_t n_cigar = bam->core.n_cigar;
     if (bd->cigar_flag == CIGAR_SIMPLE) {
         if (!(n_cigar == 0 ||
               (n_cigar == 1 && ((cigar[0] & BAM_CIGAR_MASK) == 0))))
-            return FALSE;
+            return 0;
     }
-    return TRUE;
+    return 1;
 }
 
 /* scan_bam framework */
@@ -641,18 +645,23 @@ static int _scan_bam_parse1(const bam1_t * bam, void *data)
     _BAM_DATA *bd = (_BAM_DATA *) data;
     _SCAN_BAM_DATA *sbd = (_SCAN_BAM_DATA *) bd->extra;
     bd->irec += 1;
-    if (FALSE == _bam_filter(bam, bd))
+    if (!_bam_filter(bam, bd))
         return 0;
 
     SEXP r = _get_or_grow_SCAN_BAM_DATA(bd, -1), s;
     int idx = sbd->icnt;
+    char *buf;
 
     for (int i = 0; i < LENGTH(r); ++i) {
         if (R_NilValue == (s = VECTOR_ELT(r, i)))
             continue;
         switch (i) {
         case QNAME_IDX:
-            sbd->qname[idx] = strdup(bam1_qname(bam));
+            buf = Calloc(strlen(bam1_qname(bam)) + 1, char);
+            if (!buf)
+                Rf_error("_scan_bam_parse1: failed to allcoate memory");
+            strcpy(buf, bam1_qname(bam));
+            sbd->qname[idx] = buf;
             break;
         case FLAG_IDX:
             sbd->flag[idx] = bam->core.flag;
@@ -889,7 +898,7 @@ static void _scan_bam_finish1range(_BAM_DATA * bd)
             SET_VECTOR_ELT(r, i, s);
             for (j = 0; j < sbd->icnt; ++j) {
                 SET_STRING_ELT(s, j, mkChar(sbd->qname[j]));
-                free(sbd->qname[j]);	/* strdup, so free (not Free) */
+                Free(sbd->qname[j]);
             }
             Free(sbd->qname);
             break;
@@ -946,7 +955,7 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                               _scan_bam_finish1range);
     if (status < 0) {
         int idx = bd->irec;
-        _BAM_PARSE_STATUS parse_status = bd->parse_status;
+        int parse_status = bd->parse_status;
         _Free_SCAN_BAM_DATA(bd->extra);
         _Free_BAM_DATA(bd);
         Rf_error("'scanBam' failed:\n  record: %d\n  error: %d",
@@ -965,7 +974,7 @@ static int _count_bam1(const bam1_t * bam, void *data)
 {
     _BAM_DATA *bd = (_BAM_DATA *) data;
     bd->irec += 1;
-    if (FALSE == _bam_filter(bam, bd))
+    if (!_bam_filter(bam, bd))
         return 0;
     SEXP cnt = (SEXP) (bd->extra);
     INTEGER(VECTOR_ELT(cnt, 0))[bd->irange] += 1;
@@ -977,7 +986,7 @@ static int _count_bam1(const bam1_t * bam, void *data)
 SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
     _BAM_DATA *bd =
-        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, FALSE,
+        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, 0,
                        NA_INTEGER);
     SEXP result = PROTECT(NEW_LIST(2));
     bd->extra = result;
@@ -1014,7 +1023,7 @@ static int _filter_bam1(const bam1_t * bam, void *data)
 {
     _BAM_DATA *bd = (_BAM_DATA *) data;
     bd->irec += 1;
-    if (FALSE == _bam_filter(bam, bd))
+    if (!_bam_filter(bam, bd))
         return 0;
     samwrite((samfile_t *) bd->extra, bam);
     bd->iparsed += 1;
@@ -1027,7 +1036,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
 {
     /* open destination */
     _BAM_DATA *bd =
-        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, FALSE,
+        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, 0,
                        NA_INTEGER);
     /* FIXME: this just copies the header... */
     bam_header_t *header = BAMFILE(bfile)->file->header;
@@ -1089,11 +1098,11 @@ SEXP merge_bam(SEXP fnames, SEXP destination, SEXP overwrite,
 
     int flag = 0;
     if (LOGICAL(addRG)[0])
-        flag |= MERGE_RG;
+        flag = ((int) flag) | ((int) MERGE_RG);
     if (LOGICAL(overwrite)[0])
-        flag |= MERGE_FORCE;
+        flag = ((int) flag) | ((int) MERGE_FORCE);
     if (LOGICAL(compressLevel1)[0])
-        flag |= MERGE_LEVEL1;
+        flag = ((int) flag) | ((int) MERGE_LEVEL1);
 
     const char *region = 0 == Rf_length(regionStr) ?
         NULL : translateChar(STRING_ELT(regionStr, 0));

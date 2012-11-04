@@ -43,10 +43,10 @@ static bcf_idx_t *_bcf_idx_load(const char *fname)
     return bcf_idx_load(fname);
 }
 
-static void _bcf_close(bcf_t * bcf, Rboolean errmsg)
+static void _bcf_close(bcf_t * bcf, int errmsg)
 {
     int err = vcf_close(bcf);
-    if (0 != err && errmsg) {
+    if ((0 != err) && errmsg) {
         if (Z_ERRNO == err) {
             err = errno;
             Rf_error("_bcf_close file system error (%d): %s",
@@ -104,7 +104,7 @@ SEXP bcffile_open(SEXP filename, SEXP indexname, SEXP filemode)
         const char *cindex = translateChar(STRING_ELT(indexname, 0));
         bfile->index = _bcf_idx_load(cindex);
         if (NULL == bfile->index) {
-            _bcf_close(bfile->file, FALSE);
+            _bcf_close(bfile->file, 0);
             Free(bfile);
             Rf_error("'open' BCF index failed\n  indexname: %s\n", cindex);
         }
@@ -493,8 +493,8 @@ SEXP as_bcf(SEXP file, SEXP dictionary, SEXP destination)
 
     int count = _as_bcf(fin, translateChar(STRING_ELT(dictionary, 0)), fout);
 
-    _bcf_close(fin, FALSE);
-    _bcf_close(fout, FALSE);
+    _bcf_close(fin, 0);
+    _bcf_close(fout, 0);
     if (count < 0)
         Rf_error("truncated input file at record %d", -1 * count);
 
