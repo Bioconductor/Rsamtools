@@ -28,6 +28,8 @@
    therefore I decide to heavily annotate this file, for Linux and
    Windows as well.  -ac */
 
+#define _POSIX_C_SOURCE 200112L /* Rsamtools: c99 sys/select */
+#define _SVID_SOURCE            /* Rsamtools: c99 strdup */
 #include <time.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -36,6 +38,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/select.h>
 
 #ifndef _WIN32
 #include <netdb.h>

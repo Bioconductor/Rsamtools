@@ -1,3 +1,4 @@
+#define _SVID_SOURCE            /* Rsamtools: c99 drand48 */
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
@@ -378,6 +379,7 @@ char *fai_fetch(const faidx_t *fai, const char *str, int *len)
 	return s;
 }
 
+#ifdef _MAIN
 int faidx_main(int argc, char *argv[])
 {
 	if (argc == 1) {
@@ -406,6 +408,7 @@ int faidx_main(int argc, char *argv[])
 	}
 	return 0;
 }
+#endif
 
 int faidx_fetch_nseq(const faidx_t *fai) 
 {
@@ -441,6 +444,6 @@ char *faidx_fetch_seq(const faidx_t *fai, char *c_name, int p_beg_i, int p_end_i
 	return seq;
 }
 
-#ifdef FAIDX_MAIN
+#ifdef _MAIN
 int main(int argc, char *argv[]) { return faidx_main(argc, argv); }
 #endif

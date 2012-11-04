@@ -1,3 +1,4 @@
+#define _SVID_SOURCE            /* Rsamtools: c99 drand48 */
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>

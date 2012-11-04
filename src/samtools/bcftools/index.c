@@ -1,3 +1,4 @@
+#define _SVID_SOURCE            /* Rsamtools: c99 strdup */
 #include <assert.h>
 #include <ctype.h>
 #include <sys/stat.h>

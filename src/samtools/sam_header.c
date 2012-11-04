@@ -1,3 +1,4 @@
+#define _SVID_SOURCE            /* Rsamtools: c99 strdup */
 #include "sam_header.h"
 #include <stdio.h>
 #include <string.h>

@@ -33,6 +33,7 @@ int bam_reheader(BGZF *in, const bam_header_t *h, int fd)
 	return 0;
 }
 
+#ifdef _MAIN                    /* Rsamtools */
 int main_reheader(int argc, char *argv[])
 {
 	bam_header_t *h;
@@ -59,3 +60,4 @@ int main_reheader(int argc, char *argv[])
 	bgzf_close(in);
 	return 0;
 }
+#endif  /* Rsamtools */

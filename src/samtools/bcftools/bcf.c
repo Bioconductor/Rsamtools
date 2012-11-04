@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200112L /* Rsamtools: c99 fileno */
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>

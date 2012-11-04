@@ -1,3 +1,4 @@
+#define _BSD_SOURCE             /* Rsamtools: c99 M_SQRT2 */
 #include <math.h>
 
 

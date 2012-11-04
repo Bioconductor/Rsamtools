@@ -60,9 +60,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* MTM */
-#ifdef _WIN32
+
+/* Rsamtools */
+#if defined(_WIN32)
 #define drand48() ((double)rand() / RAND_MAX)
+#else
+#define _SVID_SOURCE            /* Rsamtools: c99  */
 #endif
 
 typedef struct {

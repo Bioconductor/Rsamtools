@@ -1,3 +1,4 @@
+#define _SVID_SOURCE            /* Rsamtools: c99 drand48 */
 #include <ctype.h>
 #include <assert.h>
 #include "bam.h"
@@ -508,6 +509,7 @@ int bam_index_build(const char *fn)
 	return bam_index_build2(fn, 0);
 }
 
+#ifdef _MAIN                    /* Rsamtools */
 int bam_index(int argc, char *argv[])
 {
 	if (argc < 2) {
@@ -550,6 +552,7 @@ int bam_idxstats(int argc, char *argv[])
 	bam_index_destroy(idx);
 	return 0;
 }
+#endif  /* Rsamtools */
 
 static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[BAM_MAX_BIN])
 {

@@ -26,6 +26,7 @@
   2009-06-25 by lh3: optionally use my knetfile library to access file on a FTP.
   2009-06-12 by lh3: support a mode string like "wu" where 'u' for uncompressed output */
 
+#define _POSIX_C_SOURCE 200112L /* Rsamtools: c99 fdopen */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

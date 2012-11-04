@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200112L /* Rsamtools: c99 fileno */
+#define _SVID_SOURCE            /* Rsamtools: c99 strdup */
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
@@ -252,6 +254,7 @@ int bam_merge_core(int by_qname, const char *out, const char *headers, int n, ch
 	return 0;
 }
 
+#ifdef _MAIN                    /* Rsamtools */
 int bam_merge(int argc, char *argv[])
 {
 	int c, is_by_qname = 0, flag = 0, ret = 0;
@@ -296,6 +299,7 @@ int bam_merge(int argc, char *argv[])
 	free(fn_headers);
 	return ret;
 }
+#endif  /* Rsamtools */
 
 typedef bam1_t *bam1_p;
 
@@ -443,6 +447,7 @@ size_t bam_sort_get_max_mem(char *max_mem_string)
 	return max_mem;
 }
 
+#ifdef _MAIN                    /* Rsamtools */
 int bam_sort(int argc, char *argv[])
 {
 	size_t max_mem = 500000000;
@@ -461,3 +466,4 @@ int bam_sort(int argc, char *argv[])
 	bam_sort_core_ext(is_by_qname, argv[optind], argv[optind+1], max_mem, is_stdout);
 	return 0;
 }
+#endif  /* Rsamtools */

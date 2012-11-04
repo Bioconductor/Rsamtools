@@ -300,6 +300,7 @@ int bam_prob_realn(bam1_t *b, const char *ref)
 	return bam_prob_realn_core(b, ref, 1);
 }
 
+#ifdef _MAIN                    /* Rsamtools */
 int bam_fillmd(int argc, char *argv[])
 {
 	int c, flt_flag, tid = -2, ret, len, is_bam_out, is_sam_in, is_uncompressed, max_nm, is_realn, capQ, baq_flag;
@@ -382,3 +383,4 @@ int bam_fillmd(int argc, char *argv[])
 	samclose(fp); samclose(fpout);
 	return 0;
 }
+#endif  /* Rsamtools */
