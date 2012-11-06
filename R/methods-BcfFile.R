@@ -68,12 +68,17 @@ setMethod(isOpen, "BcfFile",
     keyval0 <- sub(rex, "\\2", lines)
     ## Handle INFO, FORMAT, FILTER and ALT
     keyval1 <- rep(NA_character_, length(keyval0))
+    keyval <- list(length(keyval0))
     idx <- tags %in% c("INFO", "FORMAT", "FILTER", "ALT")
     keyval1[idx] <- strsplit(keyval0[idx], 
             ",(?=(ID|Number|Type)=[[:alnum:]]*)|,(?=Description=\".*?\")", 
             perl=TRUE)
+    keyval[idx] <- lapply(which(idx), 
+        function(i, keyval1) strsplit(keyval1[[i]],
+            "(?<=[ID|Number|Type|Description])=", perl=TRUE), keyval1)
     keyval1[!idx] <- strsplit(keyval0[!idx], ",(?=[[:alnum:]]+=)", perl=TRUE)
-    keyval <- lapply(keyval1, strsplit, "(?<=[[:alnum:]])=", perl=TRUE)
+    keyval[!idx] <- lapply(which(!idx), function(i, keyval1) {
+        strsplit(keyval1[[i]], "(?<=[[:alnum:]])=", perl=TRUE)}, keyval1)
 
     tbls <- tapply(keyval, tags, function(elt) {
         keys <- lapply(elt, sapply, "[[", 1)
