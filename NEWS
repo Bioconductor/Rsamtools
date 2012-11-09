@@ -6,6 +6,10 @@ USER-VISIBLE CHANGES
     o bamPath and bamIndicies applied to BamViews returns named
       vectors.
 
+BUG FIXES
+
+    o completely free razip, bgzip files when done
+
 CHANGES IN VERSION 1.10.0
 -------------------------
 
