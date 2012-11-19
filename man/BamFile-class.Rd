@@ -81,13 +81,17 @@ BamFileList(..., yieldSize=NA_integer_)
 
 ## counting
 
-\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
-\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ...,
+    singleEnd=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ...,
+    singleEnd=TRUE, param=ScanBamParam()) 
 
-\S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), pairedEnd=FALSE)
-\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., param=ScanBamParam(), pairedEnd=FALSE)
+\S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ...,
+    param=ScanBamParam(), pairedEnd=FALSE)
+\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ...,
+    param=ScanBamParam(), pairedEnd=FALSE)
 
-\S4method{coverage}{BamFile}(x, shift=0L, width=NULL, weight=1L, ...)
+\S4method{coverage}{BamFile}(x, shift=0L, width=NULL, weight=1L, ..., param = ScanBamParam())
 
 \S4method{quickCountBam}{BamFile}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
 }
