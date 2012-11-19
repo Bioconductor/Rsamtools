@@ -27,7 +27,6 @@ setMethod(applyPileups, c("PileupFiles", "PileupParam"),
         space <-
             if (0L != length(param[["which"]])) .asSpace(param[["which"]])
             else NULL
-        what <- logical(2);
         param[["what"]] <- c("seq", "qual") %in% param[["what"]]
         .Call(.apply_pileups, extptr, names(files), space, param, FUN)
     }, error=function(err) {

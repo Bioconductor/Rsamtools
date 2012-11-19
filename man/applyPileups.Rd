@@ -67,6 +67,15 @@ applyPileups(files, FUN, ..., param)
 
 }
 
+\details{
+
+  Regardless of \code{param} values, the algorithm follows samtools by
+  excluding reads flagged as unmapped, secondary, duplicate, or failing
+  quality control.
+
+}
+  
+
 \value{
 
   \code{applyPileups} returns a \code{list} equal in length to the
