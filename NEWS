@@ -8,7 +8,9 @@ USER-VISIBLE CHANGES
 
 BUG FIXES
 
-    o completely free razip, bgzip files when done
+    o completely free razip, bgzip files when done.
+
+    o sortBam, indexBam fail gracefully on non-BAM input.
 
 CHANGES IN VERSION 1.10.0
 -------------------------

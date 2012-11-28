@@ -12,3 +12,8 @@ test_sortBam <- function() {
     checkIdentical(Filter(Negate(is.na), exp[["pos"]]),
                    Filter(Negate(is.na), obs[["pos"]]))
 }
+
+test_sortBam_not_BAM_input <- function() {
+    fl0 <- system.file("extdata", "ex1.sam", package="Rsamtools")
+    checkException(sortBam(fl0, tempfile()), silent=TRUE)
+}

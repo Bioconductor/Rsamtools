@@ -64,6 +64,22 @@ static const int BAM_INIT_SIZE = 1048576;
 
 /* utility */
 
+void _check_is_bam(const char *filename)
+{
+    int magic_len;
+    char buf[4];
+    bamFile bfile = bam_open(filename, "r");
+
+    if (bfile == 0)
+        Rf_error("failed to open SAM/BAM file\n  file: '%s'", filename);
+
+    magic_len = bam_read(bfile, buf, 4);
+    bam_close(bfile);
+
+    if (magic_len != 4 || strncmp(buf, "BAM\001", 4) != 0)
+	Rf_error("'filename' is not a BAM file\n  file: %s", filename);
+}
+
 void _bam_check_template_list(SEXP template_list)
 {
     if (!IS_LIST(template_list) || LENGTH(template_list) != N_TMPL_ELTS)
@@ -1136,7 +1152,9 @@ SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname, SEXP maxMemory)
     int sortMode = asInteger(isByQname);
 
     size_t maxMem = (size_t) INTEGER(maxMemory)[0] * 1024 * 1024;
+    _check_is_bam(fbam);
     bam_sort_core(sortMode, fbam, fout, maxMem);
+
     return destination;
 }
 
@@ -1147,7 +1165,10 @@ SEXP index_bam(SEXP indexname)
     if (!IS_CHARACTER(indexname) || 1 != LENGTH(indexname))
         Rf_error("'indexname' must be character(1)");
     const char *fbam = translateChar(STRING_ELT(indexname, 0));
+
+    _check_is_bam(fbam);
     int status = bam_index_build(fbam);
+
     if (0 != status)
         Rf_error("failed to build index\n  file: %s", fbam);
     char *fidx = (char *) R_alloc(strlen(fbam) + 5, sizeof(char));
