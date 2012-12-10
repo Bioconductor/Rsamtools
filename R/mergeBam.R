@@ -28,7 +28,7 @@ setMethod(mergeBam, "character",
             .Call(.merge_bam, files, destination, overwrite, header,
                   region, byQname, addRG, compressLevel1)
         if (indexDestination)
-            destination <- indexBam(destination)
+            indexBam(destination)
 
         destination
 
