@@ -17,9 +17,13 @@ BamFile <-
 open.BamFile <-
     function(con, ...)
 {
-    .io_check_exists(path(con))
-    index <- sub("\\.bai$", "", index(con))
-    con$.extptr <- .Call(.bamfile_open, path(con), index, "rb")
+    tryCatch({
+        .io_check_exists(path(con))
+        index <- sub("\\.bai$", "", index(con))
+        con$.extptr <- .Call(.bamfile_open, path(con), index, "rb")
+    }, error=function(err) {
+        stop("failed to open BamFile: ", conditionMessage(err))
+    })
     invisible(con)
 }
 

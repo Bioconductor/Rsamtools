@@ -13,6 +13,8 @@
 .io_check_exists <-
     function(file)
 {
+    if (!length(file))
+        stop("'file' is length(0)")
     idx <- !grepl("^(ftp)|(http)://", file)
     if (!all(sapply(file[idx], file.exists))) {
         msg <- paste(sprintf("'%s'", file[idx]), collapse="\n  ")
