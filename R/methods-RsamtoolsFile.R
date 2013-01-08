@@ -22,8 +22,11 @@ setReplaceMethod("yieldSize", "RsamtoolsFile",
 {
     if (1L != length(yieldSize))
         stop("'yieldSize' must be length 1")
+    yieldSize <- as.integer(yieldSize)
+    if (yieldSize <= 0)
+        stop("'yieldSize' must be >0 or NA")
     g$new(path=.normalizePath(path), index=.normalizePath(index), ...,
-          yieldSize=as.integer(yieldSize), ...)
+          yieldSize=yieldSize, ...)
 }
 
 setMethod(path, "RsamtoolsFile", function(object, ...) object$path)

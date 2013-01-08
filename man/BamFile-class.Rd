@@ -115,8 +115,8 @@ BamFileList(..., yieldSize=NA_integer_)
   \item{x, file, files}{A character vector of BAM file paths (for
     \code{BamFile}) or a \code{BamFile} instance (for other methods).}
 
-  \item{index}{A character vector of indices (for \code{BamFile});
-    ignored for all other methods on this page.}
+  \item{index}{character(1); the BAM index file path (for
+    \code{BamFile}); ignored for all other methods on this page.}
 
   \item{yieldSize}{Number of records to yield each time the file is read
     from using \code{scanBam}. Only valid when
