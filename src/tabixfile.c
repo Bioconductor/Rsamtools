@@ -132,6 +132,7 @@ SEXP _header_lines(tabix_t * tabix, const ti_conf_t * conf)
     int i_lns = 0, pidx;
 
     ti_iter_t iter = ti_query(tabix, NULL, 0, 0);
+    uint64_t curr_off = 0;
     const char *s;
     int len;
 
@@ -139,9 +140,11 @@ SEXP _header_lines(tabix_t * tabix, const ti_conf_t * conf)
         Rf_error("failed to obtain tabix iterator");
 
     PROTECT_WITH_INDEX(lns = NEW_CHARACTER(0), &pidx);
+    curr_off = bgzf_tell(tabix->fp);
     while (NULL != (s = ti_read(tabix, iter, &len))) {
         if ((int) (*s) != conf->meta_char)
             break;
+	curr_off = bgzf_tell(tabix->fp);
         if (0 == (i_lns % GROW_BY)) {
             lns = Rf_lengthgets(lns, Rf_length(lns) + GROW_BY);
             REPROTECT(lns, pidx);
@@ -149,6 +152,7 @@ SEXP _header_lines(tabix_t * tabix, const ti_conf_t * conf)
         SET_STRING_ELT(lns, i_lns++, mkChar(s));
     }
     ti_iter_destroy(iter);
+    bgzf_seek(tabix->fp, curr_off, SEEK_SET);
 
     lns = Rf_lengthgets(lns, i_lns);
     UNPROTECT(1);

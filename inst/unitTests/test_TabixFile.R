@@ -65,6 +65,16 @@ test_TabixFile_header <- function()
     checkIdentical(character(), hdr$header)
 }
 
+test_TabixFile_header_respects_first_line <- function()
+{
+    tbx <- open(TabixFile(fl))
+    xx <- headerTabix(tbx)
+    obs <- unlist(scanTabix(tbx))
+    close(tbx)
+    exp <- unlist(scanTabix(tbx))
+    checkIdentical(obs, exp)
+}
+
 test_TabixFile_header_remote <- function()
 {
     if ("windows" == .Platform$OS.type) {

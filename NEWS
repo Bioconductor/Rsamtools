@@ -12,6 +12,9 @@ BUG FIXES
 
     o sortBam, indexBam fail gracefully on non-BAM input.
 
+    o headerTabix on an open TabixFile no longer reads the first
+    record
+
 CHANGES IN VERSION 1.10.0
 -------------------------
 
