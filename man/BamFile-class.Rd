@@ -329,9 +329,10 @@ close(bf)
 
 
 ##------------------------------------------------------------------------
-## summarizeOverlaps with BamFileList
+## summarizeOverlaps with BamFileList -- counts over an entire experiment
 ##
 
+\dontrun{
 ## single-end reads
 library("TxDb.Dmelanogaster.UCSC.dm3.ensGene")
 exbygene <- exonsBy(TxDb.Dmelanogaster.UCSC.dm3.ensGene, "gene")
@@ -340,9 +341,7 @@ fl <- system.file("extdata", "untreated1_chr4.bam",
 ## When 'yieldSize' is specified the file is processed by chunks. 
 ## Otherwise the complete file is read into memory.
 bfl <- BamFileList(fl, yieldSize=50000)
-trace(readBamGappedAlignments)
 counts <- assays(summarizeOverlaps(exbygene, bfl, singleEnd=TRUE))$counts
-untrace(readBamGappedAlignments)
 
 ## paired-end reads
 fl <- system.file("extdata", "untreated3_chr4.bam", 
@@ -351,12 +350,13 @@ fl <- system.file("extdata", "untreated3_chr4.bam",
 bfl <- BamFileList(fl, index=character())
 res <- summarizeOverlaps(exbygene, bfl, singleEnd=FALSE)
 stopifnot(length(assays(res)$counts) == length(exbygene))
+}
 
 ##------------------------------------------------------------------------
 ## findSpliceOverlaps 
 ##
 
-## See ?'findSpliceOverlapsd' for examples 
+## See ?'findSpliceOverlaps' for examples 
 }
 
 \keyword{classes}
