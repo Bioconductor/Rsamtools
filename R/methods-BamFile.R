@@ -62,7 +62,7 @@ setMethod(seqinfo, "BamFile",
 })
 
 setMethod(scanBam, "BamFile",
-          function(file, index=file, ...,
+          function(file, index=file, ..., obeyQnames=FALSE,
                    param=ScanBamParam(what=scanBamWhat()))
 {
     if (!isOpen(file)) {
@@ -85,7 +85,7 @@ setMethod(scanBam, "BamFile",
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
-                 yieldSize(file), tmpl, param=param)
+                 yieldSize(file), tmpl, obeyQnames, param=param)
     .scanBam_postprocess(x, param)
 })
 
@@ -177,11 +177,11 @@ setMethod(sortBam, "BamFile",
 
 ### 'bamfile' must be a BamFile object.
 ### Returns a named list with 1 element per loaded column.
-.loadBamCols <- function(bamfile, param, what0)
+.loadBamCols <- function(bamfile, param, what0, ...)
 {
     flag0 <- scanBamFlag(isUnmappedQuery=FALSE)
     param <- .normargParam(param, flag0, what0)
-    res <- unname(scanBam(bamfile, param=param))
+    res <- unname(scanBam(bamfile, ..., param=param))
     if (length(res) == 0L)
         stop("scanBam() returned a list of length zero")
     ## Extract the "what" cols.
@@ -247,14 +247,14 @@ setMethod(sortBam, "BamFile",
 }
 
 setMethod(readBamGappedAlignments, "BamFile",
-          function(file, index=file, use.names=FALSE, param=NULL)
+          function(file, index=file, ..., use.names=FALSE, param=NULL)
 {
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
     what0 <- c("rname", "strand", "pos", "cigar")
     if (use.names)
         what0 <- c(what0, "qname")
-    bamcols <- .loadBamCols(file, param, what0)
+    bamcols <- .loadBamCols(file, param, what0, ...)
     seqlengths <- .loadBamSeqlengths(file, levels(bamcols[["rname"]]))
     ans <- GappedAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
                             cigar=bamcols$cigar, strand=bamcols$strand,

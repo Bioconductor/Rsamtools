@@ -201,7 +201,7 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
 }
 
 setMethod(scanBam, "BamViews",
-          function(file, index=file, ...,
+          function(file, index=file, ..., obeyQnames=FALSE,
                    param=ScanBamParam(what=scanBamWhat()))
 {
     if (!missing(index))
@@ -226,7 +226,7 @@ setMethod(countBam, "BamViews",
 })
 
 setMethod(readBamGappedAlignments, "BamViews",
-          function(file, index=file, use.names=FALSE, param=NULL)
+          function(file, index=file, ..., use.names=FALSE, param=NULL)
 {
     if (missing(index))
         index <- bamIndicies(file)

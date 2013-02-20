@@ -67,7 +67,7 @@ BamFileList(..., yieldSize=NA_integer_)
 
 \S4method{scanBamHeader}{BamFile}(files, ...)
 \S4method{seqinfo}{BamFile}(x)
-\S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
+\S4method{scanBam}{BamFile}(file, index=file, ..., obeyQnames=FALSE, param=ScanBamParam(what=scanBamWhat()))
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
@@ -75,7 +75,7 @@ BamFileList(..., yieldSize=NA_integer_)
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
 \S4method{mergeBam}{BamFileList}(files, destination, ...)
-\S4method{readBamGappedAlignments}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
+\S4method{readBamGappedAlignments}{BamFile}(file, index=file, ..., use.names=FALSE, param=NULL)
 \S4method{readBamGappedReads}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readBamGappedAlignmentPairs}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 
@@ -128,6 +128,9 @@ BamFileList(..., yieldSize=NA_integer_)
 
   \item{indexDestination}{logical(1) indicating whether the destination
     file should also be indexed.}
+
+  \item{obeyQnames}{A logical(1) indicating whether the file is
+    sorted by \code{qname}.}
 
   \item{byQname, maxMemory}{See \code{\link{sortBam}}.}
 

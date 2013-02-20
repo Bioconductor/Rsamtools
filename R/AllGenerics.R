@@ -6,7 +6,7 @@ setGeneric("ScanBamParam",
            signature="which")
 
 setGeneric("scanBam",
-           function(file, index=file, ...,
+           function(file, index=file, ..., obeyQnames=FALSE,
                     param=ScanBamParam(what=scanBamWhat()))
            standardGeneric("scanBam"),
            signature="file")
@@ -98,7 +98,7 @@ setGeneric("BamViews",
            signature="bamRanges")
 
 setGeneric("readBamGappedAlignments",
-           function(file, index=file, use.names=FALSE, param=NULL)
+           function(file, index=file, ..., use.names=FALSE, param=NULL)
            standardGeneric("readBamGappedAlignments"),
            signature="file")
 

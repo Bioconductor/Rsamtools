@@ -32,7 +32,7 @@
 }
 \usage{
 
-scanBam(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
+scanBam(file, index=file, ..., obeyQnames=FALSE, param=ScanBamParam(what=scanBamWhat()))
 
 countBam(file, index=file, ..., param=ScanBamParam())
 
@@ -87,7 +87,7 @@ mergeBam(files, destination, ...)
 
   \item{indexDestination}{A logical(1) indicating whether the created
     destination file should also be indexed.}
-    
+ 
   \item{byQname}{A logical(1) indicating whether the sorted destination
     file should be sorted by Query-name (TRUE) or by mapping
     position (FALSE).}
@@ -100,9 +100,12 @@ mergeBam(files, destination, ...)
 
   \item{compressLevel1}{A logical(1) indicating whether the merged BAM
     file should be compressed to zip level 1.}
-    
+ 
   \item{maxMemory}{A numerical(1) indicating the maximal amount of
     memory (in MB) that the function is allowed to use.}
+
+  \item{obeyQnames}{A logical(1) indicating whether the file is
+    sorted by \code{qname}.}
 
   \item{param}{An instance of \code{\linkS4class{ScanBamParam}}. This
     influences what fields and which records are imported.}

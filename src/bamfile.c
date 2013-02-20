@@ -120,7 +120,8 @@ SEXP read_bamfile_header(SEXP ext)
 }
 
 SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-                  SEXP reverseComplement, SEXP yieldSize, SEXP template_list)
+                  SEXP reverseComplement, SEXP yieldSize, SEXP template_list,
+                  SEXP obeyQnames)
 {
     _scan_checkext(ext, BAMFILE_TAG, "scanBam");
     _scan_checkparams(space, keepFlags, isSimpleCigar);

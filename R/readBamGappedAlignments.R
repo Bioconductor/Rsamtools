@@ -1,11 +1,11 @@
 setMethod(readBamGappedAlignments, "character",
-          function(file, index=file, use.names=FALSE, param=NULL)
+          function(file, index=file, ..., use.names=FALSE, param=NULL)
 {
     if (missing(index) && (is.null(param) || 0L == length(bamWhich(param))))
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    readBamGappedAlignments(bam, character(), use.names=use.names,
+    readBamGappedAlignments(bam, character(), ..., use.names=use.names,
                             param=param)
 })
 

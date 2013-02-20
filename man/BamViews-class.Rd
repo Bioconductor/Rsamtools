@@ -74,10 +74,10 @@ bamDirname(x, ...) <- value
 \S4method{[}{BamViews,missing,ANY}(x, i, j, \dots, drop=TRUE)
 
 ## Input
-\S4method{scanBam}{BamViews}(file, index = file, ...,
+\S4method{scanBam}{BamViews}(file, index = file, ..., obeyQnames=FALSE,
     param = ScanBamParam(what=scanBamWhat()))
 \S4method{countBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
-\S4method{readBamGappedAlignments}{BamViews}(file, index=file, use.names=FALSE, param=NULL)
+\S4method{readBamGappedAlignments}{BamViews}(file, index=file, ..., use.names=FALSE, param=NULL)
 
 ## Show
 \S4method{show}{BamViews}(object)
@@ -112,6 +112,9 @@ bamDirname(x, ...) <- value
     \code{target} element of \code{scanBamHeader}.}
 
   \item{...}{Additional arguments.}
+
+  \item{obeyQnames}{A logical(1) indicating whether the file is
+    sorted by \code{qname}.}
 
   \item{x}{An instance of \code{BamViews}.}
 

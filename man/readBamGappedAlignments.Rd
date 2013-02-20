@@ -18,7 +18,7 @@ object.
 }
 
 \usage{
-readBamGappedAlignments(file, index=file, use.names=FALSE, param=NULL)
+readBamGappedAlignments(file, index=file, ..., use.names=FALSE, param=NULL)
 readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
 readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
 }
@@ -28,6 +28,8 @@ readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
     file of the BAM file to read, respectively. The latter is given
     \emph{without} the '.bai' extension. See \code{\link{scanBam}} for more
     information.}
+
+  \item{\dots}{Arguments passed to other methods.}
 
   \item{use.names}{Use the query template names (QNAME field) as the
     names of the returned object? If not (the default), then the returned
