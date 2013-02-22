@@ -67,7 +67,7 @@ BamFileList(..., yieldSize=NA_integer_)
 
 \S4method{scanBamHeader}{BamFile}(files, ...)
 \S4method{seqinfo}{BamFile}(x)
-\S4method{scanBam}{BamFile}(file, index=file, ..., obeyQnames=FALSE, param=ScanBamParam(what=scanBamWhat()))
+\S4method{scanBam}{BamFile}(file, index=file, ..., obeyQname=FALSE, param=ScanBamParam(what=scanBamWhat()))
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
@@ -129,10 +129,10 @@ BamFileList(..., yieldSize=NA_integer_)
   \item{indexDestination}{logical(1) indicating whether the destination
     file should also be indexed.}
 
-  \item{obeyQnames}{A logical(1) indicating whether the file is
-    sorted by \code{qname}.}
-
   \item{byQname, maxMemory}{See \code{\link{sortBam}}.}
+
+  \item{obeyQname}{A logical(1) indicating whether the file is
+    sorted by \code{qname}.}
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
      further influence scanning, counting, or filtering.}
@@ -312,6 +312,7 @@ length(scanBam(fl)[[1]][[1]])  # all records
 bf <- open(BamFile(fl))        # implicit index
 bf
 identical(scanBam(bf), scanBam(fl))
+close(bf)
 
 ## chunks of size 1000
 bf <- open(BamFile(fl, yieldSize=1000))  
@@ -336,21 +337,20 @@ close(bf)
 ##
 
 \dontrun{
-## single-end reads
+library(pasillaBamSubset)
+## single-end
 library("TxDb.Dmelanogaster.UCSC.dm3.ensGene")
 exbygene <- exonsBy(TxDb.Dmelanogaster.UCSC.dm3.ensGene, "gene")
-fl <- system.file("extdata", "untreated1_chr4.bam", 
-    package="pasillaBamSubset", mustWork=TRUE) 
+fl <- untreated1_chr4() 
 ## When 'yieldSize' is specified the file is processed by chunks. 
 ## Otherwise the complete file is read into memory.
 bfl <- BamFileList(fl, yieldSize=50000)
 counts <- assays(summarizeOverlaps(exbygene, bfl, singleEnd=TRUE))$counts
 
-## paired-end reads
-fl <- system.file("extdata", "untreated3_chr4.bam", 
-    package="pasillaBamSubset", mustWork=TRUE) 
-## Complete file is read into memory.
-bfl <- BamFileList(fl, index=character())
+## paired-end
+fl <- untreated3_chr4 ()
+## If 'yieldSize' is not specified the complete file is read into memory.
+bfl <- BamFileList(fl)
 res <- summarizeOverlaps(exbygene, bfl, singleEnd=FALSE)
 stopifnot(length(assays(res)$counts) == length(exbygene))
 }

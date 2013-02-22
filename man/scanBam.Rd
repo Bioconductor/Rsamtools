@@ -32,7 +32,7 @@
 }
 \usage{
 
-scanBam(file, index=file, ..., obeyQnames=FALSE, param=ScanBamParam(what=scanBamWhat()))
+scanBam(file, index=file, ..., obeyQname=FALSE, param=ScanBamParam(what=scanBamWhat()))
 
 countBam(file, index=file, ..., param=ScanBamParam())
 
@@ -104,7 +104,7 @@ mergeBam(files, destination, ...)
   \item{maxMemory}{A numerical(1) indicating the maximal amount of
     memory (in MB) that the function is allowed to use.}
 
-  \item{obeyQnames}{A logical(1) indicating whether the file is
+  \item{obeyQname}{A logical(1) indicating whether the file is
     sorted by \code{qname}.}
 
   \item{param}{An instance of \code{\linkS4class{ScanBamParam}}. This

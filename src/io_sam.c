@@ -26,6 +26,7 @@ typedef struct {
     uint32_t keep_flag[2], cigar_flag;
     int reverseComplement;
     int yieldSize;
+    int obeyQname;
 
     void *extra;
 } _BAM_DATA;
@@ -77,7 +78,7 @@ void _check_is_bam(const char *filename)
     bam_close(bfile);
 
     if (magic_len != 4 || strncmp(buf, "BAM\001", 4) != 0)
-	Rf_error("'filename' is not a BAM file\n  file: %s", filename);
+        Rf_error("'filename' is not a BAM file\n  file: %s", filename);
 }
 
 void _bam_check_template_list(SEXP template_list)
@@ -106,7 +107,8 @@ static _BAM_DATA *_Calloc_BAM_DATA(int blocksize, int cigar_buf_sz)
 static _BAM_DATA *_init_BAM_DATA(SEXP ext, SEXP space, SEXP flag,
                                  SEXP isSimpleCigar,
                                  int reverseComplement,
-                                 int yieldSize)
+                                 int yieldSize,
+                                 int obeyQname)
 {
     int nrange = R_NilValue == space ? 1 : LENGTH(VECTOR_ELT(space, 0));
     _BAM_DATA *bd =
@@ -122,6 +124,7 @@ static _BAM_DATA *_init_BAM_DATA(SEXP ext, SEXP space, SEXP flag,
     bd->cigar_flag = LOGICAL(isSimpleCigar)[0];
     bd->reverseComplement = reverseComplement;
     bd->yieldSize = yieldSize;
+    bd->obeyQname = obeyQname;
     return bd;
 }
 
@@ -589,18 +592,37 @@ static int _scan_bam_all(_BAM_DATA * bd, _PARSE1_FUNC parse1,
     int r = 0;
 
     bam_seek(bd->bfile->file->x.bam, bd->bfile->pos0, SEEK_SET);
+    char *last_qname = NULL;
+
     while ((r = samread(bd->bfile->file, bam)) >= 0) {
+        if (NA_INTEGER != bd->yieldSize && bd->obeyQname && bd->iparsed >= bd->yieldSize) {
+            if (0 != strcmp(last_qname, bam1_qname(bam)))
+                break;
+            bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
+        }
+
         int result = (*parse1) (bam, bd);
         if (result < 0) {
             _grow_SCAN_BAM_DATA(bd, 0);
             return result;
         }
-        if (NA_INTEGER != bd->yieldSize && bd->yieldSize == bd->iparsed)
-            break;
+        if (NA_INTEGER != bd->yieldSize && bd->iparsed == bd->yieldSize) {
+            if (!bd->obeyQname)
+                break;
+            last_qname = R_alloc(strlen(bam1_qname(bam)) + 1, sizeof(char));
+            strcpy(last_qname, bam1_qname(bam));
+            bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
+         }
     }
     if (NULL != finish1)
         (*finish1) (bd);
-    bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
+    if (NA_INTEGER != bd->yieldSize) {
+        if (!bd->obeyQname || (bd->iparsed < bd->yieldSize))
+            bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
+    } else {
+        bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
+    }
+
     return bd->iparsed;
 }
 
@@ -955,12 +977,14 @@ static void _scan_bam_finish1range(_BAM_DATA * bd)
 }
 
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-               SEXP reverseComplement, SEXP yieldSize, SEXP template_list)
+               SEXP reverseComplement, SEXP yieldSize, SEXP template_list,
+               SEXP obeyQname)
 {
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
     _BAM_DATA *bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                    LOGICAL(reverseComplement)[0],
-                                   INTEGER(yieldSize)[0]);
+                                   INTEGER(yieldSize)[0],
+                                   LOGICAL(obeyQname)[0]);
     SEXP result = _scan_bam_result_init(template_list, names, space);
     PROTECT(result);
     _SCAN_BAM_DATA *sbd = _Calloc_SCAN_BAM_DATA();
@@ -1003,7 +1027,7 @@ SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
     _BAM_DATA *bd =
         _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, 0,
-                       NA_INTEGER);
+                       NA_INTEGER, 0);
     SEXP result = PROTECT(NEW_LIST(2));
     bd->extra = result;
 
@@ -1053,7 +1077,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
     /* open destination */
     _BAM_DATA *bd =
         _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, 0,
-                       NA_INTEGER);
+                       NA_INTEGER, 0);
     /* FIXME: this just copies the header... */
     bam_header_t *header = BAMFILE(bfile)->file->header;
     samfile_t *f_out = _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),

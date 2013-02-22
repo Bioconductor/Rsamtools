@@ -20,7 +20,7 @@ SEXP bamfile_isopen(SEXP ext);
 SEXP read_bamfile_header(SEXP ext);
 SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
                   SEXP simpleCigar, SEXP reverseComplement,
-                  SEXP yieldSize, SEXP tmpl, SEXP obeyQnames);
+                  SEXP yieldSize, SEXP tmpl, SEXP obeyQname);
 SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 SEXP filter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
                     SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode);

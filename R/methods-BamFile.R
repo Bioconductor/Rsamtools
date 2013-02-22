@@ -62,7 +62,7 @@ setMethod(seqinfo, "BamFile",
 })
 
 setMethod(scanBam, "BamFile",
-          function(file, index=file, ..., obeyQnames=FALSE,
+          function(file, index=file, ..., obeyQname=FALSE,
                    param=ScanBamParam(what=scanBamWhat()))
 {
     if (!isOpen(file)) {
@@ -85,7 +85,7 @@ setMethod(scanBam, "BamFile",
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
-                 yieldSize(file), tmpl, obeyQnames, param=param)
+                 yieldSize(file), tmpl, obeyQname, param=param)
     .scanBam_postprocess(x, param)
 })
 
@@ -300,6 +300,25 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     makeGappedAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
 })
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### readBamSortedPairs 
+###
+
+.readBamSortedPairs <- 
+    function(file, index=file, ..., use.names=FALSE, param=NULL)
+{
+    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
+    what <- c("flag", "mrnm", "mpos")
+    normParam <- .normargParam(param, flag, what)
+    galn <- readBamGappedAlignments(file, obeyQname=TRUE, use.names=TRUE,
+                                    param=normParam)
+    if (is.null(param)) {
+        use.mcols <- FALSE
+    } else {
+        use.mcols <- c(bamWhat(param), bamTag(param))
+    }
+    makeGappedAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
+}
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "summarizeOverlaps" methods.
@@ -327,11 +346,10 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
                     features, mode=mode, ignore.strand=ignore.strand)
             }
         } else {
-            while (length(x <- readBamGappedAlignmentPairs(bf, param=param))) {
-                x <- grglist(x)
-                cnt <- cnt + GenomicRanges:::.dispatchOverlaps(x,
-                    features, mode=mode, ignore.strand=ignore.strand)
-            }
+            ## readBamGappedAlignmentPairs does not allow yieldSize
+            x <- grglist(readBamGappedAlignmentPairs(bf, param=param))
+            cnt <- GenomicRanges:::.dispatchOverlaps(x,
+                       features, mode=mode, ignore.strand=ignore.strand)
         }
         cnt
     }, reads)

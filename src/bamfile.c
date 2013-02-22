@@ -121,17 +121,19 @@ SEXP read_bamfile_header(SEXP ext)
 
 SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                   SEXP reverseComplement, SEXP yieldSize, SEXP template_list,
-                  SEXP obeyQnames)
+                  SEXP obeyQname)
 {
     _scan_checkext(ext, BAMFILE_TAG, "scanBam");
     _scan_checkparams(space, keepFlags, isSimpleCigar);
     if (!(IS_LOGICAL(reverseComplement) && (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");
+    if (!(IS_LOGICAL(obeyQname) && (1L == LENGTH(obeyQname))))
+        Rf_error("'obeyQname' must be logical(1)");
     if (!(IS_INTEGER(yieldSize) && (1L == LENGTH(yieldSize))))
         Rf_error("'yieldSize' must be integer(1)");
     _bam_check_template_list(template_list);
     return _scan_bam(ext, space, keepFlags, isSimpleCigar,
-                     reverseComplement, yieldSize, template_list);
+                     reverseComplement, yieldSize, template_list, obeyQname);
 }
 
 SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)

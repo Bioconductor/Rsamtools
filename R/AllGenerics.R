@@ -6,7 +6,7 @@ setGeneric("ScanBamParam",
            signature="which")
 
 setGeneric("scanBam",
-           function(file, index=file, ..., obeyQnames=FALSE,
+           function(file, index=file, ..., obeyQname=FALSE,
                     param=ScanBamParam(what=scanBamWhat()))
            standardGeneric("scanBam"),
            signature="file")
@@ -18,7 +18,7 @@ setGeneric("countBam",
            function(file, index=file, ..., param=ScanBamParam())
            standardGeneric("countBam"),
            signature="file")
-           
+ 
 setGeneric("asBam",
            function(file, destination, ...)
            standardGeneric("asBam"))
