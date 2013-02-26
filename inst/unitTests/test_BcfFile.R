@@ -77,6 +77,17 @@ test_BcfFile_scanBcfHeader_remote <- function()
     checkIdentical(exp, sapply(obs, length))
 }
 
+test_BcfFile_scanBcfHeader_no_header_line <- function()
+{
+    fl <- system.file(package="Rsamtools", "unitTests", "cases",
+                      "no_header_line.vcf")
+    msg <- NULL
+    tryCatch(scanBcfHeader(fl), error=function(err) {
+        msg <<- conditionMessage(err)
+    })
+    checkIdentical("no 'header' line \"#CHROM POS ID...\"?", msg)
+}
+
 test_BcfFile_scan_noindex <- function()
 {
     bf <- open(BcfFile(fl, character(0)))

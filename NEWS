@@ -15,6 +15,9 @@ BUG FIXES
     o headerTabix on an open TabixFile no longer reads the first
     record
 
+    o scanBcfHeader provides informative error message when header
+    line ('#CHROM POS ...') is missing
+
 CHANGES IN VERSION 1.10.0
 -------------------------
 

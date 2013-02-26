@@ -296,6 +296,9 @@ SEXP scan_bcf_header(SEXP ext)
         Rf_error("internal: failed to 'seek'");
     bcf_hdr_t *hdr = vcf_hdr_read(bcf);
 
+    if (NULL == hdr)
+        Rf_error("no 'header' line \"#CHROM POS ID...\"?");
+
     SEXP ans = PROTECT(NEW_LIST(BCF_HDR_LAST));
     SET_VECTOR_ELT(ans, BCF_HDR_REF, NEW_STRING(hdr->n_ref));
     SET_VECTOR_ELT(ans, BCF_HDR_SAMPLE, NEW_STRING(hdr->n_smpl));
