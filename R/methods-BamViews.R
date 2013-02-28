@@ -201,7 +201,7 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
 }
 
 setMethod(scanBam, "BamViews",
-          function(file, index=file, ..., obeyQname=FALSE,
+          function(file, index=file, ...,
                    param=ScanBamParam(what=scanBamWhat()))
 {
     if (!missing(index))

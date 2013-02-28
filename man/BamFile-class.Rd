@@ -51,15 +51,15 @@
 
 ## Constructors
 
-BamFile(file, index=file, ..., yieldSize=NA_integer_)
-BamFileList(..., yieldSize=NA_integer_)
+BamFile(file, index=file, ..., yieldSize=NA_integer_, obeyQname=FALSE)
+BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
 
 ## Opening / closing
 
 \S3method{open}{BamFile}(con, ...)
 \S3method{close}{BamFile}(con, ...)
 
-## accessors; also path(), index(), yieldSize()
+## accessors; also path(), index(), yieldSize(), obeyQname()
 
 \S4method{isOpen}{BamFile}(con, rw="")
 
@@ -67,7 +67,7 @@ BamFileList(..., yieldSize=NA_integer_)
 
 \S4method{scanBamHeader}{BamFile}(files, ...)
 \S4method{seqinfo}{BamFile}(x)
-\S4method{scanBam}{BamFile}(file, index=file, ..., obeyQname=FALSE, param=ScanBamParam(what=scanBamWhat()))
+\S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
@@ -248,6 +248,8 @@ BamFileList(..., yieldSize=NA_integer_)
     \item{yieldSize, yieldSize<-}{Return or set an integer(1) vector
       indicating yield size.}
 
+    \item{obeyQname, obeyQname<-}{Return or set a logical(0)
+      indicating if the file was sorted by qname.}
   }
 
   Methods:
@@ -315,7 +317,7 @@ identical(scanBam(bf), scanBam(fl))
 close(bf)
 
 ## chunks of size 1000
-bf <- open(BamFile(fl, yieldSize=1000))  
+bf <- open(BamFile(fl, yieldSize=1000)) 
 while (nrec <- length(scanBam(bf)[[1]][[1]]))
     cat("records:", nrec, "\n")
 close(bf)

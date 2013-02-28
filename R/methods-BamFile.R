@@ -7,11 +7,12 @@ setMethod(isOpen, "BamFile",
 })
 
 BamFile <-
-    function(file, index=file, ..., yieldSize=NA_integer_)
+    function(file, index=file, ..., yieldSize=NA_integer_, 
+             obeyQname=FALSE)
 {
     .RsamtoolsFile(.BamFile, .normalizePath(file),
                    .normalizePath(index), yieldSize=yieldSize,
-                   ...)
+                   obeyQname=obeyQname, ...)
 }
 
 open.BamFile <-
@@ -62,7 +63,7 @@ setMethod(seqinfo, "BamFile",
 })
 
 setMethod(scanBam, "BamFile",
-          function(file, index=file, ..., obeyQname=FALSE,
+          function(file, index=file, ...,
                    param=ScanBamParam(what=scanBamWhat()))
 {
     if (!isOpen(file)) {
@@ -85,7 +86,7 @@ setMethod(scanBam, "BamFile",
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
-                 yieldSize(file), tmpl, obeyQname, param=param)
+                 yieldSize(file), tmpl, obeyQname(file), param=param)
     .scanBam_postprocess(x, param)
 })
 
@@ -310,7 +311,7 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
     what <- c("flag", "mrnm", "mpos")
     normParam <- .normargParam(param, flag, what)
-    galn <- readBamGappedAlignments(file, obeyQname=TRUE, use.names=TRUE,
+    galn <- readBamGappedAlignments(file, use.names=TRUE,
                                     param=normParam)
     if (is.null(param)) {
         use.mcols <- FALSE
@@ -346,7 +347,7 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
                     features, mode=mode, ignore.strand=ignore.strand)
             }
         } else {
-            ## readBamGappedAlignmentPairs does not allow yieldSize
+            ## readBamGappedAlignmentPairs sets yieldSize to NA
             x <- grglist(readBamGappedAlignmentPairs(bf, param=param))
             cnt <- GenomicRanges:::.dispatchOverlaps(x,
                        features, mode=mode, ignore.strand=ignore.strand)

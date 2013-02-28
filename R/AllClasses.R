@@ -51,7 +51,7 @@ setClass("PileupParam",
 ## RsamtoolsFile(s)
 .RsamtoolsFile_generator <- setRefClass("RsamtoolsFile",
     fields=list(.extptr="externalptr", path="character",
-      index="character", yieldSize="integer"))
+      index="character", yieldSize="integer", obeyQname="logical"))
 
 .BamFile <- setRefClass("BamFile", contains="RsamtoolsFile")
 .BcfFile <- setRefClass("BcfFile", contains="RsamtoolsFile",

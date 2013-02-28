@@ -6,7 +6,7 @@ setGeneric("ScanBamParam",
            signature="which")
 
 setGeneric("scanBam",
-           function(file, index=file, ..., obeyQname=FALSE,
+           function(file, index=file, ...,
                     param=ScanBamParam(what=scanBamWhat()))
            standardGeneric("scanBam"),
            signature="file")
@@ -145,5 +145,11 @@ setGeneric("yieldSize",
 
 setGeneric("yieldSize<-",
            function(object, ..., value) standardGeneric("yieldSize<-"))
+
+setGeneric("obeyQname",
+           function(object, ...) standardGeneric("obeyQname"))
+
+setGeneric("obeyQname<-",
+           function(object, ..., value) standardGeneric("obeyQname<-"))
 
 setGeneric("isOpen")
