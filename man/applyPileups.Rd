@@ -104,7 +104,7 @@ calcInfo <-
 {
     ## information at each pile-up position
     info <- apply(x[["seq"]], 2, function(y) {
-        y <- y[c("A", "C", "G", "T"),]
+        y <- y[c("A", "C", "G", "T"),,drop=FALSE]
         y <- y + 1L                     # continuity
         cvg <- colSums(y)
         p <- y / cvg[col(y)]
