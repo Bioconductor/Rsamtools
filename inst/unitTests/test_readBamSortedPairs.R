@@ -5,9 +5,13 @@ fl <- sortBam(untreated3_chr4(), tempfile(), byQname=TRUE)
 test_readBamSortedPairs <- function()
 {
     bf <- BamFile(fl, index=character(0), yieldSize=100, obeyQname=TRUE)
-    galp <- readBamSortedPairs(bf)
+    galp <- readBamSortedPairs(bf, asGappedAlignmentPairs=TRUE)
     checkTrue(validObject(galp))
     checkTrue(length(galp) == 50)
+
+    gal <- readBamSortedPairs(bf)
+    checkTrue(validObject(gal))
+    checkTrue(length(gal) == 100)
 }
 
 test_readBamSortedPairs_param <- function()
@@ -16,16 +20,16 @@ test_readBamSortedPairs_param <- function()
 
     ## valid
     param <- ScanBamParam(tag=("NM"))
-    galp <- readBamSortedPairs(bf, param=param)
+    galp <- readBamSortedPairs(bf, param=param, asGappedAlignmentPairs=TRUE)
     checkTrue(names(mcols(left(galp))) == "NM")
 
     ## empty
     param <- ScanBamParam(tag=("FO"))
-    galp <- readBamSortedPairs(bf, param=param)
+    galp <- readBamSortedPairs(bf, param=param, asGappedAlignmentPairs=TRUE)
     checkIdentical(rep.int(NA, length(galp)), mcols(left(galp))[["FO"]])
 }
 
-test_BamFile_obeyQname <- function()
+test_readBamSortedPairs_obeyQname <- function()
 {
     bf <- BamFile(fl, index=character(0), yieldSize=1, obeyQname=TRUE)
     scn1 <- scanBam(bf, obeyQname=TRUE)
@@ -41,4 +45,3 @@ test_BamFile_obeyQname <- function()
     checkTrue(length(scn3[[1]]$qname) == 4)
     checkTrue(length(unique(scn3[[1]]$qname)) == 2)
 }
-

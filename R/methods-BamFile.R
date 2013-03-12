@@ -306,19 +306,23 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 ###
 
 .readBamSortedPairs <- 
-    function(file, index=file, ..., use.names=FALSE, param=NULL)
+    function(file, index=file, ..., use.names=FALSE, param=NULL,
+             asGappedAlignmentPairs=FALSE)
 {
     flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
     what <- c("flag", "mrnm", "mpos")
     normParam <- .normargParam(param, flag, what)
     galn <- readBamGappedAlignments(file, use.names=TRUE,
                                     param=normParam)
-    if (is.null(param)) {
-        use.mcols <- FALSE
+    if (asGappedAlignmentPairs) {
+        if (is.null(param))
+            use.mcols <- FALSE
+        else
+            use.mcols <- c(bamWhat(param), bamTag(param))
+        makeGappedAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
     } else {
-        use.mcols <- c(bamWhat(param), bamTag(param))
+        galn
     }
-    makeGappedAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
