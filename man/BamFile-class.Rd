@@ -242,8 +242,8 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
       files.  Returns a \code{BamFile} instance.}
 
     \item{close.BamFile}{Closes the \code{BamFile} \code{con}; returning
-	  (invisibly) the updated \code{BamFile}. The instance may be
-	  re-opened with \code{open.BamFile}.}
+      (invisibly) the updated \code{BamFile}. The instance may be
+      re-opened with \code{open.BamFile}.}
 
   }
 
@@ -366,25 +366,41 @@ close(bf)
 
 
 ##------------------------------------------------------------------------
-## summarizeOverlaps with BamFileList -- counts over an entire experiment
+## summarizeOverlaps with BamFileList
 ##
 
 library(pasillaBamSubset)
-## single-end
 library("TxDb.Dmelanogaster.UCSC.dm3.ensGene")
 exbygene <- exonsBy(TxDb.Dmelanogaster.UCSC.dm3.ensGene, "gene")
-fl <- untreated1_chr4() 
+
+## single-end:
 ## When 'yieldSize' is specified the file is processed by chunks. 
 ## Otherwise the complete file is read into memory.
+fl <- untreated1_chr4() 
 bfl <- BamFileList(fl, yieldSize=50000)
-counts <- assays(summarizeOverlaps(exbygene, bfl, singleEnd=TRUE))$counts
+se1 <- summarizeOverlaps(exbygene, bfl, singleEnd=TRUE)
+counts1 <- assays(se1)$counts
 
-## paired-end
-fl <- untreated3_chr4 ()
-## If 'yieldSize' is not specified the complete file is read into memory.
-bfl <- BamFileList(fl)
-res <- summarizeOverlaps(exbygene, bfl, singleEnd=FALSE)
-stopifnot(length(assays(res)$counts) == length(exbygene))
+## paired-end sorted by qname:
+## Set 'singleEnd' to 'FALSE'. A BAM file sorted by qname
+## can be read in chunks with 'yieldSize'. 
+fl <- untreated3_chr4() 
+sortfl <- sortBam(fl, tempfile(), byQname=TRUE)
+bf2 <- BamFileList(sortfl, index=character(0), 
+                   yieldSize=50000, obeyQname=TRUE)
+se2 <- summarizeOverlaps(exbygene, bf2, singleEnd=FALSE)
+counts2 <- assays(se2)$counts
+
+## paired-end not sorted:
+## If the file is not sorted by qname, all records are read 
+## into memory for sorting and to determine proper pairs.
+## Any 'yieldSize' set on the BamFile will be ignored.
+fl <- untreated3_chr4() 
+bf3 <- BamFileList(fl)
+se3 <- summarizeOverlaps(exbygene, bf3, singleEnd=FALSE)
+counts3 <- assays(se3)$counts
+
+identical(as.vector(counts2), as.vector(counts3))
 
 ##------------------------------------------------------------------------
 ## findSpliceOverlaps 
