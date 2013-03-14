@@ -308,7 +308,7 @@ setMethod(readBamGAlignmentsList, "BamFile",
 {
         gal <- readBamGappedAlignments(file, use.names=TRUE, param=param)
         if (asProperPairs) {
-            stop("Not implemented yet. In progress ...") 
+            warning("asProperPairs=TRUE not implemented yet.") 
         } 
         splitAsList(gal, factor(names(gal)))
 })
