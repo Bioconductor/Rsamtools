@@ -7,20 +7,24 @@
 \alias{readBamGappedReads,character-method}
 \alias{readBamGappedAlignmentPairs}
 \alias{readBamGappedAlignmentPairs,character-method}
+\alias{readBamGAlignmentsList}
+\alias{readBamGAlignmentsList,character-method}
 
 \title{Reading a BAM file into a GappedAlignments, GappedReads, or
        GappedAlignmentPairs object}
 
 \description{
 Read a BAM file into a \link[GenomicRanges]{GappedAlignments},
-\link[ShortRead]{GappedReads}, or \link[GenomicRanges]{GappedAlignmentPairs}
-object.
+\link[ShortRead]{GappedReads}, \link[GenomicRanges]{GappedAlignmentPairs},
+or \link[GenomicRanges]{GAlignmentsList} object.
 }
 
 \usage{
 readBamGappedAlignments(file, index=file, ..., use.names=FALSE, param=NULL)
 readBamGappedReads(file, index=file, use.names=FALSE, param=NULL)
 readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
+readBamGAlignmentsList(file, index=file, ..., use.names=FALSE,
+param=ScanBamParam(), asProperPairs=TRUE)
 }
 
 \arguments{
@@ -46,14 +50,24 @@ readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
     requested by the user will actually be kept as metadata columns of the
     object.
 
-    By default (i.e. \code{param=NULL}), no additional field is loaded and
-    the flag used is \code{scanBamFlag(isUnmappedQuery=FALSE)} for
+    By default (i.e. \code{param=NULL} or \code{param=ScanBamParam()}), no 
+    additional field is loaded. The flag used is 
+    \code{scanBamFlag(isUnmappedQuery=FALSE)} for
     \code{readBamGappedAlignments} and \code{readBamGappedReads}
     (i.e. only records corresponding to mapped reads are loaded),
     and \code{scanBamFlag(isUnmappedQuery=FALSE, isPaired=TRUE,
     hasUnmappedMate=FALSE)} for \code{readBamGappedAlignmentPairs}
     (i.e. only records corresponding to paired-end reads with both ends
-    mapped are loaded).}
+    mapped are loaded).} No flag is set for \code{readBamGAlignmentsList}
+    unless \code{asProperPairs=TRUE}. In this case, the records read in
+    are the same as for \code{readBamGappedAlignmentPairs}.
+
+  \item{asProperPairs}{A logical indicating if the records should be filtered
+    such that only proper pairs are returned. Applies to 
+    \code{readBamGAlignments} only. If \code{TRUE}, the records 
+    are the same as from a call to \code{readBamGappedAlignmentPairs} 
+    except a \code{GAlignmentsList} is returned instead of a 
+    \code{GappedAlignmentPairs} object.}
 }
 
 \details{
@@ -75,6 +89,21 @@ readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
   description of \link[GenomicRanges]{GappedAlignmentPairs} objects,
   and \code{?\link{makeGappedAlignmentPairs}} for the details of the
   pairing procedure.
+
+  The return value from \code{readBamGAlignmentList} is a 
+  \code{GAlignmentsList} where each list element contains all records 
+  of the same id (QNAME in SAM/BAM file). When \code{asProperPairs} is 
+  \code{TRUE} each list element has exactly 2 records; these are the 
+  same data as that returned from \code{readBamGappedAlignmentPairs}, only 
+  the return class is different. When \code{asProperPairs} is \code{FALSE}, 
+  no QC is performed resulting in 1 or more records per element. List 
+  elements containing singletons, unpaired reads or single fragments have 
+  a length of 1 while paired-end reads or those with multiple fragments 
+  have a length of 2 or greater.
+  (NOTE: asProperPairs=TRUE not yet implemented)
+
+  See \code{?\link[GenomicRanges]{GAlignmentsList-class}} for a 
+  description of \link[GenomicRanges]{GAlignmentsList} objects.
 }
 
 \value{
@@ -96,6 +125,11 @@ readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
   user-supplied \code{\linkS4class{ScanBamParam}} is filtering out everything,
   or that the file is empty, or that all the records in the file correspond
   to unmapped reads).
+
+  A \link[GenomicRanges]{GAlignmentsList} object for
+  \code{readBamGAlignmentsList}. Single or paired-end data can be
+  read into this structure. The list elements are groups of records
+  by read id.
 }
 
 \note{
@@ -110,6 +144,7 @@ readBamGappedAlignmentPairs(file, index=file, use.names=FALSE, param=NULL)
 
 \seealso{
   \link[GenomicRanges]{GappedAlignments-class},
+  \link[GenomicRanges]{GAlignmentsList-class},
   \link[ShortRead]{GappedReads-class},
   \link[GenomicRanges]{GappedAlignmentPairs-class},
   \code{\link{makeGappedAlignmentPairs}},
@@ -188,6 +223,33 @@ galp2 <- readBamGappedAlignmentPairs(bamfile, use.names=TRUE)
 galp2
 head(galp2)
 head(names(galp2))
+
+## ---------------------------------------------------------------------
+## D. readBamGAlignmentPairs()
+## ---------------------------------------------------------------------
+## As sample data we use the paired-end file from pasillaBamSubset.
+## This method requires that Bam file to be sorted by qname. Setting
+## the yieldSize is optional.
+library(pasillaBamSubset)
+bfsort <- sortBam(untreated3_chr4(), tempfile(), byQname=TRUE)
+bf <- BamFile(bfsort, index=character(0), yieldSize=100, obeyQname=TRUE)
+galist <- readBamGAlignmentsList(bf, asProperPairs=FALSE)
+
+## List elements are grouped by id and can hold any number
+## of pairs or fragments.
+galist
+table(elementLengths(galist))
+
+## Single reads appearing in 'galist' are filtered out by 
+## the readBamGappedAlignmentPairs QC process because they
+## are not proper pairs. 
+galp <- readBamGappedAlignmentPairs(bf)
+findOverlaps(galist[elementLengths(galist) == 1], 
+             unlist(galp), type="within")
+
+## When 'asProperPairs' is 'TRUE', readBamGappedAlignmentPairs 
+## and readGAlignmentsList return the same records but in different
+## classes.
 }
 
 \keyword{manip}

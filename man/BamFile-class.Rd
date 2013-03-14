@@ -22,6 +22,7 @@
 \alias{readBamGappedAlignments,BamFile-method}
 \alias{readBamGappedReads,BamFile-method}
 \alias{readBamGappedAlignmentPairs,BamFile-method}
+\alias{readBamGAlignmentsList,BamFile-method}
 
 \alias{mergeBam,BamFileList-method}
 % counting 
@@ -78,6 +79,8 @@ BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
 \S4method{readBamGappedAlignments}{BamFile}(file, index=file, ..., use.names=FALSE, param=NULL)
 \S4method{readBamGappedReads}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readBamGappedAlignmentPairs}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
+\S4method{readBamGAlignmentsList}{BamFile}(file, index=file, ...,
+use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
 
 ## counting
 
@@ -204,6 +207,13 @@ BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
   \item{shift, width, weight}{See \code{\link[IRanges:coverage]{coverage}}.}
 
   \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
+
+  \item{asProperPairs}{A logical indicating if the records should be filtered
+    such that only proper pairs are returned. Applies to 
+    \code{readBamGAlignments} only. If filtering is applied, the records 
+    returned are the same as from \code{readBamGappedAlignmentPairs} except 
+    they are in a \code{GAlignmentsList} instead of a 
+    \code{GappedAlignmentPairs} obejct.}
 }
 
 \section{Objects from the Class}{
@@ -293,6 +303,27 @@ BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
       or \code{readBamGappedAlignmentPairs} applied to the specified path.
       See \code{\link{readBamGappedAlignments}}.}
 
+    \item{readBamGAlignmentsList}{
+      Visit the Bam file in \code{path(file)}. The file must be sorted
+      by qname, see ?\code{sortBam}. When a \code{yieldSize} is set on 
+      the BamFile data are read in chunks. To read the complete file a 
+      \code{while} or similar loop construct must be used. When 
+      \code{asProperPairs=TRUE} only proper pairs are returned. 
+      See the ?\code{GappedAlignmentsPairs} man page for details of the 
+      proper pairs filtering.
+
+      The return value from \code{readBamGAlignmentList} is a 
+      \code{GAlignmentsList} where each list element contains all records 
+      of the same id (QNAME in SAM/BAM file). When \code{asProperPairs} is 
+      \code{TRUE} each list element has exactly 2 records; these are the 
+      same data as that returned from \code{readBamGappedAlignmentPairs}, only 
+      the return class is different. When \code{asProperPairs} is \code{FALSE}, 
+      no QC is performed resulting in 1 or more records per element. List 
+      elements containing singletons, unpaired reads or single fragments have 
+      a length of 1 while paired-end reads or those with multiple fragments 
+      have a length of 2 or greater.
+      (NOTE: asProperPairs=TRUE not yet implemented)}
+
     \item{show}{Compactly display the object.}
 
   }
@@ -338,7 +369,6 @@ close(bf)
 ## summarizeOverlaps with BamFileList -- counts over an entire experiment
 ##
 
-\dontrun{
 library(pasillaBamSubset)
 ## single-end
 library("TxDb.Dmelanogaster.UCSC.dm3.ensGene")
@@ -355,7 +385,6 @@ fl <- untreated3_chr4 ()
 bfl <- BamFileList(fl)
 res <- summarizeOverlaps(exbygene, bfl, singleEnd=FALSE)
 stopifnot(length(assays(res)$counts) == length(exbygene))
-}
 
 ##------------------------------------------------------------------------
 ## findSpliceOverlaps 

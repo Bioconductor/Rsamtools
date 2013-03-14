@@ -133,8 +133,9 @@ setMethod(sortBam, "BamFile",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "readBamGappedAlignments", "readBamGappedReads" and
-### "readBamGappedAlignmentPairs" methods.
+### "readBamGappedAlignments", "readBamGappedReads",
+### "readBamGappedAlignmentPairs" and
+### "readBamGAlignmentList methods.
 ###
 
 ### A "flag filter" is represented as a 'flag' vector of length 2 with names
@@ -285,7 +286,7 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
 {
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
-    if (!is.na(yieldSize(file))) {
+    if (!isTRUE(obeyQname(file))  && !is.na(yieldSize(file))) {
         warning("'yieldSize' set to 'NA'")
         yieldSize(file) <- NA_integer_
     }
@@ -301,29 +302,16 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     makeGappedAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
 })
 
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### readBamSortedPairs 
-###
-
-.readBamSortedPairs <- 
-    function(file, index=file, ..., use.names=FALSE, param=NULL,
-             asGappedAlignmentPairs=FALSE)
+setMethod(readBamGAlignmentsList, "BamFile", 
+    function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
+             asProperPairs=TRUE)
 {
-    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
-    what <- c("flag", "mrnm", "mpos")
-    normParam <- .normargParam(param, flag, what)
-    galn <- readBamGappedAlignments(file, use.names=TRUE,
-                                    param=normParam)
-    if (asGappedAlignmentPairs) {
-        if (is.null(param))
-            use.mcols <- FALSE
-        else
-            use.mcols <- c(bamWhat(param), bamTag(param))
-        makeGappedAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
-    } else {
-        galn
-    }
-}
+        gal <- readBamGappedAlignments(file, use.names=TRUE, param=param)
+        if (asProperPairs) {
+            stop("Not implemented yet. In progress ...") 
+        } 
+        splitAsList(gal, factor(names(gal)))
+})
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "summarizeOverlaps" methods.
