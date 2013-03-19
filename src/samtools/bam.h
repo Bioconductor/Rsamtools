@@ -40,7 +40,7 @@
   @copyright Genome Research Ltd.
  */
 
-#define BAM_VERSION "0.1.18-dev (r982:313)"
+#define BAM_VERSION "0.1.19-96b5f2294a"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -168,7 +168,6 @@ typedef struct {
   @abstract Structure for core alignment information.
   @field  tid     chromosome ID, defined by bam_header_t
   @field  pos     0-based leftmost coordinate
-  @field  strand  strand; 0 for forward and 1 otherwise
   @field  bin     bin calculated by bam_reg2bin()
   @field  qual    mapping quality
   @field  l_qname length of the query name
@@ -193,13 +192,15 @@ typedef struct {
   @field  l_aux      length of auxiliary data
   @field  data_len   current length of bam1_t::data
   @field  m_data     maximum length of bam1_t::data
-  @field  data       all variable-length data, concatenated; structure: cigar-qname-seq-qual-aux
+  @field  data       all variable-length data, concatenated; structure: qname-cigar-seq-qual-aux
 
   @discussion Notes:
  
    1. qname is zero tailing and core.l_qname includes the tailing '\0'.
    2. l_qseq is calculated from the total length of an alignment block
       on reading or from CIGAR.
+   3. cigar data is encoded 4 bytes per CIGAR operation.
+   4. seq is nybble-encoded according to bam_nt16_table.
  */
 typedef struct {
 	bam1_core_t core;
@@ -772,9 +773,21 @@ static inline int bam_aux_type2size(int x)
 {
 	if (x == 'C' || x == 'c' || x == 'A') return 1;
 	else if (x == 'S' || x == 's') return 2;
-	else if (x == 'I' || x == 'i' || x == 'f') return 4;
+	else if (x == 'I' || x == 'i' || x == 'f' || x == 'F') return 4;
 	else return 0;
 }
 
+/*********************************
+ *** Compatibility with htslib ***
+ *********************************/
+
+typedef bam_header_t bam_hdr_t;
+
+#define bam_get_qname(b) bam1_qname(b)
+#define bam_get_cigar(b) bam1_cigar(b)
+
+#define bam_hdr_read(fp) bam_header_read(fp)
+#define bam_hdr_write(fp, h) bam_header_write(fp, h)
+#define bam_hdr_destroy(fp) bam_header_destroy(fp)
 
 #endif

@@ -23,7 +23,7 @@ PKG_CFLAGS += \
   $(SHLIB_OPENMP_CFLAGS) \
   $(DFLAGS) -I./samtools -I./samtools/bcftools -I./tabix
 
-PKG_LIBS += \
+PKG_LIBS += -pthread \
   $(SHLIB_OPENMP_CFLAGS) \
   "${R_PACKAGE_DIR}/usrlib${R_ARCH}/libbam.a" \
   "${R_PACKAGE_DIR}/usrlib${R_ARCH}/libbcf.a" \

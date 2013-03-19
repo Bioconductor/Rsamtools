@@ -57,7 +57,7 @@ SEXP bgzip(SEXP file, SEXP dest)
     buffer = R_alloc(BUF_SIZE, sizeof(void *));
 
     _zip_open(file, dest, &infd, &outfd);
-    outp = bgzf_fdopen(outfd, "w");
+    outp = bgzf_dopen(outfd, "w");
     if (NULL == outp)
         _zip_error("opening output 'dest'", NULL, infd, outfd);
 
@@ -70,12 +70,6 @@ SEXP bgzip(SEXP file, SEXP dest)
 
     if (0 > bgzf_close(outp))
         Rf_error("closing compressed output");
-#ifdef _USE_KNETFILE
-    fclose(outp->x.fpw);
-#else
-    fclose(outp->file);
-#endif
-    
     _zip_close(infd, -1);
 
     return dest;

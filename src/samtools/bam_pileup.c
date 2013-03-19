@@ -72,11 +72,10 @@ static inline int resolve_cigar2(bam_pileup1_t *p, uint32_t pos, cstate_t *s)
 	bam1_t *b = p->b;
 	bam1_core_t *c = &b->core;
 	uint32_t *cigar = bam1_cigar(b);
-	int k, is_head = 0;
+	int k;
 	// determine the current CIGAR operation
 //	fprintf(stderr, "%s\tpos=%d\tend=%d\t(%d,%d,%d)\n", bam1_qname(b), pos, s->end, s->k, s->x, s->y);
 	if (s->k == -1) { // never processed
-		is_head = 1;
 		if (c->n_cigar == 1) { // just one operation, save a loop
 		  if (_cop(cigar[0]) == BAM_CMATCH || _cop(cigar[0]) == BAM_CEQUAL || _cop(cigar[0]) == BAM_CDIFF) s->k = 0, s->x = c->pos, s->y = 0;
 		} else { // find the first match or deletion

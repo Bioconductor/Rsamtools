@@ -295,7 +295,6 @@ SEXP scan_bcf_header(SEXP ext)
     if (!bcf->is_vcf && 0 != bgzf_seek(bcf->fp, 0, SEEK_SET))
         Rf_error("internal: failed to 'seek'");
     bcf_hdr_t *hdr = vcf_hdr_read(bcf);
-
     if (NULL == hdr)
         Rf_error("no 'header' line \"#CHROM POS ID...\"?");
 
@@ -407,7 +406,7 @@ SEXP scan_bcf(SEXP ext, SEXP space, SEXP tmpl)
         Rf_error("internal: failed to 'seek' on bcf file");
     bcf_hdr_t *hdr = vcf_hdr_read(bcf);
     if (NULL == hdr)
-        Rf_error("failed to read header; wrong 'mode' or corrupt file?");
+        Rf_error("no 'header' line \"#CHROM POS ID...\"?");
 
     int n = 0;
     tmpl = PROTECT(Rf_duplicate(tmpl));

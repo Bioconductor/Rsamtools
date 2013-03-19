@@ -367,6 +367,7 @@ static HeaderLine *sam_header_line_parse(const char *headerLine)
     while (*to && *to=='\t') to++;
     if ( to-from != 1 ) {
         debug("[sam_header_line_parse] multiple tabs on line [%s] (%d)\n", headerLine,(int)(to-from));
+        free(hline);
 		return 0;
 	}
     from = to;
@@ -670,6 +671,36 @@ char **sam_header2list(const void *_dict, char type[2], char key_tag[2], int *_n
     return ret;
 }
 
+void *sam_header2key_val(void *iter, const char type[2], const char key_tag[2], const char value_tag[2], const char **_key, const char **_value)
+{
+    list_t *l = iter;
+    if ( !l ) return NULL;
+
+    while (l)
+    {
+        HeaderLine *hline = l->data;
+        if ( hline->type[0]!=type[0] || hline->type[1]!=type[1] )
+        {
+            l = l->next;
+            continue;
+        }
+
+        HeaderTag *key, *value;
+        key   = header_line_has_tag(hline,key_tag);
+        value = header_line_has_tag(hline,value_tag);
+        if ( !key && !value ) 
+        {
+            l = l->next;
+            continue;
+        }
+
+        *_key = key->value;
+        *_value = value->value;
+        return l->next;
+    }
+    return l;
+}
+
 const char *sam_tbl_get(void *h, const char *key)
 {
 	khash_t(str) *tbl = (khash_t(str)*)h;
@@ -740,4 +771,41 @@ void *sam_header_merge(int n, const void **_dicts)
     return out_dict;
 }
 
+char **sam_header2tbl_n(const void *dict, const char type[2], const char *tags[], int *n)
+{
+    int nout = 0;
+    char **out = NULL;
+
+    *n = 0;
+    list_t *l = (list_t *)dict;
+    if ( !l ) return NULL;
+
+    int i, ntags = 0;
+    while ( tags[ntags] ) ntags++;
+
+    while (l)
+    {
+        HeaderLine *hline = l->data;
+        if ( hline->type[0]!=type[0] || hline->type[1]!=type[1] )
+        {
+            l = l->next;
+            continue;
+        }
+        out = (char**) realloc(out, sizeof(char*)*(nout+1)*ntags);
+        for (i=0; i<ntags; i++)
+        {
+            HeaderTag *key = header_line_has_tag(hline, tags[i]);
+            if ( !key ) 
+            {
+                out[nout*ntags+i] = NULL;
+                continue;
+            }
+            out[nout*ntags+i] = key->value;
+        }
+        nout++;
+        l = l->next;
+    }
+    *n = nout;
+    return out;
+}
 

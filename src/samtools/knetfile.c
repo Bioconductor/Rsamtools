@@ -43,7 +43,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <sys/select.h>
+#include <sys/select.h>		/* Rsamtools fd_set */
 #endif
 
 #include "knetfile.h"

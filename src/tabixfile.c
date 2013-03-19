@@ -117,7 +117,7 @@ SEXP index_tabix(SEXP filename, SEXP format, SEXP seq, SEXP begin, SEXP end,
         TRUE == LOGICAL(zeroBased)[0])
         conf.preset |= TI_FLAG_UCSC;
 
-    if (1 != bgzf_check_bgzf(fname))
+    if (1 != bgzf_is_bgzf(fname))
         Rf_error("file does not appear to be bgzip'd");
     if (-1L == ti_index_build(fname, &conf))
         Rf_error("index build failed");

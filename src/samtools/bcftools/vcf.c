@@ -21,7 +21,7 @@ typedef vcffile_t *vcfFile;
 static vcfFile vcfFile_open(const char *fn, const char *__restrict mode)
 {
 	vcfFile vcf = (vcfFile) malloc(sizeof(vcffile_t));
-	vcf->is_bgzf = bgzf_check_bgzf(fn);
+	vcf->is_bgzf = bgzf_is_bgzf(fn);
 
 	if (vcf->is_bgzf)
 		vcf->fp.bgzf = bgzf_open(fn, mode);
@@ -90,7 +90,12 @@ bcf_hdr_t *vcf_hdr_read(bcf_t *bp)
 	memset(&smpl, 0, sizeof(kstring_t));
 	while (ks_getuntil(v->ks, '\n', &v->line, &dret) >= 0) {
 		if (v->line.l < 2) continue;
-		if (v->line.s[0] != '#') return 0; // no sample line
+		if (v->line.s[0] != '#') {
+		    free(meta.s);
+		    free(smpl.s);
+		    free(h);
+		    return 0; // no sample line
+		}
 		if (v->line.s[0] == '#' && v->line.s[1] == '#') {
 			kputsn(v->line.s, v->line.l, &meta); kputc('\n', &meta);
 		} else if (v->line.s[0] == '#') {

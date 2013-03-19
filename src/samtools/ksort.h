@@ -26,6 +26,10 @@
 /* Contact: Heng Li <lh3@sanger.ac.uk> */
 
 /*
+  2012-12-11 (0.1.4):
+
+    * Defined __ks_insertsort_##name as static to compile with C99.
+
   2008-11-16 (0.1.4):
 
     * Fixed a bug in introsort() that happens in rare cases.
@@ -65,7 +69,9 @@
 #if defined(_WIN32)
 #define drand48() ((double)rand() / RAND_MAX)
 #else
+#ifndef _SVID_SOURCE
 #define _SVID_SOURCE            /* Rsamtools: c99  */
+#endif
 #endif
 
 typedef struct {
@@ -149,7 +155,7 @@ typedef struct {
 			tmp = *l; *l = l[i]; l[i] = tmp; ks_heapadjust_##name(0, i, l); \
 		}																\
 	}																	\
-	static inline void __ks_insertsort_##name(type_t *s, type_t *t) 	\
+	static inline void __ks_insertsort_##name(type_t *s, type_t *t)		\
 	{																	\
 		type_t *i, *j, swap_tmp;										\
 		for (i = s + 1; i < t; ++i)										\
