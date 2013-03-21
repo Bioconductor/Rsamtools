@@ -143,12 +143,31 @@ BGZF *bgzf_open(const char *path, const char *mode)
 	assert(compressBound(BGZF_BLOCK_SIZE) < BGZF_MAX_BLOCK_SIZE);
 	if (strchr(mode, 'r') || strchr(mode, 'R')) {
 		_bgzf_file_t fpr;
-		if ((fpr = _bgzf_open(path, "r")) == 0) return 0;
+        /* Rsamtools: windows binary read / write to avoid cr */
+#ifdef _USE_KNETFILE
+		fpr = _bgzf_open(path, "r");
+#else
+		int fd, oflag = O_RDONLY;
+#ifdef _WIN32
+		oflag |= O_BINARY;
+#endif
+		fd = open(path, oflag);
+		if (fd == -1) return 0;
+		fpr = _bgzf_dopen(fd, "r");
+#endif
+		if (fpr == 0) return 0;
 		fp = bgzf_read_init();
 		fp->fp = fpr;
 	} else if (strchr(mode, 'w') || strchr(mode, 'W')) {
 		FILE *fpw;
-		if ((fpw = fopen(path, "w")) == 0) return 0;
+        /* Rsamtools: windows binary read / write to avoid cr */
+		int fd, oflag = O_WRONLY | O_CREAT | O_TRUNC;
+#ifdef _WIN32
+		oflag |= O_BINARY;
+#endif
+		fd = open(path, oflag, 0666);
+		if (fd == -1) return 0;
+		if ((fpw = fdopen(fd, "w")) == 0) return 0;
 		fp = bgzf_write_init(mode2level(mode));
 		fp->fp = fpw;
 	}
