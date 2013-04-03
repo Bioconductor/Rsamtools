@@ -592,37 +592,55 @@ static int _scan_bam_all(_BAM_DATA * bd, _PARSE1_FUNC parse1,
     int r = 0;
 
     bam_seek(bd->bfile->file->x.bam, bd->bfile->pos0, SEEK_SET);
-    char *last_qname = NULL;
+    int qname_bufsize = 1000;
+    char *last_qname = Calloc(qname_bufsize, char);
+    int ith_yield = 0;
+    int inc_qname = 0;
 
     while ((r = samread(bd->bfile->file, bam)) >= 0) {
-        if (NA_INTEGER != bd->yieldSize && bd->obeyQname && bd->iparsed >= bd->yieldSize) {
-            if (0 != strcmp(last_qname, bam1_qname(bam)))
-                break;
-            bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
+        if (NA_INTEGER != bd->yieldSize) {
+            if (bd->obeyQname) {
+                if (0 != strcmp(last_qname, bam1_qname(bam))) {
+                    inc_qname = 0;
+                    if (ith_yield >= bd->yieldSize)
+                        break;
+                    if (bam->core.l_qname > qname_bufsize) {
+                        Free(last_qname);
+                        qname_bufsize = bam->core.l_qname;
+                        last_qname = Calloc(qname_bufsize, char);
+                    }
+                    strcpy(last_qname, bam1_qname(bam));
+                } else {
+                    inc_qname = 1;
+                }
+            }
         }
 
         int result = (*parse1) (bam, bd);
         if (result < 0) {
             _grow_SCAN_BAM_DATA(bd, 0);
             return result;
+        /* record passed filters */
+        } else if (result == 1L) {
+            if (bd->obeyQname)
+                ith_yield += inc_qname;
+            else
+                ith_yield += 1;
         }
-        if (NA_INTEGER != bd->yieldSize && bd->iparsed == bd->yieldSize) {
+        if (NA_INTEGER != bd->yieldSize && ith_yield == bd->yieldSize) {
+            bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
             if (!bd->obeyQname)
                 break;
-            last_qname = R_alloc(strlen(bam1_qname(bam)) + 1, sizeof(char));
-            strcpy(last_qname, bam1_qname(bam));
-            bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
-         }
+        }
     }
+ 
     if (NULL != finish1)
         (*finish1) (bd);
-    if (NA_INTEGER != bd->yieldSize) {
-        if (!bd->obeyQname || (bd->iparsed < bd->yieldSize))
-            bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
-    } else {
+    if ((NA_INTEGER == bd->yieldSize) || (ith_yield < bd->yieldSize))
+        /* end-of-file */
         bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
-    }
 
+    Free(last_qname);
     return bd->iparsed;
 }
 

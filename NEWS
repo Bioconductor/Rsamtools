@@ -6,10 +6,19 @@ NEW FEATURES
     o BamSampler draws a random sample from BAM file records, obeying
     any restriction by ScanBamParam().
 
+    o Add argument 'obeyQname' to BamFile. Used with qname-sorted
+    Bam files only.
+
+    o Add readBamGAlignmentsList function for reading qname-sorted
+    Bam files into a GAlignmentsList object. 
+
 USER-VISIBLE CHANGES
 
     o bamPath and bamIndicies applied to BamViews returns named
       vectors.
+
+    o 'yieldSize' argument in BamFile represents the number of
+    unique qnames when 'obeyQname=TRUE'. 
 
 BUG FIXES
 
