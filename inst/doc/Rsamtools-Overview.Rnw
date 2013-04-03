@@ -235,7 +235,7 @@ summaryFunction <-
 @ 
 %% 
 This might be used as follows; it is an ideal candidate for evaluation
-in parallel, e.g., using the \Rpackage{multicore} package and
+in parallel, e.g., using the \Rpackage{parallel} package and
 \Rfunction{srapply} function in \Rpackage{ShortRead}.  
 <<summaryByChromosome>>=
 seqnames <- paste("seq", 1:2, sep="")
@@ -270,18 +270,43 @@ number of peaks of high read counts.
 To illustrate, suppose we have an interest in caffeine metabolism in
 humans. The `rows' contain coordinates of genomic regions associated
 with genes in a KEGG caffeine metabolism pathway. The `columns'
-represent individuals in the 1000 genomes project.  The details of
-creating a \Rclass{BamViews} object are described in the
-appendix. Here we retrieve archived versions of the genomic ranges we
-are interested in (\Robject{bamRanges}) and a vector of \bam{} file
-URLs (\Robject{slxMaq09}).
+represent individuals in the 1000 genomes project.  
+
+To create the `rows', we identify possible genes that KEGG associates
+with caffeine metabolism:
+<<caffeine-kegg>>=
+library(KEGG.db)
+kid <- revmap(KEGGPATHID2NAME)[["Caffeine metabolism"]]
+egid <- KEGGPATHID2EXTID[[sprintf("hsa%s", kid)]]
+@ 
+%% 
+Then we use the appropriate \Rpackage{TranscriptDb} package to
+translate Entrez identifiers to obtain ranges of interest (one could
+also use \Rpackage{biomaRt} to retrieve coordinates for non-model
+organisms, perhaps making a \Robject{TranscriptDb} object as outlined
+in the \Rpackage{GenomicFeatures} vignette). We'll find that the names
+used for chromosomes in the alignments differ from those used at
+Ensembl, so \Rcode{seqlevels<-} is used to map between naming schemes
+and to drop unused levels.
+<<txdb-transcripts>>=
+library(TxDb.Hsapiens.UCSC.hg18.knownGene)
+bamRanges <- transcripts(TxDb.Hsapiens.UCSC.hg18.knownGene, 
+                         vals=list(gene_id=egid))
+seqlevels(bamRanges) <-                 # translate seqlevels
+    sub("chr", "", seqlevels(bamRanges))
+lvls <- seqlevels(bamRanges)            # drop unused levels
+seqlevels(bamRanges) <- lvls[lvls %in% as.character(seqnames(bamRanges))]
+@ 
+%% 
+Note that \Robject{bamRanges} `knows' the genome for which the
+ranges are defined
+<<bamRanges-genome>>=
+unique(genome(bamRanges))
+@ 
+
+The details of creating the `columns' of BAM files. Here we retrieve a
+vector of \bam{} file URLs (\Robject{slxMaq09}) from the package.
 <<BamViews-parts>>=
-library(GenomicFeatures)
-bamRanges <- local({
-    fl <- system.file("extdata", "CaffeineTxdb.sqlite", 
-                      package="Rsamtools")
-    transcripts(loadDb(fl))
-})
 slxMaq09 <- local({
     fl <- system.file("extdata", "slxMaq09_urls.txt", 
                       package="Rsamtools")
@@ -331,16 +356,17 @@ idxFiles <- mapply(download.file, indexFiles,
 @ 
 %% 
 and then queries the 1000 genomes project for reads overlapping our
-transcripts; by loading the \Rpackage{multicore} package, we tell
+transcripts; by loading the \Rpackage{parallel} package, we tell
 \Rsamtools{} to use as many cores as are available on our machine (the
-\Rpackage{multicore} package is not currently -- as of 25 March, 2010
--- reliable on Windows computers)
+\Rpackage{parallel} package does not provide parallel functionality on
+ Windows computers)
 <<readBamGappedAlignments, eval=FALSE>>=
-library(multicore)
+library(parallel)
+options(srapply_fapply="parallel", mc.cores=detectCores())
 olaps <- readBamGappedAlignments(bv)
 @ 
 %% 
-The resulting object is about 6 MB in size. To avoid having to
+The resulting object is about 11 MB in size. To avoid having to
 download this data each time the vignette is run, we instead load it
 from disk
 %% 
@@ -372,7 +398,7 @@ returns an object of the same class (in this case,
 rng <- bamRanges(bv)[1]
 strand(rng) <- "*"
 olap1 <- endoapply(olaps, subsetByOverlaps, rng)
-olap1
+olap1 <- lapply(olap1, "seqlevels<-", value=as.character(seqnames(rng)))
 head(olap1[[24]])
 @ 
 %% 
@@ -384,7 +410,6 @@ maxw <- max(sapply(olap1, function(elt) max(end(elt))))
 cvg <- endoapply(olap1, coverage,
                  shift=-start(ranges(bamRanges[1])),
                  width=width(ranges(bamRanges[1])))
-cvg
 cvg[[1]]
 @ 
 %% 
@@ -422,39 +447,6 @@ sessionInfo()
 \section{Assembling a \Rclass{BamViews} instance}
 
 \subsection{Genomic ranges of interest}
-
-We identify possible genes that KEGG associates with caffeine
-metabolism:
-<<caffeine-kegg>>=
-library(KEGG.db)
-kid <- revmap(KEGGPATHID2NAME)[["Caffeine metabolism"]]
-egid <- KEGGPATHID2EXTID[[sprintf("hsa%s", kid)]]
-@ 
-%% 
-Then we use the \Rpackage{biomaRt} package to translate Entrez
-identifiers to Ensembl transcript ids, and use these to create a small
-data base (using the \Rpackage{GenomicFeatures} packages) of features
-we are interested in
-<<caffeine-txdb,eval=FALSE>>=
-library(biomaRt)
-mart <- useMart("ensembl", "hsapiens_gene_ensembl")
-ensid <- getBM(c("ensembl_transcript_id"), filters="entrezgene",
-               values=egid, mart=mart)[[1]]
-library(GenomicFeatures)
-txdb <- makeTranscriptDbFromBiomart(transcript_ids=ensid)
-@ 
-<<caffeine-txdb-load,echo=FALSE>>=
-library(GenomicFeatures)
-fl <- system.file("extdata", "CaffeineTxdb.sqlite", 
-                  package="Rsamtools")
-txdb <- loadDb(fl)
-@ 
-%% 
-Transcript genomic locations are contained in \Robject{txdb}; we will
-use those as the ranges for the \Rclass{BamViews}
-<<txdb-transcripts>>=
-bamRanges <- transcripts(txdb)
-@ 
 
 \subsection{BAM files}
 
