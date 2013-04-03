@@ -595,13 +595,13 @@ static int _scan_bam_all(_BAM_DATA * bd, _PARSE1_FUNC parse1,
     int qname_bufsize = 1000;
     char *last_qname = Calloc(qname_bufsize, char);
     int ith_yield = 0;
-    int inc_qname = 0;
+    int inc_yield = 1;
 
     while ((r = samread(bd->bfile->file, bam)) >= 0) {
         if (NA_INTEGER != bd->yieldSize) {
             if (bd->obeyQname) {
                 if (0 != strcmp(last_qname, bam1_qname(bam))) {
-                    inc_qname = 0;
+                    inc_yield = 1;
                     if (ith_yield >= bd->yieldSize)
                         break;
                     if (bam->core.l_qname > qname_bufsize) {
@@ -611,22 +611,19 @@ static int _scan_bam_all(_BAM_DATA * bd, _PARSE1_FUNC parse1,
                     }
                     strcpy(last_qname, bam1_qname(bam));
                 } else {
-                    inc_qname = 1;
+                    inc_yield = 0;
                 }
             }
         }
 
         int result = (*parse1) (bam, bd);
-        if (result < 0) {
+        if (result < 0) {	/* parse error: e.g., cigar buffer overflow */
             _grow_SCAN_BAM_DATA(bd, 0);
             return result;
-        /* record passed filters */
-        } else if (result == 1L) {
-            if (bd->obeyQname)
-                ith_yield += inc_qname;
-            else
-                ith_yield += 1;
-        }
+        } else if (result == 0L) /* does not pass filter */
+	    continue;
+
+	ith_yield += inc_yield;
         if (NA_INTEGER != bd->yieldSize && ith_yield == bd->yieldSize) {
             bd->bfile->pos0 = bam_tell(bd->bfile->file->x.bam);
             if (!bd->obeyQname)
