@@ -2,22 +2,25 @@
 
 \alias{findMateAlignment}
 \alias{findMateAlignment2}
-\alias{makeGappedAlignmentPairs}
+\alias{makeGAlignmentPairs}
 
 \alias{getDumpedAlignments}
 \alias{countDumpedAlignments}
 \alias{flushDumpedAlignments}
 
-\title{Pairing the elements of a GappedAlignments object}
+% Old stuff:
+\alias{makeGappedAlignmentPairs}
+
+\title{Pairing the elements of a GAlignments object}
 
 \description{
-Utilities for pairing the elements of a \link[GenomicRanges]{GappedAlignments}
+Utilities for pairing the elements of a \link[GenomicRanges]{GAlignments}
 object.
 }
 
 \usage{
 findMateAlignment(x, verbose=FALSE)
-makeGappedAlignmentPairs(x, use.names=FALSE, use.mcols=FALSE)
+makeGAlignmentPairs(x, use.names=FALSE, use.mcols=FALSE)
 
 ## Related low-level utilities:
 getDumpedAlignments()
@@ -27,12 +30,12 @@ flushDumpedAlignments()
 
 \arguments{
   \item{x}{
-    A named \link[GenomicRanges]{GappedAlignments} object with metadata
+    A named \link[GenomicRanges]{GAlignments} object with metadata
     columns \code{flag}, \code{mrnm}, and \code{mpos}. Typically obtained
     by loading aligned paired-end reads from a BAM file with:
     \preformatted{
     param <- ScanBamParam(what=c("flag", "mrnm", "mpos"))
-    x <- readBamGappedAlignments(..., use.names=TRUE, param=param)
+    x <- readGAlignmentsFromBam(..., use.names=TRUE, param=param)
     }
   }
   \item{verbose}{
@@ -45,15 +48,15 @@ flushDumpedAlignments()
   }
   \item{use.mcols}{
     Names of the metadata columns to propagate to the returned
-    \link[GenomicRanges]{GappedAlignmentPairs} object.
+    \link[GenomicRanges]{GAlignmentPairs} object.
   }
 }
 
 \details{
 \subsection{Pairing algorithm used by findMateAlignment}{
 \code{findMateAlignment} is the power horse used by higher-level
-functions like \code{makeGappedAlignmentPairs} and
-\code{\link{readBamGappedAlignmentPairs}} for pairing the records
+functions like \code{makeGAlignmentPairs} and
+\code{\link{readGAlignmentPairsFromBam}} for pairing the records
 loaded from a BAM file containing aligned paired-end reads.
 
 It implements the following pairing algorithm:
@@ -104,12 +107,12 @@ the situation where more than 2 records share the same QNAME. And that
 works most of the times. Unfortunately there are still situations where
 this is not enough to solve the pairing problem unambiguously.
 
-For example, here are 4 records (loaded in a GappedAlignments object)
+For example, here are 4 records (loaded in a GAlignments object)
 that cannot be paired with the above algorithm:
 
-Showing the 4 records as a GappedAlignments object of length 4:
+Showing the 4 records as a GAlignments object of length 4:
 \preformatted{
-GappedAlignments with 4 alignments and 2 metadata columns:
+GAlignments with 4 alignments and 2 metadata columns:
                     seqnames strand       cigar    qwidth     start    end
                        <Rle>  <Rle> <character> <integer> <integer> <integer>
   SRR031714.2658602    chr2R      +  21M384N16M        37   6983850 6984270
@@ -125,7 +128,7 @@ GappedAlignments with 4 alignments and 2 metadata columns:
 }
 Note that the BAM fields show up in the following columns:
 \itemize{
-  \item QNAME: the names of the GappedAlignments object (unnamed col)
+  \item QNAME: the names of the GAlignments object (unnamed col)
   \item RNAME: the seqnames col
   \item POS: the start col
   \item RNEXT: the mrnm col
@@ -167,8 +170,8 @@ with ambiguous pairing, and dumping them in a place from which they can be
 retrieved later (i.e. after \code{findMateAlignment} has returned) for
 further examination (see "Dumped alignments" subsection below for the details).
 In other words, alignments that cannot be paired unambiguously are not paired
-at all. Concretely, this means that \code{\link{readGappedAlignmentPairs}}
-is guaranteed to return a \link[GenomicRanges]{GappedAlignmentPairs} object
+at all. Concretely, this means that \code{\link{readGAlignmentPairs}}
+is guaranteed to return a \link[GenomicRanges]{GAlignmentPairs} object
 where every pair was formed in an non-ambiguous way. Note that, in practice,
 this approach doesn't seem to leave aside a lot of records because ambiguous
 pairing events seem pretty rare.
@@ -197,12 +200,12 @@ automatically flushed at the beginning of a call to \code{findMateAlignment}.
     \item A non-NA value j gives the index in \code{x} of \code{x[i]}'s mate.
   }
 
-  For \code{makeGappedAlignmentPairs}: A
-  \link[GenomicRanges]{GappedAlignmentPairs} object where the pairs
+  For \code{makeGAlignmentPairs}: A
+  \link[GenomicRanges]{GAlignmentPairs} object where the pairs
   are formed internally by calling \code{findMateAlignment} on \code{x}.
 
   For \code{getDumpedAlignments}: \code{NULL} or a
-  \link[GenomicRanges]{GappedAlignments} object containing the dumped
+  \link[GenomicRanges]{GAlignments} object containing the dumped
   alignments. See "Dumped alignments" subsection in the "Details" section
   above for the details.
 
@@ -214,22 +217,22 @@ automatically flushed at the beginning of a call to \code{findMateAlignment}.
 \author{H. Pages}
 
 \seealso{
-  \link[GenomicRanges]{GappedAlignments-class},
-  \link[GenomicRanges]{GappedAlignmentPairs-class},
-  \code{\link{readBamGappedAlignments}},
-  \code{\link{readBamGappedAlignmentPairs}}
+  \link[GenomicRanges]{GAlignments-class},
+  \link[GenomicRanges]{GAlignmentPairs-class},
+  \code{\link{readGAlignmentsFromBam}},
+  \code{\link{readGAlignmentPairsFromBam}}
 }
 
 \examples{
 bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools",
                        mustWork=TRUE)
 param <- ScanBamParam(what=c("flag", "mrnm", "mpos"))
-x <- readBamGappedAlignments(bamfile, use.names=TRUE, param=param)
+x <- readGAlignmentsFromBam(bamfile, use.names=TRUE, param=param)
 mate <- findMateAlignment(x)
 head(mate)
 table(is.na(mate))
-galp0 <- makeGappedAlignmentPairs(x)
-galp <- makeGappedAlignmentPairs(x, use.name=TRUE, use.mcols="flag")
+galp0 <- makeGAlignmentPairs(x)
+galp <- makeGAlignmentPairs(x, use.name=TRUE, use.mcols="flag")
 galp
 colnames(mcols(galp))
 colnames(mcols(first(galp)))

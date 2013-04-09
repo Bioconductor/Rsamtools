@@ -27,7 +27,7 @@
 \alias{[,BamViews,ANY,missing-method}
 \alias{scanBam,BamViews-method}
 \alias{countBam,BamViews-method}
-\alias{readBamGappedAlignments,BamViews-method}
+\alias{readGAlignmentsFromBam,BamViews-method}
 \alias{show,BamViews-method}
 
 \alias{summarizeOverlaps,BamViews,missing-method}
@@ -76,7 +76,7 @@ bamDirname(x, ...) <- value
 ## Input
 \S4method{scanBam}{BamViews}(file, index = file, ..., param = ScanBamParam(what=scanBamWhat()))
 \S4method{countBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
-\S4method{readBamGappedAlignments}{BamViews}(file, index=file, ..., use.names=FALSE, param=NULL)
+\S4method{readGAlignmentsFromBam}{BamViews}(file, index=file, ..., use.names=FALSE, param=NULL)
 
 ## Show
 \S4method{show}{BamViews}(object)
@@ -281,8 +281,8 @@ bamDirname(x, ...) <- value
       path. \code{bamRanges(file)} takes precedence over
       \code{bamWhich(param)}.}
 
-    \item{readBamGappedAlignments}{Visit each path in \code{bamPaths(file)},
-      returning the result of \code{readBamGappedAlignments} applied to the
+    \item{readGAlignmentsFromBam}{Visit each path in \code{bamPaths(file)},
+      returning the result of \code{readGAlignmentsFromBam} applied to the
       specified path. When \code{index} is missing, it is set equal to
       \code{bamIndicies(file)}. Only reads in \code{bamRanges(file)} are
       returned (if \code{param} is supplied, \code{bamRanges(file)} takes
@@ -300,7 +300,7 @@ bamDirname(x, ...) <- value
 \author{Martin Morgan}
 
 \seealso{
-  \code{\link{readBamGappedAlignments}}.
+  \code{\link{readGAlignmentsFromBam}}.
   The \code{GenomicRanges} package is where the \code{summarizeOverlaps}
   method originates.
 }
@@ -323,7 +323,7 @@ v
 bv <- BamViews(fls,
                bamSamples=DataFrame(info="test", row.names="ex1"),
                auto.range=TRUE)
-aln <- readBamGappedAlignments(bv)
+aln <- readGAlignmentsFromBam(bv)
 aln
 aln[[1]]
 aln[colnames(bv)]

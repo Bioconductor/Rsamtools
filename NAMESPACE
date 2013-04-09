@@ -12,13 +12,15 @@ importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
 
 import(IRanges)
 
-importFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo, seqinfo, Union, 
-           IntersectionNotEmpty, IntersectionStrict, findSpliceOverlaps)
+importFrom(GenomicRanges, GRanges, GAlignments, GAlignmentPairs,
+           Seqinfo, seqinfo, Union, IntersectionNotEmpty, IntersectionStrict,
+           findSpliceOverlaps)
 
 importMethodsFrom(GenomicRanges, seqnames, strand, summarizeOverlaps,
                   findSpliceOverlaps)
 
-importClassesFrom(GenomicRanges, GRanges, GappedAlignments, Seqinfo)
+importClassesFrom(GenomicRanges, GRanges,
+                  GAlignments, GAlignmentPairs, GAlignmentsList, Seqinfo)
 
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 

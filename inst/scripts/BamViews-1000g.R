@@ -70,4 +70,4 @@ bv <- BamViews(fls, sub(".bai", "", indexFiles),
                bamRanges=GRanges(seqnames=seqnames(rng),
                  ranges=ranges(rng),
                  EntrezId=mcols(rng)[["EntrezId"]]))
-gapped <- readBamGappedAlignments(bv[1:2,1:3])
+gapped <- readGAlignmentsFromBam(bv[1:2,1:3])

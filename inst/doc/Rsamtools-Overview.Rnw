@@ -62,7 +62,7 @@ new files containing subsets of the original. An important use case
 for \Rsamtools{} is as a starting point for creating \R{} objects
 suitable for a diversity of work flows, e.g., \Rclass{AlignedRead}
 objects in the \Rpackage{ShortRead} package (for quality assessment
-and read manipulation), or \Rclass{GappedAlignments} objects in
+and read manipulation), or \Rclass{GAlignments} objects in
 \Rpackage{GenomicRanges} package (for RNA-seq and other
 applications). Those desiring more functionality are encouraged to
 explore \software{samtools} and related software efforts.
@@ -142,8 +142,8 @@ head(do.call("DataFrame", lst))
 @ 
 Often, an alternative is to use a \Rclass{ScanBamParam} object with
 desired fields specified in \Rfunarg{what} as an argument to
-\Rfunction{GenomicRanges::readGappedAlignments}; the specified fields
-are added as columns to the returned \Rclass{GappedAlignments}.
+\Rfunction{GenomicRanges::readGAlignments}; the specified fields
+are added as columns to the returned \Rclass{GAlignments}.
 
 The \bam{} file in the previous example includes an index, represented
 by a separate file with extension \texttt{.bai}:
@@ -188,7 +188,7 @@ with \Rfunarg{type="bam"} will read \bam{} files in to an
 \Rclass{AlignedRead} object. This function takes a \Rfunarg{param}
 argument, just as \Rfunction{scanBam}, so the user can control which
 portions of the file are input. Similar input facilities are available
-through the \Rfunction{readGappedAlignment} function in
+through the \Rfunction{readGAlignments} function in
 \Rpackage{GenomicRanges}.  
 
 Additional ways of interacting with \bam{} files include
@@ -360,10 +360,10 @@ transcripts; by loading the \Rpackage{parallel} package, we tell
 \Rsamtools{} to use as many cores as are available on our machine (the
 \Rpackage{parallel} package does not provide parallel functionality on
  Windows computers)
-<<readBamGappedAlignments, eval=FALSE>>=
+<<readGAlignmentsFromBam, eval=FALSE>>=
 library(parallel)
 options(srapply_fapply="parallel", mc.cores=detectCores())
-olaps <- readBamGappedAlignments(bv)
+olaps <- readGAlignmentsFromBam(bv)
 @ 
 %% 
 The resulting object is about 11 MB in size. To avoid having to

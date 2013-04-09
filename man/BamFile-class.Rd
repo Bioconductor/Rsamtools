@@ -19,10 +19,10 @@
 \alias{filterBam,BamFile-method}
 \alias{indexBam,BamFile-method}
 \alias{sortBam,BamFile-method}
-\alias{readBamGappedAlignments,BamFile-method}
-\alias{readBamGappedReads,BamFile-method}
-\alias{readBamGappedAlignmentPairs,BamFile-method}
-\alias{readBamGAlignmentsList,BamFile-method}
+\alias{readGAlignmentsFromBam,BamFile-method}
+\alias{readGappedReadsFromBam,BamFile-method}
+\alias{readGAlignmentPairsFromBam,BamFile-method}
+\alias{readGAlignmentsListFromBam,BamFile-method}
 
 \alias{mergeBam,BamFileList-method}
 % counting 
@@ -76,10 +76,10 @@ BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
 \S4method{mergeBam}{BamFileList}(files, destination, ...)
-\S4method{readBamGappedAlignments}{BamFile}(file, index=file, ..., use.names=FALSE, param=NULL)
-\S4method{readBamGappedReads}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
-\S4method{readBamGappedAlignmentPairs}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
-\S4method{readBamGAlignmentsList}{BamFile}(file, index=file, ...,
+\S4method{readGAlignmentsFromBam}{BamFile}(file, index=file, ..., use.names=FALSE, param=NULL)
+\S4method{readGappedReadsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
+\S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
+\S4method{readGAlignmentsListFromBam}{BamFile}(file, index=file, ...,
 use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
 
 ## counting
@@ -110,8 +110,8 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
     indicate that no index file is available. See
     \code{\link{BamFile}}. For \code{coverage}, the arguments are passed
     to the
-    \code{\link[GenomicRanges:coverage,GappedAlignments-method]{coverage}}
-    method for \code{GappedAlignments} objects.}
+    \code{\link[GenomicRanges:coverage,GAlignments-method]{coverage}}
+    method for \code{GAlignments} objects.}
 
   \item{con}{An instance of \code{BamFile}.}
 
@@ -192,12 +192,12 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
 
   \item{query}{
     \code{character} name of a Bam file, a \link[Rsamtools]{BamFile},
-    \linkS4class{GappedAlignments}, \linkS4class{GappedAlignmentPairs}
+    \linkS4class{GAlignments}, \linkS4class{GAlignmentPairs}
     or a \linkS4class{GRangesList} object containing the reads.
 
     Paired-end reads can be supplied in a Bam file or 
-    \linkS4class{GappedAlignmentPairs} object. Single-end may
-    be in a Bam file, \linkS4class{GappedAlignments} or \linkS4class{GRanges}
+    \linkS4class{GAlignmentPairs} object. Single-end may
+    be in a Bam file, \linkS4class{GAlignments} or \linkS4class{GRanges}
     object.}
 
   \item{subject}{
@@ -210,10 +210,10 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
 
   \item{asProperPairs}{A logical indicating if the records should be filtered
     such that only proper pairs are returned. Applies to 
-    \code{readBamGAlignments} only. If filtering is applied, the records 
-    returned are the same as from \code{readBamGappedAlignmentPairs} except 
-    they are in a \code{GAlignmentsList} instead of a 
-    \code{GappedAlignmentPairs} obejct.}
+    \code{readGAlignmentsListFromBam} only. If filtering is applied, the
+    records returned are the same as from \code{readGAlignmentPairsFromBam}
+    except they are in a \code{GAlignmentsList} instead of a 
+    \code{GAlignmentPairs} obejct.}
 }
 
 \section{Objects from the Class}{
@@ -296,27 +296,27 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
       by \code{mergeBam,character-method} are also available for
       \code{BamFileList}.}
 
-    \item{readBamGappedAlignments, readBamGappedReads,
-          readBamGappedAlignmentPairs}{
+    \item{readGAlignmentsFromBam, readGappedReadsFromBam,
+          readGAlignmentPairsFromBam}{
       Visit the path in \code{path(file)}, returning the result of
-      \code{readBamGappedAlignments}, \code{readBamGappedReads},
-      or \code{readBamGappedAlignmentPairs} applied to the specified path.
-      See \code{\link{readBamGappedAlignments}}.}
+      \code{readGAlignmentsFromBam}, \code{readGappedReadsFromBam},
+      or \code{readGAlignmentPairsFromBam} applied to the specified path.
+      See \code{\link{readGAlignmentsFromBam}}.}
 
-    \item{readBamGAlignmentsList}{
+    \item{readGAlignmentsListFromBam}{
       Visit the Bam file in \code{path(file)}. The file must be sorted
       by qname, see ?\code{sortBam}. When a \code{yieldSize} is set on 
       the BamFile data are read in chunks. To read the complete file a 
       \code{while} or similar loop construct must be used. When 
       \code{asProperPairs=TRUE} only proper pairs are returned. 
-      See the ?\code{GappedAlignmentsPairs} man page for details of the 
+      See the ?\code{GAlignmentsPairs} man page for details of the 
       proper pairs filtering.
 
-      The return value from \code{readBamGAlignmentList} is a 
+      The return value from \code{readGAlignmentsListFromBam} is a 
       \code{GAlignmentsList} where each list element contains all records 
       of the same id (QNAME in SAM/BAM file). When \code{asProperPairs} is 
       \code{TRUE} each list element has exactly 2 records; these are the 
-      same data as that returned from \code{readBamGappedAlignmentPairs}, only 
+      same data as that returned from \code{readGAlignmentPairsFromBam}, only 
       the return class is different. When \code{asProperPairs} is \code{FALSE}, 
       no QC is performed resulting in 1 or more records per element. List 
       elements containing singletons, unpaired reads or single fragments have 

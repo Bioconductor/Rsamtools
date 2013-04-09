@@ -97,26 +97,38 @@ setGeneric("BamViews",
            standardGeneric("BamViews"),
            signature="bamRanges")
 
-setGeneric("readBamGappedAlignments",
+setGeneric("readGAlignmentsFromBam",
            function(file, index=file, ..., use.names=FALSE, param=NULL)
-           standardGeneric("readBamGappedAlignments"),
+           standardGeneric("readGAlignmentsFromBam"),
            signature="file")
 
-setGeneric("readBamGappedReads",
+### Temporary alias for backward compatibility.
+readBamGappedAlignments <- readGAlignmentsFromBam
+
+setGeneric("readGappedReadsFromBam",
            function(file, index=file, use.names=FALSE, param=NULL)
-           standardGeneric("readBamGappedReads"),
+           standardGeneric("readGappedReadsFromBam"),
            signature="file")
 
-setGeneric("readBamGappedAlignmentPairs",
+### Temporary alias for backward compatibility.
+readBamGappedReads <- readGappedReadsFromBam
+
+setGeneric("readGAlignmentPairsFromBam",
            function(file, index=file, use.names=FALSE, param=NULL)
-           standardGeneric("readBamGappedAlignmentPairs"),
+           standardGeneric("readGAlignmentPairsFromBam"),
            signature="file")
 
-setGeneric("readBamGAlignmentsList",
+### Temporary alias for backward compatibility.
+readBamGappedAlignmentPairs <- readGAlignmentPairsFromBam
+
+setGeneric("readGAlignmentsListFromBam",
            function(file, index=file, ..., use.names=FALSE, 
                     param=ScanBamParam(), asProperPairs=TRUE)
-           standardGeneric("readBamGAlignmentsList"),
+           standardGeneric("readGAlignmentsListFromBam"),
            signature="file")
+
+### Temporary alias for backward compatibility.
+readBamGAlignmentsList <- readGAlignmentsListFromBam
 
 ## tabix
 

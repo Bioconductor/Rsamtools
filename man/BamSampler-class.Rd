@@ -74,8 +74,8 @@ BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE)
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 samp <- BamSampler(fl, yieldSize=1000)
 ## two independent samples
-head(readBamGappedAlignments(samp))
-head(readBamGappedAlignments(samp))
+head(readGAlignmentsFromBam(samp))
+head(readGAlignmentsFromBam(samp))
 
 }
 

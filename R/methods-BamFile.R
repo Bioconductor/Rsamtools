@@ -133,9 +133,8 @@ setMethod(sortBam, "BamFile",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "readBamGappedAlignments", "readBamGappedReads",
-### "readBamGappedAlignmentPairs" and
-### "readBamGAlignmentList methods.
+### "readGAlignmentsFromBam", "readGappedReadsFromBam",
+### "readGAlignmentPairsFromBam", and "readGAlignmentsListFromBam" methods.
 ###
 
 ### A "flag filter" is represented as a 'flag' vector of length 2 with names
@@ -228,7 +227,7 @@ setMethod(sortBam, "BamFile",
     NULL
 }
 
-### 'x' must be a GappedAlignments object.
+### 'x' must be a GAlignments object.
 .bindExtraData <- function(x, use.names, param, bamcols)
 {
     if (use.names)
@@ -248,7 +247,7 @@ setMethod(sortBam, "BamFile",
     x
 }
 
-setMethod(readBamGappedAlignments, "BamFile",
+setMethod(readGAlignmentsFromBam, "BamFile",
           function(file, index=file, ..., use.names=FALSE, param=NULL)
 {
     if (!isTRUEorFALSE(use.names))
@@ -258,13 +257,13 @@ setMethod(readBamGappedAlignments, "BamFile",
         what0 <- c(what0, "qname")
     bamcols <- .loadBamCols(file, param, what0, ...)
     seqlengths <- .loadBamSeqlengths(file, levels(bamcols[["rname"]]))
-    ans <- GappedAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
-                            cigar=bamcols$cigar, strand=bamcols$strand,
-                            seqlengths=seqlengths)
+    ans <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
+                       cigar=bamcols$cigar, strand=bamcols$strand,
+                       seqlengths=seqlengths)
     .bindExtraData(ans, use.names, param, bamcols)
 })
 
-setMethod(readBamGappedReads, "BamFile",
+setMethod(readGappedReadsFromBam, "BamFile",
           function(file, index=file, use.names=FALSE, param=NULL)
 {
     require(ShortRead)  # for the GappedReads() constructor
@@ -281,7 +280,7 @@ setMethod(readBamGappedReads, "BamFile",
     .bindExtraData(ans, use.names, param, bamcols)
 })
 
-setMethod(readBamGappedAlignmentPairs, "BamFile",
+setMethod(readGAlignmentPairsFromBam, "BamFile",
           function(file, index=file, use.names=FALSE, param=NULL)
 {
     if (!isTRUEorFALSE(use.names))
@@ -293,20 +292,20 @@ setMethod(readBamGappedAlignmentPairs, "BamFile",
     flag0 <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
     what0 <- c("flag", "mrnm", "mpos")
     param2 <- .normargParam(param, flag0, what0)
-    galn <- readBamGappedAlignments(file, use.names=TRUE, param=param2)
+    galn <- readGAlignmentsFromBam(file, use.names=TRUE, param=param2)
     if (is.null(param)) {
         use.mcols <- FALSE
     } else {
         use.mcols <- c(bamWhat(param), bamTag(param))
     }
-    makeGappedAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
+    makeGAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
 })
 
-setMethod(readBamGAlignmentsList, "BamFile", 
+setMethod(readGAlignmentsListFromBam, "BamFile", 
     function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
              asProperPairs=TRUE)
 {
-        gal <- readBamGappedAlignments(file, use.names=TRUE, param=param)
+        gal <- readGAlignmentsFromBam(file, use.names=TRUE, param=param)
         if (asProperPairs) {
             warning("asProperPairs=TRUE not implemented yet.") 
         } 
@@ -340,19 +339,19 @@ setMethod(readBamGAlignmentsList, "BamFile",
             open(bf)
             on.exit(close(bf))
         }
-        ## singleEnd=TRUE -> output GappedAlignments
+        ## singleEnd=TRUE -> output GAlignments
         if (singleEnd)
-            ct <- .countWithYieldSize(readBamGappedAlignments, bf, param,
+            ct <- .countWithYieldSize(readGAlignmentsFromBam, bf, param,
                                       features, mode, ignore.strand)
-        ## singleEnd=FALSE -> output GappedAlignmentPairs
+        ## singleEnd=FALSE -> output GAlignmentPairs
         if (!singleEnd) {
             ## paired-end, file sorted by qname
             if (isTRUE(obeyQname(bf))) {
-                ct <- .countWithYieldSize(readBamGappedAlignmentPairs, bf,
+                ct <- .countWithYieldSize(readGAlignmentPairsFromBam, bf,
                                           param, features, mode, ignore.strand)
             ## paired-end, file not sorted 
             } else {
-                x <- grglist(readBamGappedAlignmentPairs(bf, param=param))
+                x <- grglist(readGAlignmentPairsFromBam(bf, param=param))
                 ct <- .dispatchOverlaps(x, features, mode=mode, 
                                        ignore.strand=ignore.strand)
             }
@@ -413,9 +412,9 @@ setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
     if (!"XS" %in% bamTag(param))
         bamTag(param) <- c(bamTag(param), "XS")
     if (!pairedEnd)
-        reads <- readBamGappedAlignments(bam, param=param)
+        reads <- readGAlignmentsFromBam(bam, param=param)
     else {
-        reads <- readGappedAlignmentPairs(path(bam), param=param)
+        reads <- readGAlignmentPairsFromBam(path(bam), param=param)
         first_xs <- mcols(first(reads))$XS
         last_xs <- mcols(last(reads))$XS
         if (!is.null(first_xs) && !is.null(last_xs)) {
@@ -437,7 +436,7 @@ setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
 setMethod("coverage", "BamFile",
           function(x, shift=0L, width=NULL, weight=1L, ...,
                    param = ScanBamParam())
-          coverage(readBamGappedAlignments(x, param = param),
+          coverage(readGAlignmentsFromBam(x, param = param),
                    shift=shift, width=width, weight=weight, ...)
           )
 

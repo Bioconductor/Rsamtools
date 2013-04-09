@@ -2,8 +2,8 @@
 ### findMateAlignment()
 ### -------------------------------------------------------------------------
 ###
-### For each element in GappedAlignments object 'x', finds its mate in
-### GappedAlignments object 'y'.
+### For each element in GAlignments object 'x', finds its mate in GAlignments
+### object 'y'.
 ###
 ### Alignments 'x[i1]' and 'y[i2]' are considered mates iff:
 ###
@@ -27,8 +27,8 @@
 
 .checkMetadatacols <- function(arg, argname)
 {
-    if (!is(arg, "GappedAlignments"))
-        stop("'", argname, "' must be a GappedAlignments object")
+    if (!is(arg, "GAlignments"))
+        stop("'", argname, "' must be a GAlignments object")
     if (is.null(names(arg)))
         stop("'", argname, "' must have names")
     arg_mcols <- mcols(arg)
@@ -43,7 +43,7 @@
 }
 
 ### 'names', 'flagbits', 'mrnm', and 'mpos', must all come from the same
-### GappedAlignments object x.
+###     GAlignments object x.
 ### 'names': names(x).
 ### 'flagbits': integer matrix (of 0's and 1's) obtained with
 ###     bamFlagAsBitMatrix(mcols(x)$flag, bitnames=.MATING_FLAG_BITNAMES)
@@ -62,7 +62,7 @@
 .MATING_FLAG_BITNAMES <- c("isPaired", "hasUnmappedMate",
                            "isFirstMateRead", "isSecondMateRead")
 
-.makeGappedAlignmentsGNames <- function(names, flagbits, mrnm, mpos)
+.makeGAlignmentsGNames <- function(names, flagbits, mrnm, mpos)
 {
     is_paired <- flagbits[ , "isPaired"]
     is_first <- flagbits[ , "isFirstMateRead"]
@@ -171,8 +171,8 @@
     ans
 }
 
-### Assumes that GappedAlignments object 'x':
-###   (1) has clean group names i.e. .makeGappedAlignmentsGNames() would not
+### Assumes that GAlignments object 'x':
+###   (1) has clean group names i.e. .makeGAlignmentsGNames() would not
 ###       inject any NA in its names,
 ###   (2) is already ordered by group names (which are the same as its names).
 ### 'group.sizes' must be the same as 'runLength(Rle(names(x)))'.
@@ -196,14 +196,14 @@
     .makeMateIdx2(x_hits, y_hits, length(x_start))
 }
 
-.showGappedAlignmentsEltsWithMoreThan1Mate <- function(x, idx)
+.showGAlignmentsEltsWithMoreThan1Mate <- function(x, idx)
 {
     if (length(idx) == 0L)
         return()
     cat("\n!! Found more than 1 mate for the following elements in 'x': ",
         paste(idx, collapse=", "),
         ".\n!! Details:\n!! ", sep="")
-    GenomicRanges:::showGappedAlignments(x[idx],
+    GenomicRanges:::showGAlignments(x[idx],
                                          margin="!! ",
                                          with.classinfo=TRUE,
                                          print.seqlengths=FALSE)
@@ -266,8 +266,7 @@ findMateAlignment <- function(x, verbose=FALSE)
     x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
     x_mrnm <- as.character(x_mcols$mrnm)
     x_mpos <- x_mcols$mpos
-    x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
-                                            x_mrnm, x_mpos)
+    x_gnames <- .makeGAlignmentsGNames(x_names, x_flagbits, x_mrnm, x_mpos)
     x_seqnames <- as.character(seqnames(x))
     x_start <- start(x)
 
@@ -393,8 +392,7 @@ findMateAlignment2 <- function(x, y=NULL)
     x_flag <- x_mcols$flag
     bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
     x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
-    x_gnames <- .makeGappedAlignmentsGNames(x_names, x_flagbits,
-                                            x_mrnm, x_mpos)
+    x_gnames <- .makeGAlignmentsGNames(x_names, x_flagbits, x_mrnm, x_mpos)
 
     if (is.null(y)) {
         y_seqnames <- x_seqnames
@@ -415,8 +413,7 @@ findMateAlignment2 <- function(x, y=NULL)
         y_mpos <- y_mcols$mpos
         y_flag <- y_mcols$flag
         y_flagbits <- bamFlagAsBitMatrix(y_flag, bitnames=bitnames)
-        y_gnames <- .makeGappedAlignmentsGNames(y_names, y_flagbits,
-                                                y_mrnm, y_mpos)
+        y_gnames <- .makeGAlignmentsGNames(y_names, y_flagbits, y_mrnm, y_mpos)
 
         hits <- .findMatches(x_gnames, y_gnames, incomparables=NA_character_)
     }
@@ -438,7 +435,7 @@ findMateAlignment2 <- function(x, y=NULL)
     ans <- .makeMateIdx2(x_hits, y_hits, length(x))
     if (any(ans <= 0L, na.rm=TRUE)) {
         more_than_1_mate_idx <- which(ans == 0L)
-        .showGappedAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
+        .showGAlignmentsEltsWithMoreThan1Mate(x, more_than_1_mate_idx)
         ans[ans <= 0L] <- NA_integer_
     }
     ans
@@ -446,11 +443,11 @@ findMateAlignment2 <- function(x, y=NULL)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### makeGappedAlignmentPairs().
+### makeGAlignmentPairs().
 ###
 
 ### TODO: Make isFirstSegment() an S4 generic function with methods for
-### matrices, integer vectors, and GappedAlignments objects. Put this with the
+### matrices, integer vectors, and GAlignments objects. Put this with the
 ### flag utils in Rsamtools.
 .isFirstSegment.matrix <- function(x)
 {
@@ -470,11 +467,11 @@ findMateAlignment2 <- function(x, y=NULL)
     .isFirstSegment.matrix(bamFlagAsBitMatrix(flag, bitnames=bitnames))
 }
 
-.isFirstSegment.GappedAlignments <- function(x)
+.isFirstSegment.GAlignments <- function(x)
     .isFirstSegment.integer(mcols(x)$flag)
 
 ### TODO: Make isLastSegment() an S4 generic function with methods for
-### matrices, integer vectors, and GappedAlignments objects. Put this with the
+### matrices, integer vectors, and GAlignments objects. Put this with the
 ### flag utils in Rsamtools.
 .isLastSegment.matrix <- function(x)
 {
@@ -494,11 +491,11 @@ findMateAlignment2 <- function(x, y=NULL)
     .isLastSegment.matrix(bamFlagAsBitMatrix(flag, bitnames=bitnames))
 }
 
-.isLastSegment.GappedAlignments <- function(x)
+.isLastSegment.GAlignments <- function(x)
     .isLastSegment.integer(mcols(x)$flag)
 
-### 'x' must be a GappedAlignments objects.
-makeGappedAlignmentPairs <- function(x, use.names=FALSE, use.mcols=FALSE)
+### 'x' must be a GAlignments objects.
+makeGAlignmentPairs <- function(x, use.names=FALSE, use.mcols=FALSE)
 {
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
@@ -510,8 +507,8 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE, use.mcols=FALSE)
             stop("'use.mcols' must be a subset of 'colnames(mcols(x))'")
     }
     mate <- findMateAlignment(x)
-    x_is_first <- .isFirstSegment.GappedAlignments(x)
-    x_is_last <- .isLastSegment.GappedAlignments(x)
+    x_is_first <- .isFirstSegment.GAlignments(x)
+    x_is_last <- .isLastSegment.GAlignments(x)
     first_idx <- which(!is.na(mate) & x_is_first)
     last_idx <- mate[first_idx]
 
@@ -566,6 +563,9 @@ makeGappedAlignmentPairs <- function(x, use.names=FALSE, use.mcols=FALSE)
     } else if (!use.mcols) {
         mcols(ans_first) <- mcols(ans_last) <- NULL
     }
-    GappedAlignmentPairs(ans_first, ans_last, ans_is_proper, names=ans_names)
+    GAlignmentPairs(ans_first, ans_last, ans_is_proper, names=ans_names)
 }
+
+### Temporary alias for backward compatibility.
+makeGappedAlignmentPairs <- makeGAlignmentPairs
 

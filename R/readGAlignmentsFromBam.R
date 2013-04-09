@@ -1,36 +1,36 @@
-setMethod(readBamGappedAlignments, "character",
+setMethod(readGAlignmentsFromBam, "character",
           function(file, index=file, ..., use.names=FALSE, param=NULL)
 {
     if (missing(index) && (is.null(param) || 0L == length(bamWhich(param))))
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    readBamGappedAlignments(bam, character(), ..., use.names=use.names,
-                            param=param)
+    readGAlignmentsFromBam(bam, character(), ..., use.names=use.names,
+                           param=param)
 })
 
-setMethod(readBamGappedReads, "character",
+setMethod(readGappedReadsFromBam, "character",
           function(file, index=file, use.names=FALSE, param=NULL)
 {
     if (missing(index) && (is.null(param) || 0L == length(bamWhich(param))))
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    readBamGappedReads(bam, character(), use.names=use.names, param=param)
+    readGappedReadsFromBam(bam, character(), use.names=use.names, param=param)
 })
 
-setMethod(readBamGappedAlignmentPairs, "character",
+setMethod(readGAlignmentPairsFromBam, "character",
           function(file, index=file, use.names=FALSE, param=NULL)
 {
     if (missing(index) && (is.null(param) || 0L == length(bamWhich(param))))
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    readBamGappedAlignmentPairs(bam, character(), use.names=use.names,
-                                param=param)
+    readGAlignmentPairsFromBam(bam, character(), use.names=use.names,
+                               param=param)
 })
 
-setMethod(readBamGAlignmentsList, "character",
+setMethod(readGAlignmentsListFromBam, "character",
           function(file, index=file, ..., use.names=FALSE, 
                    param=ScanBamParam(), asProperPairs=TRUE)
 {
@@ -38,7 +38,7 @@ setMethod(readBamGAlignmentsList, "character",
         index <- character(0)
     bam <- open(BamFile(file, index, obeyQname=TRUE), "rb")
     on.exit(close(bam))
-    readBamGAlignmentsList(bam, character(), use.names=use.names,
-                           param=param, asProperPairs=asProperPairs)
+    readGAlignmentsListFromBam(bam, character(), use.names=use.names,
+                               param=param, asProperPairs=asProperPairs)
 })
 

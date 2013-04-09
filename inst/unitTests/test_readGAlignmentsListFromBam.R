@@ -1,17 +1,17 @@
 library(pasillaBamSubset)
 fl <- sortBam(untreated3_chr4(), tempfile(), byQname=TRUE)
 
-test_readBamGAlignments_noYieldSize <- function()
+test_readGAlignmentsListFromBam_noYieldSize <- function()
 {
     bf <- BamFile(fl, character(0), obeyQname=TRUE)
-    galist <- readBamGAlignmentsList(bf, asProperPairs=FALSE)
+    galist <- readGAlignmentsListFromBam(bf, asProperPairs=FALSE)
     scn0 <- scanBam(bf)
     checkTrue(validObject(galist))
     checkTrue(length(scn0[[1]]$qname) == 
               length(unlist(galist, use.names=FALSE)))
 }
 
-test_readBamGAlignmentsList_yieldSize <- function()
+test_readGAlignmentsListFromBam_yieldSize <- function()
 {
     bf <- BamFile(fl, character(0), yieldSize=1, obeyQname=TRUE)
     scn1 <- scanBam(bf)
@@ -49,19 +49,19 @@ test_readBamGAlignmentsList_yieldSize <- function()
     checkTrue(len == countBam(bf)$records)
 }
 
-test_readBamGAlignmentsList_mcols <- function()
+test_readGAlignmentsListFromBam_mcols <- function()
 {
     bf <- BamFile(fl, character(0), yieldSize=100, obeyQname=TRUE)
     param <- ScanBamParam(tag=("NM"))
-    galist <- readBamGAlignmentsList(bf, param=param, asProperPairs=FALSE)
+    galist <- readGAlignmentsListFromBam(bf, param=param, asProperPairs=FALSE)
     checkTrue(colnames(mcols(unlist(galist))) == "NM")
     param <- ScanBamParam(tag=("FO"))
-    galist <- readBamGAlignmentsList(bf, param=param, asProperPairs=FALSE)
+    galist <- readGAlignmentsListFromBam(bf, param=param, asProperPairs=FALSE)
     checkIdentical(rep.int(NA, length(unlist(galist))), 
                    mcols(unlist(galist))[["FO"]])
 }
 
-test_readBamGAlignmentsList_obeyQname <- function()
+test_readGAlignmentsListFromBam_obeyQname <- function()
 {
     ## TBD
 }
