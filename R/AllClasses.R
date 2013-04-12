@@ -28,6 +28,7 @@ setClass("ScanBVcfParam",
       fixed="character",
       info="character",
       geno="character",
+      samples="character",
       trimEmpty="logical"),
     prototype=prototype(
       trimEmpty=TRUE))

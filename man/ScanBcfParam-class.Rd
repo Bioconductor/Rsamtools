@@ -15,6 +15,7 @@
 \alias{bcfFixed}
 \alias{bcfInfo}
 \alias{bcfGeno}
+\alias{bcfSamples}
 \alias{bcfTrimEmpty}
 \alias{bcfWhich}
 
@@ -24,7 +25,7 @@
 \description{
 
   Use \code{ScanBcfParam()} to create a parameter object influencing the
-  \sQuote{INFO} and \sQuote{GENO} fields parsed, and which recrods are
+  \sQuote{INFO} and \sQuote{GENO} fields parsed, and which sample records are
   imported from a BCF file. Use of \code{which} requires that a BCF
   index file (\code{<filename>.bci}) exists.
 
@@ -32,23 +33,25 @@
 
 \usage{
 
-ScanBcfParam(fixed=character(), info=character(), geno=character(), trimEmpty=TRUE,
-             which, ...)
+ScanBcfParam(fixed=character(), info=character(), geno=character(),
+             samples=character(), trimEmpty=TRUE, which, ...)
+
 \S4method{ScanBcfParam}{missing}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, ...)
+             samples=character(), trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{RangesList}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, ...)
+             samples=character(), trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{RangedData}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, ...)
+             samples=character(), trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{GRanges}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, ...)
+             samples=character(), trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{GRangesList}(fixed=character(), info=character(), geno=character(), 
-             trimEmpty=TRUE, which, ...)
+             samples=character(), trimEmpty=TRUE, which, ...)
 
 ## Accessors
 bcfFixed(object)
 bcfInfo(object)
 bcfGeno(object)
+bcfSamples(object)
 bcfTrimEmpty(object)
 bcfWhich(object)
 
@@ -62,6 +65,10 @@ bcfWhich(object)
     \link[VariantAnnotation]{scanVcfHeader}) to be returned.}
 
   \item{geno}{A character() vector of \sQuote{GENO} fields (see
+    \link[VariantAnnotation]{scanVcfHeader}) to be returned. \code{character(0)}
+    returns all fields, \code{NA_character_} returns none.}
+
+  \item{samples}{A character() vector of sample names (see
     \link[VariantAnnotation]{scanVcfHeader}) to be returned. \code{character(0)}
     returns all fields, \code{NA_character_} returns none.}
 
@@ -92,6 +99,8 @@ bcfWhich(object)
       portions of \sQuote{INFO} to be returned.}
     \item{\code{geno}:}{Object of class \code{"character"} indicating
       portions of \sQuote{GENO} to be returned. }
+    \item{\code{samples}:}{Object of class \code{"character"} indicating
+      the samples to be returned. }
     \item{\code{trimEmpty}:}{Object of class \code{"logical"} indicating
       whether empty \sQuote{GENO} fields are to be returned.}
     \item{\code{fixed}:}{Object of class \code{"character"}. For use
