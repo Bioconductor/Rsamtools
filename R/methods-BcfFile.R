@@ -87,10 +87,10 @@ setMethod(isOpen, "BcfFile",
         cols <- unique(unlist(keys))
         entries <- Map(function(k) as.vector(sapply(vals, "[", k)),
                        cols)
-        desc <- "DESCRIPTION" == toupper(names(entries))
+        desc <- which("DESCRIPTION" == toupper(names(entries)))
         if (1L == length(desc))
             entries[[desc]] <- gsub("\"", "", entries[[desc]])
-        id <- "ID" == toupper(names(entries))
+        id <- which("ID" == toupper(names(entries)))
         if (length(id)) {
             df <- do.call(DataFrame, entries[-id])
             if (any(duplicated(entries[[id]]))) 
