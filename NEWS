@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.14.0
+-------------------------
+
+BUG FIXES
+
+    o scanVcfHeader tolerates records without ID fields, and with
+    fields named similar to ID
+
 CHANGES IN VERSION 1.12.0
 -------------------------
 
