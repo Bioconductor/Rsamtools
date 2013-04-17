@@ -6,6 +6,8 @@ BUG FIXES
     o scanVcfHeader tolerates records without ID fields, and with
     fields named similar to ID
 
+    o close razip files only once
+
 CHANGES IN VERSION 1.12.0
 -------------------------
 

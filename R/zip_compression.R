@@ -18,7 +18,7 @@ bgzipTabix <-
         .Call(func, file, dest)
     }, error=function(err) {
         msg <- sprintf("'%s' error: %s\n  file: %s\n  dest: %s",
-                       sub(".", "", func), conditionMessage(err),
+                       sub(".", "", func, fixed=TRUE), conditionMessage(err),
                        file, dest)
         stop(msg, call.=FALSE)
     })

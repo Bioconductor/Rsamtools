@@ -97,7 +97,7 @@ SEXP razip(SEXP file, SEXP dest)
                    strerror(errno), infd, outfd);
 
     razf_close(outp);
-    _zip_close(infd, outfd);
+    _zip_close(infd, -1);
 
     return dest;
 }

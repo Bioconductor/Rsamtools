@@ -1,7 +1,7 @@
 Package: Rsamtools
 Type: Package
 Title: Binary alignment (BAM), variant call (BCF), or tabix file import
-Version: 1.13.3
+Version: 1.13.4
 Author: Martin Morgan, Herv\'e Pag\`es
 Maintainer: Bioconductor Package Maintainer <maintainer@bioconductor.org>
 Description: This package provides an interface to the 'samtools',
