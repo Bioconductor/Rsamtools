@@ -335,7 +335,7 @@ static bam_index_t *bam_index_load_core(FILE *fp)
 	fread(magic, 1, 4, fp);
 	if (strncmp(magic, "BAI\1", 4)) {
 		fprintf(stderr, "[bam_index_load] wrong magic number.\n");
-		fclose(fp);
+        /* fclose(fp); */ /* Rsamtools: avoid double close in calling function */
 		return 0;
 	}
 	idx = (bam_index_t*)calloc(1, sizeof(bam_index_t));	

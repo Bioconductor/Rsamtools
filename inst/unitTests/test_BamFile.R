@@ -17,6 +17,14 @@ test_BamFile_openclose <- function()
     checkTrue(identical(bf$.extptr, bf1$.extptr))
 }
 
+test_BamFile_corrupt_index <- function()
+{
+    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+    idx <- system.file("unitTests", "cases", "ex1_zero_index.bam.bai")
+    bf <- BamFile(fl, idx)
+    checkException(suppressWarnings(open(bf)), silent=TRUE)
+}
+
 test_BamFile_yield <- function()
 {
     bf <- open(BamFile(fl, yieldSize=1000))
