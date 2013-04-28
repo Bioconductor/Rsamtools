@@ -6,6 +6,7 @@
 \alias{BamSampler}
 % methods
 \alias{scanBam,BamSampler-method}
+\alias{show,BamSampler-method}
 
 \title{Sample from a BAM files}
 

@@ -62,6 +62,21 @@ setMethod(seqinfo, "BamFile",
     Seqinfo(names(h), unname(h))
 })
 
+setMethod(obeyQname, "BamFile",
+    function(object, ...)
+{
+    object$obeyQname
+})
+
+setReplaceMethod("obeyQname", "BamFile", 
+    function(object, ..., value)
+{
+    if (1L != length(value))
+        stop("'value' must be length 1")
+    object$obeyQname <- value
+    object
+})
+
 setMethod(scanBam, "BamFile",
           function(file, index=file, ...,
                    param=ScanBamParam(what=scanBamWhat()))
@@ -370,23 +385,6 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
                          rowData=features, colData=colData)
 }
 
-setMethod("summarizeOverlaps", c("GRanges", "BamFileList"),
-    function(features, reads, mode, ignore.strand=FALSE, ..., 
-             singleEnd=TRUE, param=ScanBamParam())
-{
-    .processBamFiles(features, reads, mode, ignore.strand, 
-        ..., singleEnd=singleEnd, param=param)
-})
-
-setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
-    function(features, reads, mode, ignore.strand=FALSE, ..., 
-             singleEnd=TRUE, param=ScanBamParam())
-{
-    .processBamFiles(features, reads, mode, ignore.strand, 
-        ..., singleEnd=singleEnd, param=param)
-})
-
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "findSpliceOverlaps" methods.
 ###
@@ -460,4 +458,13 @@ setMethod(quickCountBam, "BamFile",
     } 
 
     quickCountBam(res0, param=param, mainGroupsOnly=mainGroupsOnly)
+})
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### "show" methods
+###
+
+setMethod(show, "BamFile", function(object) {
+    callNextMethod()
+    cat("obeyQname:", obeyQname(object), "\n")
 })

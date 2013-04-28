@@ -13,6 +13,12 @@
 % methods
 \alias{scanBamHeader,BamFile-method}
 \alias{seqinfo,BamFile-method}
+\alias{obeyQname}
+\alias{obeyQname<-}
+\alias{obeyQname,BamFile-method}
+\alias{obeyQname<-,BamFile-method}
+\alias{obeyQname,BamFileList-method}
+\alias{obeyQname<-,BamFileList-method}
 \alias{scanBam,BamFile-method}
 \alias{countBam,BamFile-method}
 \alias{countBam,BamFileList-method}
@@ -34,6 +40,9 @@
 \alias{findSpliceOverlaps,BamFile,ANY-method}
 \alias{quickCountBam,BamFile-method}
 \alias{coverage,BamFile-method}
+
+\alias{show,BamFile-method}
+\alias{show,BamFileList-method}
 
 \title{Maintain and use BAM files}
 
@@ -60,9 +69,11 @@ BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
 \S3method{open}{BamFile}(con, ...)
 \S3method{close}{BamFile}(con, ...)
 
-## accessors; also path(), index(), yieldSize(), obeyQname()
+## accessors; also path(), index(), yieldSize()
 
 \S4method{isOpen}{BamFile}(con, rw="")
+\S4method{obeyQname}{BamFile}(object, ...)
+obeyQname(object, ...) <- value
 
 ## actions
 
@@ -115,8 +126,9 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
 
   \item{con}{An instance of \code{BamFile}.}
 
-  \item{x, file, files}{A character vector of BAM file paths (for
-    \code{BamFile}) or a \code{BamFile} instance (for other methods).}
+  \item{x, object, file, files}{A character vector of BAM file paths
+    (for \code{BamFile}) or a \code{BamFile} instance (for other
+    methods).}
 
   \item{index}{character(1); the BAM index file path (for
     \code{BamFile}); ignored for all other methods on this page.}
@@ -134,7 +146,7 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
 
   \item{byQname, maxMemory}{See \code{\link{sortBam}}.}
 
-  \item{obeyQname}{A logical(1) indicating whether the file is
+  \item{obeyQname, value}{A logical(1) indicating whether the file is
     sorted by \code{qname}.}
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
@@ -225,8 +237,13 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
 \section{Fields}{
 
   The \code{BamFile} class inherits fields from the
-  \code{\linkS4class{RsamtoolsFile}} class.
+  \code{\linkS4class{RsamtoolsFile}} class and has field:
 
+  \describe{
+
+    \item{obeyQname}{A logical(0) indicating if the file was sorted by qname.}
+
+  }
 }
 
 \section{Functions and methods}{

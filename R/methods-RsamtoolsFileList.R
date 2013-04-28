@@ -1,29 +1,25 @@
 setGeneric(".RsamtoolsFileList",
-           function(..., yieldSize=NA_integer_, obeyQname=FALSE, class)
+           function(..., yieldSize=NA_integer_, class)
                standardGeneric(".RsamtoolsFileList"),
            signature="...")
 
 setMethod(.RsamtoolsFileList, "character",
-    function(file, index=file, ..., yieldSize=NA_integer_, obeyQname=FALSE, 
-             class)
+    function(file, index=file, ..., yieldSize=NA_integer_, class)
 {
-    fun <- function(elt, idx=character(), yieldSize, obeyQname, class) {
-        do.call(class, list(elt, index=idx, yieldSize=yieldSize,
-                obeyQname=obeyQname))
+    fun <- function(elt, idx=character(), yieldSize, class) {
+        do.call(class, list(elt, index=idx, yieldSize=yieldSize))
     }
     listData <- if (0L == length(index)) {
-        Map(fun, file, MoreArgs=list(yieldSize=yieldSize, obeyQname=obeyQname,
-            class=class))
+        Map(fun, file, MoreArgs=list(yieldSize=yieldSize, class=class))
     } else {
         Map(fun, file, index,
-            MoreArgs=list(yieldSize=yieldSize, obeyQname=obeyQname, 
-                          class=class))
+            MoreArgs=list(yieldSize=yieldSize, class=class))
     }
     new(paste0(class, "List"), listData=listData)
 })
 
 setMethod(.RsamtoolsFileList, "ANY",
-    function(..., yieldSize=NA_integer_, obeyQname=FALSE, class)
+    function(..., yieldSize=NA_integer_, class)
 {
     list <- list(...)
     if (length(list) == 1 && is.list(list[[1L]])) 
@@ -48,20 +44,6 @@ setReplaceMethod("yieldSize", "RsamtoolsFileList",
 {
     for (i in seq_along(object))
       yieldSize(object[[i]]) <- value
-    object
-})
-
-setMethod(obeyQname, "RsamtoolsFileList",
-    function(object, ...)
-{
-    sapply(as.list(object), obeyQname)
-})
-
-setReplaceMethod("obeyQname", "RsamtoolsFileList", 
-    function(object, ..., value)
-{
-    for (i in seq_along(object))
-      obeyQname(object[[i]]) <- value
     object
 })
 
@@ -97,13 +79,6 @@ setMethod(names, "RsamtoolsFileList",
 })
 
 ## implementations
-
-BamFileList <-
-    function(..., yieldSize=NA_integer_, obeyQname=FALSE)
-{
-    .RsamtoolsFileList(..., yieldSize=yieldSize, obeyQname=obeyQname,
-                      class="BamFile")
-}
 
 BcfFileList <- function(...) .RsamtoolsFileList(..., class="BcfFile")
 

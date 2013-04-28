@@ -52,12 +52,16 @@ setClass("PileupParam",
 ## RsamtoolsFile(s)
 .RsamtoolsFile_generator <- setRefClass("RsamtoolsFile",
     fields=list(.extptr="externalptr", path="character",
-      index="character", yieldSize="integer", obeyQname="logical"))
+      index="character", yieldSize="integer"))
 
-.BamFile <- setRefClass("BamFile", contains="RsamtoolsFile")
+.BamFile <- setRefClass("BamFile", contains="RsamtoolsFile",
+    fields=list(obeyQname="logical"))
+
 .BcfFile <- setRefClass("BcfFile", contains="RsamtoolsFile",
-   fields=list(mode="character"))
+    fields=list(mode="character"))
+
 .TabixFile <- setRefClass("TabixFile", contains="RsamtoolsFile")
+
 .FaFile <- setRefClass("FaFile", contains="RsamtoolsFile")
 
 setClass("RsamtoolsFileList", contains=c("SimpleList", "VIRTUAL"))

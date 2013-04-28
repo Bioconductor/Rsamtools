@@ -10,8 +10,6 @@
 \alias{names,RsamtoolsFileList-method}
 \alias{yieldSize,RsamtoolsFileList-method}
 \alias{yieldSize<-,RsamtoolsFileList-method}
-\alias{obeyQname,RsamtoolsFileList-method}
-\alias{obeyQname<-,RsamtoolsFileList-method}
 
 \title{A base class for managing lists of Rsamtools file references}
 
@@ -31,7 +29,6 @@
 \S3method{close}{RsamtoolsFileList}(con, ...)
 \S4method{names}{RsamtoolsFileList}(x)
 \S4method{yieldSize}{RsamtoolsFileList}(object, ...)
-\S4method{obeyQname}{RsamtoolsFileList}(object, ...)
 
 }
 

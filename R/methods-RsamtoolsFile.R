@@ -17,26 +17,8 @@ setReplaceMethod("yieldSize", "RsamtoolsFile",
     object
 })
 
-setMethod(obeyQname, "RsamtoolsFile",
-    function(object, ...)
-{
-    object$obeyQname
-})
-
-setReplaceMethod("obeyQname", "RsamtoolsFile", 
-    function(object, ..., value)
-{
-    if (1L != length(value))
-        stop("'value' must be length 1")
-    if (!is.logical(value))
-        stop("'value' must be logical")
-    object$obeyQname <- value
-    object
-})
-
 .RsamtoolsFile <-
-    function(g, path, index, ..., yieldSize=NA_integer_,
-             obeyQname=FALSE)
+    function(g, path, index, ..., yieldSize=NA_integer_)
 {
     if (1L != length(yieldSize))
         stop("'yieldSize' must be length 1")
@@ -44,7 +26,7 @@ setReplaceMethod("obeyQname", "RsamtoolsFile",
     if (!(yieldSize > 0L || is.na(yieldSize)))
         stop("'yieldSize' must be >0 or NA")
     g$new(path=.normalizePath(path), index=.normalizePath(index), ...,
-          yieldSize=yieldSize, obeyQname=obeyQname, ...)
+          yieldSize=yieldSize)
 }
 
 setMethod(path, "RsamtoolsFile", function(object, ...) object$path)
@@ -57,5 +39,4 @@ setMethod(show, "RsamtoolsFile", function(object) {
     cat(.ppath("index", index(object)))
     cat("isOpen:", isOpen(object), "\n")
     cat("yieldSize:", yieldSize(object), "\n")
-    cat("obeyQname:", obeyQname(object), "\n")
 })

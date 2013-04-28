@@ -7,14 +7,10 @@
 \alias{yieldSize}
 \alias{yieldSize<-}
 \alias{yieldSize<-,RsamtoolsFile-method}
-\alias{obeyQname}
-\alias{obeyQname<-}
-\alias{obeyQname<-,RsamtoolsFile-method}
 \alias{path,RsamtoolsFile-method}
 \alias{isOpen,RsamtoolsFile-method}
 \alias{show,RsamtoolsFile-method}
 \alias{yieldSize,RsamtoolsFile-method}
-\alias{obeyQname,RsamtoolsFile-method}
 
 \title{A base class for managing file references in Rsamtools}
 
@@ -34,8 +30,6 @@ index(object)
 \S4method{isOpen}{RsamtoolsFile}(con, rw="")
 \S4method{yieldSize}{RsamtoolsFile}(object, ...)
 yieldSize(object, ...) <- value
-\S4method{obeyQname}{RsamtoolsFile}(object, ...)
-obeyQname(object, ...) <- value
 \S4method{show}{RsamtoolsFile}(object)
 
 }
@@ -75,8 +69,6 @@ obeyQname(object, ...) <- value
     \item{yieldSize}{An integer(1) vector of the number of records to
       yield.}
 
-    \item{obeyQname}{A logical(0) indicating if the file was sorted by qname.}
-
   }
 }
 
@@ -92,8 +84,6 @@ obeyQname(object, ...) <- value
     \item{yieldSize, yieldSize<-}{Return or set an integer(1) vector
       indicating yield size.}
 
-    \item{obeyQname, obeyQname<-}{Return or set a logical(0) indicating
-      if the file was sorted by qname.}
   }
 
   Methods:

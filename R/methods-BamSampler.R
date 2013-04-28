@@ -39,3 +39,8 @@ setMethod("scanBam", "BamSampler",
     }
     list(smpl)
 })
+
+setMethod(show, "BamSampler", function(object) {
+    callNextMethod()
+    cat("obeyQname:", obeyQname(object), "\n")
+})
