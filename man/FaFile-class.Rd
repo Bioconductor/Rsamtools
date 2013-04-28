@@ -14,6 +14,7 @@
 \alias{indexFa,FaFile-method}
 \alias{scanFaIndex,FaFile-method}
 \alias{scanFaIndex,FaFileList-method}
+\alias{seqinfo,FaFile-method}
 \alias{countFa,FaFile-method}
 \alias{scanFa,FaFile,GRanges-method}
 \alias{scanFa,FaFile,RangesList-method}
@@ -57,6 +58,8 @@ FaFileList(...)
 
 \S4method{scanFaIndex}{FaFile}(file, ...)
 \S4method{scanFaIndex}{FaFileList}(file, ..., as=c("GRangesList", "GRanges"))
+
+\S4method{seqinfo}{FaFile}(x)
 
 \S4method{countFa}{FaFile}(file, ...)
 
@@ -146,6 +149,9 @@ FaFileList(...)
     \item{scanFaIndex}{Read the sequence names and and widths of
       recorded in an indexed fasta file, returning the information as a
       \code{\linkS4class{GRanges}} object.}
+
+    \item{seqinfo}{Consult the index file for defined sequences
+      (\code{seqlevels()}) and lengths (\code{seqlengths()}).}
 
     \item{countFa}{Return the number of records in the fasta file.}
 

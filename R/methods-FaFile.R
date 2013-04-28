@@ -113,6 +113,13 @@ setMethod(scanFa, c("FaFile", "missing"),
     readDNAStringSet(path(file))
 })
 
+setMethod(seqinfo, "FaFile",
+    function(x)
+{
+    gr <- scanFaIndex(x)
+    Seqinfo(as.character(seqnames(gr)), width(gr))
+})
+
 setMethod(getSeq, "FaFile",
     function(x, param, ...)
 {

@@ -1,6 +1,11 @@
 CHANGES IN VERSION 1.14.0
 -------------------------
 
+NEW FEATURES
+
+    o seqinfo(FaFile) returns available information on sequences and
+    lengths on Fa (indexed fasta) files
+
 BUG FIXES
 
     o scanVcfHeader tolerates records without ID fields, and with
