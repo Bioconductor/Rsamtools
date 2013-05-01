@@ -318,14 +318,94 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
 
 setMethod(readGAlignmentsListFromBam, "BamFile", 
     function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
-             asProperPairs=TRUE)
+             group.as.pairs=TRUE)
 {
+    if (yieldSize(file) && !obeyQname(file))
+        stop("'obeyQname(file)' must be TRUE when 'yieldSize(file)' != NA")
+    if (group.as.pairs) {
+        use.mcols=c(bamWhat(param), bamTag(param))
+        bamWhat(param) <- union(bamWhat(param), c("flag", "mrnm", "mpos"))
         gal <- readGAlignmentsFromBam(file, use.names=TRUE, param=param)
-        if (asProperPairs) {
-            warning("asProperPairs=TRUE not implemented yet.") 
-        } 
-        splitAsList(gal, factor(names(gal)))
+        groupAsPairs(gal, use.mcols=use.mcols) 
+    } else {
+        gal <- readGAlignmentsFromBam(file, use.names=TRUE, param=param)
+        splitAsList(gal, factor(names(gal)))  ## may not be ordered
+    }
 })
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### "groupAsPairs" methods.
+###
+
+setMethod(groupAsPairs, "GAlignmentsList", 
+    function(x, ...) 
+{
+    callGeneric(unlist(x, use.names=FALSE), ...) 
+})
+
+setMethod(groupAsPairs, "GAlignments", 
+    function(x, ..., use.mcols=colnames(mcols(x))) 
+{
+    if (length(use.mcols) > 0L) {
+        if (!all(use.mcols %in% colnames(mcols(x))))
+            stop("'use.mcols' must be a subset of 'colnames(mcols(x))'")
+    }
+    .groupAsPairs(x, use.mcols=use.mcols)
+})
+
+.groupAsPairs <- function(x, use.mcols)
+{
+    ## Potential mates.
+    mate <- findMateAlignment(x)
+    x_is_first <- .isFirstSegment.GAlignments(x)
+    x_is_last <- .isLastSegment.GAlignments(x)
+    first_idx <- which(!is.na(mate) & x_is_first)
+    last_idx <- mate[first_idx]
+    .checkMates(mate, x_is_first, x_is_last, first_idx, last_idx)
+
+    ## Check the 0x2 bit (isProperPair).
+    x_is_proper <- as.logical(bamFlagAsBitMatrix(mcols(x)$flag,
+                              bitnames="isProperPair"))
+    ans_is_proper <- x_is_proper[first_idx]
+
+    ## Check pairs for discordant seqnames or strand.
+    x_is_discordant <- (as.character(seqnames(x)[first_idx]) !=
+                        as.character(seqnames(x)[last_idx])) | 
+                       (as.character(strand(x)[first_idx]) ==
+                        as.character(strand(x)[last_idx]))
+    keep <- which(!x_is_discordant)
+    first_idx <- first_idx[keep]
+    last_idx <- last_idx[keep]
+    ## FIXME: is this ever FALSE?
+    ans_is_proper <- ans_is_proper[keep]
+
+    ## Assemble GAlignmentsList.
+    pairs_idx <- c(rbind(first_idx, last_idx))
+    other_idx <- seq_along(x)[-pairs_idx]
+    mcols(x)$paired <- seq_along(x) %in% pairs_idx
+    mcols(x) <- mcols(x)[c(use.mcols, "paired")] 
+    other_nms <- names(x)[other_idx]
+    other_elt <- splitAsList(other_nms, factor(other_nms))
+    widths <- c(rep(2, length(first_idx)), elementLengths(other_elt))
+    relist(x[c(pairs_idx, other_idx)], PartitioningByEnd(cumsum(widths)))
+}
+
+.checkMates <- function(mate, x_is_first, x_is_last, first_idx, last_idx)
+{
+    ## Fundamental property of the 'mate' vector: it's a permutation of order
+    ## 2 and with no fixed point on the set of indices for which 'mate' is
+    ## not NA.
+    ## Check there are no fixed points.
+    if (!all(first_idx != last_idx))
+        stop("findMateAlignment() returned an invalid 'mate' vector")
+    ## Check order 2 (i.e. permuting a 2nd time brings back the original
+    ## set of indices).
+    if (!identical(mate[last_idx], first_idx))
+        stop("findMateAlignment() returned an invalid 'mate' vector")
+    ## One more sanity check.
+    if (!all(x_is_last[last_idx]))
+        stop("findMateAlignment() returned an invalid 'mate' vector")
+}
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "summarizeOverlaps" methods.

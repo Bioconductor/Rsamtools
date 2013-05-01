@@ -123,12 +123,17 @@ readBamGappedAlignmentPairs <- readGAlignmentPairsFromBam
 
 setGeneric("readGAlignmentsListFromBam",
            function(file, index=file, ..., use.names=FALSE, 
-                    param=ScanBamParam(), asProperPairs=TRUE)
+                    param=ScanBamParam(), group.as.pairs=TRUE)
            standardGeneric("readGAlignmentsListFromBam"),
            signature="file")
 
 ### Temporary alias for backward compatibility.
 readBamGAlignmentsList <- readGAlignmentsListFromBam
+
+setGeneric("groupAsPairs",
+           function(x, ...)
+           standardGeneric("groupAsPairs"),
+           signature="x")
 
 ## tabix
 

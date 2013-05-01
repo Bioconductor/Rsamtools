@@ -91,7 +91,7 @@ obeyQname(object, ...) <- value
 \S4method{readGappedReadsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readGAlignmentsListFromBam}{BamFile}(file, index=file, ...,
-use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
+use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 
 ## counting
 
@@ -220,12 +220,12 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
 
   \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
 
-  \item{asProperPairs}{A logical indicating if the records should be filtered
-    such that only proper pairs are returned. Applies to 
-    \code{readGAlignmentsListFromBam} only. If filtering is applied, the
-    records returned are the same as from \code{readGAlignmentPairsFromBam}
-    except they are in a \code{GAlignmentsList} instead of a 
-    \code{GAlignmentPairs} obejct.}
+  \item{group.as.pairs}{A logical indicating if the records should be paired
+    using the algorithm in \code{readGAlignmentPairs}. When TRUE, a metadata 
+    column named \code{paired} is returned with the result indicating
+    which records were paired using the algorithm. All other reads are 
+    grouped by read id (QNAME in SAM/BAM). Applies to 
+    \code{readGAlignmentsListFromBam} only.}
 }
 
 \section{Objects from the Class}{
@@ -321,25 +321,10 @@ use.names=FALSE, param=ScanBamParam(), asProperPairs=TRUE)
       See \code{\link{readGAlignmentsFromBam}}.}
 
     \item{readGAlignmentsListFromBam}{
-      Visit the Bam file in \code{path(file)}. The file must be sorted
-      by qname, see ?\code{sortBam}. When a \code{yieldSize} is set on 
-      the BamFile data are read in chunks. To read the complete file a 
-      \code{while} or similar loop construct must be used. When 
-      \code{asProperPairs=TRUE} only proper pairs are returned. 
-      See the ?\code{GAlignmentsPairs} man page for details of the 
-      proper pairs filtering.
-
-      The return value from \code{readGAlignmentsListFromBam} is a 
-      \code{GAlignmentsList} where each list element contains all records 
-      of the same id (QNAME in SAM/BAM file). When \code{asProperPairs} is 
-      \code{TRUE} each list element has exactly 2 records; these are the 
-      same data as that returned from \code{readGAlignmentPairsFromBam}, only 
-      the return class is different. When \code{asProperPairs} is \code{FALSE}, 
-      no QC is performed resulting in 1 or more records per element. List 
-      elements containing singletons, unpaired reads or single fragments have 
-      a length of 1 while paired-end reads or those with multiple fragments 
-      have a length of 2 or greater.
-      (NOTE: asProperPairs=TRUE not yet implemented)}
+      Visit the Bam file in \code{path(file)}. When \code{yieldSize} is
+      set on the BamFile, the file must be sorted by qname, 
+      see ?\code{sortBam}. For a full description of the method see
+      \code{\link{readGAlignmentsListFromBam}}.} 
 
     \item{show}{Compactly display the object.}
 

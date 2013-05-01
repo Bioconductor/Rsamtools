@@ -9,6 +9,9 @@
 \alias{readGAlignmentPairsFromBam,character-method}
 \alias{readGAlignmentsListFromBam}
 \alias{readGAlignmentsListFromBam,character-method}
+\alias{groupAsPairs}
+\alias{groupAsPairs,GAlignments-method}
+\alias{groupAsPairs,GAlignmentsList-method}
 
 % Old stuff:
 \alias{readBamGappedAlignments}
@@ -33,7 +36,9 @@ readGappedReadsFromBam(file, index=file, use.names=FALSE, param=NULL)
 readGAlignmentPairsFromBam(file, index=file, use.names=FALSE, param=NULL)
 
 readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
-                           param=ScanBamParam(), asProperPairs=TRUE)
+                           param=ScanBamParam(), group.as.pairs=TRUE)
+
+groupAsPairs(x, ...)
 }
 
 \arguments{
@@ -41,6 +46,10 @@ readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
     file of the BAM file to read, respectively. The latter is given
     \emph{without} the '.bai' extension. See \code{\link{scanBam}} for more
     information.}
+
+  \item{x}{A \code{GAlignments} or \code{GAlignmentsList} object.
+    The \code{GAlignments} must have names and metadata columns of
+    \sQuote{flag}, \sQuote{mrnm} and \sQuote{mpos}.} 
 
   \item{\dots}{Arguments passed to other methods.}
 
@@ -67,16 +76,13 @@ readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
     and \code{scanBamFlag(isUnmappedQuery=FALSE, isPaired=TRUE,
     hasUnmappedMate=FALSE)} for \code{readGAlignmentPairsFromBam}
     (i.e. only records corresponding to paired-end reads with both ends
-    mapped are loaded).} No flag is set for \code{readGAlignmentsListFromBam}
-    unless \code{asProperPairs=TRUE}. In this case, the records read in
-    are the same as for \code{readGAlignmentPairsFromBam}.
+    mapped are loaded).} No flag is set for \code{readGAlignmentsListFromBam}.
 
-  \item{asProperPairs}{A logical indicating if the records should be filtered
-    such that only proper pairs are returned. Applies to 
-    \code{readGAlignmentsListFromBam} only. If \code{TRUE}, the records 
-    are the same as from a call to \code{readGAlignmentPairsFromBam} 
-    except a \code{GAlignmentsList} is returned instead of a 
-    \code{GAlignmentPairs} object.}
+  \item{group.as.pairs}{A logical indicating if records should be 
+    paired using the algorithm in \code{readGAlignmentPairsFromBam}.
+    When \code{TRUE}, a metadata column is added to the result to
+    indicate which records were paired using the algorithm. All other 
+    (i.e., non-paired) records are grouped by QNAME.}
 }
 
 \details{
@@ -99,20 +105,23 @@ readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
   and \code{?\link{makeGAlignmentPairs}} for the details of the
   pairing procedure.
 
-  The return value from \code{readGAlignmentsListFromBam} is a 
-  \code{GAlignmentsList} where each list element contains all records 
-  of the same id (QNAME in SAM/BAM file). When \code{asProperPairs} is 
-  \code{TRUE} each list element has exactly 2 records; these are the 
-  same data as that returned from \code{readGAlignmentPairsFromBam}, only 
-  the return class is different. When \code{asProperPairs} is \code{FALSE}, 
-  no QC is performed resulting in 1 or more records per element. List 
-  elements containing singletons, unpaired reads or single fragments have 
-  a length of 1 while paired-end reads or those with multiple fragments 
-  have a length of 2 or greater.
-  (NOTE: asProperPairs=TRUE not yet implemented)
-
+  \code{readGAlignmentsListFromBam} returns a \code{GAlignmentsList} object. 
+  When \code{group.as.pairs} is \code{TRUE} records are paired using the 
+  algorithm in \code{readGAlignmentPairsFromBam}. A metadata column 
+  is added to the result to indicate which records were paired using the 
+  algorithm. Reads not paired by the algorithm are grouped by id 
+  (QNAME in SAM/BAM file). When \code{group.as.pairs} is \code{FALSE}, no
+  pairing is performed and all records are grouped by QNAME.
+ 
   See \code{?\link[GenomicRanges]{GAlignmentsList-class}} for a 
   description of \link[GenomicRanges]{GAlignmentsList} objects.
+
+  \code{groupAsPairs} returns a \code{GAlignmentsList} object. 
+  This function pairs reads in a \code{GAlignments} or 
+  \code{GAlignmentsList} object using the algorithm in 
+  \code{readGAlignmentPairsFromBam}. This function is called from
+  \code{readGAlignmentsListFromBam} when \code{group.as.pairs} is
+  TRUE.
 }
 
 \value{
@@ -234,31 +243,38 @@ head(galp2)
 head(names(galp2))
 
 ## ---------------------------------------------------------------------
-## D. readGAlignmentPairsFromBam()
+## D. readGAlignmentsListFromBam()
 ## ---------------------------------------------------------------------
-## As sample data we use the paired-end file from pasillaBamSubset.
-## This method requires that Bam file to be sorted by qname. Setting
-## the yieldSize is optional.
+
+## (i) Records grouped by id (QUNAME):
+## When 'yieldSize' is used, the Bam file must be sorted by qname.
+## When creating the BamFile 'obeyQname' should be TRUE.
 library(pasillaBamSubset)
-bfsort <- sortBam(untreated3_chr4(), tempfile(), byQname=TRUE)
-bf <- BamFile(bfsort, index=character(0), yieldSize=100, obeyQname=TRUE)
-galist <- readGAlignmentsListFromBam(bf, asProperPairs=FALSE)
+fl <- untreated3_chr4() 
+flsort <- sortBam(fl, tempfile(), byQname=TRUE)
+bf <- BamFile(flsort, index=character(0), yieldSize=100, obeyQname=TRUE)
+galist1 <- readGAlignmentsListFromBam(bf, group.as.pairs=FALSE)
 
-## List elements are grouped by id and can hold any number
+## List elements are grouped by id and contain any number
 ## of pairs or fragments.
-galist
-table(elementLengths(galist))
+galist1
+table(elementLengths(galist1))
 
-## Single reads appearing in 'galist' are filtered out by 
-## the readGAlignmentPairsFromBam QC process because they
-## are not proper pairs. 
-galp <- readGAlignmentPairsFromBam(bf)
-findOverlaps(galist[elementLengths(galist) == 1], 
-             unlist(galp), type="within")
+## (ii) Records grouped with algorithm in readGAlignmentPairs():
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+galist2 <- readGAlignmentsListFromBam(fl, group.as.pairs=TRUE)
+## 'paired=TRUE' for records paired with the algorithm.
+head(galist2, 2)
+## Singletons or fragments not paired with the algorithm are grouped 
+## by id.
+tail(galist2, 2)
 
-## When 'asProperPairs' is 'TRUE', readGAlignmentPairsFromBam 
-## and readGAlignmentsList return the same records but in different
-## classes.
+## groupAsPaired() applies the readGAlignmentsPairs() algorithm 
+## to reads in a GAlignments or GAlignmentsList. These
+## objects must have names and the appropriate metadata columns.
+param <- ScanBamParam(what=c("flag", "mrnm", "mpos"))
+gal <- readGAlignmentsFromBam(fl, use.names=TRUE, param=param) 
+gal_paired <- groupAsPairs(gal)
 }
 
 \keyword{manip}
