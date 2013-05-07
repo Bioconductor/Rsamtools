@@ -63,7 +63,7 @@ SEXP fafile_open(SEXP filename)
 
 SEXP fafile_close(SEXP ext)
 {
-    _scan_checkext(ext, FAFILE_TAG, "close");
+    _checkext(ext, FAFILE_TAG, "close");
     _fafile_close(ext);
     return ext;
 }
@@ -72,7 +72,7 @@ SEXP fafile_isopen(SEXP ext)
 {
     SEXP ans = ScalarLogical(FALSE);
     if (NULL != FAFILE(ext)) {
-        _scan_checkext(ext, FAFILE_TAG, "isOpen");
+        _checkext(ext, FAFILE_TAG, "isOpen");
         if (NULL != FAFILE(ext)->index)
             ans = ScalarLogical(TRUE);
     }
@@ -96,7 +96,7 @@ SEXP index_fa(SEXP filename)
 
 SEXP n_fa(SEXP ext)
 {
-    _scan_checkext(ext, FAFILE_TAG, "isOpen");
+    _checkext(ext, FAFILE_TAG, "isOpen");
     faidx_t *fai = FAFILE(ext)->index;
     if (NULL == fai)
         Rf_error("'index' not available");
@@ -105,7 +105,7 @@ SEXP n_fa(SEXP ext)
 
 SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
 {
-    _scan_checkext(ext, FAFILE_TAG, "isOpen");
+    _checkext(ext, FAFILE_TAG, "isOpen");
     if (!IS_CHARACTER(seq))
         Rf_error("'seq' must be 'character()");
     if (!IS_INTEGER(start))

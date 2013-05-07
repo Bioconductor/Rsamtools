@@ -4,17 +4,20 @@
 SEXP _get_namespace(const char *pkg);
 SEXP _get_strand_levels();
 SEXP _get_encoding_lookup(const char *from, const char *to);
+SEXP _get_lkup(const char *baseclass);
 void _as_factor_SEXP(SEXP vec, SEXP lvls);
 void _as_factor(SEXP vect, const char **lvls, const int n_lvls);
+SEXP _as_XStringSet(const char **key, int len, const char *baseclass);
+SEXP _as_PhredQuality(const char **key, int len);
 void _reverse(char *buf, int len);
 void _reverseComplement(char *buf, int len);
 char *_rtrim(char *);
 
-/* scan-related */
+/* common checks */
 
-void _scan_checkext(SEXP ext, SEXP tag, const char *lbl);
-void _scan_checknames(SEXP filename, SEXP indexname, SEXP filemode);
-void _scan_checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
+void _checkext(SEXP ext, SEXP tag, const char *lbl);
+void _checknames(SEXP filename, SEXP indexname, SEXP filemode);
+void _checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 
 /* call-building macros */
 

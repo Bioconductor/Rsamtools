@@ -13,7 +13,7 @@ typedef enum {
 #define WHAT_QUAL 2
 
 typedef struct {
-    _BAM_FILE *bfile;
+    BAM_FILE bfile;
     bamFile fp;
     bam_iter_t iter;
     /* read filter params */
@@ -664,7 +664,7 @@ SEXP apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
         _check_isbamfile(VECTOR_ELT(files, i), "pileup");
     if (R_NilValue == space)
         Rf_error("'NULL' space not (yet) supported");
-    _scan_checkparams(space, R_NilValue, R_NilValue);
+    _checkparams(space, R_NilValue, R_NilValue);
     if (!Rf_isFunction(callback) || 1L != Rf_length(FORMALS(callback)))
         Rf_error("'callback' mst be a function of 1 argument");
     call = PROTECT(Rf_lang2(callback, R_NilValue));

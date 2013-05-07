@@ -9,4 +9,5 @@
     .Call(.bcffile_init)
     .Call(.fafile_init)
     .Call(.tabixfile_init)
+    .Call(.bambuffer_init)
 }

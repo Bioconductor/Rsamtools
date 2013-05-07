@@ -120,6 +120,7 @@ setMethod(countBam, "BamFile",
 
 setMethod(filterBam, "BamFile",
           function (file, destination, index=file, ...,
+                    filter=FilterRules(),
                     indexDestination=TRUE,
                     param=ScanBamParam(what=scanBamWhat()))
 {
@@ -127,12 +128,44 @@ setMethod(filterBam, "BamFile",
         open(file)
         on.exit(close(file))
     }
+    if (missing(destination))
+        stop(sprintf("'%s' missing with no default", "destination"))
+    if (!is(param, "ScanBamParam"))
+        stop(sprintf("'%s' must be a '%s'; was '%s'",
+                     "param", "ScanBamParam", class(param)))
+
+    seqlengths <- seqlengths(file)
+    yieldSize <- yieldSize(file)
+    if (is.na(yieldSize))
+        yieldSize <- 1000000L
     param <- .filterBam_preprocess(file, param)
     destination <- .normalizePath(destination)
-    fl <- .io_bam(.filter_bamfile, file, param=param, destination, "wb")
+    dest <- .Call(.bamfile_open, destination, path(file), "wb")
+    n_tot <- 0L
+
+    repeat {
+        buf <- .io_bam(.prefilter_bamfile, file, param=param, yieldSize,
+                       obeyQname(file))
+        if (0L == .Call(.bambuffer_length, buf))
+            break;
+
+        if (length(filter)) {
+            tmpl <- .scanBam_template(param)
+            reverseComplement <- bamReverseComplement(param)
+            ans <- .io_bam(.bambuffer_parse, file, param=param,
+                           buf, reverseComplement, tmpl)
+            ans <- .loadBamColsFromScan(unname(ans), param)
+            ans <- DataFrame(ans)
+            ans <- eval(filter, ans)
+        } else ans <- TRUE
+
+        n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
+    }
+
+    .Call(.bamfile_close, dest)
     if (indexDestination)
-        indexBam(fl)
-    fl
+        indexBam(destination)
+    destination
 })
 
 setMethod(indexBam, "BamFile", function(files, ...) {
@@ -193,13 +226,8 @@ setMethod(sortBam, "BamFile",
 
 ### 'bamfile' must be a BamFile object.
 ### Returns a named list with 1 element per loaded column.
-.loadBamCols <- function(bamfile, param, what0, ...)
+.loadBamColsFromScan <- function(res, param)
 {
-    flag0 <- scanBamFlag(isUnmappedQuery=FALSE)
-    param <- .normargParam(param, flag0, what0)
-    res <- unname(scanBam(bamfile, ..., param=param))
-    if (length(res) == 0L)
-        stop("scanBam() returned a list of length zero")
     ## Extract the "what" cols.
     ans1 <- lapply(bamWhat(param),
                    function(nm) {
@@ -225,6 +253,16 @@ setMethod(sortBam, "BamFile",
                    })
     names(ans2) <- bamTag(param)
     c(ans1, ans2)
+}
+
+.loadBamCols <- function(bamfile, param, what0, ...)
+{
+    flag0 <- scanBamFlag(isUnmappedQuery=FALSE)
+    param <- .normargParam(param, flag0, what0)
+    res <- unname(scanBam(bamfile, ..., param=param))
+    if (length(res) == 0L)
+        stop("scanBam() returned a list of length zero")
+    .loadBamColsFromScan(res, param)
 }
 
 .loadBamSeqlengths <- function(file, seqlevels)

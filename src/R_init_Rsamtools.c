@@ -24,6 +24,7 @@ static const R_CallMethodDef callMethods[] = {
     {".read_bamfile_header", (DL_FUNC) & read_bamfile_header, 1},
     {".scan_bamfile", (DL_FUNC) & scan_bamfile, 8},
     {".count_bamfile", (DL_FUNC) & count_bamfile, 4},
+    {".prefilter_bamfile", (DL_FUNC) & prefilter_bamfile, 6},
     {".filter_bamfile", (DL_FUNC) & filter_bamfile, 6},
     /* as_bam.c */
     {".as_bam", (DL_FUNC) & as_bam, 2},
@@ -62,6 +63,12 @@ static const R_CallMethodDef callMethods[] = {
     {".tabix_as_character", (DL_FUNC) & tabix_as_character, 4},
     /* pileup */
     {".apply_pileups", (DL_FUNC) & apply_pileups, 5},
+    /* bambuffer */
+    {".bambuffer_init", (DL_FUNC) & bambuffer_init, 0},
+    {".bambuffer", (DL_FUNC) & bambuffer, 1},
+    {".bambuffer_length", (DL_FUNC) & bambuffer_length, 1},
+    {".bambuffer_parse", (DL_FUNC) & bambuffer_parse, 7},
+    {".bambuffer_write", (DL_FUNC) & bambuffer_write, 3},
     {NULL, NULL, 0}
 };
 

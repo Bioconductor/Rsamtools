@@ -83,7 +83,8 @@ obeyQname(object, ...) <- value
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
-    indexDestination=TRUE, param=ScanBamParam(what=scanBamWhat()))
+    filter=FilterRules(), indexDestination=TRUE,
+    param=ScanBamParam(what=scanBamWhat()))
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
 \S4method{mergeBam}{BamFileList}(files, destination, ...)
@@ -138,6 +139,14 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
     \code{length(bamWhich(param)) == 0}. \code{yieldSize} does not alter
     existing yield sizes, include \code{NA}, when creating a
     \code{BamFileList} from \code{BamFile} instances.}
+
+  \item{filter}{A \code{\link{FilterRules}} instance. Functions in the
+    \code{FilterRules} instance should expect a single \code{DataFrame}
+    argument representing all information specified by
+    \code{param}. Each function must return a \code{logical} vector,
+    usually of length equal to the number of rows of the
+    \code{DataFrame}. Return values are used to include (when
+    \code{TRUE}) corresponding records in the filtered BAM file.}
 
   \item{destination}{character(1) file path to write filtered reads to.}
 

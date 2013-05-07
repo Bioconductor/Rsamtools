@@ -57,7 +57,7 @@ SEXP tabixfile_open(SEXP filename, SEXP indexname)
 
 SEXP tabixfile_close(SEXP ext)
 {
-    _scan_checkext(ext, TABIXFILE_TAG, "close");
+    _checkext(ext, TABIXFILE_TAG, "close");
     _tabixfile_close(ext);
     return (ext);
 }
@@ -66,7 +66,7 @@ SEXP tabixfile_isopen(SEXP ext)
 {
     SEXP ans = ScalarLogical(FALSE);
     if (NULL != TABIXFILE(ext)) {
-        _scan_checkext(ext, TABIXFILE_TAG, "isOpen");
+        _checkext(ext, TABIXFILE_TAG, "isOpen");
         if (TABIXFILE(ext)->tabix)
             ans = ScalarLogical(TRUE);
     }
@@ -162,7 +162,7 @@ SEXP _header_lines(tabix_t * tabix, const ti_conf_t * conf)
 
 SEXP header_tabix(SEXP ext)
 {
-    _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
+    _checkext(ext, TABIXFILE_TAG, "scanTabix");
     tabix_t *tabix = TABIXFILE(ext)->tabix;
     if (0 != ti_lazy_index_load(tabix))
         Rf_error("'seqnamesTabix' failed to load index");
@@ -272,10 +272,10 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
 
 SEXP scan_tabix(SEXP ext, SEXP space, SEXP yield, SEXP fun, SEXP state)
 {
-    _scan_checkparams(space, R_NilValue, R_NilValue);
+    _checkparams(space, R_NilValue, R_NilValue);
     if (!IS_INTEGER(yield) || 1L != Rf_length(yield))
         Rf_error("'yieldSize' must be integer(1)");
-    _scan_checkext(ext, TABIXFILE_TAG, "scanTabix");
+    _checkext(ext, TABIXFILE_TAG, "scanTabix");
 
     tabix_t *tabix = TABIXFILE(ext)->tabix;
     SCAN_FUN *scan = (SCAN_FUN *) R_ExternalPtrAddr(fun);

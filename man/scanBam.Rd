@@ -45,7 +45,8 @@ asBam(file, destination, ...)
 
 filterBam(file, destination, index=file, ...)
 \S4method{filterBam}{character}(file, destination, index=file, ...,
-    indexDestination=TRUE, param=ScanBamParam(what=scanBamWhat()))
+    filter=FilterRules(), indexDestination=TRUE,
+    param=ScanBamParam(what=scanBamWhat()))
     
 sortBam(file, destination, ...)
 \S4method{sortBam}{character}(file, destination, ..., byQname=FALSE, maxMemory=512)
@@ -84,6 +85,9 @@ mergeBam(files, destination, ...)
 
   \item{overwrite}{A logical(1) indicating whether the destination
     can be over-written if it already exists.}
+
+  \item{filter}{A \code{\link{FilterRules}} instance allowing users to
+    filter BAM files based on arbitrary criteria, as described below.}
 
   \item{indexDestination}{A logical(1) indicating whether the created
     destination file should also be indexed.}
@@ -129,11 +133,24 @@ mergeBam(files, destination, ...)
   and an index created on the destination (with extension '.bai') when
   \code{indexDestination=TRUE}.
 
-  \code{filterBam} parses records in \code{file} satisfying the
-  \code{bamWhich} of \code{param}, writing each record satisfying the
-  \code{bamFlag} and \code{bamSimpleCigar} criteria of \code{param} to
-  file \code{destination}. An index file is created on the destination
-  when \code{indexDestination=TRUE}.
+  \code{filterBam} parses records in \code{file}. Records satisfying the
+  \code{bamWhich} \code{bamFlag} and \code{bamSimpleCigar} criteria of
+  \code{param} are accumulated to a default of \code{yieldSize =
+  1000000} records (change this by specifying \code{yieldSize} when
+  creating a \code{BamFile} instance; see
+  \code{\linkS4class{BamFile}-class}). These records are then parsed to
+  a \code{DataFrame} and made available for further filtering by
+  user-supplied \code{FilterRules}.  Functions in the \code{FilterRules}
+  instance should expect a single \code{DataFrame} argument representing
+  all information specified by \code{param}. Each function must return a
+  \code{logical} vector equal to the number of rows of the
+  \code{DataFrame}. Return values are used to include (when \code{TRUE})
+  corresponding records in the filtered BAM file.  The BAM file is
+  created at \code{destination}. An index file is created on the
+  destination when \code{indexDestination=TRUE}. It is more space- and
+  time-efficient to filter use \code{bamWHich}, \code{bamFlag}, and
+  \code{bamSimpleCigar}, if appropriate, than to supply
+  \code{FilterRules}.
   
   \code{sortBam} sorts the BAM file given as its first argument,
   analogous to the \dQuote{samtools sort} function.
@@ -258,6 +275,10 @@ mergeBam(files, destination, ...)
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
                   mustWork=TRUE)
 
+##
+## scanBam
+##
+
 res0 <- scanBam(fl)[[1]] # always list-of-lists
 names(res0)
 length(res0[["qname"]])
@@ -280,6 +301,25 @@ res2 <- scanBam(fl, param=p2)
                 
 p3 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))
 length(scanBam(fl, param=p3)[[1]])
+
+##
+## filterBam
+##
+
+param <- ScanBamParam(
+   flag=scanBamFlag(isUnmappedQuery=FALSE),
+   what="seq")
+dest <- filterBam(fl, tempfile(), param=param)
+countBam(dest)  ## 3271 records
+filt <- list(MinWidth = function(x) width(x$seq) > 35)
+dest <- filterBam(fl, tempfile(), param=param, filter=FilterRules(filt))
+countBam(dest)  ## 398 records
+res3 <- scanBam(dest, param=ScanBamParam(what="seq"))[[1]]
+table(width(res3$seq))
+
+##
+## sortBam
+##
 
 sorted <- sortBam(fl, tempfile())
 

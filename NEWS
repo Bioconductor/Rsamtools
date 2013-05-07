@@ -4,14 +4,17 @@ CHANGES IN VERSION 1.14.0
 NEW FEATURES
 
     o seqinfo(FaFile) returns available information on sequences and
-    lengths on Fa (indexed fasta) files
+    lengths on Fa (indexed fasta) files.
+
+    o filterBam accepts FilterRules call-backs for arbitrary
+    filtering.
 
 BUG FIXES
 
     o scanVcfHeader tolerates records without ID fields, and with
-    fields named similar to ID
+    fields named similar to ID.
 
-    o close razip files only once
+    o close razip files only once.
 
 CHANGES IN VERSION 1.12.0
 -------------------------

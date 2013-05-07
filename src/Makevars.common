@@ -48,4 +48,3 @@ libs: libs0
 
 clean:
 	rm $(BAMOBJ) $(BCFOBJ) $(TABIXOBJ) *.a *.o *.so *.dll
-

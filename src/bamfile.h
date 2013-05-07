@@ -3,17 +3,18 @@
 
 #include <Rdefines.h>
 #include "samtools/sam.h"
+#include "bambuffer.h"
 
 typedef struct {
     samfile_t *file;
     bam_index_t *index;
     uint64_t pos0;
-} _BAM_FILE;
+} _BAM_FILE, *BAM_FILE;
 
-#define BAMFILE(b) ((_BAM_FILE *) R_ExternalPtrAddr(b))
+#define BAMFILE(b) ((BAM_FILE) R_ExternalPtrAddr(b))
 
 SEXP bamfile_init();
-SEXP bamfile_open(SEXP filename, SEXP indexname, SEXP mode);
+SEXP bamfile_open(SEXP file0, SEXP file1, SEXP mode);
 SEXP bamfile_close(SEXP ext);
 SEXP bamfile_isopen(SEXP ext);
 
@@ -22,6 +23,8 @@ SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
                   SEXP simpleCigar, SEXP reverseComplement,
                   SEXP yieldSize, SEXP tmpl, SEXP obeyQname);
 SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
+SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
+		       SEXP isSimpleCigar, SEXP yieldSize, SEXP obeyQname);
 SEXP filter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
                     SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode);
 

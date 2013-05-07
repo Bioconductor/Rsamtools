@@ -1,7 +1,6 @@
 .io_bam <-
     function(func, file, ..., param)
 {
-    .io_check_exists(path(file))
     flag <- bamFlag(param, asInteger=TRUE)
     simpleCigar <- bamSimpleCigar(param)
     which <- bamWhich(param)
@@ -11,6 +10,8 @@
                  .uunlist(end(which)))
         else NULL
     on.exit(.Call(.scan_bam_cleanup))
+
+    .io_check_exists(path(file))
     tryCatch({
         .Call(func, .extptr(file), space, flag, simpleCigar, ...)
     }, error=function(err) {

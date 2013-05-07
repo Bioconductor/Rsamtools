@@ -34,6 +34,7 @@
 
 setMethod(filterBam, "character",
           function(file, destination, index=file, ...,
+                   filter=FilterRules(),
                    indexDestination=TRUE,
                    param=ScanBamParam(what=scanBamWhat()))
 {
@@ -41,6 +42,6 @@ setMethod(filterBam, "character",
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    filterBam(bam, destination, ...,
+    filterBam(bam, destination, ..., filter=filter,
               indexDestination=indexDestination, param=param)
 })

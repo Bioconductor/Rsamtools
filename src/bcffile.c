@@ -85,7 +85,7 @@ SEXP bcffile_init()
 
 SEXP bcffile_open(SEXP filename, SEXP indexname, SEXP filemode)
 {
-    _scan_checknames(filename, indexname, filemode);
+    _checknames(filename, indexname, filemode);
 
     _BCF_FILE *bfile = Calloc(1, _BCF_FILE);
 
@@ -119,7 +119,7 @@ SEXP bcffile_open(SEXP filename, SEXP indexname, SEXP filemode)
 
 SEXP bcffile_close(SEXP ext)
 {
-    _scan_checkext(ext, BCFFILE_TAG, "close");
+    _checkext(ext, BCFFILE_TAG, "close");
     _bcffile_close(ext);
     return ext;
 }
@@ -128,7 +128,7 @@ SEXP bcffile_isopen(SEXP ext)
 {
     SEXP ans = ScalarLogical(FALSE);
     if (NULL != BCFFILE(ext)) {
-        _scan_checkext(ext, BCFFILE_TAG, "isOpen");
+        _checkext(ext, BCFFILE_TAG, "isOpen");
         if (BCFFILE(ext)->file)
             ans = ScalarLogical(TRUE);
     }
@@ -139,7 +139,7 @@ SEXP bcffile_isvcf(SEXP ext)
 {
     SEXP ans = ScalarLogical(FALSE);
     if (NULL != BCFFILE(ext)) {
-        _scan_checkext(ext, BCFFILE_TAG, "isVcf");
+        _checkext(ext, BCFFILE_TAG, "isVcf");
         if (BCFFILE(ext)->file && BCFFILE(ext)->file->is_vcf)
             ans = ScalarLogical(TRUE);
     }
@@ -290,7 +290,7 @@ static void _bcf_gi2sxp(SEXP geno, const int i_rec, const bcf_hdr_t * h,
 
 SEXP scan_bcf_header(SEXP ext)
 {
-    _scan_checkext(ext, BCFFILE_TAG, "scanBcfHeader");
+    _checkext(ext, BCFFILE_TAG, "scanBcfHeader");
     bcf_t *bcf = BCFFILE(ext)->file;
     if (!bcf->is_vcf && 0 != bgzf_seek(bcf->fp, 0, SEEK_SET))
         Rf_error("internal: failed to 'seek'");
@@ -398,8 +398,8 @@ int scan_bcf_range(bcf_t * bcf, bcf_hdr_t * hdr, SEXP ans, int tid, int start,
 
 SEXP scan_bcf(SEXP ext, SEXP space, SEXP tmpl)
 {
-    _scan_checkparams(space, R_NilValue, R_NilValue);
-    _scan_checkext(ext, BCFFILE_TAG, "scanBcf");
+    _checkparams(space, R_NilValue, R_NilValue);
+    _checkext(ext, BCFFILE_TAG, "scanBcf");
     bcf_t *bcf = BCFFILE(ext)->file;
     bcf_idx_t *idx = BCFFILE(ext)->index;
     if (!bcf->is_vcf && 0 != bgzf_seek(bcf->fp, 0, SEEK_SET))
