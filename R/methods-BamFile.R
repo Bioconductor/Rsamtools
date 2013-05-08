@@ -449,57 +449,85 @@ setMethod(groupAsPairs, "GAlignments",
 ### "summarizeOverlaps" methods.
 ###
 
-.dispatchOverlaps <- GenomicRanges:::.dispatchOverlaps
-.countWithYieldSize <- function(FUN, bf, param, features, 
-                                mode, ignore.strand)
+setMethod("summarizeOverlaps", c("GRanges", "BamFile"),
+    function(features, reads, mode, ignore.strand=FALSE, ..., 
+             inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
+             param=ScanBamParam())
 {
-    ct <- integer(length(features))
-    while (length(x <- FUN(bf, param=param))) {
-        ct <- ct + .dispatchOverlaps(x, features, mode, ignore.strand) 
-    }
-    ct
-}
-.processBamFiles <-
-    function(features, reads, mode, ignore.strand, ..., singleEnd=TRUE, param)
-{
-    mode <- match.fun(mode)
-    if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
-        lapply <- parallel::mclapply
+    .dispatchBamFiles(features, BamFileList(reads), mode, ignore.strand, ..., 
+                      inter.feature=inter.feature, singleEnd=singleEnd, 
+                      fragments=fragments, param=param)
+})
 
-    lst <- lapply(seq_along(reads), function(i, reads) {
-        bf <- reads[[i]]
+setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
+    function(features, reads, mode, ignore.strand=FALSE, ..., 
+             inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE, 
+             param=ScanBamParam())
+{
+    .dispatchBamFiles(features, BamFileList(reads), mode, ignore.strand, ..., 
+                      inter.feature=inter.feature, singleEnd=singleEnd, 
+                      fragments=fragments, param=param)
+})
+
+.dispatchOverlaps <- GenomicRanges:::.dispatchOverlaps
+.countWithYieldSize <- function(FUN, features, bf, mode, ignore.strand, 
+                                inter.feature, param)
+{
+    if (is.na(yieldSize(bf))) {
+        x <- FUN(bf, param=param)
+        .dispatchOverlaps(features, x, mode, ignore.strand, inter.feature)
+    } else {
         if (!isOpen(bf)) {
             open(bf)
             on.exit(close(bf))
         }
-        ## singleEnd=TRUE -> output GAlignments
-        if (singleEnd)
-            ct <- .countWithYieldSize(readGAlignmentsFromBam, bf, param,
-                                      features, mode, ignore.strand)
-        ## singleEnd=FALSE -> output GAlignmentPairs
-        if (!singleEnd) {
-            ## paired-end, file sorted by qname
-            if (isTRUE(obeyQname(bf))) {
-                ct <- .countWithYieldSize(readGAlignmentPairsFromBam, bf,
-                                          param, features, mode, ignore.strand)
-            ## paired-end, file not sorted 
-            } else {
-                x <- grglist(readGAlignmentPairsFromBam(bf, param=param))
-                ct <- .dispatchOverlaps(x, features, mode=mode, 
-                                       ignore.strand=ignore.strand)
-            }
+        ct <- integer(length(features))
+        while (length(x <- FUN(bf, param=param))) {
+            ct <- ct + .dispatchOverlaps(features, x, mode, ignore.strand,
+                                         inter.feature) 
         }
         ct
-    }, reads)
-
-    counts <- do.call(cbind, lst)
-    colData <- DataFrame(fileName = reads)
-    if (!is.null(names(reads))) {
-        rownames(colData) <- names(reads)
-    } else {
-        rownames(colData) <- sub(".bai$", "", basename(reads))
     }
-    SummarizedExperiment(assays=SimpleList(counts=as.matrix(counts)),
+}
+
+.dispatchBamFiles <-
+    function(features, reads, mode, ignore.strand, ..., 
+             inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
+             param=ScanBamParam())
+{
+    if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
+        lapply <- parallel::mclapply
+
+    cts <- lapply(seq_along(reads), 
+               function(i, reads, mode) {
+                   bf <- reads[[i]]
+                   if (singleEnd) {
+                       ## single-end
+                       FUN <- readGAlignmentsFromBam
+                   } else {
+                       if (fragments) { 
+                           if (isTRUE(obeyQname(bf))) 
+                               ## paired-end, sorted by qname
+                               FUN <- readGAlignmentsListFromBam
+                           else
+                               stop("when 'fragments=TRUE' Bam files must be ",
+                                    "sorted by qname ('obeyQname=TRUE')")
+                       } else {
+                           ## paired-end, not sorted by qname
+                           FUN <- readGAlignmentPairsFromBam
+                       }
+                   }
+                   .countWithYieldSize(FUN, features, bf, mode, ignore.strand, 
+                                       inter.feature=inter.feature, param=param) 
+               }, reads, mode=match.fun(mode))
+
+    counts <- as.matrix(do.call(cbind, cts))
+    colData <- DataFrame(fileName=reads)
+    if (!is.null(names(reads)))
+        rownames(colData) <- names(reads)
+    else
+        rownames(colData) <- sub(".bai$", "", basename(reads))
+    SummarizedExperiment(assays=SimpleList(counts=counts),
                          rowData=features, colData=colData)
 }
 

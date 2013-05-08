@@ -83,7 +83,8 @@ bamDirname(x, ...) <- value
 
 ## Counting
 \S4method{summarizeOverlaps}{BamViews,missing}(
-    features, reads, mode, ignore.strand=FALSE, ..., singleEnd=TRUE, param=ScanBamParam()) 
+    features, reads, mode, ignore.strand=FALSE, ..., inter.feature=TRUE,
+    singleEnd=TRUE, fragments=TRUE, param=ScanBamParam()) 
 
 }
 
@@ -185,6 +186,27 @@ bamDirname(x, ...) <- value
   \item{singleEnd}{
     A logical value indicating if the bam files contain single or paired-end
     reads.}
+
+  \item{inter.feature}{
+    A logical indicating if the counting \code{mode} should be aware of
+    overlapping features. When TRUE (default), reads mapping to multiple
+    features are dropped (i.e., not counted). When FALSE, these reads are
+    retained and a count is assigned to each feature they map to.
+
+    There are 6 possible combinations of the \code{mode} and
+    \code{inter.feature} arguments. When \code{inter.feature=FALSE} the
+    behavior of modes \sQuote{Union} and \sQuote{IntersectionNotEmpty} are the
+    same resulting in 5 distinct ways to count.}
+
+  \item{fragments}{
+    A logical value indicating if singletons, reads with unmapped pairs
+    and other fragments should be included in the counting. When
+    \code{fragments=FALSE} only reads paired with the algorithm described
+    at ?findMateAlignment are counted. When \code{fragments=TRUE} (default)
+    all singletons, reads with unmapped pairs and other fragments are
+    counted in addition to the reads paired with the ?findMateAlignment
+    algorithm. This argument applies to paired-end reads only so
+    \code{singleEnd} must be TRUE.}
 
 }
 
@@ -330,19 +352,18 @@ aln[colnames(bv)]
 mcols(aln)
 
 ##---------------------------------------------------------------------------
-## summarizeOverlaps with BamViews
+## summarizeOverlaps() with BamViews
 ##
 
-## bamSamples and bamPaths metadata are put into the colData
-## and the bamExperiment metadata is put into the exptData slot
-## of the resulting SummarizedExperiment.
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
-                  mustWork=TRUE)
-rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
-bv <- BamViews(fl, bamSamples=DataFrame(info="test", row.names="ex1"),
-               bamRanges=rng)
-se <- summarizeOverlaps(bv, mode=Union, ignore.strand=TRUE)
+## bamSamples and bamPaths metadata are included in the colData.
+## bamExperiment metadata is put into the exptData slot.
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools", mustWork=TRUE)
+rngs <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
+samp <- DataFrame(info="test", row.names="ex1")
+view <- BamViews(fl, bamSamples=samp, bamRanges=rngs)
+se <- summarizeOverlaps(view, mode=Union, ignore.strand=TRUE)
 colData(se)
+exptData(se)
 }
 
 \keyword{classes}

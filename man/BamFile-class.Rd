@@ -34,6 +34,8 @@
 % counting 
 \alias{summarizeOverlaps,GRanges,BamFileList-method}
 \alias{summarizeOverlaps,GRangesList,BamFileList-method}
+\alias{summarizeOverlaps,GRanges,BamFile-method}
+\alias{summarizeOverlaps,GRangesList,BamFile-method}
 \alias{findSpliceOverlaps,character-method}
 \alias{findSpliceOverlaps,BamFile-method}
 \alias{findSpliceOverlaps,character,ANY-method}
@@ -96,10 +98,18 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 
 ## counting
 
-\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, ignore.strand=FALSE, ...,
-    singleEnd=TRUE, param=ScanBamParam()) 
-\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, ignore.strand=FALSE, ...,
-    singleEnd=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, 
+    ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
+    fragments=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, 
+    ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
+    fragments=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRanges,BamFile}(features, reads, mode, 
+    ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
+    fragments=TRUE, param=ScanBamParam()) 
+\S4method{summarizeOverlaps}{GRangesList,BamFile}(features, reads, mode, 
+    ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
+    fragments=TRUE, param=ScanBamParam()) 
 
 \S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ...,
     param=ScanBamParam(), pairedEnd=FALSE)
@@ -205,8 +215,29 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
   \item{ignore.strand}{
     A logical value indicating if strand should be considered when matching.}
 
+  \item{inter.feature}{
+    A logical indicating if the counting \code{mode} should be aware of
+    overlapping features. When TRUE (default), reads mapping to multiple
+    features are dropped (i.e., not counted). When FALSE, these reads are
+    retained and a count is assigned to each feature they map to.
+
+    There are 6 possible combinations of the \code{mode} and
+    \code{inter.feature} arguments. When \code{inter.feature=FALSE} the
+    behavior of modes \sQuote{Union} and \sQuote{IntersectionNotEmpty} are the
+    same resulting in 5 distinct ways to count.}
+
   \item{singleEnd}{
     A logical value indicating if reads are single or paired-end.}
+
+  \item{fragments}{
+    A logical value indicating if singletons, reads with unmapped pairs
+    and other fragments should be included in the counting. When 
+    \code{fragments=FALSE} only reads paired with the algorithm described
+    at ?findMateAlignment are counted. When \code{fragments=TRUE} (default)
+    all singletons, reads with unmapped pairs and other fragments are
+    counted in addition to the reads paired with the ?findMateAlignment 
+    algorithm. This argument applies to paired-end reads only so
+    \code{singleEnd} must be TRUE.}
 
   \item{pairedEnd}{
     A logical value indicating if reads are single or paired-end.}
@@ -343,8 +374,10 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 \author{Martin Morgan and Marc Carlson}
 
 \seealso{
-  The \code{GenomicRanges} package is where the \code{summarizeOverlaps}
-  method originates.
+  \code{summarizeOverlaps}-methods for GRanges and GAlignments are in
+  the \code{GenomicRanges} package. See 
+  \code{\link[GenomicRanges:summarizeOverlaps]{summarizeOverlaps}} for
+  more details.
 }
 
 \examples{
@@ -375,43 +408,11 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
 }, bf, rng)
 close(bf)
 
-
 ##------------------------------------------------------------------------
-## summarizeOverlaps with BamFileList
+## summarizeOverlaps() with Bam files
 ##
 
-library(pasillaBamSubset)
-library("TxDb.Dmelanogaster.UCSC.dm3.ensGene")
-exbygene <- exonsBy(TxDb.Dmelanogaster.UCSC.dm3.ensGene, "gene")
-
-## single-end:
-## When 'yieldSize' is specified the file is processed by chunks. 
-## Otherwise the complete file is read into memory.
-fl <- untreated1_chr4() 
-bfl <- BamFileList(fl, yieldSize=50000)
-se1 <- summarizeOverlaps(exbygene, bfl, singleEnd=TRUE)
-counts1 <- assays(se1)$counts
-
-## paired-end sorted by qname:
-## Set 'singleEnd' to 'FALSE'. A BAM file sorted by qname
-## can be read in chunks with 'yieldSize'. 
-fl <- untreated3_chr4() 
-sortfl <- sortBam(fl, tempfile(), byQname=TRUE)
-bf2 <- BamFileList(sortfl, index=character(0), 
-                   yieldSize=50000, obeyQname=TRUE)
-se2 <- summarizeOverlaps(exbygene, bf2, singleEnd=FALSE)
-counts2 <- assays(se2)$counts
-
-## paired-end not sorted:
-## If the file is not sorted by qname, all records are read 
-## into memory for sorting and to determine proper pairs.
-## Any 'yieldSize' set on the BamFile will be ignored.
-fl <- untreated3_chr4() 
-bf3 <- BamFileList(fl)
-se3 <- summarizeOverlaps(exbygene, bf3, singleEnd=FALSE)
-counts3 <- assays(se3)$counts
-
-identical(as.vector(counts2), as.vector(counts3))
+## See ?'summarizeOverlaps' in the GenomicRanges package for examples.
 
 ##------------------------------------------------------------------------
 ## findSpliceOverlaps 

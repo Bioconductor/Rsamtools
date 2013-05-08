@@ -9,18 +9,22 @@ BamFileList <-
 
 setMethod("summarizeOverlaps", c("GRanges", "BamFileList"),
     function(features, reads, mode, ignore.strand=FALSE, ..., 
-             singleEnd=TRUE, param=ScanBamParam())
+             inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
+             param=ScanBamParam())
 {
-    .processBamFiles(features, reads, mode, ignore.strand, 
-        ..., singleEnd=singleEnd, param=param)
+    .dispatchBamFiles(features, reads, mode, ignore.strand, ..., 
+                      inter.feature=inter.feature, singleEnd=singleEnd, 
+                      fragments=fragments, param=param)
 })
 
 setMethod("summarizeOverlaps", c("GRangesList", "BamFileList"),
     function(features, reads, mode, ignore.strand=FALSE, ..., 
-             singleEnd=TRUE, param=ScanBamParam())
+             inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
+             param=ScanBamParam())
 {
-    .processBamFiles(features, reads, mode, ignore.strand, 
-        ..., singleEnd=singleEnd, param=param)
+    .dispatchBamFiles(features, reads, mode, ignore.strand, ..., 
+                      inter.feature=inter.feature, singleEnd=singleEnd, 
+                      fragments=fragments, param=param)
 })
 
 setMethod(obeyQname, "BamFileList",

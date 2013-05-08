@@ -259,14 +259,14 @@ setMethod(show, "BamViews", function(object) {
 
 setMethod("summarizeOverlaps", c("BamViews", "missing"),
 function(features, reads, mode, ignore.strand=FALSE, 
-         ..., singleEnd=TRUE, param=ScanBamParam())
+         ..., inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
+         param=ScanBamParam())
 {
-    se <- .processBamFiles(bamRanges(features), BamFileList(bamPaths(features)), 
-        mode, ignore.strand, ..., singleEnd=singleEnd, param=param)
-    nms <- rownames(colData(se))
-    colData(se) <- DataFrame(colData(se), bamSamples(features),
-        bamIndicies(features))
-    rownames(colData(se)) <- nms
-    exptData(se) <- SimpleList(bamExperiment=bamExperiment(features)) 
+    se <- callGeneric(bamRanges(features), BamFileList(bamPaths(features)), 
+                      mode, ignore.strand, ..., inter.feature=inter.feature, 
+                      singleEnd=singleEnd, fragments=fragments, param=param)
+    colData(se)$bamSamples <- bamSamples(features)
+    colData(se)$bamIndicies <- bamIndicies(features)
+    exptData(se)$bamExperiment <- bamExperiment(features)
     se 
 })
