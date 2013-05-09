@@ -505,7 +505,8 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
         lapply <- parallel::mclapply
 
     cts <- lapply(seq_along(reads), 
-               function(i, reads, mode) {
+               function(i, reads, features, mode, ignore.strand, 
+                        inter.feature, param) {
                    bf <- reads[[i]]
                    if (singleEnd) {
                        ## single-end
@@ -524,8 +525,9 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
                        }
                    }
                    .countWithYieldSize(FUN, features, bf, mode, ignore.strand, 
-                                       inter.feature=inter.feature, param=param) 
-               }, reads, mode=match.fun(mode))
+                                       inter.feature, param) 
+               }, reads, features, mode=match.fun(mode), ignore.strand, 
+               inter.feature, param) 
 
     counts <- as.matrix(do.call(cbind, cts))
     colData <- DataFrame(fileName=reads)
