@@ -69,6 +69,8 @@ setGeneric("ScanBcfParam",
 
 setGeneric("isOpen")
 
+setGeneric("isIncomplete")
+
 setGeneric("scanBcfHeader",
            function(file, ...) standardGeneric("scanBcfHeader"))
 

@@ -6,6 +6,12 @@ setMethod(isOpen, "BamFile",
     .Call(.bamfile_isopen, .extptr(con))
 })
 
+setMethod(isIncomplete, "BamFile",
+    function(con)
+{
+    .Call(.bamfile_isincomplete, .extptr(con))
+})
+
 BamFile <-
     function(file, index=file, ..., yieldSize=NA_integer_, 
              obeyQname=FALSE)

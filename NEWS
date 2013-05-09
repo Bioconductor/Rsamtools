@@ -9,6 +9,8 @@ NEW FEATURES
     o filterBam accepts FilterRules call-backs for arbitrary
     filtering.
 
+    o add isIncomplete,BamFile-method to test for end-of-file
+
 BUG FIXES
 
     o scanVcfHeader tolerates records without ID fields, and with

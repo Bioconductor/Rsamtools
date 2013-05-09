@@ -130,13 +130,31 @@ SEXP bamfile_close(SEXP ext)
 
 SEXP bamfile_isopen(SEXP ext)
 {
-    SEXP ans = ScalarLogical(FALSE);
+    int ans = FALSE;
     if (NULL != BAMFILE(ext)) {
         _checkext(ext, BAMFILE_TAG, "isOpen");
-        if (NULL != BAMFILE(ext)->file)
-            ans = ScalarLogical(TRUE);
+	ans = NULL != BAMFILE(ext)->file;
     }
-    return ans;
+    return ScalarLogical(ans);
+}
+
+SEXP bamfile_isincomplete(SEXP ext)
+{
+    int ans = FALSE;
+    BAM_FILE bfile;
+    if (NULL != BAMFILE(ext)) {
+	_checkext(ext, BAMFILE_TAG, "isIncomplete");
+	bfile = BAMFILE(ext);
+	if (NULL != bfile && NULL != bfile->file) {
+	    /* heuristic: can we read a record? bam_seek does not
+	     * support SEEK_END */
+	    off_t offset = bam_tell(bfile->file->x.bam);
+	    char buf;
+	    ans = bam_read(bfile->file->x.bam, &buf, 1) > 0;
+	    bam_seek(bfile->file->x.bam, offset, SEEK_SET);
+	}
+    }
+    return ScalarLogical(ans);
 }
 
 /* implementation */

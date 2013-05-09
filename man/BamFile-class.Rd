@@ -10,6 +10,7 @@
 \alias{close.BamFile}
 % accessors
 \alias{isOpen,BamFile-method}
+\alias{isIncomplete,BamFile-method}
 % methods
 \alias{scanBamHeader,BamFile-method}
 \alias{seqinfo,BamFile-method}
@@ -74,6 +75,7 @@ BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
 ## accessors; also path(), index(), yieldSize()
 
 \S4method{isOpen}{BamFile}(con, rw="")
+\S4method{isIncomplete}{BamFile}(con)
 \S4method{obeyQname}{BamFile}(object, ...)
 obeyQname(object, ...) <- value
 
@@ -301,6 +303,12 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
     \item{close.BamFile}{Closes the \code{BamFile} \code{con}; returning
       (invisibly) the updated \code{BamFile}. The instance may be
       re-opened with \code{open.BamFile}.}
+
+    \item{isOpen}{Tests whether the \code{BamFile} \code{con} has been
+      opened for reading.}
+
+    \item{isIncomplete}{Tests whether the \code{BamFile} \code{con} is
+      niether closed nor at the end of the file.}
 
   }
 

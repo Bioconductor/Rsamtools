@@ -17,6 +17,20 @@ test_BamFile_openclose <- function()
     checkTrue(identical(bf$.extptr, bf1$.extptr))
 }
 
+test_BamFile_isIncomplete <- function()
+{
+    bf <- BamFile(fl, yieldSize=3000)
+    checkIdentical(FALSE, isIncomplete(bf))
+    open(bf)
+    checkIdentical(TRUE, isIncomplete(bf))
+    checkIdentical(3000L, length(scanBam(bf)[[1]][[1]]))
+    checkIdentical(TRUE, isIncomplete(bf))
+    checkIdentical(307L, length(scanBam(bf)[[1]][[1]]))
+    checkIdentical(FALSE, isIncomplete(bf))
+    close(bf)
+    checkIdentical(FALSE, isIncomplete(bf))
+}
+
 test_BamFile_corrupt_index <- function()
 {
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
