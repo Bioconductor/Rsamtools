@@ -1,6 +1,7 @@
 #include <Rdefines.h>
 #include "utilities.h"
 #include "IRanges_interface.h"
+#include "XVector_interface.h"
 
 SEXP _get_namespace(const char *pkg)
 {
