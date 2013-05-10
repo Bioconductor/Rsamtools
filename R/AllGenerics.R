@@ -104,33 +104,21 @@ setGeneric("readGAlignmentsFromBam",
            standardGeneric("readGAlignmentsFromBam"),
            signature="file")
 
-### Temporary alias for backward compatibility.
-readBamGappedAlignments <- readGAlignmentsFromBam
-
 setGeneric("readGappedReadsFromBam",
            function(file, index=file, use.names=FALSE, param=NULL)
            standardGeneric("readGappedReadsFromBam"),
            signature="file")
-
-### Temporary alias for backward compatibility.
-readBamGappedReads <- readGappedReadsFromBam
 
 setGeneric("readGAlignmentPairsFromBam",
            function(file, index=file, use.names=FALSE, param=NULL)
            standardGeneric("readGAlignmentPairsFromBam"),
            signature="file")
 
-### Temporary alias for backward compatibility.
-readBamGappedAlignmentPairs <- readGAlignmentPairsFromBam
-
 setGeneric("readGAlignmentsListFromBam",
            function(file, index=file, ..., use.names=FALSE, 
                     param=ScanBamParam(), group.as.pairs=TRUE)
            standardGeneric("readGAlignmentsListFromBam"),
            signature="file")
-
-### Temporary alias for backward compatibility.
-readBamGAlignmentsList <- readGAlignmentsListFromBam
 
 setGeneric("groupAsPairs",
            function(x, ...)
@@ -178,3 +166,33 @@ setGeneric("obeyQname<-",
            function(object, ..., value) standardGeneric("obeyQname<-"))
 
 setGeneric("isOpen")
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Old stuff.
+###
+
+readBamGappedAlignments <- function(...)
+{
+    .Deprecated("readGAlignmentsFromBam")
+    readGAlignmentsFromBam(...)
+}
+
+readBamGappedReads <- function(...)
+{
+    .Deprecated("readGappedReadsFromBam")
+    readGappedReadsFromBam(...)
+}
+
+readBamGappedAlignmentPairs <- function(...)
+{
+    .Deprecated("readGAlignmentPairsFromBam")
+    readGAlignmentPairsFromBam(...)
+}
+
+readBamGAlignmentsList <- function(...)
+{
+    .Deprecated("readGAlignmentsListFromBam")
+    readGAlignmentsListFromBam(...)
+}
+

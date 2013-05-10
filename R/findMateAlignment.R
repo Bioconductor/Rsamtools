@@ -566,6 +566,14 @@ makeGAlignmentPairs <- function(x, use.names=FALSE, use.mcols=FALSE)
     GAlignmentPairs(ans_first, ans_last, ans_is_proper, names=ans_names)
 }
 
-### Temporary alias for backward compatibility.
-makeGappedAlignmentPairs <- makeGAlignmentPairs
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Old stuff.
+###
+
+makeGappedAlignmentPairs <- function(...)
+{
+    .Deprecated("makeGAlignmentPairs")
+    makeGAlignmentPairs(...)
+}
 
