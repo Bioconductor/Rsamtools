@@ -158,7 +158,8 @@ groupAsPairs(x, ...)
   drop them).
 }
 
-\author{H. Pages}
+\author{H. Pages <hpages@fhcrc.org> and
+        Valerie Obenchain <vobencha@fhcrc.org>}
 
 \seealso{
   \link[GenomicRanges]{GAlignments-class},
