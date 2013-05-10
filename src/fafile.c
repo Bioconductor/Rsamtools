@@ -1,5 +1,6 @@
 #include <stdlib.h>             /* free */
 #include "IRanges_interface.h"
+#include "XVector_interface.h"
 #include "fafile.h"
 #include "utilities.h"
 #include "razf.h"

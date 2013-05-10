@@ -7,6 +7,7 @@
 #include "encode.h"
 #include "utilities.h"
 #include "IRanges_interface.h"
+#include "XVector_interface.h"
 #include "Biostrings_interface.h"
 
 /* from samtoools/bam_sort.c */
