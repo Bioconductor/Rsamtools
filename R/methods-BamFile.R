@@ -496,37 +496,39 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
     }
 }
 
+.readFunction <- function(singleEnd, fragments, obeyQname) 
+{
+    if (singleEnd) {
+        FUN <- readGAlignmentsFromBam
+    } else {
+        if (fragments) 
+            if (obeyQname) 
+                FUN <- readGAlignmentsListFromBam
+            else
+                stop("when 'fragments=TRUE' Bam files must be ",
+                     "sorted by qname ('obeyQname=TRUE')")
+        else
+            FUN <- readGAlignmentPairsFromBam
+    }
+    FUN
+}
+
 .dispatchBamFiles <-
     function(features, reads, mode, ignore.strand, ..., 
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
              param=ScanBamParam())
 {
+    FUN <- .readFunction(singleEnd, fragments, isTRUE(obeyQname(reads)))
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
         lapply <- parallel::mclapply
 
     cts <- lapply(seq_along(reads), 
-               function(i, reads, features, mode, ignore.strand, 
+               function(i, FUN, reads, features, mode, ignore.strand, 
                         inter.feature, param) {
                    bf <- reads[[i]]
-                   if (singleEnd) {
-                       ## single-end
-                       FUN <- readGAlignmentsFromBam
-                   } else {
-                       if (fragments) { 
-                           if (isTRUE(obeyQname(bf))) 
-                               ## paired-end, sorted by qname
-                               FUN <- readGAlignmentsListFromBam
-                           else
-                               stop("when 'fragments=TRUE' Bam files must be ",
-                                    "sorted by qname ('obeyQname=TRUE')")
-                       } else {
-                           ## paired-end, not sorted by qname
-                           FUN <- readGAlignmentPairsFromBam
-                       }
-                   }
                    .countWithYieldSize(FUN, features, bf, mode, ignore.strand, 
                                        inter.feature, param) 
-               }, reads, features, mode=match.fun(mode), ignore.strand, 
+               }, FUN, reads, features, mode=match.fun(mode), ignore.strand, 
                inter.feature, param) 
 
     counts <- as.matrix(do.call(cbind, cts))
