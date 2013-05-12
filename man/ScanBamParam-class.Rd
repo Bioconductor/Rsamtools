@@ -97,10 +97,16 @@ bamFlagTest(flag, value)
     of the alignment) is missing or contains only matches / mismatches
     (\code{'M'}).}
 
-  \item{reverseComplement}{A logical(1) vector which, when TRUE, returns
-    the sequence and quality scores of reads mapped to the minus strand
-    in the reverse complement (sequence) and reverse (quality) of the
-    read as stored in the BAM file.}
+  \item{reverseComplement}{A logical(1) vectors. BAM files store reads
+    mapping to the minus strand as though they are on the plus
+    strand. Rsamtools obeys this convention by default
+    (\code{reverseComplement=FALSE}), but when this value is set to TRUE
+    returns the sequence and quality scores of reads mapped to the minus
+    strand in the reverse complement (sequence) and reverse (quality) of
+    the read as stored in the BAM file. This might be useful if wishing
+    to recover read and quality scores as represented in fastq files,
+    but is NOT appropriate for variant calling or other alignment-based
+    operations.}
 
   \item{tag}{A character vector naming tags to be extracted. A tag is an
     optional field, with arbitrary information, stored with each
@@ -155,11 +161,14 @@ bamFlagTest(flag, value)
     mate read should be returned (TRUE) or not (FALSE), or whether mate
     read number should be ignored (NA).}
 
-  \item{isNotPrimaryRead}{A logical(1) indicating whether reads that are
-    primary (FALSE), are not primary (TRUE) or whose primary status does
-    not matter (NA) should be returned. A non-primary read might result
-    when portions of a read aligns to multiple locations, e.g., when
-    spanning splice junctions).}
+  \item{isNotPrimaryRead}{A logical(1) indicating whether alignments
+    that are primary (FALSE), are not primary (TRUE) or whose primary
+    status does not matter (NA) should be returned. A non-primary
+    alignment (\dQuote{secondary alignment} in the SAM specification)
+    might result when a read aligns to multiple locations. One alignment
+    is designated as primary and has this flag set to FALSE; the
+    remainder, for which this flag is TRUE, are designated by the
+    aligner as secondary.}
 
   \item{isNotPassingQualityControls}{A logical(1) indicating whether
     reads passing quality controls (FALSE), reads not passing quality
