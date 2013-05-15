@@ -40,6 +40,7 @@ setMethod(isOpen, "BcfFile",
     function(header)
 {
     h <- sub("^##", "", header[["Header"]])
+    h <- h[!duplicated(h)]
     ## simple key=value pairs --> DataFrame
     rex <- "^[[:alnum:]]+=[^<]"
     x <- strsplit(grep(rex, h, value=TRUE), "=")
