@@ -22,7 +22,7 @@ typedef void (_FINISH1_FUNC) (BAM_DATA);
 static const char *TMPL_ELT_NMS[] = {
     "qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
     "mrnm", "mpos", "isize", "seq", "qual", "tag"
-        /* "vtype", "value" */
+    /* "vtype", "value" */
 };
 
 static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
@@ -134,8 +134,8 @@ SEXP _read_bam_header(SEXP ext)
 
     /* target length / name */
     SET_VECTOR_ELT(ans, 0, NEW_INTEGER(n_elts));
-    SEXP tlen = VECTOR_ELT(ans, 0);	/* target length */
-    SEXP tnm = PROTECT(NEW_CHARACTER(n_elts));	/* target name */
+    SEXP tlen = VECTOR_ELT(ans, 0); /* target length */
+    SEXP tnm = PROTECT(NEW_CHARACTER(n_elts));  /* target name */
     setAttrib(tlen, R_NamesSymbol, tnm);
     UNPROTECT(1);
     for (int j = 0; j < n_elts; ++j) {
@@ -170,7 +170,7 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
     int qname_bufsize = 1000;
     char *last_qname = Calloc(qname_bufsize, char);
     int yieldSize = bd->yieldSize,
-	obeyQname = bd->obeyQname;
+        obeyQname = bd->obeyQname;
     int ith_yield = 0, inc_yield = 1;
 
     while ((r = samread(bfile->file, bam)) >= 0) {
@@ -193,13 +193,13 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
         }
 
         int result = (*parse1) (bam, bd);
-        if (result < 0) {	/* parse error: e.g., cigar buffer overflow */
+        if (result < 0) {   /* parse error: e.g., cigar buffer overflow */
             _grow_SCAN_BAM_DATA(bd, 0);
             return result;
         } else if (result == 0L) /* does not pass filter */
-	    continue;
+            continue;
 
-	ith_yield += inc_yield;
+        ith_yield += inc_yield;
         if (NA_INTEGER != yieldSize && ith_yield == yieldSize) {
             bfile->pos0 = bam_tell(bfile->file->x.bam);
             if (!obeyQname)
@@ -257,7 +257,7 @@ static int _do_scan_bam(BAM_DATA bd, SEXP space, _PARSE1_FUNC parse1,
         /* everything */
         status = _scan_bam_all(bd, parse1, finish1);
     else {                      /* fetch */
-	BAM_FILE bfile = _bam_file_BAM_DATA(bd);
+        BAM_FILE bfile = _bam_file_BAM_DATA(bd);
         if (NULL == bfile->index)
             Rf_error("valid 'index' file required");
         status = _scan_bam_fetch(bd, VECTOR_ELT(space, 0),
@@ -287,7 +287,7 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space)
        range1: tmpl1, tmpl2...
        range2: tmpl1, tmpl2...
        ...
-     */
+    */
     for (int irange = 0; irange < nrange; ++irange) {
         SEXP tag = VECTOR_ELT(template_list, TAG_IDX);
         SEXP tmpl;
@@ -316,12 +316,12 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
 {
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
     SEXP result =
-	PROTECT(_scan_bam_result_init(template_list, names, space));
+        PROTECT(_scan_bam_result_init(template_list, names, space));
     SCAN_BAM_DATA sbd = _Calloc_SCAN_BAM_DATA(result);
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
-				 LOGICAL(reverseComplement)[0],
-				 INTEGER(yieldSize)[0],
-				 LOGICAL(obeyQname)[0], (void *) sbd);
+                                 LOGICAL(reverseComplement)[0],
+                                 INTEGER(yieldSize)[0],
+                                 LOGICAL(obeyQname)[0], (void *) sbd);
 
     int status = _do_scan_bam(bd, space, _filter_and_parse1,
                               _finish1range_BAM_DATA);
@@ -371,7 +371,7 @@ SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
         int idx = bd->irec;
         int parse_status = bd->parse_status;
         _Free_BAM_DATA(bd);
-	UNPROTECT(1);
+        UNPROTECT(1);
         Rf_error("'countBam' failed:\n  record: %d\n  error: %d",
                  idx, parse_status);
     }
@@ -401,19 +401,19 @@ static int _prefilter_bam1(const bam1_t * bam, void *data)
 
 SEXP
 _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-	       SEXP yieldSize, SEXP obeyQname)
+               SEXP yieldSize, SEXP obeyQname)
 {
     SEXP ext = PROTECT(bambuffer(INTEGER(yieldSize)[0]));
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
-				 0, INTEGER(yieldSize)[0],
-				 LOGICAL(obeyQname)[0], BAMBUFFER(ext));
+                                 0, INTEGER(yieldSize)[0],
+                                 LOGICAL(obeyQname)[0], BAMBUFFER(ext));
 
     int status = _do_scan_bam(bd, space, _prefilter_bam1, NULL);
     if (status < 0) {
         int idx = bd->irec;
         int parse_status = bd->parse_status;
         _Free_BAM_DATA(bd);
-	UNPROTECT(1);
+        UNPROTECT(1);
         Rf_error("'filterBam' prefilter failed:\n  record: %d\n  error: %d",
                  idx, parse_status);
     }
@@ -453,7 +453,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
         int idx = bd->irec;
         int parse_status = bd->parse_status;
         _Free_BAM_DATA(bd);
-	samclose(f_out);
+        samclose(f_out);
         Rf_error("'filterBam' failed:\n  record: %d\n  error: %d",
                  idx, parse_status);
     }

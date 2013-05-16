@@ -92,10 +92,10 @@ static BAM_FILE _bamfile_open_w(SEXP file0, SEXP file1)
     BAM_FILE bfile;
 
     if (0 == Rf_length(file1))
-	Rf_error("'file1' must be a character(1) path to a valid bam file");
+        Rf_error("'file1' must be a character(1) path to a valid bam file");
     infile = _bam_tryopen(translateChar(STRING_ELT(file1, 0)), "rb", 0);
     outfile = _bam_tryopen(translateChar(STRING_ELT(file0, 0)), "wb",
-			   infile->header);
+                           infile->header);
     samclose(infile);
 
     bfile = (BAM_FILE) Calloc(1, _BAM_FILE);
@@ -110,9 +110,9 @@ SEXP bamfile_open(SEXP file0, SEXP file1, SEXP mode)
     _checknames(file0, file1, mode);
     BAM_FILE bfile;
     if (*CHAR(STRING_ELT(mode, 0)) == 'r')
-	bfile = _bamfile_open_r(file0, file1, mode);
+        bfile = _bamfile_open_r(file0, file1, mode);
     else
-	bfile = _bamfile_open_w(file0, file1);
+        bfile = _bamfile_open_w(file0, file1);
 
     SEXP ext = PROTECT(R_MakeExternalPtr(bfile, BAMFILE_TAG, file0));
     R_RegisterCFinalizerEx(ext, _bamfile_finalizer, TRUE);
@@ -133,7 +133,7 @@ SEXP bamfile_isopen(SEXP ext)
     int ans = FALSE;
     if (NULL != BAMFILE(ext)) {
         _checkext(ext, BAMFILE_TAG, "isOpen");
-	ans = NULL != BAMFILE(ext)->file;
+        ans = NULL != BAMFILE(ext)->file;
     }
     return ScalarLogical(ans);
 }
@@ -143,16 +143,16 @@ SEXP bamfile_isincomplete(SEXP ext)
     int ans = FALSE;
     BAM_FILE bfile;
     if (NULL != BAMFILE(ext)) {
-	_checkext(ext, BAMFILE_TAG, "isIncomplete");
-	bfile = BAMFILE(ext);
-	if (NULL != bfile && NULL != bfile->file) {
-	    /* heuristic: can we read a record? bam_seek does not
-	     * support SEEK_END */
-	    off_t offset = bam_tell(bfile->file->x.bam);
-	    char buf;
-	    ans = bam_read(bfile->file->x.bam, &buf, 1) > 0;
-	    bam_seek(bfile->file->x.bam, offset, SEEK_SET);
-	}
+        _checkext(ext, BAMFILE_TAG, "isIncomplete");
+        bfile = BAMFILE(ext);
+        if (NULL != bfile && NULL != bfile->file) {
+            /* heuristic: can we read a record? bam_seek does not
+             * support SEEK_END */
+            off_t offset = bam_tell(bfile->file->x.bam);
+            char buf;
+            ans = bam_read(bfile->file->x.bam, &buf, 1) > 0;
+            bam_seek(bfile->file->x.bam, offset, SEEK_SET);
+        }
     }
     return ScalarLogical(ans);
 }
@@ -193,7 +193,7 @@ SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 }
 
 SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-		       SEXP yieldSize, SEXP obeyQname)
+                       SEXP yieldSize, SEXP obeyQname)
 {
     _checkext(ext, BAMFILE_TAG, "filterBam");
     _checkparams(space, keepFlags, isSimpleCigar);
@@ -202,8 +202,8 @@ SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     if (!(IS_LOGICAL(obeyQname) && (1L == LENGTH(obeyQname))))
         Rf_error("'obeyQname' must be logical(1)");
     SEXP result =
-	_prefilter_bam(ext, space, keepFlags, isSimpleCigar, yieldSize,
-		       obeyQname);
+        _prefilter_bam(ext, space, keepFlags, isSimpleCigar, yieldSize,
+                       obeyQname);
     if (R_NilValue == result)
         Rf_error("'filterBam' failed during pre-filtering");
     return result;
