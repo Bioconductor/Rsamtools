@@ -124,6 +124,34 @@ setMethod(countBam, "BamFile",
     .countBam_postprocess(x, file, param)
 })
 
+.filterBam_FilterRules <-
+    function(file, destination, filter, param)
+{
+    yieldSize <- yieldSize(file)
+    if (is.na(yieldSize))
+        yieldSize <- 1000000L
+    tmpl <- .scanBam_template(param)
+    reverseComplement <- bamReverseComplement(param)
+
+    dest <- .Call(.bamfile_open, destination, path(file), "wb")
+    n_tot <- 0L
+    repeat {
+        buf <- .io_bam(.prefilter_bamfile, file, param=param, yieldSize,
+                       obeyQname(file))
+        if (0L == .Call(.bambuffer_length, buf))
+            break;
+
+        ans <- .io_bam(.bambuffer_parse, file, param=param,
+                       buf, reverseComplement, tmpl)
+        ans <- DataFrame(.loadBamColsFromScan(unname(ans), param))
+        ans <- eval(filter, ans)
+        n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
+    }
+
+    .Call(.bamfile_close, dest)
+    destination
+}
+
 setMethod(filterBam, "BamFile",
           function (file, destination, index=file, ...,
                     filter=FilterRules(),
@@ -139,36 +167,14 @@ setMethod(filterBam, "BamFile",
     if (!is(param, "ScanBamParam"))
         stop(sprintf("'%s' must be a '%s'; was '%s'",
                      "param", "ScanBamParam", class(param)))
-
-    seqlengths <- seqlengths(file)
-    yieldSize <- yieldSize(file)
-    if (is.na(yieldSize))
-        yieldSize <- 1000000L
     param <- .filterBam_preprocess(file, param)
     destination <- .normalizePath(destination)
-    dest <- .Call(.bamfile_open, destination, path(file), "wb")
-    n_tot <- 0L
 
-    repeat {
-        buf <- .io_bam(.prefilter_bamfile, file, param=param, yieldSize,
-                       obeyQname(file))
-        if (0L == .Call(.bambuffer_length, buf))
-            break;
+    if (length(filter))
+        .filterBam_FilterRules(file, param=param, destination, filter)
+    else
+        .io_bam(.filter_bamfile, file, param=param, destination, "wb")
 
-        if (length(filter)) {
-            tmpl <- .scanBam_template(param)
-            reverseComplement <- bamReverseComplement(param)
-            ans <- .io_bam(.bambuffer_parse, file, param=param,
-                           buf, reverseComplement, tmpl)
-            ans <- .loadBamColsFromScan(unname(ans), param)
-            ans <- DataFrame(ans)
-            ans <- eval(filter, ans)
-        } else ans <- TRUE
-
-        n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
-    }
-
-    .Call(.bamfile_close, dest)
     if (indexDestination)
         indexBam(destination)
     destination
