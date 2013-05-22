@@ -239,7 +239,7 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
     all singletons, reads with unmapped pairs and other fragments are
     counted in addition to the reads paired with the ?findMateAlignment 
     algorithm. This argument applies to paired-end reads only so
-    \code{singleEnd} must be TRUE.}
+    \code{singleEnd} must be FALSE.}
 
   \item{pairedEnd}{
     A logical value indicating if reads are single or paired-end.}
@@ -382,13 +382,14 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 \author{Martin Morgan and Marc Carlson}
 
 \seealso{
-  \code{summarizeOverlaps}-methods for GRanges and GAlignments are in
-  the \code{GenomicRanges} package. See 
-  \code{\link[GenomicRanges:summarizeOverlaps]{summarizeOverlaps}} for
-  more details.
+  \code{\link[GenomicRanges:summarizeOverlaps]{summarizeOverlaps}} 
 }
 
 \examples{
+
+##------------------------------------------------------------------------
+## Iterating over Bam files.
+##------------------------------------------------------------------------
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
                   mustWork=TRUE)
@@ -417,14 +418,14 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
 close(bf)
 
 ##------------------------------------------------------------------------
-## summarizeOverlaps() with Bam files
-##
+## summarizeOverlaps().
+##------------------------------------------------------------------------
 
 ## See ?'summarizeOverlaps' in the GenomicRanges package for examples.
 
 ##------------------------------------------------------------------------
-## findSpliceOverlaps 
-##
+## findSpliceOverlaps. 
+##------------------------------------------------------------------------
 
 ## See ?'findSpliceOverlaps' for examples 
 }

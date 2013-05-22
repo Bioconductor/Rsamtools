@@ -502,7 +502,7 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
     }
 }
 
-.readFunction <- function(singleEnd, fragments, obeyQname) 
+.getReadFunction <- function(singleEnd, fragments, obeyQname) 
 {
     if (singleEnd) {
         FUN <- readGAlignmentsFromBam
@@ -524,7 +524,7 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
              param=ScanBamParam())
 {
-    FUN <- .readFunction(singleEnd, fragments, isTRUE(obeyQname(reads)))
+    FUN <- .getReadFunction(singleEnd, fragments, isTRUE(obeyQname(reads)))
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
         lapply <- parallel::mclapply
 
@@ -535,14 +535,15 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
                    .countWithYieldSize(FUN, features, bf, mode, ignore.strand, 
                                        inter.feature, param) 
                }, FUN, reads, features, mode=match.fun(mode), ignore.strand, 
-               inter.feature, param) 
+               inter.feature, param
+           ) 
 
     counts <- as.matrix(do.call(cbind, cts))
-    colData <- DataFrame(fileName=reads)
+    countBam <- countBam(reads)
+    colData <- DataFrame(countBam[c("file", "records", "nucleotides")],
+                         row.names=countBam$file) 
     if (!is.null(names(reads)))
         rownames(colData) <- names(reads)
-    else
-        rownames(colData) <- sub(".bai$", "", basename(reads))
     SummarizedExperiment(assays=SimpleList(counts=counts),
                          rowData=features, colData=colData)
 }
