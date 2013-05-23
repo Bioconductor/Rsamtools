@@ -370,8 +370,10 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
              group.as.pairs=TRUE)
 {
-    if (yieldSize(file) && !obeyQname(file))
-        stop("'obeyQname(file)' must be TRUE when 'yieldSize(file)' != NA")
+    if (!isTRUEorFALSE(use.names))
+        stop("'use.names' must be TRUE or FALSE")
+    if (!is.na(yieldSize(file)) && !obeyQname(file))
+        stop("'obeyQname(file)' must be TRUE when 'yieldSize(file)' is specified")
     if (group.as.pairs) {
         use.mcols=c(bamWhat(param), bamTag(param))
         bamWhat(param) <- union(bamWhat(param), c("flag", "mrnm", "mpos"))
