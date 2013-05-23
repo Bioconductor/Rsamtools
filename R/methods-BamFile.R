@@ -540,18 +540,12 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
                inter.feature, param
            ) 
 
-
-
     counts <- as.matrix(do.call(cbind, cts))
     countBam <- countBam(reads)
-    colData <- DataFrame(countBam[c("records", "nucleotides")],
-                         row.names=countBam$file) 
     param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE), what="seq")
-    mapped <- lapply(reads, function(fl, param) {
-                             dest <- filterBam(fl, tempfile(), param=param)
-                             countBam(dest)$records
-                         }, param)
-    colData$mapped <- do.call(c, mapped)
+    colData <- DataFrame(countBam[c("records", "nucleotides")],
+                         mapped=countBam(reads, param=param)$records,
+                         row.names=countBam$file) 
     SummarizedExperiment(assays=SimpleList(counts=counts),
                          rowData=features, colData=colData)
 }
