@@ -225,8 +225,11 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 
     There are 6 possible combinations of the \code{mode} and
     \code{inter.feature} arguments. When \code{inter.feature=FALSE} the
-    behavior of modes \sQuote{Union} and \sQuote{IntersectionNotEmpty} are the
-    same resulting in 5 distinct ways to count.}
+    behavior of modes \sQuote{Union} and \sQuote{IntersectionStrict} are 
+    essentially \sQuote{countOverlaps} with \sQuote{type=any} and
+    \code{type=within}, respectively. \sQuote{IntersectionNotEmpty} does
+    not reduce to a simple countOverlaps because common (shared) regions 
+    of the annotation are removed before counting.}
 
   \item{singleEnd}{
     A logical value indicating if reads are single or paired-end.}
@@ -387,9 +390,9 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 
 \examples{
 
-##------------------------------------------------------------------------
+##
 ## Iterating over Bam files.
-##------------------------------------------------------------------------
+##
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
                   mustWork=TRUE)
@@ -417,15 +420,15 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
 }, bf, rng)
 close(bf)
 
-##------------------------------------------------------------------------
+##
 ## summarizeOverlaps().
-##------------------------------------------------------------------------
+##
 
 ## See ?'summarizeOverlaps' in the GenomicRanges package for examples.
 
-##------------------------------------------------------------------------
+##
 ## findSpliceOverlaps. 
-##------------------------------------------------------------------------
+##
 
 ## See ?'findSpliceOverlaps' for examples 
 }
