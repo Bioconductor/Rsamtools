@@ -293,7 +293,7 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
         case QNAME_IDX:
             buf = Calloc(strlen(bam1_qname(bam)) + 1, char);
             if (!buf)
-                Rf_error("_parse1: failed to allcoate memory");
+                Rf_error("_parse1: failed to allocate memory");
             strcpy(buf, bam1_qname(bam));
             sbd->qname[idx] = buf;
             break;

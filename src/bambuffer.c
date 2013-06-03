@@ -19,8 +19,10 @@ BAM_BUFFER bambuffer_new(int n)
 
 void bambuffer_push(BAM_BUFFER buf, const bam1_t *bam)
 {
-    if (buf->i == buf->n)
-        Rf_error("internal: 'push'ing too many elements to bam buffer");
+    if (buf->i == buf->n) {
+        buf->n *= 1.3;
+        buf->buffer = Realloc(buf->buffer, buf->n, bam1_t *);
+    }
     buf->buffer[buf->i] = bam_dup1(bam);
     buf->i += 1;
 }

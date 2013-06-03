@@ -125,17 +125,25 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 
 \arguments{
 
-  \item{...}{Additional arguments. For \code{BamFileList}, this can
-    either be a single character vector of paths to BAM files, or
-    several instances of \code{BamFile} objects. When a character vector
-    of paths, a second named argument \sQuote{index} can be a
-    \code{character()} vector of length equal to the first argument
-    specifying the paths to the index files, or \code{character()} to
-    indicate that no index file is available. See
-    \code{\link{BamFile}}. For \code{coverage}, the arguments are passed
-    to the
+  \item{...}{Additional arguments.
+
+    For \code{BamFileList}, this can either be a single character vector
+    of paths to BAM files, or several instances of \code{BamFile}
+    objects. When a character vector of paths, a second named argument
+    \sQuote{index} can be a \code{character()} vector of length equal to
+    the first argument specifying the paths to the index files, or
+    \code{character()} to indicate that no index file is available. See
+    \code{\link{BamFile}}.
+
+    For \code{coverage}, the arguments are passed to the
     \code{\link[GenomicRanges:coverage,GAlignments-method]{coverage}}
-    method for \code{GAlignments} objects.}
+    method for \code{GAlignments} objects.
+
+    For \code{summarizeOverlaps}, providing
+    \code{count.mapped.reads=TRUE} include additional passes through the
+    BAM file to collect statistics like those from \code{countBam}.
+
+  }
 
   \item{con}{An instance of \code{BamFile}.}
 

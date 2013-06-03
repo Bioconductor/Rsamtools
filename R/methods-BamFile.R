@@ -522,7 +522,8 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
 }
 
 .dispatchBamFiles <-
-    function(features, reads, mode, ignore.strand, ..., 
+    function(features, reads, mode, ignore.strand, ...,
+             count.mapped.reads=FALSE,
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
              param=ScanBamParam())
 {
@@ -530,7 +531,7 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
         lapply <- parallel::mclapply
 
-    cts <- lapply(seq_along(reads), 
+    cts <- lapply(setNames(seq_along(reads), names(reads)), 
                function(i, FUN, reads, features, mode, ignore.strand, 
                         inter.feature, param) {
                    bf <- reads[[i]]
@@ -541,11 +542,16 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
            ) 
 
     counts <- as.matrix(do.call(cbind, cts))
-    countBam <- countBam(reads)
-    param <- ScanBamParam(flag=scanBamFlag(isUnmappedQuery=FALSE), what="seq")
-    colData <- DataFrame(countBam[c("records", "nucleotides")],
-                         mapped=countBam(reads, param=param)$records,
-                         row.names=countBam$file) 
+    if (count.mapped.reads) {
+        countBam <- countBam(reads)
+        flag <- scanBamFlag(isUnmappedQuery=FALSE)
+        param <- ScanBamParam(flag=flag, what="seq")
+        colData <- DataFrame(countBam[c("records", "nucleotides")],
+                             mapped=countBam(reads, param=param)$records,
+                             row.names=colnames(counts))
+    } else {
+        colData <- DataFrame(row.names=colnames(counts))
+    }
     SummarizedExperiment(assays=SimpleList(counts=counts),
                          rowData=features, colData=colData)
 }
