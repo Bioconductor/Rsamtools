@@ -1,5 +1,5 @@
 ### =========================================================================
-### sequenceLayer()
+### stackSequences() and related
 ### -------------------------------------------------------------------------
 
 
@@ -54,14 +54,19 @@
     relist(ans_flesh, ans_skeleton)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### sequenceLayer()
+###
 ### TODO: (1) Add option for dropping sequences that are not visible.
 ###       (2) Let the user choose the letter used for padding and for filling
 ###           deletions and gaps.
 ###       (3) If the letter for padding and gaps is the same (e.g. "+"), then
 ###           doing consensusMatrix() on the result of sequenceLayer() should
 ###           give a result consistent with coverage().
-sequenceLayer <- function(x, cigar, layout="query-to-reference",
-                          from=NA, to=NA, pos=1L)
+###
+
+sequenceLayer <- function(x, cigar, layout="query-to-reference")
 {
     if (!is(x, "XStringSet"))
         stop("'x' must be an XStringSet object")
@@ -95,28 +100,28 @@ sequenceLayer <- function(x, cigar, layout="query-to-reference",
     fillers <- .make_sequence_fillers_from_list_of_widths(width(to_ranges), "-",
                                                           class=class(x))
     value <- .pcombine(empty_sequences, fillers)
-    ans <- replaceAt(x, at, value=value)
-    if (layout == "query-to-reference")
-        ans <- stackSequences(ans, from=from, to=to, pos=pos)
-    ans
+    replaceAt(x, at, value=value)
 }
 
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### stackSequences()
+###
+
 setGeneric("stackSequences", signature="x",
-    function(x, from=NA, to=NA, pos=1L, pad.letter="+")
+    function(x, from, to, pos=1L, pad.letter="+")
         standardGeneric("stackSequences")
 )
 
 setMethod("stackSequences", "XStringSet",
-    function(x, from=NA, to=NA, pos=1L, pad.letter="+")
+    function(x, from, to, pos=1L, pad.letter="+")
     {
-        if (identical(from, NA) && identical(to, NA) && identical(pos, 1L))
-            return(x)  # no-op
         if (!isSingleNumber(from))
-            stop("'from' must be a single integer (or NA)")
+            stop("'from' must be a single integer")
         if (!is.integer(from))
             from <- as.integer(from)
         if (!isSingleNumber(to))
-            stop("'to' must be a single integer (or NA)")
+            stop("'to' must be a single integer")
         if (!is.integer(to))
             to <- as.integer(to)
         width0 <- to - from + 1L
@@ -148,19 +153,20 @@ setMethod("stackSequences", "XStringSet",
 )
 
 setMethod("stackSequences", "BamFile",
-    function(x, from=NA, to=NA, pos=1L, pad.letter="+")
+    function(x, from, to, pos=1L, pad.letter="+")
     {
         if (!is(from, "GenomicRanges"))
             stop("'from' must be a GRanges object ",
                  "when 'x' is a BamFile object")
-        if (!identical(to, NA))
+        if (!missing(to))
             warning("'to' is ignored when 'x' is a BamFile object")
         if (!identical(pos, 1L))
             warning("'pos' is ignored when 'x' is a BamFile object")
         param <- ScanBamParam(what="seq", which=from)
         gal <- readGAlignmentsFromBam(x, param=param)
-        sequenceLayer(mcols(gal)$seq, cigar(gal),
-                      from=start(from), to=end(from), pos=start(gal))
+        layed_seq <- sequenceLayer(mcols(gal)$seq, cigar(gal))
+        stackSequences(layed_seq,
+                       from=start(from), to=end(from), pos=start(gal))
     }
 )
 
@@ -187,8 +193,12 @@ stopifnot(all(width(x) == width(x3)))
 x4 <- sequenceLayer(x3, cigar, layout="query-to-reference")
 stopifnot(all(x2 == x4))
 
+
+
 bamfile <- BamFile(system.file("extdata", "ex1.bam", package="Rsamtools"))
+
 stackSequences(bamfile, GRanges("seq1", IRanges(1, 60)))
+
 options(showHeadLines=25)
 options(showTailLines=2)
 stackSequences(bamfile, GRanges("seq1", IRanges(61, 120)))
@@ -197,5 +207,12 @@ stacked_reads <- stackSequences(bamfile, GRanges("seq2", IRanges(1509, 1519)))
 stacked_reads  # deletion in read 13
 consensusMatrix(stacked_reads)
 
+
+library(RNAseqData.HNRNPC.bam.chr14)
+bamfile <- BamFile(RNAseqData.HNRNPC.bam.chr14_BAMFILES[1])
+
+my_ROI <- GRanges("chr14", IRanges(19650095, 19650159)) # my Region Of Interest
+readGAlignments(bamfile, param=ScanBamParam(which=my_ROI))
+stackSequences(bamfile, my_ROI)
 }
 
