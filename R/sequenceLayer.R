@@ -54,47 +54,6 @@
     relist(ans_flesh, ans_skeleton)
 }
 
-stackSequences <- function(x, pos=1L, from=NA, to=NA, pad.letter="+")
-{
-    if (!is(x, "XStringSet"))
-        stop("'x' must be an XStringSet object")
-    if (identical(pos, 1L) && identical(from, NA) && identical(to, NA))
-        return(x)  # no-op
-    if (!is.numeric(pos))
-        stop("'pos' must be a vector of integers")
-    if (!is.integer(pos)) 
-        pos <- as.integer(pos)
-    pos <- Biostrings:::.V_recycle(pos, x, "pos", "'length(x)'")
-    if (!isSingleNumber(from))
-        stop("'from' must be a single integer (or NA)")
-    if (!is.integer(from))
-        from <- as.integer(from)
-    if (!isSingleNumber(to))
-        stop("'to' must be a single integer (or NA)")
-    if (!is.integer(to))
-        to <- as.integer(to)
-    width0 <- to - from + 1L
-    if (width0 < 0L)
-        stop("'to' must be >= 'from - 1L'")
-    if (!isSingleString(pad.letter) || nchar(pad.letter) != 1L)
-        stop("'pad.letter' must be a single letter")
-
-    left_margin <- pos - from
-    right_margin <- to - (pos + width(x) - 1L)
-
-    left_pad <- pmin(pmax(left_margin, 0L), width0)
-    right_pad <- pmin(pmax(right_margin, 0L), width0)
-    left_trim <- pmin(pmax(-left_margin, 0L), width(x))
-    right_trim <- pmin(pmax(-right_margin, 0L), width(x))
-
-    left <- .make_sequence_fillers_from_widths(left_pad, pad.letter,
-                                               class=class(x))
-    right <- .make_sequence_fillers_from_widths(right_pad, pad.letter,
-                                                class=class(x))
-    middle <- narrow(x, start=1L+left_trim, end=-(1L+right_trim))
-    xscat(left, middle, right)
-}
-
 ### TODO: (1) Add option for dropping sequences that are not visible.
 ###       (2) Let the user choose the letter used for padding and for filling
 ###           deletions and gaps.
@@ -102,7 +61,7 @@ stackSequences <- function(x, pos=1L, from=NA, to=NA, pad.letter="+")
 ###           doing consensusMatrix() on the result of sequenceLayer() should
 ###           give a result consistent with coverage().
 sequenceLayer <- function(x, cigar, layout="query-to-reference",
-                          pos=1L, from=NA, to=NA)
+                          from=NA, to=NA, pos=1L)
 {
     if (!is(x, "XStringSet"))
         stop("'x' must be an XStringSet object")
@@ -138,11 +97,76 @@ sequenceLayer <- function(x, cigar, layout="query-to-reference",
     value <- .pcombine(empty_sequences, fillers)
     ans <- replaceAt(x, at, value=value)
     if (layout == "query-to-reference")
-        ans <- stackSequences(ans, pos=pos, from=from, to=to)
+        ans <- stackSequences(ans, from=from, to=to, pos=pos)
     ans
 }
 
+setGeneric("stackSequences", signature="x",
+    function(x, from=NA, to=NA, pos=1L, pad.letter="+")
+        standardGeneric("stackSequences")
+)
+
+setMethod("stackSequences", "XStringSet",
+    function(x, from=NA, to=NA, pos=1L, pad.letter="+")
+    {
+        if (identical(from, NA) && identical(to, NA) && identical(pos, 1L))
+            return(x)  # no-op
+        if (!isSingleNumber(from))
+            stop("'from' must be a single integer (or NA)")
+        if (!is.integer(from))
+            from <- as.integer(from)
+        if (!isSingleNumber(to))
+            stop("'to' must be a single integer (or NA)")
+        if (!is.integer(to))
+            to <- as.integer(to)
+        width0 <- to - from + 1L
+        if (width0 < 0L)
+            stop("'to' must be >= 'from - 1L'")
+        if (!is.numeric(pos))
+            stop("'pos' must be a vector of integers")
+        if (!is.integer(pos)) 
+            pos <- as.integer(pos)
+        pos <- Biostrings:::.V_recycle(pos, x, "pos", "'length(x)'")
+        if (!isSingleString(pad.letter) || nchar(pad.letter) != 1L)
+            stop("'pad.letter' must be a single letter")
+
+        left_margin <- pos - from
+        right_margin <- to - (pos + width(x) - 1L)
+
+        left_pad <- pmin(pmax(left_margin, 0L), width0)
+        right_pad <- pmin(pmax(right_margin, 0L), width0)
+        left_trim <- pmin(pmax(-left_margin, 0L), width(x))
+        right_trim <- pmin(pmax(-right_margin, 0L), width(x))
+
+        left <- .make_sequence_fillers_from_widths(left_pad, pad.letter,
+                                                   class=class(x))
+        right <- .make_sequence_fillers_from_widths(right_pad, pad.letter,
+                                                    class=class(x))
+        middle <- narrow(x, start=1L+left_trim, end=-(1L+right_trim))
+        xscat(left, middle, right)
+    }
+)
+
+setMethod("stackSequences", "BamFile",
+    function(x, from=NA, to=NA, pos=1L, pad.letter="+")
+    {
+        if (!is(from, "GenomicRanges"))
+            stop("'from' must be a GRanges object ",
+                 "when 'x' is a BamFile object")
+        if (!identical(to, NA))
+            warning("'to' is ignored when 'x' is a BamFile object")
+        if (!identical(pos, 1L))
+            warning("'pos' is ignored when 'x' is a BamFile object")
+        param <- ScanBamParam(what="seq", which=from)
+        gal <- readGAlignmentsFromBam(x, param=param)
+        sequenceLayer(mcols(gal)$seq, cigar(gal),
+                      from=start(from), to=end(from), pos=start(gal))
+    }
+)
+
 if (FALSE) {
+
+library(Rsamtools)
 
 x <- DNAStringSet(c(seq1="AAAA", seq2="AAAAATCCCTTTTNN"))
 cigar <- c("4M", "5M1I3M2D4M2S")
@@ -163,12 +187,15 @@ stopifnot(all(width(x) == width(x3)))
 x4 <- sequenceLayer(x3, cigar, layout="query-to-reference")
 stopifnot(all(x2 == x4))
 
-bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
-greads1 <- readGappedReadsFromBam(bamfile)
-sequenceLayer(qseq(greads1), cigar(greads1), pos=start(greads1), from=1, to=60)
+bamfile <- BamFile(system.file("extdata", "ex1.bam", package="Rsamtools"))
+stackSequences(bamfile, GRanges("seq1", IRanges(1, 60)))
 options(showHeadLines=25)
 options(showTailLines=2)
-sequenceLayer(qseq(greads1), cigar(greads1), pos=start(greads1), from=1, to=60)
-sequenceLayer(qseq(greads1), cigar(greads1), pos=start(greads1), from=31, to=90)
+stackSequences(bamfile, GRanges("seq1", IRanges(61, 120)))
+
+stacked_reads <- stackSequences(bamfile, GRanges("seq2", IRanges(1509, 1519)))
+stacked_reads  # deletion in read 13
+consensusMatrix(stacked_reads)
+
 }
 
