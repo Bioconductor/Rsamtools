@@ -1,5 +1,5 @@
 ### =========================================================================
-### stackSequences() and related
+### stackStringsFromBam() and related
 ### -------------------------------------------------------------------------
 
 
@@ -105,62 +105,7 @@ sequenceLayer <- function(x, cigar, layout="query-to-reference")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### stackSequences()
-###
-
-stackSequences <- function(x, from, to, pos=1, pad.letter=NA)
-{
-    if (!is(x, "XStringSet"))
-        stop("'x' must be an XStringSet object")
-    if (!isSingleNumber(from))
-        stop("'from' must be a single integer")
-    if (!is.integer(from))
-        from <- as.integer(from)
-    if (!isSingleNumber(to))
-        stop("'to' must be a single integer")
-    if (!is.integer(to))
-        to <- as.integer(to)
-    width0 <- to - from + 1L
-    if (width0 < 0L)
-        stop("'to' must be >= 'from - 1L'")
-    if (!is.numeric(pos))
-        stop("'pos' must be a vector of integers")
-    if (!is.integer(pos)) 
-        pos <- as.integer(pos)
-    pos <- Biostrings:::.V_recycle(pos, x, "pos", "'length(x)'")
-    if (identical(pad.letter, NA)) {
-        if (is(x, "BStringSet")) {
-            pad.letter <- " "
-        } else {
-            pad.letter <- "+"
-        }
-    }
-    if (!isSingleString(pad.letter) || nchar(pad.letter) != 1L)
-        stop("'pad.letter' must be a single letter")
-
-    left_margin <- pos - from
-    right_margin <- to - (pos + width(x) - 1L)
-
-    left_pad <- pmin(pmax(left_margin, 0L), width0)
-    right_pad <- pmin(pmax(right_margin, 0L), width0)
-    left_trim <- pmin(pmax(-left_margin, 0L), width(x))
-    right_trim <- pmin(pmax(-right_margin, 0L), width(x))
-
-    left <- .make_sequence_fillers_from_widths(left_pad, pad.letter,
-                                               class=class(x))
-    right <- .make_sequence_fillers_from_widths(right_pad, pad.letter,
-                                                class=class(x))
-    middle <- narrow(x, start=1L+left_trim, end=-(1L+right_trim),
-                        use.names=FALSE)
-    ans <- xscat(left, middle, right)
-    names(ans) <- names(x)
-    mcols(ans) <- mcols(x)
-    ans
-}
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### stackSequencesFromBam()
+### stackStringsFromBam()
 ###
 
 ### Should always return a ScanBamParam object containing exactly 1 genomic
@@ -207,34 +152,39 @@ stackSequences <- function(x, from, to, pos=1, pad.letter=NA)
     param
 }
 
-stackSequencesFromBam <- function(file, param, use.names=FALSE,
-                                  what="seq", pad.letter=NA)
+stackStringsFromBam <- function(file, param, use.names=FALSE,
+                                what="seq", padding.letter=NA)
 {
     param <- .normarg_param(param)
     region <- unlist(bamWhich(param), use.names=FALSE)
-    what0 <- match.arg(what, c("seq", "qual"))
-    user_what <- bamWhat(param)
-    if (!(what0 %in% user_what))
-        bamWhat(param) <- c(user_what, what0)
+    what <- match.arg(what, c("seq", "qual"))
+    param_what <- bamWhat(param)
+    if (!(what %in% param_what))
+        bamWhat(param) <- c(param_what, what)
     gal <- readGAlignmentsFromBam(file, use.names=use.names, param=param)
     gal_mcols <- mcols(gal)
-    what0_col_idx <- match(what0, colnames(gal_mcols))
-    what0_col <- gal_mcols[[what0_col_idx]]
-    if (what0 == "qual")
-        what0_col <- BStringSet(what0_col)
-    names(what0_col) <- names(gal)
-    layed_seq <- sequenceLayer(what0_col, cigar(gal))
-    ans <- stackSequences(layed_seq,
-                          from=start(region), to=end(region), pos=start(gal),
-                          pad.letter=pad.letter)
-    if (!(what0 %in% user_what)) {
-        ## Remove the what0 column from 'gal_mcols'.
-        gal_mcols <- gal_mcols[ , -what0_col_idx, drop=FALSE]
+    what_col_idx <- match(what, colnames(gal_mcols))
+    what_col <- gal_mcols[[what_col_idx]]
+    if (what == "seq") {
+        if (identical(padding.letter, NA))
+            padding.letter <- DNAString("+")
+    } else {  # what == "qual"
+        what_col <- BStringSet(what_col)
+        if (identical(padding.letter, NA))
+            padding.letter <- BString(" ")
+    }
+    layed_seq <- sequenceLayer(what_col, cigar(gal))
+    ans <- stackStrings(layed_seq, start(region), end(region), padding.letter,
+                        shift=start(gal)-1L)
+    if (!(what %in% param_what)) {
+        ## Remove the what column from 'gal_mcols'.
+        gal_mcols <- gal_mcols[ , -what_col_idx, drop=FALSE]
         ## Sadly, subsetting a DataFrame will mangle the colnames of the
         ## returned DataFrame if it has duplicated colnames. Since we of
         ## course don't want this, we fix them.
-        colnames(gal_mcols) <- user_what
+        colnames(gal_mcols) <- param_what
     }
+    names(ans) <- names(gal)
     mcols(ans) <- gal_mcols
     ans
 }
@@ -266,15 +216,15 @@ stopifnot(all(x2 == x4))
 
 bamfile <- BamFile(system.file("extdata", "ex1.bam", package="Rsamtools"))
 
-stackSequencesFromBam(bamfile, GRanges("seq1", IRanges(1, 60)))
+stackStringsFromBam(bamfile, GRanges("seq1", IRanges(1, 60)))
 
 options(showHeadLines=25)
 options(showTailLines=2)
-stackSequencesFromBam(bamfile, GRanges("seq1", IRanges(61, 120)))
+stackStringsFromBam(bamfile, GRanges("seq1", IRanges(61, 120)))
 
-stacked_reads <- stackSequencesFromBam(bamfile, "seq2:1509-1519")
+stacked_reads <- stackStringsFromBam(bamfile, "seq2:1509-1519")
 stacked_reads  # deletion in read 13
-stackSequencesFromBam(bamfile, "seq2:1509-1519", what="qual")
+stackStringsFromBam(bamfile, "seq2:1509-1519", what="qual")
 consensusMatrix(stacked_reads)
 
 
@@ -283,6 +233,6 @@ bamfile <- BamFile(RNAseqData.HNRNPC.bam.chr14_BAMFILES[1])
 
 my_ROI <- GRanges("chr14", IRanges(19650095, 19650159)) # my Region Of Interest
 readGAlignments(bamfile, param=ScanBamParam(which=my_ROI))
-stackSequencesFromBam(bamfile, my_ROI)
+stackStringsFromBam(bamfile, my_ROI)
 }
 
