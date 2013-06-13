@@ -16,9 +16,9 @@
     relist(unlisted_ans, skeleton)
 }
 
-### 'filler_width' must be an integer vector.
-.make_sequence_fillers_from_widths <- function(filler_width, letter,
-                                               class="BStringSet")
+### 'filler_width' must be an integer vector and 'letter' an XString object
+### of length 1.
+.make_sequence_fillers_from_widths <- function(filler_width, letter)
 {
     if (length(filler_width) == 0L) {
         max_width <- 0L
@@ -27,17 +27,15 @@
         max_width <- max(filler_width)
         at <- IRanges(1L, filler_width)
     }
-    biggest_filler <- rep.int(as(letter, class)[[1L]], max_width)
+    biggest_filler <- rep.int(letter, max_width)
     extractAt(biggest_filler, at)
 }
 
 ### 'filler_widths' must be an IntegerList object (or list of integers).
-.make_sequence_fillers_from_list_of_widths <- function(filler_widths, letter,
-                                                       class="BStringSet")
+.make_sequence_fillers_from_list_of_widths <- function(filler_widths, letter)
 {
     unlisted_widths <- unlist(filler_widths, use.names=FALSE)
-    unlisted_ans <- .make_sequence_fillers_from_widths(unlisted_widths, letter,
-                                                       class=class)
+    unlisted_ans <- .make_sequence_fillers_from_widths(unlisted_widths, letter)
     relist(unlisted_ans, filler_widths)
 }
 
@@ -58,15 +56,20 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### sequenceLayer()
 ###
-### TODO: (1) Add option for dropping sequences that are not visible.
-###       (2) Let the user choose the letter to use for filling deletions
-###           and gaps.
-###       (3) If the letter for padding and gaps is the same (e.g. "+"), then
-###           doing consensusMatrix() on the result of sequenceLayer() should
-###           give a result consistent with coverage().
-###
+### NOTE: Using the same letter ("-") for gaps (N) and deletions (D) is
+###       problematic when one tries to infer coverage by calling
+###       consensusMatrix() on the result of sequenceLayer(): then gaps
+###       and deletions will both generate coverage when only the latters
+###       should! Hence the result won't be consistent with coverage().
+###       OTOH using "+" for gaps is compatible with coverage() but is
+###       not visually appealing (the gaps, which are usually big, cannot
+###       be seen anymore).
+###       "-" and "+" are the only 2 special letters in Biostrings DNA
+###       alphabet (DNA_ALPHABET). Should we add 1 more? Should it be " ",
+###       ".", or "*"?
 
-sequenceLayer <- function(x, cigar, layout="query-to-reference")
+sequenceLayer <- function(x, cigar, layout="query-to-reference",
+                          D.letter="-", N.letter="-")
 {
     if (!is(x, "XStringSet"))
         stop("'x' must be an XStringSet object")
@@ -75,30 +78,37 @@ sequenceLayer <- function(x, cigar, layout="query-to-reference")
                  "aligned-query",
                  "aligned-reference")
     layout <- match.arg(layout, LAYOUTS)
-
+    D.letter <- Biostrings:::.normarg_padding.letter(D.letter, seqtype(x))
+    N.letter <- Biostrings:::.normarg_padding.letter(N.letter, seqtype(x))
     ops1 <- c("I", "S")
     ops2 <- c("D", "N")
     if (layout == "query-to-reference") {
-        del_ranges <- cigarRangesOnQuery(cigar, ops=ops1)
-        fill_ranges <- cigarRangesOnQuery(cigar, ops=ops2)
-        to_ranges <- cigarRangesOnReference(cigar,
-                                            pos=rep.int(1L, length(cigar)),
-                                            ops=ops2)
+        where_to_remove <- cigarRangesOnQuery(cigar, ops=ops1)
+        where_to_fill1 <- cigarRangesOnQuery(cigar, ops="D")
+        where_to_fill2 <- cigarRangesOnQuery(cigar, ops="N")
+        where_to_fill <- .pcombine(where_to_fill1, where_to_fill2)
+        pos_one <- rep.int(1L, length(cigar))
+        filler_widths1 <- width(cigarRangesOnReference(cigar, pos=pos_one,
+                                                       ops="D"))
+        filler_widths2 <- width(cigarRangesOnReference(cigar, pos=pos_one,
+                                                       ops="N"))
+        fillers1 <- .make_sequence_fillers_from_list_of_widths(
+                                        filler_widths1, D.letter)
+        fillers2 <- .make_sequence_fillers_from_list_of_widths(
+                                        filler_widths2, N.letter)
+        fillers <- .pcombine(fillers1, fillers2)
     } else if (layout == "reference-to-query") {
-        del_ranges <- cigarRangesOnReference(cigar,
-                                             pos=rep.int(1L, length(cigar)),
-                                             ops=ops2)
-        fill_ranges <- cigarRangesOnReference(cigar,
-                                              pos=rep.int(1L, length(cigar)),
-                                              ops=ops1)
-        to_ranges <- cigarRangesOnQuery(cigar, ops=ops1)
+        filler_widths <- width(cigarRangesOnQuery(cigar, ops=ops1))
+        fillers <- .make_sequence_fillers_from_list_of_widths(
+                                        filler_widths, as("-", class(x))[[1L]])
+        pos_one <- rep.int(1L, length(cigar))
+        where_to_fill <- cigarRangesOnReference(cigar, pos=pos_one, ops=ops1)
+        where_to_remove <- cigarRangesOnReference(cigar, pos=pos_one, ops=ops2)
     } else {
         stop("\"", layout, "\" layout is not implemented yet, sorry!")
     }
-    at <- .pcombine(del_ranges, fill_ranges)
-    empty_sequences <- .make_empty_sequences(del_ranges, class=class(x))
-    fillers <- .make_sequence_fillers_from_list_of_widths(width(to_ranges), "-",
-                                                          class=class(x))
+    at <- .pcombine(where_to_remove, where_to_fill)
+    empty_sequences <- .make_empty_sequences(where_to_remove, class=class(x))
     value <- .pcombine(empty_sequences, fillers)
     replaceAt(x, at, value=value)
 }
@@ -152,8 +162,8 @@ sequenceLayer <- function(x, cigar, layout="query-to-reference")
     param
 }
 
-stackStringsFromBam <- function(file, param, use.names=FALSE,
-                                what="seq", padding.letter=NA)
+stackStringsFromBam <- function(file, param, use.names=FALSE, what="seq",
+                                D.letter="-", N.letter="-", padding.letter=NA)
 {
     param <- .normarg_param(param)
     region <- unlist(bamWhich(param), use.names=FALSE)
@@ -173,7 +183,8 @@ stackStringsFromBam <- function(file, param, use.names=FALSE,
         if (identical(padding.letter, NA))
             padding.letter <- BString(" ")
     }
-    layed_seq <- sequenceLayer(what_col, cigar(gal))
+    layed_seq <- sequenceLayer(what_col, cigar(gal),
+                               D.letter=D.letter, N.letter=N.letter)
     ans <- stackStrings(layed_seq, start(region), end(region), padding.letter,
                         shift=start(gal)-1L)
     if (!(what %in% param_what)) {
