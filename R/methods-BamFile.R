@@ -302,11 +302,10 @@ setMethod(sortBam, "BamFile",
     colnames <- c(bamWhat(param), bamTag(param))
     if (length(colnames) != 0L) {
         df <- do.call(DataFrame, bamcols[colnames])
-        ## The DataFrame() constructor will mangle the duplicated colnames
-        ## to make them unique. We don't want this so we fix them. Note
-        ## that we cannot use "colnames<-" for this because it's broken,
-        ## but "names<-" seems to work as expected.
-        names(df) <- colnames
+        ## Sadly, the DataFrame() constructor is mangling the duplicated
+        ## colnames to make them unique. Since we of course don't want this,
+        ## we fix them.
+        colnames(df) <- colnames
         mcols(x) <- df
     }
     x
