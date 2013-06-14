@@ -16,7 +16,7 @@
     relist(unlisted_ans, skeleton)
 }
 
-### 'filler_width' must be an integer vector and 'letter' an XString object
+### 'filler_width' must be an integer vector, and 'letter' an XString object
 ### of length 1.
 .make_sequence_fillers_from_widths <- function(filler_width, letter)
 {
@@ -163,7 +163,8 @@ sequenceLayer <- function(x, cigar, layout="query-to-reference",
 }
 
 stackStringsFromBam <- function(file, param, use.names=FALSE, what="seq",
-                                D.letter="-", N.letter="-", padding.letter=NA)
+                                D.letter="-", N.letter="-",
+                                Lpadding.letter="+", Rpadding.letter="+")
 {
     param <- .normarg_param(param)
     region <- unlist(bamWhich(param), use.names=FALSE)
@@ -175,18 +176,14 @@ stackStringsFromBam <- function(file, param, use.names=FALSE, what="seq",
     gal_mcols <- mcols(gal)
     what_col_idx <- match(what, colnames(gal_mcols))
     what_col <- gal_mcols[[what_col_idx]]
-    if (what == "seq") {
-        if (identical(padding.letter, NA))
-            padding.letter <- DNAString("+")
-    } else {  # what == "qual"
+    if (what == "qual")
         what_col <- BStringSet(what_col)
-        if (identical(padding.letter, NA))
-            padding.letter <- BString(" ")
-    }
     layed_seq <- sequenceLayer(what_col, cigar(gal),
                                D.letter=D.letter, N.letter=N.letter)
-    ans <- stackStrings(layed_seq, start(region), end(region), padding.letter,
-                        shift=start(gal)-1L)
+    ans <- stackStrings(layed_seq, start(region), end(region),
+                        shift=start(gal)-1L,
+                        Lpadding.letter=Lpadding.letter,
+                        Rpadding.letter=Rpadding.letter)
     if (!(what %in% param_what)) {
         ## Remove the what column from 'gal_mcols'.
         gal_mcols <- gal_mcols[ , -what_col_idx, drop=FALSE]
