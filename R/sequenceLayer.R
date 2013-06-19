@@ -108,7 +108,7 @@
 
 sequenceLayer <- function(x, cigar, from="query", to="reference",
                           D.letter="-", N.letter="-",
-                          I.letter="-", S.letter="-", H.letter="+")
+                          I.letter="-", S.letter="+", H.letter="+")
 {
     if (!is(x, "XStringSet"))
         stop("'x' must be an XStringSet object")
@@ -128,18 +128,19 @@ sequenceLayer <- function(x, cigar, from="query", to="reference",
     I.letter <- Biostrings:::.normarg_padding.letter(I.letter, seqtype(x))
     S.letter <- Biostrings:::.normarg_padding.letter(S.letter, seqtype(x))
     H.letter <- Biostrings:::.normarg_padding.letter(H.letter, seqtype(x))
+    if (from == to)
+        return(x)
+
     ## Right now, the way 'S.letter' and 'H.letter' are injected in 'x' when
     ## 'to' is "query-before-hard-clipping" can result in padding in the
     ## wrong order (i.e. padding with 'H.letter' followed by padding with
     ## 'S.letter') so we temporarily work around this by enforcing 'S.letter'
     ## and 'H.letter' to be the same.
-    if (to == "query-before-hard-clipping" &&
+    if (from != "query" && to == "query-before-hard-clipping" &&
         as.character(S.letter) != as.character(H.letter))
         stop("'H.letter' must be the same as 'S.letter' ",
-             "when 'to' is \"query-before-hard-clipping\"")
-
-    if (from == to)
-        return(x)
+             "when 'from' is not \"query\" and 'to' ",
+             "is \"query-before-hard-clipping\"")
 
     ## TODO: What follows is a big ugly piece of stinking code (250+ lines!).
     ## There must be a better way...
