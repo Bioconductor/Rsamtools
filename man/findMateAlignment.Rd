@@ -100,12 +100,12 @@ It implements the following pairing algorithm:
 \subsection{Timing and memory requirement of the pairing algorithm}{
 The estimated timings and memory requirements on a modern Linux system are:
 \preformatted{
-  nb of alignments |   time | required memory
-  -----------------+--------+----------------
-        8 millions | 32 sec |          1.6 GB
-       16 millions | 98 sec |          3.2 GB
-       32 millions | 18 min |         12.3 GB
-       64 millions | ?? min |           ?? GB
+  nb of alignments |         time | required memory
+  -----------------+--------------+----------------
+        8 millions |       32 sec |          1.7 GB
+       16 millions |       65 sec |          3.3 GB
+       32 millions | 2 min 25 sec |          6.5 GB
+       64 millions |       ??     |           ?? GB
 }
 Those numbers may vary depending on your hardware and OS.
 }

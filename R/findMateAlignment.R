@@ -117,6 +117,26 @@
 ### The arguments prefixed with 'y_' describe a vector 'y' of N alignments.
 ### Performs "parallel pairing" of the N alignments in 'x' with the N
 ### alignments in 'y'.
+.isValidHit_old <- function(x_flag, x_seqnames, x_start, x_mrnm, x_mpos,
+                            y_flag, y_seqnames, y_start, y_mrnm, y_mpos)
+{
+    D1_bitmask <- .makeFlagBitmask("isMateMinusStrand")
+    D2_bitmask <- .makeFlagBitmask("isMinusStrand")
+    E_bitmask <- .makeFlagBitmask("isFirstMateRead")
+    FG_bitmask <- .makeFlagBitmask(c("isProperPair", "isNotPrimaryRead"))
+    ## (B)
+    x_mrnm == y_seqnames & y_mrnm == x_seqnames &
+    ## (C)
+      x_mpos == y_start & y_mpos == x_start &
+    ## (D)
+      (bitAnd(x_flag, D1_bitmask) != 0L) == (bitAnd(y_flag, D2_bitmask) != 0L) &
+      (bitAnd(y_flag, D1_bitmask) != 0L) == (bitAnd(x_flag, D2_bitmask) != 0L) &
+    ## (E)
+      bitAnd(x_flag, E_bitmask) != bitAnd(y_flag, E_bitmask) &
+    ## (F) & (G)
+      bitAnd(x_flag, FG_bitmask) == bitAnd(y_flag, FG_bitmask)
+}
+
 .isValidHit <- function(x_flag, x_seqnames, x_start, x_mrnm, x_mpos,
                         y_flag, y_seqnames, y_start, y_mrnm, y_mpos)
 {
@@ -269,8 +289,13 @@ findMateAlignment <- function(x, verbose=FALSE)
     xo_and_GS <- .getCharacterOrderAndGroupSizes(x_gnames)
     xo <- xo_and_GS$xo
     GS <- xo_and_GS$group.sizes
-    ans <- rep.int(NA_integer_, length(x_gnames))
-    NGROUP_BY_CHUNK <- 25000L
+    ans_len <- length(x_gnames)
+    ans <- rep.int(NA_integer_, ans_len)
+    if (ans_len == 0L) {
+        NGROUP_BY_CHUNK <- 0L
+    } else {
+        NGROUP_BY_CHUNK <- as.integer(16000000 / mean(GS))
+    }
     chunk.GIDX <- seq_len(NGROUP_BY_CHUNK)
     chunk.offset <- 0L
     while (TRUE) {
