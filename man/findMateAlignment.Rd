@@ -103,10 +103,10 @@ The estimated timings and memory requirements on a modern Linux system are
 \preformatted{
   nb of alignments |         time | required memory
   -----------------+--------------+----------------
-        8 millions |       32 sec |          1.7 GB
-       16 millions |       65 sec |          3.3 GB
-       32 millions | 2 min 25 sec |          6.5 GB
-       64 millions | 5 min 40 sec |         13.0 GB
+        8 millions |       30 sec |          1.7 GB
+       16 millions |       62 sec |          3.3 GB
+       32 millions | 2 min 15 sec |          6.2 GB
+       64 millions | 5 min 20 sec |         12.3 GB
 }
 This is for a \link{GAlignments} object coming from a file with an
 "average nb of records per unique QNAME" of 2.04. A value of 2 (which means
