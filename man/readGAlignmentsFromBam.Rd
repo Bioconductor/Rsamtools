@@ -102,8 +102,8 @@ groupAsPairs(x, ...)
   }
   See \code{?\link[GenomicRanges]{GAlignmentPairs-class}} for a
   description of \link[GenomicRanges]{GAlignmentPairs} objects,
-  and \code{?\link{makeGAlignmentPairs}} for the details of the
-  pairing procedure.
+  and \code{?\link{findMateAlignment}} for a description of the
+  pairing algorithm (including timing and memory requirement).
 
   \code{readGAlignmentsListFromBam} returns a \code{GAlignmentsList} object. 
   When \code{group.as.pairs} is \code{TRUE} records are paired using the 
@@ -166,7 +166,7 @@ groupAsPairs(x, ...)
   \link[GenomicRanges]{GAlignmentsList-class},
   \link[ShortRead]{GappedReads-class},
   \link[GenomicRanges]{GAlignmentPairs-class},
-  \code{\link{makeGAlignmentPairs}},
+  \code{\link{findMateAlignment}},
   \code{\link{scanBam}},
   \code{\link{ScanBamParam}}
 }

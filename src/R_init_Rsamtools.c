@@ -1,5 +1,6 @@
 #include <R_ext/Rdynload.h>
 #include "zip_compression.h"
+#include "utilities.h"
 #include "bamfile.h"
 #include "bcffile.h"
 #include "fafile.h"
@@ -16,6 +17,8 @@ static const R_CallMethodDef callMethods[] = {
     /* zip_compression.c */
     {".bgzip", (DL_FUNC) & bgzip, 2},
     {".razip", (DL_FUNC) & razip, 2},
+    /* utilities.c */
+    {".p_pairing", (DL_FUNC) & p_pairing, 12},
     /* bamfile.c */
     {".bamfile_init", (DL_FUNC) & bamfile_init, 0},
     {".bamfile_open", (DL_FUNC) & bamfile_open, 3},

@@ -229,3 +229,163 @@ void _checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
         if (!IS_LOGICAL(isSimpleCigar) || LENGTH(isSimpleCigar) != 1)
             Rf_error("'isSimpleCigar' must be logical(1) or NULL");
 }
+
+/* pairing */
+
+static int check_x_or_y(SEXP qname, SEXP flag, SEXP rname, SEXP pos,
+                        SEXP rnext, SEXP pnext, const char *what)
+{
+    int len;
+
+    len = LENGTH(flag);
+    if (qname != R_NilValue)
+        if (!IS_CHARACTER(qname) || LENGTH(qname) != len)
+            Rf_error("'%s_qname' must be NULL or a character vector "
+                     "of the same length as '%s_flag'", what, what);
+    if (!isFactor(rname) || LENGTH(rname) != len)
+        Rf_error("'%s_rname' must be a factor "
+                 "of the same length as '%s_flag'", what, what);
+    if (!IS_INTEGER(pos) || LENGTH(pos) != len)
+        Rf_error("'%s_pos' must be an integer vector "
+                 "of the same length as '%s_flag'", what, what);
+    if (!isFactor(rnext) || LENGTH(rnext) != len)
+        Rf_error("'%s_rnext' must be a factor "
+                 "of the same length as '%s_flag'", what, what);
+    if (!IS_INTEGER(pnext) || LENGTH(pnext) != len)
+        Rf_error("'%s_pnext' must be an integer vector "
+                 "of the same length as '%s_flag'", what, what);
+    return len;
+}
+
+/* 'x_qname' and 'y_qname' must be NULLs or 0-terminated strings. */
+static int is_a_pair(const char *x_qname, int x_flag, int x_rname,
+                     int x_pos, int x_rnext, int x_pnext,
+                     const char *y_qname, int y_flag, int y_rname,
+                     int y_pos, int y_rnext, int y_pnext)
+{
+    int ok, tmp, x_is_first, x_is_last, x_is_proper, x_is_secondary,
+                 y_is_first, y_is_last, y_is_proper, y_is_secondary;
+
+    /* 'x' and 'y' must have multiple segments in sequencing */
+    if ((x_flag & 0x001) == 0 || (y_flag & 0x001) == 0)
+        return 0;
+
+    /* 'x' and 'y' must be mapped. */
+    if ((x_flag & 0x004) || (y_flag & 0x004))
+        return 0;
+
+    /* 'x' and 'y' must have their next segment in the template mapped. */
+    if ((x_flag & 0x008) || (y_flag & 0x008))
+        return 0;
+
+    /* See top of the R/findMateAlignment.R file for the definition of tests
+       (A), (B), (C), (D), (E), (F), and (G). */
+
+    /* Test (A). */
+    tmp = (x_qname != NULL) + (y_qname != NULL);
+    if (tmp == 1)
+        return 0;  /* 'x_qname' or 'y_qname' is NULL but not both */
+    if (tmp == 2 && strcmp(x_qname, y_qname) != 0)
+        return 0;  /* 'x_qname' and 'y_qname' differ */
+
+    /* Test (B). */
+    if ((x_rnext != y_rname) || (y_rnext != x_rname))
+        return 0;
+
+    /* Test (C). */
+    if ((x_pnext != y_pos) || (y_pnext != x_pos))
+        return 0;
+
+    /* Test (D). */
+    ok = (((x_flag & 0x020) == 0) == ((y_flag & 0x010) == 0)) &&
+         (((y_flag & 0x020) == 0) == ((x_flag & 0x010) == 0));
+    if (!ok)
+        return 0;
+
+    /* Test (E). */
+    x_is_first = (x_flag & 0x040) && !(x_flag & 0x080);
+    x_is_last = !(x_flag & 0x040) && (x_flag & 0x080);
+    y_is_first = (y_flag & 0x040) && !(y_flag & 0x080);
+    y_is_last = !(y_flag & 0x040) && (y_flag & 0x080);
+    ok = (x_is_first && y_is_last) || (y_is_first && x_is_last);
+    if (!ok)
+        return 0;
+
+    /* Test (F). */
+    x_is_proper = (x_flag & 0x002) != 0;
+    y_is_proper = (y_flag & 0x002) != 0;
+    if (x_is_proper != y_is_proper)
+        return 0;
+
+    /* Test (G). */
+    x_is_secondary = (x_flag & 0x100) != 0;
+    y_is_secondary = (y_flag & 0x100) != 0;
+    if (x_is_secondary != y_is_secondary)
+        return 0;
+
+    return 1;
+}
+
+/*
+ * Parallel pairing of 2 vectors of alignments (i.e. BAM records). The 2
+ * vectors must have the same length.
+ * 'x_rname', 'y_rname', 'x_rnext', and 'y_rnext' must all have exactly the
+ * same levels in the same order. This is NOT checked.
+ * Returns a logical vector of the same length as the input vectors.
+ */
+SEXP p_pairing(SEXP x_qname, SEXP x_flag, SEXP x_rname,
+               SEXP x_pos, SEXP x_rnext, SEXP x_pnext,
+               SEXP y_qname, SEXP y_flag, SEXP y_rname,
+               SEXP y_pos, SEXP y_rnext, SEXP y_pnext)
+{
+    SEXP ans, x_qname_elt, y_qname_elt;
+    int x_len, y_len, i,
+        x_flag_elt, x_rname_elt, x_pos_elt, x_rnext_elt, x_pnext_elt,
+        y_flag_elt, y_rname_elt, y_pos_elt, y_rnext_elt, y_pnext_elt;
+    const char *x_qname_string, *y_qname_string;
+
+    x_len = check_x_or_y(x_qname, x_flag, x_rname, x_pos,
+                         x_rnext, x_pnext, "x");
+    y_len = check_x_or_y(y_qname, y_flag, y_rname, y_pos,
+                         y_rnext, y_pnext, "y");
+    if (x_len != y_len)
+        Rf_error("'x' and 'y' must have the same length");
+    if ((x_qname == R_NilValue) != (y_qname == R_NilValue))
+        Rf_error("both of 'x' and 'y' must either be NULL or not");
+    if (x_qname == R_NilValue)
+        x_qname_string = y_qname_string = NULL;
+
+    PROTECT(ans = NEW_LOGICAL(x_len));
+    for (i = 0; i < x_len; i++) {
+        x_flag_elt = INTEGER(x_flag)[i];
+        y_flag_elt = INTEGER(y_flag)[i];
+        if (x_flag_elt == NA_INTEGER || y_flag_elt == NA_INTEGER) {
+            UNPROTECT(1);
+            Rf_error("'x_flag' or 'y_flag' contains NAs");
+        }
+        if (x_qname != R_NilValue) {
+            x_qname_elt = STRING_ELT(x_qname, i);
+            y_qname_elt = STRING_ELT(y_qname, i);
+            if (x_qname_elt == NA_STRING || y_qname_elt == NA_STRING) {
+                UNPROTECT(1);
+                Rf_error("'x_qname' or 'y_qname' contains NAs");
+            }
+            x_qname_string = CHAR(x_qname_elt);
+            y_qname_string = CHAR(y_qname_elt);
+        }
+        x_rname_elt = INTEGER(x_rname)[i];
+        y_rname_elt = INTEGER(y_rname)[i];
+        x_pos_elt = INTEGER(x_pos)[i];
+        y_pos_elt = INTEGER(y_pos)[i];
+        x_rnext_elt = INTEGER(x_rnext)[i];
+        y_rnext_elt = INTEGER(y_rnext)[i];
+        x_pnext_elt = INTEGER(x_pnext)[i];
+        y_pnext_elt = INTEGER(y_pnext)[i];
+        LOGICAL(ans)[i] = is_a_pair(x_qname_string, x_flag_elt, x_rname_elt,
+                                    x_pos_elt, x_rnext_elt, x_pnext_elt,
+                                    y_qname_string, y_flag_elt, y_rname_elt,
+                                    y_pos_elt, y_rnext_elt, y_pnext_elt);
+    }
+    UNPROTECT(1);
+    return ans;
+}

@@ -19,6 +19,13 @@ void _checkext(SEXP ext, SEXP tag, const char *lbl);
 void _checknames(SEXP filename, SEXP indexname, SEXP filemode);
 void _checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 
+/* pairing */
+
+SEXP p_pairing(SEXP x_qname, SEXP x_flag, SEXP x_rname,
+               SEXP x_pos, SEXP x_rnext, SEXP x_pnext,
+               SEXP y_qname, SEXP y_flag, SEXP y_rname,
+               SEXP y_pos, SEXP y_rnext, SEXP y_pnext);
+
 /* call-building macros */
 
 #define NEW_CALL(S, T, NAME, ENV, N)            \

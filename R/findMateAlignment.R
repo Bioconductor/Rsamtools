@@ -5,7 +5,8 @@
 ### For each element in GAlignments object 'x', finds its mate in GAlignments
 ### object 'y'.
 ###
-### Alignments 'x[i1]' and 'y[i2]' are considered mates iff:
+### Alignments 'x[i1]' and 'y[i2]' are considered mates iff they pass all the
+### following tests:
 ###
 ###   (A) names(x[i1]) == names(y[i2])
 ###
@@ -39,6 +40,15 @@
         stop("required columns in 'mcols(", argname, ")': ",
              colnames_in1string)
     }
+    if (!is.integer(arg_mcols$flag))
+        stop("'mcols(", argname, ")$flag' must be an integer vector")
+    if (!is.factor(arg_mcols$mrnm))
+        stop("'mcols(", argname, ")$mrnm' must be a factor")
+    if (!identical(levels(arg_mcols$mrnm), levels(seqnames(arg))))
+        stop("'mcols(", argname, ")$mrnm' and 'seqnames(", argname, ")' ",
+             "must have exactly the same levels in the same order")
+    if (!is.integer(arg_mcols$mpos))
+        stop("'mcols(", argname, ")$mpos' must be an integer vector")
     arg_mcols
 }
 
@@ -47,7 +57,7 @@
 ### 'names': names(x).
 ### 'flagbits': integer matrix (of 0's and 1's) obtained with
 ###     bamFlagAsBitMatrix(mcols(x)$flag, bitnames=.MATING_FLAG_BITNAMES)
-### 'mrnm': character vector or factor obtained with mcols(x)$mrnm
+### 'mrnm': factor obtained with mcols(x)$mrnm
 ### 'mpos': integer vector obtained with mcols(x)$mpos
 ### Returns 'names' with NAs injected at positions corresponding to alignments
 ### that satisfy at least one of following conditions:
@@ -102,30 +112,16 @@
     sum(as.integer(2L ^ (bitpos-1L)))
 }
 
-### All arguments must be atomic vectors of the same length N.
+### All arguments must be vectors of the same length N.
 ### The arguments prefixed with 'x_' describe a vector 'x' of N alignments.
 ### The arguments prefixed with 'y_' describe a vector 'y' of N alignments.
-### Performs element-wise comparison of the N alignments in 'x' with the N
-### alignments in 'y', and returns a logical vector of length N indicating
-### whether conditions (B), (C), (D), (E), (F), and (G), are satisfied.
-.isValidHit <- function(x_seqnames, x_start, x_mrnm, x_mpos, x_flag,
-                        y_seqnames, y_start, y_mrnm, y_mpos, y_flag)
+### Performs "parallel pairing" of the N alignments in 'x' with the N
+### alignments in 'y'.
+.isValidHit <- function(x_flag, x_seqnames, x_start, x_mrnm, x_mpos,
+                        y_flag, y_seqnames, y_start, y_mrnm, y_mpos)
 {
-    D1_bitmask <- .makeFlagBitmask("isMateMinusStrand")
-    D2_bitmask <- .makeFlagBitmask("isMinusStrand")
-    E_bitmask <- .makeFlagBitmask("isFirstMateRead")
-    FG_bitmask <- .makeFlagBitmask(c("isProperPair", "isNotPrimaryRead"))
-    ## (B)
-    x_mrnm == y_seqnames & y_mrnm == x_seqnames &
-    ## (C)
-      x_mpos == y_start & y_mpos == x_start &
-    ## (D)
-      (bitAnd(x_flag, D1_bitmask) != 0L) == (bitAnd(y_flag, D2_bitmask) != 0L) &
-      (bitAnd(y_flag, D1_bitmask) != 0L) == (bitAnd(x_flag, D2_bitmask) != 0L) &
-    ## (E)
-      bitAnd(x_flag, E_bitmask) != bitAnd(y_flag, E_bitmask) &
-    ## (F) & (G)
-      bitAnd(x_flag, FG_bitmask) == bitAnd(y_flag, FG_bitmask)
+    .Call(.p_pairing, NULL, x_flag, x_seqnames, x_start, x_mrnm, x_mpos,
+                      NULL, y_flag, y_seqnames, y_start, y_mrnm, y_mpos)
 }
 
 ### 3 equivalent implementations for this:
@@ -183,10 +179,10 @@
     hits <- IRanges:::makeAllGroupInnerHits(group.sizes, hit.type=1L)
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
-    valid_hits <- .isValidHit(x_seqnames[x_hits], x_start[x_hits],
-                              x_mrnm[x_hits], x_mpos[x_hits], x_flag[x_hits],
-                              x_seqnames[y_hits], x_start[y_hits],
-                              x_mrnm[y_hits], x_mpos[y_hits], x_flag[y_hits])
+    valid_hits <- .isValidHit(x_flag[x_hits], x_seqnames[x_hits],
+                              x_start[x_hits], x_mrnm[x_hits], x_mpos[x_hits],
+                              x_flag[y_hits], x_seqnames[y_hits],
+                              x_start[y_hits], x_mrnm[y_hits], x_mpos[y_hits])
     x_hits <- x_hits[valid_hits]
     y_hits <- y_hits[valid_hits]
 
@@ -264,10 +260,10 @@ findMateAlignment <- function(x, verbose=FALSE)
     x_flag <- x_mcols$flag
     bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
     x_flagbits <- bamFlagAsBitMatrix(x_flag, bitnames=bitnames)
-    x_mrnm <- as.character(x_mcols$mrnm)
+    x_mrnm <- x_mcols$mrnm
     x_mpos <- x_mcols$mpos
     x_gnames <- .makeGAlignmentsGNames(x_names, x_flagbits, x_mrnm, x_mpos)
-    x_seqnames <- as.character(seqnames(x))
+    x_seqnames <- as.factor(seqnames(x))
     x_start <- start(x)
 
     xo_and_GS <- .getCharacterOrderAndGroupSizes(x_gnames)
@@ -385,9 +381,9 @@ findMateAlignment2 <- function(x, y=NULL)
     if (is.null(x_names))
         stop("'x' must have names")
     x_mcols <- .checkMetadatacols(x, "x")
-    x_seqnames <- as.character(seqnames(x))
+    x_seqnames <- as.factor(seqnames(x))
     x_start <- start(x)
-    x_mrnm <- as.character(x_mcols$mrnm)
+    x_mrnm <- x_mcols$mrnm
     x_mpos <- x_mcols$mpos
     x_flag <- x_mcols$flag
     bitnames <- c(.MATING_FLAG_BITNAMES, "isMinusStrand", "isMateMinusStrand")
@@ -407,9 +403,9 @@ findMateAlignment2 <- function(x, y=NULL)
         if (is.null(y_names))
             stop("'y' must have names")
         y_mcols <- .checkMetadatacols(y, "y")
-        y_seqnames <- as.character(seqnames(y))
+        y_seqnames <- as.factor(seqnames(y))
         y_start <- start(y)
-        y_mrnm <- as.character(y_mcols$mrnm)
+        y_mrnm <- y_mcols$mrnm
         y_mpos <- y_mcols$mpos
         y_flag <- y_mcols$flag
         y_flagbits <- bamFlagAsBitMatrix(y_flag, bitnames=bitnames)
@@ -420,10 +416,10 @@ findMateAlignment2 <- function(x, y=NULL)
 
     x_hits <- queryHits(hits)
     y_hits <- subjectHits(hits)
-    valid_hits <- .isValidHit(x_seqnames[x_hits], x_start[x_hits],
-                              x_mrnm[x_hits], x_mpos[x_hits], x_flag[x_hits],
-                              y_seqnames[y_hits], y_start[y_hits],
-                              y_mrnm[y_hits], y_mpos[y_hits], y_flag[y_hits])
+    valid_hits <- .isValidHit(x_flag[x_hits], x_seqnames[x_hits],
+                              x_start[x_hits], x_mrnm[x_hits], x_mpos[x_hits],
+                              y_flag[y_hits], y_seqnames[y_hits],
+                              y_start[y_hits], y_mrnm[y_hits], y_mpos[y_hits])
     x_hits <- x_hits[valid_hits]
     y_hits <- y_hits[valid_hits]
 
