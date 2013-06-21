@@ -19,6 +19,7 @@ static const R_CallMethodDef callMethods[] = {
     {".razip", (DL_FUNC) & razip, 2},
     /* utilities.c */
     {".p_pairing", (DL_FUNC) & p_pairing, 12},
+    {".find_mate_within_groups", (DL_FUNC) & find_mate_within_groups, 6},
     /* bamfile.c */
     {".bamfile_init", (DL_FUNC) & bamfile_init, 0},
     {".bamfile_open", (DL_FUNC) & bamfile_open, 3},

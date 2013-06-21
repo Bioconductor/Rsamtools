@@ -3,6 +3,8 @@
 #include "IRanges_interface.h"
 #include "XVector_interface.h"
 
+#include <stdlib.h>  /* for malloc() / free() */
+
 SEXP _get_namespace(const char *pkg)
 {
     SEXP fun = PROTECT(findFun(install("getNamespace"), R_GlobalEnv));
@@ -263,19 +265,22 @@ static int is_a_pair(const char *x_qname, int x_flag, int x_rname,
                      const char *y_qname, int y_flag, int y_rname,
                      int y_pos, int y_rnext, int y_pnext)
 {
-    int ok, tmp, x_is_first, x_is_last, x_is_proper, x_is_secondary,
-                 y_is_first, y_is_last, y_is_proper, y_is_secondary;
+    int x_is_not_first, x_is_not_last, x_is_proper, x_is_secondary,
+        y_is_not_first, y_is_not_last, y_is_proper, y_is_secondary,
+        tmp, ok;
 
-    /* 'x' and 'y' must have multiple segments in sequencing */
-    if ((x_flag & 0x001) == 0 || (y_flag & 0x001) == 0)
+
+    /* Flag bits 0x001, 0x004, and 0x008 must be 1, 0, and 0.
+       Testing the 3 bits at once. */
+    if (((x_flag & 0x00d) != 0x001) || ((y_flag & 0x00d) != 0x001))
         return 0;
 
-    /* 'x' and 'y' must be mapped. */
-    if ((x_flag & 0x004) || (y_flag & 0x004))
-        return 0;
-
-    /* 'x' and 'y' must have their next segment in the template mapped. */
-    if ((x_flag & 0x008) || (y_flag & 0x008))
+    /* 'x' and 'y' must be the first or the last segment in the template. */
+    x_is_not_first = (x_flag & 0x040) == 0;
+    x_is_not_last = (x_flag & 0x080) == 0;
+    y_is_not_first = (y_flag & 0x040) == 0;
+    y_is_not_last = (y_flag & 0x080) == 0;
+    if ((x_is_not_first == x_is_not_last) || (y_is_not_first == y_is_not_last))
         return 0;
 
     /* See top of the R/findMateAlignment.R file for the definition of tests
@@ -303,12 +308,7 @@ static int is_a_pair(const char *x_qname, int x_flag, int x_rname,
         return 0;
 
     /* Test (E). */
-    x_is_first = (x_flag & 0x040) && !(x_flag & 0x080);
-    x_is_last = !(x_flag & 0x040) && (x_flag & 0x080);
-    y_is_first = (y_flag & 0x040) && !(y_flag & 0x080);
-    y_is_last = !(y_flag & 0x040) && (y_flag & 0x080);
-    ok = (x_is_first && y_is_last) || (y_is_first && x_is_last);
-    if (!ok)
+    if (x_is_not_first == y_is_not_first)
         return 0;
 
     /* Test (F). */
@@ -327,8 +327,8 @@ static int is_a_pair(const char *x_qname, int x_flag, int x_rname,
 }
 
 /*
- * Parallel pairing of 2 vectors of alignments (i.e. BAM records). The 2
- * vectors must have the same length.
+ * Parallel pairing of 2 vectors of alignments (i.e. BAM records).
+ * The 2 input vectors 'x' and 'y' must have the same length.
  * 'x_rname', 'y_rname', 'x_rnext', and 'y_rnext' must all have exactly the
  * same levels in the same order. This is NOT checked.
  * Returns a logical vector of the same length as the input vectors.
@@ -385,6 +385,76 @@ SEXP p_pairing(SEXP x_qname, SEXP x_flag, SEXP x_rname,
                                     x_pos_elt, x_rnext_elt, x_pnext_elt,
                                     y_qname_string, y_flag_elt, y_rname_elt,
                                     y_pos_elt, y_rnext_elt, y_pnext_elt);
+    }
+    UNPROTECT(1);
+    return ans;
+}
+
+/*
+ * The input is a vector 'x' of alignments.
+ * 'group_sizes 'must be a vector of positive integers that sum up to the
+ * length of the input vectors. This is NOT checked.
+ * 'x_rname' and 'x_rnext' must have exactly the same levels in the same order.
+ * This is NOT checked.
+ * Returns an integer vector of the same length as the input vectors.
+ */
+SEXP find_mate_within_groups(SEXP group_sizes,
+                             SEXP x_flag, SEXP x_rname,
+                             SEXP x_pos, SEXP x_rnext, SEXP x_pnext)
+{
+    SEXP ans;
+    int x_len, ngroup, n, group_size, offset, i, i2, j, j2, ok,
+        x_flag_elt, x_rname_elt, x_pos_elt, x_rnext_elt, x_pnext_elt,
+        y_flag_elt, y_rname_elt, y_pos_elt, y_rnext_elt, y_pnext_elt,
+        ans_i2_is_na, ans_j2_is_na;
+
+    x_len = check_x_or_y(R_NilValue, x_flag, x_rname, x_pos,
+                         x_rnext, x_pnext, "x");
+    ngroup = LENGTH(group_sizes);
+    PROTECT(ans = NEW_INTEGER(x_len));
+    for (i = 0; i < x_len; i++)
+        INTEGER(ans)[i] = NA_INTEGER;
+    for (n = offset = 0; n < ngroup; n++, offset += group_size) {
+        group_size = INTEGER(group_sizes)[n];
+        for (i = 1; i < group_size; i++) {
+            i2 = i + offset;
+            x_flag_elt = INTEGER(x_flag)[i2];
+            if (x_flag_elt == NA_INTEGER) {
+                UNPROTECT(1);
+                Rf_error("'x_flag' contains NAs");
+            }
+            x_rname_elt = INTEGER(x_rname)[i2];
+            x_pos_elt = INTEGER(x_pos)[i2];
+            x_rnext_elt = INTEGER(x_rnext)[i2];
+            x_pnext_elt = INTEGER(x_pnext)[i2];
+            for (j = 0; j < i; j++) {
+                j2 = j + offset;
+                y_flag_elt = INTEGER(x_flag)[j2];
+                if (y_flag_elt == NA_INTEGER) {
+                    UNPROTECT(1);
+                    Rf_error("'y_flag' contains NAs");
+                }
+                y_rname_elt = INTEGER(x_rname)[j2];
+                y_pos_elt = INTEGER(x_pos)[j2];
+                y_rnext_elt = INTEGER(x_rnext)[j2];
+                y_pnext_elt = INTEGER(x_pnext)[j2];
+                ok = is_a_pair(NULL, x_flag_elt, x_rname_elt,
+                               x_pos_elt, x_rnext_elt, x_pnext_elt,
+                               NULL, y_flag_elt, y_rname_elt,
+                               y_pos_elt, y_rnext_elt, y_pnext_elt);
+                if (!ok)
+                    continue;
+                ans_i2_is_na = INTEGER(ans)[i2] == NA_INTEGER;
+                ans_j2_is_na = INTEGER(ans)[j2] == NA_INTEGER;
+                if (ans_i2_is_na && ans_j2_is_na) {
+                    INTEGER(ans)[i2] = j2 + 1;
+                    INTEGER(ans)[j2] = i2 + 1;
+                    continue;
+                }
+                INTEGER(ans)[i2] = ans_i2_is_na ? -(j2 + 1) : 0;
+                INTEGER(ans)[j2] = ans_j2_is_na ? -(i2 + 1) : 0;
+            }
+        }
     }
     UNPROTECT(1);
     return ans;

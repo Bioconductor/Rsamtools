@@ -117,26 +117,6 @@
 ### The arguments prefixed with 'y_' describe a vector 'y' of N alignments.
 ### Performs "parallel pairing" of the N alignments in 'x' with the N
 ### alignments in 'y'.
-.isValidHit_old <- function(x_flag, x_seqnames, x_start, x_mrnm, x_mpos,
-                            y_flag, y_seqnames, y_start, y_mrnm, y_mpos)
-{
-    D1_bitmask <- .makeFlagBitmask("isMateMinusStrand")
-    D2_bitmask <- .makeFlagBitmask("isMinusStrand")
-    E_bitmask <- .makeFlagBitmask("isFirstMateRead")
-    FG_bitmask <- .makeFlagBitmask(c("isProperPair", "isNotPrimaryRead"))
-    ## (B)
-    x_mrnm == y_seqnames & y_mrnm == x_seqnames &
-    ## (C)
-      x_mpos == y_start & y_mpos == x_start &
-    ## (D)
-      (bitAnd(x_flag, D1_bitmask) != 0L) == (bitAnd(y_flag, D2_bitmask) != 0L) &
-      (bitAnd(y_flag, D1_bitmask) != 0L) == (bitAnd(x_flag, D2_bitmask) != 0L) &
-    ## (E)
-      bitAnd(x_flag, E_bitmask) != bitAnd(y_flag, E_bitmask) &
-    ## (F) & (G)
-      bitAnd(x_flag, FG_bitmask) == bitAnd(y_flag, FG_bitmask)
-}
-
 .isValidHit <- function(x_flag, x_seqnames, x_start, x_mrnm, x_mpos,
                         y_flag, y_seqnames, y_start, y_mrnm, y_mpos)
 {
@@ -158,14 +138,6 @@
     x %in% x[duplicated(x)]
 }
 
-.makeMateIdx <- function(x_hits, y_hits, x_len)
-{
-    oo <- IRanges:::orderInteger(y_hits, decreasing=TRUE)
-    ans <- rep.int(NA_integer_, x_len)
-    ans[x_hits[oo]] <- y_hits[oo]
-    ans
-}
-
 ### 'x_hits' and 'y_hits' must be 2 integer vectors of the same length N
 ### representing the N edges of a bipartite graph between the [1, x_len] and
 ### [1, y_len] intervals (the i-th edge being represented by (x[i], y[i])).
@@ -174,7 +146,7 @@
 ###   - If there is more than 1 occurence of k in 'x', then F[k] = 0.
 ###   - If there is exactly 1 occurence of k in 'x', at index i_k, then
 ###     F[k] = y[i_k].
-### In addition, if more than valule of index k is associated to F[k], then
+### In addition, if more than 1 value of index k is associated to F[k], then
 ### F[k] is replaced by -F[k].
 .makeMateIdx2 <- function(x_hits, y_hits, x_len)
 {
@@ -192,24 +164,16 @@
 ###       inject any NA in its names,
 ###   (2) is already ordered by group names (which are the same as its names).
 ### 'group.sizes' must be the same as 'runLength(Rle(names(x)))'.
-.findMateAlignmentInChunk <- function(group.sizes,
-                                      x_seqnames, x_start,
-                                      x_mrnm, x_mpos, x_flag)
+### Alignments with more than 1 possible mate are assigned a zero.
+### Those with exactly 1 mate that has itself more than 1 mate are assigned
+### a negative value (the opposite of the index of the mate).
+.findMateWithinGroups <- function(group.sizes,
+                                  x_flag, x_seqnames,
+                                  x_start, x_mrnm, x_mpos)
 {
-    hits <- IRanges:::makeAllGroupInnerHits(group.sizes, hit.type=1L)
-    x_hits <- queryHits(hits)
-    y_hits <- subjectHits(hits)
-    valid_hits <- .isValidHit(x_flag[x_hits], x_seqnames[x_hits],
-                              x_start[x_hits], x_mrnm[x_hits], x_mpos[x_hits],
-                              x_flag[y_hits], x_seqnames[y_hits],
-                              x_start[y_hits], x_mrnm[y_hits], x_mpos[y_hits])
-    x_hits <- x_hits[valid_hits]
-    y_hits <- y_hits[valid_hits]
-
-    tmp <- x_hits
-    x_hits <- c(x_hits, y_hits)
-    y_hits <- c(y_hits, tmp)
-    .makeMateIdx2(x_hits, y_hits, length(x_start))
+    .Call(.find_mate_within_groups, group.sizes,
+                                    x_flag, x_seqnames,
+                                    x_start, x_mrnm, x_mpos)
 }
 
 .showGAlignmentsEltsWithMoreThan1Mate <- function(x, idx)
@@ -305,20 +269,20 @@ findMateAlignment <- function(x, verbose=FALSE)
         chunk.GS <- GS[chunk.GIDX]
         chunk.length <- sum(chunk.GS)
         chunk.idx <- xo[chunk.offset + seq_len(chunk.length)]
+        chunk.x_flag <- x_flag[chunk.idx]
         chunk.x_seqnames <- x_seqnames[chunk.idx]
         chunk.x_start <- x_start[chunk.idx]
         chunk.x_mrnm <- x_mrnm[chunk.idx]
         chunk.x_mpos <- x_mpos[chunk.idx]
-        chunk.x_flag <- x_flag[chunk.idx]
         if (verbose)
             message("Finding mates in chunk of ", chunk.length,
                     " alignments ... ", appendLF=FALSE)
-        chunk.ans <- .findMateAlignmentInChunk(chunk.GS,
-                                               chunk.x_seqnames,
-                                               chunk.x_start,
-                                               chunk.x_mrnm,
-                                               chunk.x_mpos,
-                                               chunk.x_flag)
+        chunk.ans <- .findMateWithinGroups(chunk.GS,
+                                           chunk.x_flag,
+                                           chunk.x_seqnames,
+                                           chunk.x_start,
+                                           chunk.x_mrnm,
+                                           chunk.x_mpos)
         dumpme_idx <- which(chunk.ans <= 0L)
         if (length(dumpme_idx) != 0L) {
             .dumpAlignments(x, chunk.idx[dumpme_idx])

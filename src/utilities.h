@@ -26,6 +26,10 @@ SEXP p_pairing(SEXP x_qname, SEXP x_flag, SEXP x_rname,
                SEXP y_qname, SEXP y_flag, SEXP y_rname,
                SEXP y_pos, SEXP y_rnext, SEXP y_pnext);
 
+SEXP find_mate_within_groups(SEXP group_sizes,
+                             SEXP x_flag, SEXP x_rname,
+                             SEXP x_pos, SEXP x_rnext, SEXP x_pnext);
+
 /* call-building macros */
 
 #define NEW_CALL(S, T, NAME, ENV, N)            \
