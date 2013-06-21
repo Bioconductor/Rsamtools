@@ -19,7 +19,7 @@ object.
 }
 
 \usage{
-findMateAlignment(x, verbose=FALSE)
+findMateAlignment(x)
 makeGAlignmentPairs(x, use.names=FALSE, use.mcols=FALSE)
 
 ## Related low-level utilities:
@@ -37,10 +37,6 @@ flushDumpedAlignments()
     param <- ScanBamParam(what=c("flag", "mrnm", "mpos"))
     x <- readGAlignmentsFromBam(..., use.names=TRUE, param=param)
     }
-  }
-  \item{verbose}{
-    If \code{TRUE}, then \code{findMateAlignment} will print some
-    details about what is currently going on. Mostly useful for debugging.
   }
   \item{use.names}{
     Whether the names on the input object should be propagated to the

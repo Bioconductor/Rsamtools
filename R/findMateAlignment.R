@@ -228,10 +228,8 @@ getDumpedAlignments <- function()
 ### and about 13 s and 909MB of RAM to mate 5 million alignments.
 ### So it's a little bit faster and more memory efficient than
 ### findMateAlignment2().
-findMateAlignment <- function(x, verbose=FALSE)
+findMateAlignment <- function(x)
 {
-    if (!isTRUEorFALSE(verbose))
-        stop("'verbose' must be TRUE or FALSE")
     x_names <- names(x)
     if (is.null(x_names))
         stop("'x' must have names")
@@ -252,48 +250,16 @@ findMateAlignment <- function(x, verbose=FALSE)
 
     xo_and_GS <- .getCharacterOrderAndGroupSizes(x_gnames)
     xo <- xo_and_GS$xo
-    GS <- xo_and_GS$group.sizes
-    ans_len <- length(x_gnames)
-    ans <- rep.int(NA_integer_, ans_len)
-    if (ans_len == 0L) {
-        NGROUP_BY_CHUNK <- 0L
-    } else {
-        NGROUP_BY_CHUNK <- as.integer(16000000 / mean(GS))
+    group.sizes <- xo_and_GS$group.sizes
+    ans <- .findMateWithinGroups(group.sizes,
+                                 x_flag[xo], x_seqnames[xo],
+                                 x_start[xo], x_mrnm[xo], x_mpos[xo])
+    dumpme_idx <- which(ans <= 0L)
+    if (length(dumpme_idx) != 0L) {
+        .dumpAlignments(x, xo[dumpme_idx])
+        ans[dumpme_idx] <- NA_integer_
     }
-    chunk.GIDX <- seq_len(NGROUP_BY_CHUNK)
-    chunk.offset <- 0L
-    while (TRUE) {
-        chunk.GIDX <- chunk.GIDX[chunk.GIDX <= length(GS)]
-        if (length(chunk.GIDX) == 0L)
-            break
-        chunk.GS <- GS[chunk.GIDX]
-        chunk.length <- sum(chunk.GS)
-        chunk.idx <- xo[chunk.offset + seq_len(chunk.length)]
-        chunk.x_flag <- x_flag[chunk.idx]
-        chunk.x_seqnames <- x_seqnames[chunk.idx]
-        chunk.x_start <- x_start[chunk.idx]
-        chunk.x_mrnm <- x_mrnm[chunk.idx]
-        chunk.x_mpos <- x_mpos[chunk.idx]
-        if (verbose)
-            message("Finding mates in chunk of ", chunk.length,
-                    " alignments ... ", appendLF=FALSE)
-        chunk.ans <- .findMateWithinGroups(chunk.GS,
-                                           chunk.x_flag,
-                                           chunk.x_seqnames,
-                                           chunk.x_start,
-                                           chunk.x_mrnm,
-                                           chunk.x_mpos)
-        dumpme_idx <- which(chunk.ans <= 0L)
-        if (length(dumpme_idx) != 0L) {
-            .dumpAlignments(x, chunk.idx[dumpme_idx])
-            chunk.ans[dumpme_idx] <- NA_integer_
-        }
-        if (verbose)
-            message("OK")
-        ans[chunk.idx] <- chunk.idx[chunk.ans]
-        chunk.GIDX <- chunk.GIDX + NGROUP_BY_CHUNK
-        chunk.offset <- chunk.offset + chunk.length
-    }
+    ans[xo] <- xo[ans]  # isn't that cute!
     dump_count <- countDumpedAlignments()
     if (dump_count != 0L)
         warning("  ", dump_count, " alignments with ambiguous pairing ",
