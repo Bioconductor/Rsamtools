@@ -98,16 +98,23 @@ It implements the following pairing algorithm:
 }
 
 \subsection{Timing and memory requirement of the pairing algorithm}{
-The estimated timings and memory requirements on a modern Linux system are:
+The estimated timings and memory requirements on a modern Linux system are
+(those numbers may vary depending on your hardware and OS):
 \preformatted{
   nb of alignments |         time | required memory
   -----------------+--------------+----------------
         8 millions |       32 sec |          1.7 GB
        16 millions |       65 sec |          3.3 GB
        32 millions | 2 min 25 sec |          6.5 GB
-       64 millions |       ??     |           ?? GB
+       64 millions | 5 min 40 sec |         13.0 GB
 }
-Those numbers may vary depending on your hardware and OS.
+This is for a \link{GAlignments} object coming from a file with an
+"average nb of records per unique QNAME" of 2.04. A value of 2 (which means
+the file contains only primary reads) is optimal for the pairing algorithm.
+A greater value, say > 3, will significantly degrade its performance.
+An easy way to avoid this degradation is to load only primary alignments
+by setting the \code{isNotPrimaryRead} flag to \code{FALSE} in ScanBamParam().
+See examples in \code{?readGAlignmentPairsFromBam} for how to do this.
 }
 
 \subsection{Ambiguous pairing}{

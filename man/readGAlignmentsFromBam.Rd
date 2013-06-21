@@ -188,9 +188,10 @@ gal2 <- readGAlignmentsFromBam(bamfile, use.names=TRUE)
 gal2
 head(names(gal2))
 
-## Using the 'param' arg to drop PCR or optical duplicates and load
-## additional BAM fields:
-param <- ScanBamParam(flag=scanBamFlag(isDuplicate=FALSE),
+## Using the 'param' arg to drop PCR or optical duplicates as well as
+## secondary alignments, and to load additional BAM fields:
+param <- ScanBamParam(flag=scanBamFlag(isDuplicate=FALSE,
+                                       isNotPrimaryRead=FALSE),
                       what=c("qual", "flag"))
 gal3 <- readGAlignmentsFromBam(bamfile, param=param)
 gal3
@@ -238,7 +239,12 @@ head(names(greads2))
 galp1 <- readGAlignmentPairsFromBam(bamfile)
 head(galp1)
 names(galp1)
-galp2 <- readGAlignmentPairsFromBam(bamfile, use.names=TRUE)
+## Using the 'param' arg to drop PCR or optical duplicates as well as
+## secondary alignments (dropping secondary alignments can help make the
+## pairing algorithm run significantly faster, see ?findMateAlignment):
+param <- ScanBamParam(flag=scanBamFlag(isDuplicate=FALSE,
+                                       isNotPrimaryRead=FALSE))
+galp2 <- readGAlignmentPairsFromBam(bamfile, use.names=TRUE, param=param)
 galp2
 head(galp2)
 head(names(galp2))
