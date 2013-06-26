@@ -55,7 +55,7 @@ setClass("PileupParam",
       index="character", yieldSize="integer"))
 
 .BamFile <- setRefClass("BamFile", contains="RsamtoolsFile",
-    fields=list(obeyQname="logical"))
+    fields=list(obeyQname="logical", asMates="logical"))
 
 .BcfFile <- setRefClass("BcfFile", contains="RsamtoolsFile",
     fields=list(mode="character"))

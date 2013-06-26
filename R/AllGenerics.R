@@ -165,6 +165,12 @@ setGeneric("obeyQname",
 setGeneric("obeyQname<-",
            function(object, ..., value) standardGeneric("obeyQname<-"))
 
+setGeneric("asMates",
+           function(object, ...) standardGeneric("asMates"))
+
+setGeneric("asMates<-",
+           function(object, ..., value) standardGeneric("asMates<-"))
+
 setGeneric("isOpen")
 
 

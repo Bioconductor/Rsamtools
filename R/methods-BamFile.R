@@ -14,11 +14,11 @@ setMethod(isIncomplete, "BamFile",
 
 BamFile <-
     function(file, index=file, ..., yieldSize=NA_integer_, 
-             obeyQname=FALSE)
+             obeyQname=FALSE, asMates=FALSE)
 {
     .RsamtoolsFile(.BamFile, .normalizePath(file),
                    .normalizePath(index), yieldSize=yieldSize,
-                   obeyQname=obeyQname, ...)
+                   obeyQname=obeyQname, asMates=asMates, ...)
 }
 
 open.BamFile <-
@@ -83,6 +83,21 @@ setReplaceMethod("obeyQname", "BamFile",
     object
 })
 
+setMethod(asMates, "BamFile",
+    function(object, ...)
+{
+    object$asMates
+})
+
+setReplaceMethod("asMates", "BamFile", 
+    function(object, ..., value)
+{
+    if (1L != length(value))
+        stop("'value' must be length 1")
+    object$asMates <- value
+    object
+})
+
 setMethod(scanBam, "BamFile",
           function(file, index=file, ...,
                    param=ScanBamParam(what=scanBamWhat()))
@@ -107,7 +122,8 @@ setMethod(scanBam, "BamFile",
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
-                 yieldSize(file), tmpl, obeyQname(file), param=param)
+                 yieldSize(file), tmpl, obeyQname(file), 
+                 asMates(file), param=param)
     .scanBam_postprocess(x, param)
 })
 
@@ -137,7 +153,7 @@ setMethod(countBam, "BamFile",
     n_tot <- 0L
     repeat {
         buf <- .io_bam(.prefilter_bamfile, file, param=param, yieldSize,
-                       obeyQname(file))
+                       obeyQname(file), asMates(file))
         if (0L == .Call(.bambuffer_length, buf))
             break;
 
@@ -637,4 +653,5 @@ setMethod(quickCountBam, "BamFile",
 setMethod(show, "BamFile", function(object) {
     callNextMethod()
     cat("obeyQname:", obeyQname(object), "\n")
+    cat("asMates:", asMates(object), "\n")
 })

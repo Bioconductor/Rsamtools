@@ -167,19 +167,22 @@ SEXP read_bamfile_header(SEXP ext)
 
 SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                   SEXP reverseComplement, SEXP yieldSize, SEXP template_list,
-                  SEXP obeyQname)
+                  SEXP obeyQname, SEXP asMates)
 {
     _checkext(ext, BAMFILE_TAG, "scanBam");
     _checkparams(space, keepFlags, isSimpleCigar);
     if (!(IS_LOGICAL(reverseComplement) && (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");
-    if (!(IS_LOGICAL(obeyQname) && (1L == LENGTH(obeyQname))))
-        Rf_error("'obeyQname' must be logical(1)");
     if (!(IS_INTEGER(yieldSize) && (1L == LENGTH(yieldSize))))
         Rf_error("'yieldSize' must be integer(1)");
+    if (!(IS_LOGICAL(obeyQname) && (1L == LENGTH(obeyQname))))
+        Rf_error("'obeyQname' must be logical(1)");
+    if (!(IS_LOGICAL(asMates) && (1L == LENGTH(asMates))))
+        Rf_error("'asMates' must be logical(1)");
     _bam_check_template_list(template_list);
     return _scan_bam(ext, space, keepFlags, isSimpleCigar,
-                     reverseComplement, yieldSize, template_list, obeyQname);
+                     reverseComplement, yieldSize, template_list, 
+                     obeyQname, asMates);
 }
 
 SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
@@ -193,7 +196,7 @@ SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 }
 
 SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-                       SEXP yieldSize, SEXP obeyQname)
+                       SEXP yieldSize, SEXP obeyQname, SEXP asMates)
 {
     _checkext(ext, BAMFILE_TAG, "filterBam");
     _checkparams(space, keepFlags, isSimpleCigar);
@@ -201,9 +204,11 @@ SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
         Rf_error("'yieldSize' must be integer(1)");
     if (!(IS_LOGICAL(obeyQname) && (1L == LENGTH(obeyQname))))
         Rf_error("'obeyQname' must be logical(1)");
+    if (!(IS_LOGICAL(asMates) && (1L == LENGTH(asMates))))
+        Rf_error("'asMates' must be logical(1)");
     SEXP result =
         _prefilter_bam(ext, space, keepFlags, isSimpleCigar, yieldSize,
-                       obeyQname);
+                       obeyQname, asMates);
     if (R_NilValue == result)
         Rf_error("'filterBam' failed during pre-filtering");
     return result;

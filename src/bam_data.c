@@ -26,7 +26,7 @@ static BAM_DATA _Calloc_BAM_DATA(int blocksize, int cigar_buf_sz)
 BAM_DATA
 _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
 	       int reverseComplement, int yieldSize, int obeyQname,
-	       void *extra)
+	       int asMates, void *extra)
 {
     int nrange = R_NilValue == space ? 1 : LENGTH(VECTOR_ELT(space, 0));
     BAM_DATA bd =
@@ -43,6 +43,7 @@ _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
     bd->reverseComplement = reverseComplement;
     bd->yieldSize = yieldSize;
     bd->obeyQname = obeyQname;
+    bd->asMates = asMates;
     bd->extra = extra;
     return bd;
 }

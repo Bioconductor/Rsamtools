@@ -22,7 +22,7 @@
 
 ## Constructors
 
-BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE) 
+BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE, asMates = FALSE) 
 
 \S4method{scanBam}{BamSampler}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
 }
@@ -42,6 +42,9 @@ BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE)
 
   \item{obeyQname}{logical(1); indicating whether the file is sorted by
     \code{qname} and if so, that qnames are not split between yields.}
+
+  \item{asMates}{logical(1); indicating whether the records should be
+    returned as mated pairs.}
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
      further influence scanning, counting, or filtering.}

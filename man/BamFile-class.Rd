@@ -20,6 +20,12 @@
 \alias{obeyQname<-,BamFile-method}
 \alias{obeyQname,BamFileList-method}
 \alias{obeyQname<-,BamFileList-method}
+\alias{asMates}
+\alias{asMates<-}
+\alias{asMates,BamFile-method}
+\alias{asMates<-,BamFile-method}
+\alias{asMates,BamFileList-method}
+\alias{asMates<-,BamFileList-method}
 \alias{scanBam,BamFile-method}
 \alias{countBam,BamFile-method}
 \alias{countBam,BamFileList-method}
@@ -64,8 +70,9 @@
 
 ## Constructors
 
-BamFile(file, index=file, ..., yieldSize=NA_integer_, obeyQname=FALSE)
-BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
+BamFile(file, index=file, ..., yieldSize=NA_integer_, obeyQname=FALSE,
+        asMates=FALSE)
+BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE, asMates=FALSE)
 
 ## Opening / closing
 
@@ -78,6 +85,8 @@ BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE)
 \S4method{isIncomplete}{BamFile}(con)
 \S4method{obeyQname}{BamFile}(object, ...)
 obeyQname(object, ...) <- value
+\S4method{asMates}{BamFile}(object, ...)
+asMates(object, ...) <- value
 
 ## actions
 
@@ -177,6 +186,9 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 
   \item{obeyQname, value}{A logical(1) indicating whether the file is
     sorted by \code{qname}.}
+
+  \item{asMates}{A logical(1) indicating whether records should
+    be returned as mated pairs.}
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
      further influence scanning, counting, or filtering.}
@@ -295,6 +307,8 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
   \describe{
 
     \item{obeyQname}{A logical(0) indicating if the file was sorted by qname.}
+    \item{asMates}{A logical(0) indicating if the records should be returned as
+      mated pairs.}
 
   }
 }
@@ -336,6 +350,9 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 
     \item{obeyQname, obeyQname<-}{Return or set a logical(0)
       indicating if the file was sorted by qname.}
+
+    \item{asMates, asMates<-}{Return or set a logical(0)
+      indicating if the records should be returned as mated pairs.}
   }
 
   Methods:

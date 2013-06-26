@@ -9,6 +9,7 @@
 #include "IRanges_interface.h"
 #include "XVector_interface.h"
 #include "Biostrings_interface.h"
+#include "bam_mate_iter.h"
 
 /* from samtoools/bam_sort.c */
 void bam_sort_core(int is_by_qname, const char *fn, const char *prefix,
@@ -170,7 +171,8 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
     int qname_bufsize = 1000;
     char *last_qname = Calloc(qname_bufsize, char);
     int yieldSize = bd->yieldSize,
-        obeyQname = bd->obeyQname;
+        obeyQname = bd->obeyQname,
+        asMates = bd->asMates;
     int ith_yield = 0, inc_yield = 1;
 
     while ((r = samread(bfile->file, bam)) >= 0) {
@@ -206,7 +208,7 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
                 break;
         }
     }
- 
+
     if (NULL != finish1)
         (*finish1) (bd);
     if ((NA_INTEGER == yieldSize) || (ith_yield < yieldSize))
@@ -224,7 +226,8 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
     BAM_FILE bfile = _bam_file_BAM_DATA(bd);
     samfile_t *sfile = bfile->file;
     bam_index_t *bindex = bfile->index;
-    int n_tot = bd->iparsed;
+    int n_tot = bd->iparsed,
+        asMates = bd->asMates;
 
     for (int irange = 0; irange < LENGTH(space); ++irange) {
         const char *spc = translateChar(STRING_ELT(space, irange));
@@ -238,13 +241,16 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             Rf_warning("space '%s' not in BAM header", spc);
             return -1;
         }
-
-        bam_fetch(sfile->x.bam, bindex, tid, starti, end[irange], bd, parse1);
+        if (asMates)
+            bam_mate_fetch(sfile->x.bam, bindex, tid, starti, 
+                           end[irange], bd, parse1);
+        else
+            bam_fetch(sfile->x.bam, bindex, tid, starti, 
+                      end[irange], bd, parse1);
         if (NULL != finish1)
             (*finish1) (bd);
         bd->irange += 1;
     }
-
     return bd->iparsed - n_tot;
 }
 
@@ -312,7 +318,7 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space)
 
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP reverseComplement, SEXP yieldSize, SEXP template_list,
-               SEXP obeyQname)
+               SEXP obeyQname, SEXP asMates)
 {
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
     SEXP result =
@@ -321,7 +327,8 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
-                                 LOGICAL(obeyQname)[0], (void *) sbd);
+                                 LOGICAL(obeyQname)[0], 
+                                 LOGICAL(asMates)[0], (void *) sbd);
 
     int status = _do_scan_bam(bd, space, _filter_and_parse1,
                               _finish1range_BAM_DATA);
@@ -352,7 +359,7 @@ SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
     SEXP result = PROTECT(NEW_LIST(2));
     BAM_DATA bd =
         _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, 0,
-                       NA_INTEGER, 0, result);
+                       NA_INTEGER, 0, 0, result);
 
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(bd->nrange));
     SET_VECTOR_ELT(result, 1, NEW_NUMERIC(bd->nrange));
@@ -401,12 +408,13 @@ static int _prefilter_bam1(const bam1_t * bam, void *data)
 
 SEXP
 _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-               SEXP yieldSize, SEXP obeyQname)
+               SEXP yieldSize, SEXP obeyQname, SEXP asMates)
 {
     SEXP ext = PROTECT(bambuffer(INTEGER(yieldSize)[0]));
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  0, INTEGER(yieldSize)[0],
-                                 LOGICAL(obeyQname)[0], BAMBUFFER(ext));
+                                 LOGICAL(obeyQname)[0], 
+                                 LOGICAL(asMates), BAMBUFFER(ext));
 
     int status = _do_scan_bam(bd, space, _prefilter_bam1, NULL);
     if (status < 0) {
@@ -441,7 +449,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
     /* open destination */
     BAM_DATA bd =
         _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, 0,
-                       NA_INTEGER, 0, NULL);
+                       NA_INTEGER, 0, 0, NULL);
     /* FIXME: this just copies the header... */
     bam_header_t *header = BAMFILE(bfile)->file->header;
     samfile_t *f_out = _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),

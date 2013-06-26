@@ -1,10 +1,11 @@
 .BamSampler <- setRefClass("BamSampler", contains="BamFile")
 
 BamSampler <-
-    function (file, index = file, ..., yieldSize, obeyQname = FALSE) 
+    function (file, index = file, ..., yieldSize, obeyQname = FALSE,
+              asMates = FALSE) 
 {
     .RsamtoolsFile(.BamSampler, .normalizePath(file), .normalizePath(index), 
-        yieldSize = yieldSize, obeyQname = obeyQname, ...)
+        yieldSize = yieldSize, obeyQname = obeyQname, asMates = asMates, ...)
 }
 
 setMethod("scanBam", "BamSampler",
@@ -42,5 +43,4 @@ setMethod("scanBam", "BamSampler",
 
 setMethod(show, "BamSampler", function(object) {
     callNextMethod()
-    cat("obeyQname:", obeyQname(object), "\n")
 })

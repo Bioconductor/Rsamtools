@@ -13,7 +13,8 @@ typedef struct {
     BAM_FILE bfile;
     int irec, iparsed, irange, nrange;
     uint32_t keep_flag[2], cigar_flag;
-    int reverseComplement, yieldSize, obeyQname;
+    int reverseComplement, yieldSize, 
+        obeyQname, asMates;
 
     void *extra;
 } _BAM_DATA, *BAM_DATA;
@@ -26,7 +27,7 @@ enum {
 
 BAM_DATA _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
 			int reverseComplement, int yieldSize, int obeyQname,
-			void *extra);
+			int asMates, void *extra);
 void _Free_BAM_DATA(BAM_DATA bd);
 BAM_FILE _bam_file_BAM_DATA(BAM_DATA bd);
 int _count1_BAM_DATA(const bam1_t *bam, BAM_DATA bd);

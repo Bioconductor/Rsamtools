@@ -89,7 +89,7 @@ SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     SCAN_BAM_DATA sbd = _Calloc_SCAN_BAM_DATA(result);
     BAM_DATA bd = _init_BAM_DATA(ext, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
-                                 NA_INTEGER, 0, (void *) sbd);
+                                 NA_INTEGER, 0, 0, (void *) sbd);
 
     BAM_BUFFER buf = BAMBUFFER(bufext);
     _grow_SCAN_BAM_DATA(bd, buf->n);

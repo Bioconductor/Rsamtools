@@ -18,10 +18,12 @@ void _bam_check_template_list(SEXP template_list);
 SEXP _read_bam_header(SEXP ext);
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags,
                SEXP isSimpleCigar, SEXP reverseComplement,
-               SEXP yieldSize, SEXP template_list, SEXP obeyQname);
+               SEXP yieldSize, SEXP template_list, SEXP obeyQname,
+               SEXP asMates);
 SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 SEXP _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
-		    SEXP isSimpleCigar, SEXP yieldSize, SEXP obeyQname);
+		    SEXP isSimpleCigar, SEXP yieldSize, SEXP obeyQname,
+                    SEXP asMates);
 SEXP _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
                  SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode);
 
