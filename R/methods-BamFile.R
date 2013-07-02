@@ -366,7 +366,7 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
     if (!isTRUE(obeyQname(file))  && !is.na(yieldSize(file))) {
-        warning("'yieldSize' set to 'NA'")
+        warning("'yieldSize' set to 'NA'", immediate.=TRUE)
         yieldSize(file) <- NA_integer_
     }
     flag0 <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
