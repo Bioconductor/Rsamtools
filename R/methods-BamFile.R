@@ -543,7 +543,7 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
              param=ScanBamParam())
 {
     FUN <- .getReadFunction(singleEnd, fragments,
-                            isTRUE(unname(obeyQname(reads))))
+                            isTRUE(all(obeyQname(reads))))
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
         lapply <- parallel::mclapply
 
