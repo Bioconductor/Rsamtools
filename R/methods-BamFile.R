@@ -365,7 +365,7 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
 {
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
-    if (!isTRUE(obeyQname(file))  && !is.na(yieldSize(file))) {
+    if (!isTRUE(unname(obeyQname(file)))  && !is.na(yieldSize(file))) {
         warning("'yieldSize' set to 'NA'", immediate.=TRUE)
         yieldSize(file) <- NA_integer_
     }
@@ -542,7 +542,8 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
              param=ScanBamParam())
 {
-    FUN <- .getReadFunction(singleEnd, fragments, isTRUE(obeyQname(reads)))
+    FUN <- .getReadFunction(singleEnd, fragments,
+                            isTRUE(unname(obeyQname(reads))))
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
         lapply <- parallel::mclapply
 

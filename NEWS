@@ -11,8 +11,11 @@ NEW FEATURES
 
     o add isIncomplete,BamFile-method to test for end-of-file
 
-    o add count.mapped.reads to summarizeOverlaps,BamFileList-method;
+    o add count.mapped.reads to summarizeOverlaps,*,BamFileList-method;
     set to TRUE to collect read and nucleotide counts via countBam.
+
+    o add summarizeOverlaps,*,character-method to count simple file
+    paths
 
 BUG FIXES
 

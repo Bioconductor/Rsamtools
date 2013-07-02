@@ -9,6 +9,23 @@ BamFileList <-
     fls
 }
 
+.summarizeOverlaps_character <-
+    function(features, reads, mode, ignore.strand=FALSE, ...,
+        yieldSize=1000000L, inter.feature=TRUE, singleEnd=TRUE,
+        fragments=TRUE, param=ScanBamParam())
+{
+    reads <- BamFileList(reads, yieldSize=yieldSize, obeyQname=!singleEnd)
+    summarizeOverlaps(features, reads, mode, ignore.strand, ...,
+                      inter.feature=inter.feature, singleEnd=singleEnd,
+                      fragments=fragments)
+}
+
+setMethod("summarizeOverlaps", c("GRanges", "character"),
+    .summarizeOverlaps_character)
+
+setMethod("summarizeOverlaps", c("GRangesList", "character"),
+    .summarizeOverlaps_character)
+
 setMethod("summarizeOverlaps", c("GRanges", "BamFileList"),
     function(features, reads, mode, ignore.strand=FALSE, ..., 
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,

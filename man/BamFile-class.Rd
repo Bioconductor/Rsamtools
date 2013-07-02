@@ -39,6 +39,8 @@
 
 \alias{mergeBam,BamFileList-method}
 % counting 
+\alias{summarizeOverlaps,GRanges,character-method}
+\alias{summarizeOverlaps,GRangesList,character-method}
 \alias{summarizeOverlaps,GRanges,BamFileList-method}
 \alias{summarizeOverlaps,GRangesList,BamFileList-method}
 \alias{summarizeOverlaps,GRanges,BamFile-method}
@@ -109,6 +111,12 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
 
 ## counting
 
+\S4method{summarizeOverlaps}{GRanges,character}(features, reads, mode,
+    ignore.strand=FALSE, ..., yieldSize=1000000L, inter.feature=TRUE,
+    singleEnd=TRUE, fragments=TRUE, param=ScanBamParam())
+\S4method{summarizeOverlaps}{GRangesList,character}(features, reads, mode,
+    ignore.strand=FALSE, ..., yieldSize=1000000L, inter.feature=TRUE,
+    singleEnd=TRUE, fragments=TRUE, param=ScanBamParam())
 \S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, 
     ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
     fragments=TRUE, param=ScanBamParam()) 
