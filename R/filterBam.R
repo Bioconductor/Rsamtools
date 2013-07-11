@@ -2,32 +2,30 @@
     function(rangesList)
 {
     nms <- names(rangesList)
-    if (0 != length(rangesList) && is.null(nms)) {
+    reducedList <- if (0 != length(rangesList) && is.null(nms)) {
         ## special case, all names missing
-        rng <- as(Reduce(append, as(rangesList, "list")),
-                  "NormalIRanges")
-        RangesList(rng)
+        rng <- Reduce(append, as(rangesList, "list"))
+        IRangesList(reduce(rng, drop.empty.ranges=TRUE))
     } else if (any(duplicated(nms))) {
         unms <- unique(nms)
         lst <- lapply(unms, function(nm, rnglist) {
             idx <- names(rnglist) == nm
-            as(Reduce(append, as(rnglist[idx], "list")),
-               "NormalIRanges")
+            rng <- Reduce(append, as(rnglist[idx], "list"))
+            reduce(rng, drop.empty.ranges=TRUE)
         }, rnglist=rangesList)
         names(lst) <- unms
-        do.call(RangesList, lst)
+        do.call(IRangesList, lst)
     } else {
-        if (is(rangesList, "CompressedIRangesList"))
-            rangesList <- as(rangesList, "SimpleIRangesList")
-        endoapply(rangesList, as, "NormalIRanges")
+        reduce(rangesList, drop.empty.ranges=TRUE)
     }
+    reducedList[elementLengths(reducedList) != 0]
 }
 
 .filterBam_preprocess <-
     function(file, param)
 {
     which <- .normalizeRangesList(bamWhich(param))
-    hnames <- names(scanBamHeader(file)[["targets"]])
+    hnames <- seqlevels(file)
     o <- order(match(names(which), hnames))
     initialize(param, which=which[o])
 }

@@ -143,19 +143,35 @@ setMethod(countBam, "BamFile",
 .filterBam_FilterRules <-
     function(file, destination, filter, param)
 {
+    which <- unlist(bamWhich(param))
+    nRange <- length(which)
+    if (nRange)                         # yield by range
+        iRange <- 1L
+
     yieldSize <- yieldSize(file)
     if (is.na(yieldSize))
         yieldSize <- 1000000L
+
     tmpl <- .scanBam_template(param)
     reverseComplement <- bamReverseComplement(param)
 
     dest <- .Call(.bamfile_open, destination, path(file), "wb")
     n_tot <- 0L
     repeat {
-        buf <- .io_bam(.prefilter_bamfile, file, param=param, yieldSize,
-                       obeyQname(file), asMates(file))
+        if (nRange) {                   # by range
+            if (iRange > nRange)
+                break
+            which0 <- IRangesList(which[iRange])
+            names(which0) <- names(which)[iRange]
+            param <- initialize(param, which=which0)
+            iRange <- iRange + 1L
+        }
+        buf <- .io_bam(.prefilter_bamfile, file, param=param,
+                       yieldSize, obeyQname(file), asMates(file))
         if (0L == .Call(.bambuffer_length, buf))
-            break;
+            if (nRange) {
+                next
+            } else break
 
         ans <- .io_bam(.bambuffer_parse, file, param=param,
                        buf, reverseComplement, tmpl)
