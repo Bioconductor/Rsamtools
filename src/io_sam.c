@@ -414,7 +414,7 @@ _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  0, INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
-                                 LOGICAL(asMates), BAMBUFFER(ext));
+                                 LOGICAL(asMates)[0], BAMBUFFER(ext));
 
     int status = _do_scan_bam(bd, space, _prefilter_bam1, NULL);
     if (status < 0) {
