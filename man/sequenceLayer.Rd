@@ -1,0 +1,240 @@
+\name{sequenceLayer}
+
+\alias{sequenceLayer}
+
+
+\title{Lay down read sequences on the reference space, based on their CIGARs}
+
+\description{
+  \code{sequenceLayer} brings strings from one space (e.g. the
+  \code{"query"} space) to another (e.g. the \code{"reference"} space)
+  by injecting and/or removing portions of them based on the associated CIGARs. 
+  Its primary use is to lay down the read sequences stored in a BAM file
+  (which are considered to belong to the \code{"query"} space) on the
+  \code{"reference"} space. However it can bring sequences from/to
+  any of the 7 supported spaces: \code{"query-before-hard-clipping"},
+  \code{"query"}, \code{"query-after-soft-clipping"}, \code{"pairwise"},
+  \code{"reference"}, \code{"pairwise-N-regions-removed"}, and
+  \code{"reference-N-regions-removed"}.
+}
+
+\usage{
+sequenceLayer(x, cigar, from="query", to="reference",
+              D.letter="-", N.letter="-",
+              I.letter="-", S.letter="+", H.letter="+")
+}
+
+\arguments{
+  \item{x}{
+    An \link{XStringSet} object containing the strings to bring from one
+    space to the other.
+  }
+  \item{cigar}{
+    A character vector or factor of the same length as \code{x} containing
+    the extended CIGAR strings (one per element in \code{x}).
+  }
+  \item{from, to}{
+    A single string specifying one of the 7 supported spaces listed above.
+  }
+  \item{D.letter, N.letter, I.letter, S.letter, H.letter}{
+    A single letter used as a filler for injections. More on this is the
+    Details section below.
+  }
+}
+
+\details{
+  The 7 supported spaces can be characterized by the extended CIGAR
+  operations that are \emph{visible} in each of them. A CIGAR operation is
+  said to be \emph{visible} in a given space if it's associated with a block
+  of contiguous positions in that space (the size of the block being the length
+  of the CIGAR operation). For example, the M/=/X operations are \emph{visible}
+  in all spaces, the D/N operations are \emph{visible} in the
+  \code{"reference"} space but not in the \code{"query"} space, the S operation
+  is \emph{visible} in the \code{"query"} space but not in the
+  \code{"reference"} or \code{"query-after-soft-clipping"} space, etc...
+
+  Here are the extended CIGAR operations that are \emph{visible} for each
+  space:
+  \enumerate{
+    \item \code{"query-before-hard-clipping"}: M, I, S, H, =, X
+
+    \item \code{"query"}: M, I, S, =, X
+
+    \item \code{"query-after-soft-clipping"}: M, I, =, X
+
+    \item \code{"pairwise"}: M, I, D, N, =, X
+
+    \item \code{"reference"}: M, D, N, =, X
+
+    \item \code{"pairwise-N-regions-removed"}: M, I, D, =, X
+
+    \item \code{"reference-N-regions-removed"}: M, D, =, X
+  }
+
+  \code{sequenceLayer} brings a string from one space to another by
+  (1) removing its portions associated with operations that are not
+  \emph{visible} anymore in the new space and (2) injecting portions
+  associated with operations that become \emph{visible} in the new space.
+  What's injected exactly is controlled via the \code{D.letter},
+  \code{N.letter}, \code{I.letter}, \code{S.letter}, and \code{H.letter}
+  arguments. For example, when going from the \code{"query"} space to the
+  \code{"reference"} space (the default), existing portions associated with
+  I/S operations are removed and new portions associated with D/N operations
+  are injected. More precisely, the new portions associated with the D
+  operation are filled with the letter specified in \code{D.letter} and
+  those associated with the N operation are filled with the letter specified
+  in \code{N.letter}. The other \code{*.letter} arguments are ignored
+  in that case.
+}
+
+\value{
+  An \link{XStringSet} object of the same class and length as the \code{x}.
+}
+
+\author{H. Pages}
+
+\seealso{
+  \itemize{
+    \item The \code{\link{stackStringsFromBam}} function
+          for stacking the read sequences (or their quality strings)
+          stored in a BAM file on a region of interest.
+
+    \item The \code{\link{extractAt}} and \code{\link{replaceAt}} functions
+          for extracting/replacing arbitrary substrings from/in a string or
+          set of strings.
+
+    \item \link[GenomicRanges]{cigar-utils} in the \pkg{GenomicRanges}
+          package for the CIGAR utility functions used internally by
+          \code{sequenceLayer}.
+
+    \item The \code{\link{readGAlignmentsFromBam}} function for loading read
+          sequences from a BAM file (via a \link[GenomicRanges]{GAlignments}
+          object).
+  }
+}
+
+\examples{
+## ---------------------------------------------------------------------
+## A. FROM "query" TO "reference" SPACE
+## ---------------------------------------------------------------------
+
+## Load read sequences from a BAM file (via a GAlignments object):
+bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
+param <- ScanBamParam(what="seq")
+gal <- readGAlignmentsFromBam(bamfile, param=param)
+qseq <- mcols(gal)$seq  # the read sequences (aka query sequences)
+
+## Lay down the query sequences on the reference space. This will remove
+## the string portions that correspond to insertions (I operations) and
+## soft clipping (S operations), and will inject new portions (filled
+## with "-") where deletions (D operations) and skipped regions (N
+## operations) occurred during the alignment process:
+qseq_on_ref <- sequenceLayer(qseq, cigar(gal))
+
+## A typical use case for doing the above is to compute 1 consensus
+## sequence per chromosome. The code below shows how this can be done
+## in 2 extra steps.
+
+## Step 1: Compute 1 consensus matrix per chromosome.
+qseq_on_ref_by_chrom <- splitAsList(qseq_on_ref, seqnames(gal))
+pos_by_chrom <- splitAsList(start(gal), seqnames(gal))
+
+cm_by_chrom <- lapply(names(pos_by_chrom),
+    function(seqname)
+        consensusMatrix(qseq_on_ref_by_chrom[[seqname]],
+                        as.prob=TRUE,
+                        shift=pos_by_chrom[[seqname]]-1,
+                        width=seqlengths(gal)[[seqname]]))
+names(cm_by_chrom) <- names(pos_by_chrom)
+
+## 'cm_by_chrom' is a list of consensus matrices. Each matrix has 17
+## rows (1 per letter in the DNA alphabet) and 1 column per chromosome
+## position.
+
+## Step 2: Compute the consensus string from each consensus matrix.
+## We'll put "+" in the strings wherever there is no coverage for that
+## position, and "N" where there is coverage but no consensus.
+cs_by_chrom <- lapply(cm_by_chrom,
+    function(cm) {
+        ## Because consensusString() doesn't like consensus matrices
+        ## with columns that contain only zeroes (and you will have
+        ## columns like that for chromosome positions that don't
+        ## receive any coverage), we need to "fix" 'cm' first.
+        idx <- colSums(cm) == 0
+        cm["+", idx] <- 1
+        DNAString(consensusString(cm, ambiguityMap="N"))
+    })
+
+## consensusString() provides some flexibility to let you extract
+## the consensus in different ways. See '?consensusString' in the
+## Biostrings package for the details.
+
+## ---------------------------------------------------------------------
+## B. FROM "query" TO "query-after-soft-clipping" SPACE
+## ---------------------------------------------------------------------
+
+## ---------------------------------------------------------------------
+## C. BRING QUERY AND REFERENCE SEQUENCES TO THE "pairwise" SPACE
+## ---------------------------------------------------------------------
+
+## ---------------------------------------------------------------------
+## D. SANITY CHECKS
+## ---------------------------------------------------------------------
+SPACES <- c("query-before-hard-clipping",
+            "query",
+            "query-after-soft-clipping",
+            "pairwise",
+            "reference",
+            "pairwise-N-regions-removed",
+            "reference-N-regions-removed")
+
+cigarWidth <- list(
+    function(cigar) cigarWidthOnQuerySpace(cigar, before.hard.clipping=TRUE),
+    function(cigar) cigarWidthOnQuerySpace(cigar),
+    function(cigar) cigarWidthOnQuerySpace(cigar, after.soft.clipping=TRUE),
+    function(cigar) cigarWidthOnPairwiseSpace(cigar),
+    function(cigar) cigarWidthOnReferenceSpace(cigar),
+    function(cigar) cigarWidthOnPairwiseSpace(cigar, N.regions.removed=TRUE),
+    function(cigar) cigarWidthOnReferenceSpace(cigar, N.regions.removed=TRUE)
+)
+
+cigar <- c("3H2S4M1D2M2I1M5N3M6H", "5M1I3M2D4M2S")
+
+seq <- list(
+    BStringSet(c(A=".....AAAABBiiCDDD......", B="AAAAAiBBBCCCC..")),
+    BStringSet(c(A="..AAAABBiiCDDD", B="AAAAAiBBBCCCC..")),
+    BStringSet(c(A="AAAABBiiCDDD", B="AAAAAiBBBCCCC")),
+    BStringSet(c(A="AAAA-BBiiC+++++DDD", B="AAAAAiBBB--CCCC")),
+    BStringSet(c(A="AAAA-BBC+++++DDD", B="AAAAABBB--CCCC")),
+    BStringSet(c(A="AAAA-BBiiCDDD", B="AAAAAiBBB--CCCC")),
+    BStringSet(c(A="AAAA-BBCDDD", B="AAAAABBB--CCCC"))
+)
+
+stopifnot(all(sapply(1:7,
+    function(i) identical(width(seq[[i]]), cigarWidth[[i]](cigar))
+)))
+
+sequenceLayer2 <- function(x, cigar, from, to)
+    sequenceLayer(x, cigar, from=from, to=to, D.letter="-", N.letter= "+",
+                  I.letter="i", S.letter=".", H.letter=".")
+
+identical_XStringSet <- function(target, current)
+{
+    ok1 <- identical(class(target), class(current))
+    ok2 <- identical(names(target), names(current))
+    ok3 <- all(target == current)
+    ok1 && ok2 && ok3
+}
+
+sapply(1:7, function(i) {
+    sapply(1:7, function(j) {
+        target <- seq[[j]]
+        current <- sequenceLayer2(seq[[i]], cigar,
+                                  from=SPACES[i], to=SPACES[j])
+        identical_XStringSet(target, current)
+    })
+})
+}
+
+\keyword{methods}
+\keyword{manip}
