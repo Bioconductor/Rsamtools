@@ -27,16 +27,15 @@ stackStringsFromBam(file, index=file, param,
   \item{param}{
     A \link{ScanBamParam} object containing exactly 1 genomic region
     (i.e. \code{unlist(bamWhich(param))} must have length 1).
-
     Alternatively, \code{param} can be a \link[GenomicRanges]{GRanges} or
     \link[IRanges]{RangesList} object containing exactly 1 genomic region,
     or a character string specifying a single genomic region (in the
     \code{"chr14:5201-5300"} format).
   }
   \item{what}{
-    A single string. Either \code{"seq"} or \code{"qual"}. If \code{"seq"},
-    the read sequences will be stacked. If \code{"qual"}, the read quality
-    strings will be stacked.
+    A single string. Either \code{"seq"} or \code{"qual"}. If \code{"seq"}
+    (the default), the read sequences will be stacked. If \code{"qual"},
+    the read quality strings will be stacked.
   }
   \item{use.names}{
     Use the query template names (QNAME field) as the names of the returned
@@ -75,6 +74,12 @@ stackStringsFromBam(file, index=file, param,
   }
 }
 
+\value{
+  A rectangular (i.e. constant-width) \link[Biostrings]{DNAStringSet} object
+  if \code{what} is \code{"seq"} or \link[Biostrings]{BStringSet} object
+  if \code{what} is \code{"qual"}.
+}
+
 \note{
   TWO IMPORTANT CAVEATS:
 
@@ -82,12 +87,6 @@ stackStringsFromBam(file, index=file, param,
   memory (especially with high coverage reads) and is not recommended.
 
   Paired-end reads are treated as single-end reads (i.e. they're not paired).
-}
-
-\value{
-  A rectangular (i.e. constant-width) \link[Biostrings]{DNAStringSet} object
-  if \code{what} is \code{"seq"} or \link[Biostrings]{BStringSet} object
-  if \code{what} is \code{"qual"}.
 }
 
 \author{H. Pages}
@@ -104,6 +103,10 @@ stackStringsFromBam(file, index=file, param,
     \item The \code{\link[Biostrings]{stackStrings}} function in the
           \pkg{Biostrings} package for stacking an arbitrary
           \link[Biostrings]{XStringSet} object.
+
+    \item The SAMtools mpileup command available at
+          \url{http://samtools.sourceforge.net/} as part of the
+          SAMtools project.
   }
 }
 
