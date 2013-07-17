@@ -14,7 +14,7 @@
   Its primary use is to lay the read sequences stored in a BAM file
   (which are considered to belong to the \code{"query"} space) alongside
   the \code{"reference"} space. It can also be used to remove the parts
-  of the read sequences that correspond to solft-clipping. More generally
+  of the read sequences that correspond to soft-clipping. More generally
   it can lay strings that belong to any supported space alongside any other
   supported space. See the Details section below for the list of supported
   spaces.
@@ -48,17 +48,24 @@ sequenceLayer(x, cigar, from="query", to="reference",
 }
 
 \details{
-  The 8 supported spaces can be characterized by the extended CIGAR
-  operations that are \emph{visible} in each of them. A CIGAR operation is
-  said to be \emph{visible} in a given space if it's associated with a block
-  of contiguous positions in that space (the size of the block being the length
-  of the CIGAR operation). For example, the M/=/X operations are \emph{visible}
-  in all spaces, the D/N operations are \emph{visible} in the
-  \code{"reference"} space but not in the \code{"query"} space, the S operation
-  is \emph{visible} in the \code{"query"} space but not in the
-  \code{"reference"} or \code{"query-after-soft-clipping"} space, etc...
+  The 8 supported spaces are: \code{"reference"},
+  \code{"reference-N-regions-removed"}, \code{"query"},
+  \code{"query-before-hard-clipping"}, \code{"query-after-soft-clipping"},
+  \code{"pairwise"}, \code{"pairwise-N-regions-removed"},
+  and \code{"pairwise-dense"}.
 
-  Here are the extended CIGAR operations that are \emph{visible} for each
+  Each space can be characterized by the extended CIGAR
+  operations that are \emph{visible} in it. A CIGAR operation is
+  said to be \emph{visible} in a given space if it "runs along it",
+  that is, if it's associated with a block of contiguous positions in
+  that space (the size of the block being the length of the CIGAR operation).
+  For example, the M/=/X operations are \emph{visible} in all spaces,
+  the D/N operations are \emph{visible} in the \code{"reference"} space
+  but not in the \code{"query"} space, the S operation is \emph{visible}
+  in the \code{"query"} space but not in the \code{"reference"}
+  or in the \code{"query-after-soft-clipping"} space, etc...
+
+  Here are the extended CIGAR operations that are \emph{visible} in each
   space:
   \enumerate{
     \item reference: M, D, N, =, X
@@ -79,11 +86,12 @@ sequenceLayer(x, cigar, from="query", to="reference",
   }
 
   \code{sequenceLayer} lays a string that belongs to one space alongside
-  another by (1) removing its substrings associated with operations that
+  another by (1) removing the substrings associated with operations that
   are not \emph{visible} anymore in the new space, and (2) injecting
   substrings associated with operations that become \emph{visible} in the
-  new space. The content of the injected substrings is controlled via the
-  \code{*.letter} arguments.
+  new space. The injected substrings have the length of the operation they
+  are associated with, and their content is controlled via the \code{*.letter}
+  arguments.
 
   For example, when going from the \code{"query"} space to the
   \code{"reference"} space (the default), the I- and S-substrings (i.e.
@@ -92,8 +100,6 @@ sequenceLayer(x, cigar, from="query", to="reference",
   the D-substrings are filled with the letter specified in \code{D.letter},
   and the N-substrings with the letter specified in \code{N.letter}.
   The other \code{*.letter} arguments are ignored in that case.
-
-  
 }
 
 \value{
