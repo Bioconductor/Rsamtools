@@ -76,8 +76,8 @@ stackStringsFromBam(file, index=file, param,
 
 \value{
   A rectangular (i.e. constant-width) \link[Biostrings]{DNAStringSet} object
-  if \code{what} is \code{"seq"} or \link[Biostrings]{BStringSet} object
-  if \code{what} is \code{"qual"}.
+  (if \code{what} is \code{"seq"}) or \link[Biostrings]{BStringSet} object
+  (if \code{what} is \code{"qual"}).
 }
 
 \note{
