@@ -72,19 +72,19 @@
 .D_ranges_on_query_space <- function(cigar, before.hard.clipping=FALSE,
                                             after.soft.clipping=FALSE)
 {
-    cigarRangesOnQuerySpace(cigar,
-                            before.hard.clipping=before.hard.clipping,
-                            after.soft.clipping=after.soft.clipping,
-                            ops="D")
+    cigarRangesAlongQuerySpace(cigar,
+                               before.hard.clipping=before.hard.clipping,
+                               after.soft.clipping=after.soft.clipping,
+                               ops="D")
 }
 
 .N_ranges_on_query_space <- function(cigar, before.hard.clipping=FALSE,
                                             after.soft.clipping=FALSE)
 {
-    cigarRangesOnQuerySpace(cigar,
-                            before.hard.clipping=before.hard.clipping,
-                            after.soft.clipping=after.soft.clipping,
-                            ops="N")
+    cigarRangesAlongQuerySpace(cigar,
+                               before.hard.clipping=before.hard.clipping,
+                               after.soft.clipping=after.soft.clipping,
+                               ops="N")
 }
 
 .D_and_N_ranges_on_query_space <- function(cigar, before.hard.clipping=FALSE,
@@ -112,15 +112,16 @@ sequenceLayer <- function(x, cigar, from="query", to="reference",
 {
     if (!is(x, "XStringSet"))
         stop("'x' must be an XStringSet object")
-    ## The 7 spaces below are also defined at the top of the src/cigar_utils.c
+    ## The 8 spaces below are also defined at the top of the src/cigar_utils.c
     ## file in the GenomicRanges package.
-    SPACES <- c("query-before-hard-clipping",
+    SPACES <- c("reference",
+                "reference-N-regions-removed",
                 "query",
+                "query-before-hard-clipping",
                 "query-after-soft-clipping",
                 "pairwise",
-                "reference",
                 "pairwise-N-regions-removed",
-                "reference-N-regions-removed")
+                "pairwise-dense")
     from <- match.arg(from, SPACES)
     to <- match.arg(to, SPACES)
     D.letter <- Biostrings:::.normarg_padding.letter(D.letter, seqtype(x))
@@ -142,151 +143,25 @@ sequenceLayer <- function(x, cigar, from="query", to="reference",
              "when 'from' is not \"query\" and 'to' ",
              "is \"query-before-hard-clipping\"")
 
-    ## TODO: What follows is a big ugly piece of stinking code (250+ lines!).
-    ## There must be a better way...
+    ## TODO: What follows is a big ugly piece of stinking code (350 lines!).
+    ## There is of course a better way...
     inject_at <- ops_to_remove <- NULL
-    if (from == "query-before-hard-clipping") {
+    if (from == "reference") {
         getCigarRanges <- function(cigar, ops)
-            cigarRangesOnQuerySpace(cigar, before.hard.clipping=TRUE, ops=ops)
-        if (to == "query") {
-            ## "query-before-hard-clipping" -> "query"
-            ops_to_remove <- "H"
-        } else if (to == "query-after-soft-clipping") {
-            ## "query-before-hard-clipping" -> "query-after-soft-clipping"
-            ops_to_remove <- c("H", "S")
-        } else if (to == "pairwise") {
-            ## "query-before-hard-clipping" -> "pairwise"
-            ops_to_remove <- c("H", "S")
-            inject_at <- .D_and_N_ranges_on_query_space(cigar,
-                                                 before.hard.clipping=TRUE)
-            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
-        } else if (to == "reference") {
-            ## "query-before-hard-clipping" -> "reference"
-            ops_to_remove <- c("H", "S", "I")
-            inject_at <- .D_and_N_ranges_on_query_space(cigar,
-                                                 before.hard.clipping=TRUE)
-            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
-        } else if (to == "pairwise-N-regions-removed") {
-            ## "query-before-hard-clipping" -> "pairwise-N-regions-removed"
-            ops_to_remove <- c("H", "S")
-            ops_to_inject <- "D"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
-        } else if (to == "reference-N-regions-removed") {
-            ## "query-before-hard-clipping" -> "reference-N-regions-removed"
-            ops_to_remove <- c("H", "S", "I")
-            ops_to_inject <- "D"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
-        }
-    } else if (from == "query") {
-        getCigarRanges <- function(cigar, ops)
-            cigarRangesOnQuerySpace(cigar, ops=ops)
-        if (to == "query-before-hard-clipping") {
-            ## "query" -> "query-before-hard-clipping"
-            ops_to_inject <- "H"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, H.letter)
-        } else if (to == "query-after-soft-clipping") {
-            ## "query" -> "query-after-soft-clipping"
-            ops_to_remove <- "S"
-        } else if (to == "pairwise") {
-            ## "query" -> "pairwise"
-            ops_to_remove <- "S"
-            inject_at <- .D_and_N_ranges_on_query_space(cigar)
-            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
-        } else if (to == "reference") {
-            ## "query" -> "reference"
-            ops_to_remove <- c("I", "S")
-            inject_at <- .D_and_N_ranges_on_query_space(cigar)
-            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
-        } else if (to == "pairwise-N-regions-removed") {
-            ## "query" -> "pairwise-N-regions-removed"
-            ops_to_remove <- "S"
-            ops_to_inject <- "D"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
-        } else if (to == "reference-N-regions-removed") {
-            ## "query" -> "reference-N-regions-removed"
-            ops_to_remove <- c("S", "I")
-            ops_to_inject <- "D"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
-        }
-    } else if (from == "query-after-soft-clipping") {
-        getCigarRanges <- function(cigar, ops)
-            cigarRangesOnQuerySpace(cigar, after.soft.clipping=TRUE, ops=ops)
-        if (to == "query-before-hard-clipping") {
-            ## "query-after-soft-clipping" -> "query-before-hard-clipping"
-            S_inject_at <- getCigarRanges(cigar, "S")
-            S_fillers <- .make_fillers(cigar, "S", S.letter)
-            H_inject_at <- getCigarRanges(cigar, "H")
-            H_fillers <- .make_fillers(cigar, "H", H.letter)
-            inject_at <- .pcombine(S_inject_at, H_inject_at)
-            fillers <- .pcombine(S_fillers, H_fillers)
-        } else if (to == "query") {
-            ## "query-after-soft-clipping" -> "query"
-            ops_to_inject <- "S"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, S.letter)
-        } else if (to == "pairwise") {
-            ## "query-after-soft-clipping" -> "pairwise"
-            inject_at <- .D_and_N_ranges_on_query_space(cigar,
-                                                 after.soft.clipping=TRUE)
-            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
-        } else if (to == "reference") {
-            ## "query-after-soft-clipping" -> "reference"
-            ops_to_remove <- "I"
-            inject_at <- .D_and_N_ranges_on_query_space(cigar,
-                                                 after.soft.clipping=TRUE)
-            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
-        } else if (to == "pairwise-N-regions-removed") {
-            ## "query-after-soft-clipping" -> "pairwise-N-regions-removed"
-            ops_to_inject <- "D"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
-        } else if (to == "reference-N-regions-removed") {
-            ## "query-after-soft-clipping" -> "reference-N-regions-removed"
-            ops_to_remove <- "I"
-            ops_to_inject <- "D"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
-        }
-    } else if (from == "pairwise") {
-        getCigarRanges <- function(cigar, ops)
-            cigarRangesOnPairwiseSpace(cigar, ops=ops)
-        if (to == "query-before-hard-clipping") {
-            ## "pairwise" -> "query-before-hard-clipping"
-            ops_to_remove <- c("D", "N")
-            S_inject_at <- getCigarRanges(cigar, "S")
-            S_fillers <- .make_fillers(cigar, "S", S.letter)
-            H_inject_at <- getCigarRanges(cigar, "H")
-            H_fillers <- .make_fillers(cigar, "H", H.letter)
-            inject_at <- .pcombine(S_inject_at, H_inject_at)
-            fillers <- .pcombine(S_fillers, H_fillers)
-        } else if (to == "query") {
-            ## "pairwise" -> "query"
-            ops_to_remove <- c("D", "N")
-            ops_to_inject <- "S"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, S.letter)
-        } else if (to == "query-after-soft-clipping") {
-            ## "pairwise" -> "query-after-soft-clipping"
-            ops_to_remove <- c("D", "N")
-        } else if (to == "reference") {
-            ## "pairwise" -> "reference"
-            ops_to_remove <- "I"
-        } else if (to == "pairwise-N-regions-removed") {
-            ## "pairwise" -> "pairwise-N-regions-removed"
+            cigarRangesAlongReferenceSpace(cigar, ops=ops)
+        if (to == "reference-N-regions-removed") {
+            ## "reference" -> "reference-N-regions-removed"
             ops_to_remove <- "N"
-        } else if (to == "reference-N-regions-removed") {
-            ## "pairwise" -> "reference-N-regions-removed"
-            ops_to_remove <- c("I", "N")
-        }
-    } else if (from == "reference") {
-        getCigarRanges <- function(cigar, ops)
-            cigarRangesOnReferenceSpace(cigar, ops=ops)
-        if (to == "query-before-hard-clipping") {
+        } else if (to == "query") {
+            ## "reference" -> "query"
+            ops_to_remove <- c("D", "N")
+            I_inject_at <- getCigarRanges(cigar, "I")
+            I_fillers <- .make_fillers(cigar, "I", I.letter)
+            S_inject_at <- getCigarRanges(cigar, "S")
+            S_fillers <- .make_fillers(cigar, "S", S.letter)
+            inject_at <- .pcombine(I_inject_at, S_inject_at)
+            fillers <- .pcombine(I_fillers, S_fillers)
+        } else if (to == "query-before-hard-clipping") {
             ## "reference" -> "query-before-hard-clipping"
             ops_to_remove <- c("D", "N")
             I_inject_at <- getCigarRanges(cigar, "I")
@@ -299,15 +174,6 @@ sequenceLayer <- function(x, cigar, from="query", to="reference",
             inject_at <- .pcombine(inject_at, H_inject_at)
             fillers <- .pcombine(I_fillers, S_fillers)
             fillers <- .pcombine(fillers, H_fillers)
-        } else if (to == "query") {
-            ## "reference" -> "query"
-            ops_to_remove <- c("D", "N")
-            I_inject_at <- getCigarRanges(cigar, "I")
-            I_fillers <- .make_fillers(cigar, "I", I.letter)
-            S_inject_at <- getCigarRanges(cigar, "S")
-            S_fillers <- .make_fillers(cigar, "S", S.letter)
-            inject_at <- .pcombine(I_inject_at, S_inject_at)
-            fillers <- .pcombine(I_fillers, S_fillers)
         } else if (to == "query-after-soft-clipping") {
             ## "reference" -> "query-after-soft-clipping"
             ops_to_remove <- c("D", "N")
@@ -325,50 +191,28 @@ sequenceLayer <- function(x, cigar, from="query", to="reference",
             ops_to_inject <- "I"
             inject_at <- getCigarRanges(cigar, ops_to_inject)
             fillers <- .make_fillers(cigar, ops_to_inject, I.letter)
-        } else if (to == "reference-N-regions-removed") {
-            ## "reference" -> "reference-N-regions-removed"
-            ops_to_remove <- "N"
-        }
-    } else if (from == "pairwise-N-regions-removed") {
-        getCigarRanges <- function(cigar, ops)
-            cigarRangesOnPairwiseSpace(cigar, N.regions.removed=TRUE, ops=ops)
-        if (to == "query-before-hard-clipping") {
-            ## "pairwise-N-regions-removed" -> "query-before-hard-clipping"
-            ops_to_remove <- "D"
-            S_inject_at <- getCigarRanges(cigar, "S")
-            S_fillers <- .make_fillers(cigar, "S", S.letter)
-            H_inject_at <- getCigarRanges(cigar, "H")
-            H_fillers <- .make_fillers(cigar, "H", H.letter)
-            inject_at <- .pcombine(S_inject_at, H_inject_at)
-            fillers <- .pcombine(S_fillers, H_fillers)
-        } else if (to == "query") {
-            ## "pairwise-N-regions-removed" -> "query"
-            ops_to_remove <- "D"
-            ops_to_inject <- "S"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, S.letter)
-        } else if (to == "query-after-soft-clipping") {
-            ## "pairwise-N-regions-removed" -> "query-after-soft-clipping"
-            ops_to_remove <- "D"
-        } else if (to == "pairwise") {
-            ## "pairwise-N-regions-removed" -> "pairwise"
-            ops_to_inject <- "N"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, N.letter)
-        } else if (to == "reference") {
-            ## "pairwise-N-regions-removed" -> "reference"
-            ops_to_remove <- "I"
-            ops_to_inject <- "N"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, N.letter)
-        } else if (to == "reference-N-regions-removed") {
-            ## "pairwise-N-regions-removed" -> "reference-N-regions-removed"
-            ops_to_remove <- "I"
+        } else if (to == "pairwise-dense") {
+            ## "reference" -> "pairwise-dense"
+            ops_to_remove <- c("D", "N")
         }
     } else if (from == "reference-N-regions-removed") {
         getCigarRanges <- function(cigar, ops)
-            cigarRangesOnReferenceSpace(cigar, N.regions.removed=TRUE, ops=ops)
-        if (to == "query-before-hard-clipping") {
+            cigarRangesAlongReferenceSpace(cigar, N.regions.removed=TRUE, ops=ops)
+        if (to == "reference") {
+            ## "reference-N-regions-removed" -> "reference"
+            ops_to_inject <- "N"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, N.letter)
+        } else if (to == "query") {
+            ## "reference-N-regions-removed" -> "query"
+            ops_to_remove <- "D"
+            I_inject_at <- getCigarRanges(cigar, "I")
+            I_fillers <- .make_fillers(cigar, "I", I.letter)
+            S_inject_at <- getCigarRanges(cigar, "S")
+            S_fillers <- .make_fillers(cigar, "S", S.letter)
+            inject_at <- .pcombine(I_inject_at, S_inject_at)
+            fillers <- .pcombine(I_fillers, S_fillers)
+        } else if (to == "query-before-hard-clipping") {
             ## "reference-N-regions-removed" -> "query-before-hard-clipping"
             ops_to_remove <- "D"
             I_inject_at <- getCigarRanges(cigar, "I")
@@ -381,15 +225,6 @@ sequenceLayer <- function(x, cigar, from="query", to="reference",
             inject_at <- .pcombine(inject_at, H_inject_at)
             fillers <- .pcombine(I_fillers, S_fillers)
             fillers <- .pcombine(fillers, H_fillers)
-        } else if (to == "query") {
-            ## "reference-N-regions-removed" -> "query"
-            ops_to_remove <- "D"
-            I_inject_at <- getCigarRanges(cigar, "I")
-            I_fillers <- .make_fillers(cigar, "I", I.letter)
-            S_inject_at <- getCigarRanges(cigar, "S")
-            S_fillers <- .make_fillers(cigar, "S", S.letter)
-            inject_at <- .pcombine(I_inject_at, S_inject_at)
-            fillers <- .pcombine(I_fillers, S_fillers)
         } else if (to == "query-after-soft-clipping") {
             ## "reference-N-regions-removed" -> "query-after-soft-clipping"
             ops_to_remove <- "D"
@@ -404,16 +239,263 @@ sequenceLayer <- function(x, cigar, from="query", to="reference",
             N_fillers <- .make_fillers(cigar, "N", N.letter)
             inject_at <- .pcombine(I_inject_at, N_inject_at)
             fillers <- .pcombine(I_fillers, N_fillers)
-        } else if (to == "reference") {
-            ## "reference-N-regions-removed" -> "reference"
-            ops_to_inject <- "N"
-            inject_at <- getCigarRanges(cigar, ops_to_inject)
-            fillers <- .make_fillers(cigar, ops_to_inject, N.letter)
         } else if (to == "pairwise-N-regions-removed") {
             ## "reference-N-regions-removed" -> "pairwise-N-regions-removed"
             ops_to_inject <- "I"
             inject_at <- getCigarRanges(cigar, ops_to_inject)
             fillers <- .make_fillers(cigar, ops_to_inject, I.letter)
+        } else if (to == "pairwise-dense") {
+            ## "reference-N-regions-removed" -> "pairwise-dense"
+            ops_to_remove <- "D"
+        }
+    } else if (from == "query") {
+        getCigarRanges <- function(cigar, ops)
+            cigarRangesAlongQuerySpace(cigar, ops=ops)
+        if (to == "reference") {
+            ## "query" -> "reference"
+            ops_to_remove <- c("I", "S")
+            inject_at <- .D_and_N_ranges_on_query_space(cigar)
+            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
+        } else if (to == "reference-N-regions-removed") {
+            ## "query" -> "reference-N-regions-removed"
+            ops_to_remove <- c("S", "I")
+            ops_to_inject <- "D"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
+        } else if (to == "query-before-hard-clipping") {
+            ## "query" -> "query-before-hard-clipping"
+            ops_to_inject <- "H"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, H.letter)
+        } else if (to == "query-after-soft-clipping") {
+            ## "query" -> "query-after-soft-clipping"
+            ops_to_remove <- "S"
+        } else if (to == "pairwise") {
+            ## "query" -> "pairwise"
+            ops_to_remove <- "S"
+            inject_at <- .D_and_N_ranges_on_query_space(cigar)
+            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
+        } else if (to == "pairwise-N-regions-removed") {
+            ## "query" -> "pairwise-N-regions-removed"
+            ops_to_remove <- "S"
+            ops_to_inject <- "D"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
+        } else if (to == "pairwise-dense") {
+            ## "query" -> "pairwise-dense"
+            ops_to_remove <- c("I", "S")
+        }
+    } else if (from == "query-before-hard-clipping") {
+        getCigarRanges <- function(cigar, ops)
+            cigarRangesAlongQuerySpace(cigar, before.hard.clipping=TRUE, ops=ops)
+        if (to == "reference") {
+            ## "query-before-hard-clipping" -> "reference"
+            ops_to_remove <- c("H", "S", "I")
+            inject_at <- .D_and_N_ranges_on_query_space(cigar,
+                                                 before.hard.clipping=TRUE)
+            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
+        } else if (to == "reference-N-regions-removed") {
+            ## "query-before-hard-clipping" -> "reference-N-regions-removed"
+            ops_to_remove <- c("H", "S", "I")
+            ops_to_inject <- "D"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
+        } else if (to == "query") {
+            ## "query-before-hard-clipping" -> "query"
+            ops_to_remove <- "H"
+        } else if (to == "query-after-soft-clipping") {
+            ## "query-before-hard-clipping" -> "query-after-soft-clipping"
+            ops_to_remove <- c("H", "S")
+        } else if (to == "pairwise") {
+            ## "query-before-hard-clipping" -> "pairwise"
+            ops_to_remove <- c("H", "S")
+            inject_at <- .D_and_N_ranges_on_query_space(cigar,
+                                                 before.hard.clipping=TRUE)
+            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
+        } else if (to == "pairwise-N-regions-removed") {
+            ## "query-before-hard-clipping" -> "pairwise-N-regions-removed"
+            ops_to_remove <- c("H", "S")
+            ops_to_inject <- "D"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
+        } else if (to == "pairwise-dense") {
+            ## "query-before-hard-clipping" -> "pairwise-dense"
+            ops_to_remove <- c("I", "S", "H")
+        }
+    } else if (from == "query-after-soft-clipping") {
+        getCigarRanges <- function(cigar, ops)
+            cigarRangesAlongQuerySpace(cigar, after.soft.clipping=TRUE, ops=ops)
+        if (to == "reference") {
+            ## "query-after-soft-clipping" -> "reference"
+            ops_to_remove <- "I"
+            inject_at <- .D_and_N_ranges_on_query_space(cigar,
+                                                 after.soft.clipping=TRUE)
+            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
+        } else if (to == "reference-N-regions-removed") {
+            ## "query-after-soft-clipping" -> "reference-N-regions-removed"
+            ops_to_remove <- "I"
+            ops_to_inject <- "D"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
+        } else if (to == "query") {
+            ## "query-after-soft-clipping" -> "query"
+            ops_to_inject <- "S"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, S.letter)
+        } else if (to == "query-before-hard-clipping") {
+            ## "query-after-soft-clipping" -> "query-before-hard-clipping"
+            S_inject_at <- getCigarRanges(cigar, "S")
+            S_fillers <- .make_fillers(cigar, "S", S.letter)
+            H_inject_at <- getCigarRanges(cigar, "H")
+            H_fillers <- .make_fillers(cigar, "H", H.letter)
+            inject_at <- .pcombine(S_inject_at, H_inject_at)
+            fillers <- .pcombine(S_fillers, H_fillers)
+        } else if (to == "pairwise") {
+            ## "query-after-soft-clipping" -> "pairwise"
+            inject_at <- .D_and_N_ranges_on_query_space(cigar,
+                                                 after.soft.clipping=TRUE)
+            fillers <- .make_D_and_N_fillers(cigar, D.letter, N.letter)
+        } else if (to == "pairwise-N-regions-removed") {
+            ## "query-after-soft-clipping" -> "pairwise-N-regions-removed"
+            ops_to_inject <- "D"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
+        } else if (to == "pairwise-dense") {
+            ## "query-after-soft-clipping" -> "pairwise-dense"
+            ops_to_remove <- "I"
+        }
+    } else if (from == "pairwise") {
+        getCigarRanges <- function(cigar, ops)
+            cigarRangesAlongPairwiseSpace(cigar, ops=ops)
+        if (to == "reference") {
+            ## "pairwise" -> "reference"
+            ops_to_remove <- "I"
+        } else if (to == "reference-N-regions-removed") {
+            ## "pairwise" -> "reference-N-regions-removed"
+            ops_to_remove <- c("I", "N")
+        } else if (to == "query") {
+            ## "pairwise" -> "query"
+            ops_to_remove <- c("D", "N")
+            ops_to_inject <- "S"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, S.letter)
+        } else if (to == "query-before-hard-clipping") {
+            ## "pairwise" -> "query-before-hard-clipping"
+            ops_to_remove <- c("D", "N")
+            S_inject_at <- getCigarRanges(cigar, "S")
+            S_fillers <- .make_fillers(cigar, "S", S.letter)
+            H_inject_at <- getCigarRanges(cigar, "H")
+            H_fillers <- .make_fillers(cigar, "H", H.letter)
+            inject_at <- .pcombine(S_inject_at, H_inject_at)
+            fillers <- .pcombine(S_fillers, H_fillers)
+        } else if (to == "query-after-soft-clipping") {
+            ## "pairwise" -> "query-after-soft-clipping"
+            ops_to_remove <- c("D", "N")
+        } else if (to == "pairwise-N-regions-removed") {
+            ## "pairwise" -> "pairwise-N-regions-removed"
+            ops_to_remove <- "N"
+        } else if (to == "pairwise-dense") {
+            ## "pairwise" -> "pairwise-dense"
+            ops_to_remove <- c("I", "D", "N")
+        }
+    } else if (from == "pairwise-N-regions-removed") {
+        getCigarRanges <- function(cigar, ops)
+            cigarRangesAlongPairwiseSpace(cigar, N.regions.removed=TRUE, ops=ops)
+        if (to == "reference") {
+            ## "pairwise-N-regions-removed" -> "reference"
+            ops_to_remove <- "I"
+            ops_to_inject <- "N"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, N.letter)
+        } else if (to == "reference-N-regions-removed") {
+            ## "pairwise-N-regions-removed" -> "reference-N-regions-removed"
+            ops_to_remove <- "I"
+        } else if (to == "query") {
+            ## "pairwise-N-regions-removed" -> "query"
+            ops_to_remove <- "D"
+            ops_to_inject <- "S"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, S.letter)
+        } else if (to == "query-before-hard-clipping") {
+            ## "pairwise-N-regions-removed" -> "query-before-hard-clipping"
+            ops_to_remove <- "D"
+            S_inject_at <- getCigarRanges(cigar, "S")
+            S_fillers <- .make_fillers(cigar, "S", S.letter)
+            H_inject_at <- getCigarRanges(cigar, "H")
+            H_fillers <- .make_fillers(cigar, "H", H.letter)
+            inject_at <- .pcombine(S_inject_at, H_inject_at)
+            fillers <- .pcombine(S_fillers, H_fillers)
+        } else if (to == "query-after-soft-clipping") {
+            ## "pairwise-N-regions-removed" -> "query-after-soft-clipping"
+            ops_to_remove <- "D"
+        } else if (to == "pairwise") {
+            ## "pairwise-N-regions-removed" -> "pairwise"
+            ops_to_inject <- "N"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, N.letter)
+        } else if (to == "pairwise-dense") {
+            ## "pairwise-N-regions-removed" -> "pairwise-dense"
+            ops_to_remove <- c("I", "D")
+        }
+    } else if (from == "pairwise-dense") {
+        getCigarRanges <- function(cigar, ops)
+            cigarRangesAlongPairwiseSpace(cigar, dense=TRUE, ops=ops)
+        if (to == "reference") {
+            ## "pairwise-dense" -> "reference"
+            D_inject_at <- getCigarRanges(cigar, "D")
+            D_fillers <- .make_fillers(cigar, "D", D.letter)
+            N_inject_at <- getCigarRanges(cigar, "N")
+            N_fillers <- .make_fillers(cigar, "N", N.letter)
+            inject_at <- .pcombine(D_inject_at, N_inject_at)
+            fillers <- .pcombine(D_fillers, N_fillers)
+        } else if (to == "reference-N-regions-removed") {
+            ## "pairwise-dense" -> "reference-N-regions-removed"
+            ops_to_inject <- "D"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, D.letter)
+        } else if (to == "query") {
+            ## "pairwise-dense" -> "query"
+            I_inject_at <- getCigarRanges(cigar, "I")
+            I_fillers <- .make_fillers(cigar, "I", I.letter)
+            S_inject_at <- getCigarRanges(cigar, "S")
+            S_fillers <- .make_fillers(cigar, "S", S.letter)
+            inject_at <- .pcombine(I_inject_at, S_inject_at)
+            fillers <- .pcombine(I_fillers, S_fillers)
+        } else if (to == "query-before-hard-clipping") {
+            ## "pairwise-dense" -> "query-before-hard-clipping"
+            I_inject_at <- getCigarRanges(cigar, "I")
+            I_fillers <- .make_fillers(cigar, "I", I.letter)
+            S_inject_at <- getCigarRanges(cigar, "S")
+            S_fillers <- .make_fillers(cigar, "S", S.letter)
+            H_inject_at <- getCigarRanges(cigar, "H")
+            H_fillers <- .make_fillers(cigar, "H", H.letter)
+            inject_at <- .pcombine(.pcombine(I_inject_at, S_inject_at),
+                                   H_inject_at)
+            fillers <- .pcombine(.pcombine(I_fillers, S_fillers), H_fillers)
+        } else if (to == "query-after-soft-clipping") {
+            ## "pairwise-dense" -> "query-after-soft-clipping"
+            ops_to_inject <- "I"
+            inject_at <- getCigarRanges(cigar, ops_to_inject)
+            fillers <- .make_fillers(cigar, ops_to_inject, I.letter)
+        } else if (to == "pairwise") {
+            ## "pairwise-dense" -> "pairwise"
+            I_inject_at <- getCigarRanges(cigar, "I")
+            I_fillers <- .make_fillers(cigar, "I", I.letter)
+            D_inject_at <- getCigarRanges(cigar, "D")
+            D_fillers <- .make_fillers(cigar, "D", D.letter)
+            N_inject_at <- getCigarRanges(cigar, "N")
+            N_fillers <- .make_fillers(cigar, "N", N.letter)
+            inject_at <- .pcombine(.pcombine(I_inject_at, D_inject_at),
+                                   N_inject_at)
+            fillers <- .pcombine(.pcombine(I_fillers, D_fillers), N_fillers)
+        } else if (to == "pairwise-N-regions-removed") {
+            ## "pairwise-dense" -> "pairwise-N-regions-removed"
+            I_inject_at <- getCigarRanges(cigar, "I")
+            I_fillers <- .make_fillers(cigar, "I", I.letter)
+            D_inject_at <- getCigarRanges(cigar, "D")
+            D_fillers <- .make_fillers(cigar, "D", D.letter)
+            inject_at <- .pcombine(I_inject_at, D_inject_at)
+            fillers <- .pcombine(I_fillers, D_fillers)
         }
     }
 

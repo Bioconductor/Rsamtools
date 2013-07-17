@@ -8,18 +8,19 @@
 \description{
   \code{sequenceLayer} can bring strings from one space (e.g. the
   \code{"query"} space) to another (e.g. the \code{"reference"} space)
-  by removing/injecting substrings from/into them based on the supplied
+  by removing/injecting substrings from/into them, based on the supplied
   CIGARs.
 
   Its primary use is to lay down the read sequences stored in a BAM file
   (which are considered to belong to the \code{"query"} space) on the
   \code{"reference"} space. It can also be used for removing the parts of
   the read sequences that correspond to solft-clipping. More generally it
-  can bring strings from/to any of the 7 supported spaces:
-  \code{"query-before-hard-clipping"}, \code{"query"},
-  \code{"query-after-soft-clipping"}, \code{"pairwise"},
-  \code{"reference"}, \code{"pairwise-N-regions-removed"}, and
-  \code{"reference-N-regions-removed"}.
+  can bring strings from and to any of the 8 supported spaces:
+  \code{"reference"}, \code{"reference-N-regions-removed"},
+  \code{"query"}, \code{"query-before-hard-clipping"},
+  \code{"query-after-soft-clipping"},
+  \code{"pairwise"}, \code{"pairwise-N-regions-removed"}, and
+  \code{"pairwise-dense"}.
 }
 
 \usage{
@@ -38,7 +39,7 @@ sequenceLayer(x, cigar, from="query", to="reference",
     the extended CIGAR strings (one per element in \code{x}).
   }
   \item{from, to}{
-    A single string specifying one of the 7 supported spaces listed above.
+    A single string specifying one of the 8 supported spaces listed above.
   }
   \item{D.letter, N.letter, I.letter, S.letter, H.letter}{
     A single letter used as a filler for injections. More on this in
@@ -47,7 +48,7 @@ sequenceLayer(x, cigar, from="query", to="reference",
 }
 
 \details{
-  The 7 supported spaces can be characterized by the extended CIGAR
+  The 8 supported spaces can be characterized by the extended CIGAR
   operations that are \emph{visible} in each of them. A CIGAR operation is
   said to be \emph{visible} in a given space if it's associated with a block
   of contiguous positions in that space (the size of the block being the length
@@ -60,19 +61,21 @@ sequenceLayer(x, cigar, from="query", to="reference",
   Here are the extended CIGAR operations that are \emph{visible} for each
   space:
   \enumerate{
-    \item \code{"query-before-hard-clipping"}: M, I, S, H, =, X
+    \item reference: M, D, N, =, X
 
-    \item \code{"query"}: M, I, S, =, X
+    \item reference-N-regions-removed: M, D, =, X
 
-    \item \code{"query-after-soft-clipping"}: M, I, =, X
+    \item query: M, I, S, =, X
 
-    \item \code{"pairwise"}: M, I, D, N, =, X
+    \item query-before-hard-clipping: M, I, S, H, =, X
 
-    \item \code{"reference"}: M, D, N, =, X
+    \item query-after-soft-clipping: M, I, =, X
 
-    \item \code{"pairwise-N-regions-removed"}: M, I, D, =, X
+    \item pairwise: M, I, D, N, =, X
 
-    \item \code{"reference-N-regions-removed"}: M, D, =, X
+    \item pairwise-N-regions-removed: M, I, D, =, X
+
+    \item pairwise-dense: M, =, X
   }
 
   \code{sequenceLayer} brings a string from one space to another by
@@ -248,37 +251,44 @@ rseq2[N_idx]
 ## ---------------------------------------------------------------------
 ## D. SANITY CHECKS
 ## ---------------------------------------------------------------------
-SPACES <- c("query-before-hard-clipping",
+SPACES <- c("reference",
+            "reference-N-regions-removed",
             "query",
+            "query-before-hard-clipping",
             "query-after-soft-clipping",
             "pairwise",
-            "reference",
             "pairwise-N-regions-removed",
-            "reference-N-regions-removed")
+            "pairwise-dense")
 
 cigarWidth <- list(
-    function(cigar) cigarWidthOnQuerySpace(cigar, before.hard.clipping=TRUE),
-    function(cigar) cigarWidthOnQuerySpace(cigar),
-    function(cigar) cigarWidthOnQuerySpace(cigar, after.soft.clipping=TRUE),
-    function(cigar) cigarWidthOnPairwiseSpace(cigar),
-    function(cigar) cigarWidthOnReferenceSpace(cigar),
-    function(cigar) cigarWidthOnPairwiseSpace(cigar, N.regions.removed=TRUE),
-    function(cigar) cigarWidthOnReferenceSpace(cigar, N.regions.removed=TRUE)
+    function(cigar) cigarWidthAlongReferenceSpace(cigar),
+    function(cigar) cigarWidthAlongReferenceSpace(cigar,
+                                                  N.regions.removed=TRUE),
+    function(cigar) cigarWidthAlongQuerySpace(cigar),
+    function(cigar) cigarWidthAlongQuerySpace(cigar,
+                                              before.hard.clipping=TRUE),
+    function(cigar) cigarWidthAlongQuerySpace(cigar,
+                                              after.soft.clipping=TRUE),
+    function(cigar) cigarWidthAlongPairwiseSpace(cigar),
+    function(cigar) cigarWidthAlongPairwiseSpace(cigar,
+                                                 N.regions.removed=TRUE),
+    function(cigar) cigarWidthAlongPairwiseSpace(cigar, dense=TRUE)
 )
 
 cigar <- c("3H2S4M1D2M2I1M5N3M6H", "5M1I3M2D4M2S")
 
 seq <- list(
-    BStringSet(c(A=".....AAAABBiiCDDD......", B="AAAAAiBBBCCCC..")),
+    BStringSet(c(A="AAAA-BBC+++++DDD", B="AAAAABBB--CCCC")),
+    BStringSet(c(A="AAAA-BBCDDD", B="AAAAABBB--CCCC")),
     BStringSet(c(A="..AAAABBiiCDDD", B="AAAAAiBBBCCCC..")),
+    BStringSet(c(A=".....AAAABBiiCDDD......", B="AAAAAiBBBCCCC..")),
     BStringSet(c(A="AAAABBiiCDDD", B="AAAAAiBBBCCCC")),
     BStringSet(c(A="AAAA-BBiiC+++++DDD", B="AAAAAiBBB--CCCC")),
-    BStringSet(c(A="AAAA-BBC+++++DDD", B="AAAAABBB--CCCC")),
     BStringSet(c(A="AAAA-BBiiCDDD", B="AAAAAiBBB--CCCC")),
-    BStringSet(c(A="AAAA-BBCDDD", B="AAAAABBB--CCCC"))
+    BStringSet(c(A="AAAABBCDDD", B="AAAAABBBCCCC"))
 )
 
-stopifnot(all(sapply(1:7,
+stopifnot(all(sapply(1:8,
     function(i) identical(width(seq[[i]]), cigarWidth[[i]](cigar))
 )))
 
@@ -294,14 +304,15 @@ identical_XStringSet <- function(target, current)
     ok1 && ok2 && ok3
 }
 
-sapply(1:7, function(i) {
-    sapply(1:7, function(j) {
-        target <- seq[[j]]
-        current <- sequenceLayer2(seq[[i]], cigar,
-                                  from=SPACES[i], to=SPACES[j])
-        identical_XStringSet(target, current)
-    })
-})
+res <- sapply(1:8, function(i) {
+           sapply(1:8, function(j) {
+               target <- seq[[j]]
+               current <- sequenceLayer2(seq[[i]], cigar,
+                                         from=SPACES[i], to=SPACES[j])
+               identical_XStringSet(target, current)
+           })
+       })
+stopifnot(all(res))
 }
 
 \keyword{methods}
