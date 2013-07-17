@@ -58,7 +58,8 @@
 ###       "-" and "+" are the only 2 special letters in Biostrings DNA
 ###       alphabet (DNA_ALPHABET). Should we add 1 more? Should it be " ",
 ###       ".", or "*"?
-stackStringsFromBam <- function(file, param, use.names=FALSE, what="seq",
+stackStringsFromBam <- function(file, index=file, param,
+                                what="seq", use.names=FALSE,
                                 D.letter="-", N.letter="-",
                                 Lpadding.letter="+", Rpadding.letter="+")
 {
@@ -68,7 +69,8 @@ stackStringsFromBam <- function(file, param, use.names=FALSE, what="seq",
     param_what <- bamWhat(param)
     if (!(what %in% param_what))
         bamWhat(param) <- c(param_what, what)
-    gal <- readGAlignmentsFromBam(file, use.names=use.names, param=param)
+    gal <- readGAlignmentsFromBam(file, index=index,
+                                  use.names=use.names, param=param)
     gal_mcols <- mcols(gal)
     what_col_idx <- match(what, colnames(gal_mcols))
     what_col <- gal_mcols[[what_col_idx]]
