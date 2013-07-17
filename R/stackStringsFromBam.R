@@ -93,29 +93,3 @@ stackStringsFromBam <- function(file, param, use.names=FALSE, what="seq",
     ans
 }
 
-
-if (FALSE) {
-
-library(Rsamtools)
-bamfile <- BamFile(system.file("extdata", "ex1.bam", package="Rsamtools"))
-
-stackStringsFromBam(bamfile, GRanges("seq1", IRanges(1, 60)))
-
-options(showHeadLines=25)
-options(showTailLines=2)
-stackStringsFromBam(bamfile, GRanges("seq1", IRanges(61, 120)))
-
-stacked_reads <- stackStringsFromBam(bamfile, "seq2:1509-1519")
-stacked_reads  # deletion in read 13
-stackStringsFromBam(bamfile, "seq2:1509-1519", what="qual")
-consensusMatrix(stacked_reads)
-
-
-library(RNAseqData.HNRNPC.bam.chr14)
-bamfile <- BamFile(RNAseqData.HNRNPC.bam.chr14_BAMFILES[1])
-
-my_ROI <- GRanges("chr14", IRanges(19650095, 19650159)) # my Region Of Interest
-readGAlignments(bamfile, param=ScanBamParam(which=my_ROI))
-stackStringsFromBam(bamfile, my_ROI)
-}
-

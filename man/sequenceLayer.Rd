@@ -187,6 +187,16 @@ cs_by_chrom <- lapply(cm_by_chrom,
 ## the consensus in different ways. See '?consensusString' in the
 ## Biostrings package for the details.
 
+## Finally, note that the read quality strings can also be used as
+## input for sequenceLayer():
+param <- ScanBamParam(what="qual")
+gal <- readGAlignmentsFromBam(bamfile, param=param)
+qual <- mcols(gal)$qual  # the read quality strings
+qual_on_ref <- sequenceLayer(qual, cigar(gal))
+## Note that since the "-" letter is a valid quality code, there is
+## no way to distinguish it from the "-" letters inserted by
+## sequenceLayer().
+
 ## ---------------------------------------------------------------------
 ## B. FROM "query" TO "query-after-soft-clipping" SPACE
 ## ---------------------------------------------------------------------
