@@ -3,24 +3,21 @@
 \alias{sequenceLayer}
 
 
-\title{Lay down read sequences on the reference space, based on their CIGARs}
+\title{Lay read sequences alongside the reference space, using their CIGARs}
 
 \description{
-  \code{sequenceLayer} can bring strings from one space (e.g. the
-  \code{"query"} space) to another (e.g. the \code{"reference"} space)
-  by removing/injecting substrings from/into them, based on the supplied
-  CIGARs.
+  \code{sequenceLayer} can lay strings that belong to a given space (e.g.
+  the \code{"query"} space) alongside another space (e.g. the
+  \code{"reference"} space) by removing/injecting substrings from/into them,
+  using the supplied CIGARs.
 
-  Its primary use is to lay down the read sequences stored in a BAM file
-  (which are considered to belong to the \code{"query"} space) on the
-  \code{"reference"} space. It can also be used for removing the parts of
-  the read sequences that correspond to solft-clipping. More generally it
-  can bring strings from and to any of the 8 supported spaces:
-  \code{"reference"}, \code{"reference-N-regions-removed"},
-  \code{"query"}, \code{"query-before-hard-clipping"},
-  \code{"query-after-soft-clipping"},
-  \code{"pairwise"}, \code{"pairwise-N-regions-removed"}, and
-  \code{"pairwise-dense"}.
+  Its primary use is to lay the read sequences stored in a BAM file
+  (which are considered to belong to the \code{"query"} space) alongside
+  the \code{"reference"} space. It can also be used to remove the parts
+  of the read sequences that correspond to solft-clipping. More generally
+  it can lay strings that belong to any supported space alongside any other
+  supported space. See the Details section below for the list of supported
+  spaces.
 }
 
 \usage{
@@ -31,15 +28,18 @@ sequenceLayer(x, cigar, from="query", to="reference",
 
 \arguments{
   \item{x}{
-    An \link{XStringSet} object containing the strings to bring from one
-    space to the other.
+    An \link{XStringSet} object containing strings that belong to a given
+    space.
   }
   \item{cigar}{
     A character vector or factor of the same length as \code{x} containing
     the extended CIGAR strings (one per element in \code{x}).
   }
   \item{from, to}{
-    A single string specifying one of the 8 supported spaces listed above.
+    A single string specifying one of the 8 supported spaces listed in the
+    Details section below. \code{from} must be the current space (i.e. the
+    space the strings in \code{x} belong to) and \code{to} is the space
+    alonside which to lay the strings in \code{x}.
   }
   \item{D.letter, N.letter, I.letter, S.letter, H.letter}{
     A single letter used as a filler for injections. More on this in
@@ -78,12 +78,12 @@ sequenceLayer(x, cigar, from="query", to="reference",
     \item pairwise-dense: M, =, X
   }
 
-  \code{sequenceLayer} brings a string from one space to another by
-  (1) removing its substrings associated with operations that are not
-  \emph{visible} anymore in the new space, and (2) injecting substrings
-  associated with operations that become \emph{visible} in the new space.
-  The content of the injected substrings is controlled via the \code{*.letter}
-  arguments.
+  \code{sequenceLayer} lays a string that belongs to one space alongside
+  another by (1) removing its substrings associated with operations that
+  are not \emph{visible} anymore in the new space, and (2) injecting
+  substrings associated with operations that become \emph{visible} in the
+  new space. The content of the injected substrings is controlled via the
+  \code{*.letter} arguments.
 
   For example, when going from the \code{"query"} space to the
   \code{"reference"} space (the default), the I- and S-substrings (i.e.
@@ -135,7 +135,7 @@ param <- ScanBamParam(what="seq")
 gal <- readGAlignmentsFromBam(bamfile, param=param)
 qseq <- mcols(gal)$seq  # the read sequences (aka query sequences)
 
-## Lay down the query sequences on the reference space. This will
+## Lay the query sequences alongside the reference space. This will
 ## remove the substrings associated with insertions to the reference
 ## (I operations) and soft clipping (S operations), and will inject new
 ## substrings (filled with "-") where deletions from the reference (D
@@ -185,7 +185,7 @@ cs_by_chrom <- lapply(cm_by_chrom,
 ## B. FROM "query" TO "query-after-soft-clipping" SPACE
 ## ---------------------------------------------------------------------
 
-## Going from "query" to "query-after-soft-clipping" will simply remove
+## Going from "query" to "query-after-soft-clipping" simply removes
 ## the substrings associated with soft clipping (S operations):
 qseq <- DNAStringSet(c("AAAGTTCGAA", "TTACGATTAN", "GGATAATTTT"))
 cigar <- c("3H10M", "2S7M1S2H", "2M1I1M3D2M4S")
@@ -200,7 +200,8 @@ sequenceLayer(clipped_qseq, cigar,
               S.letter="-")
 
 ## ---------------------------------------------------------------------
-## C. BRING QUERY AND REFERENCE SEQUENCES TO THE "pairwise" SPACE
+## C. BRING QUERY AND REFERENCE SEQUENCES TO THE "pairwise" or
+##    "pairwise-dense" SPACE
 ## ---------------------------------------------------------------------
 
 ## Load read sequences from a BAM file:
@@ -243,10 +244,33 @@ D_idx <- which(cigar_op_table[ , "D"] >= 2)  # at least 2 deletions
 qseq2[D_idx]
 rseq2[D_idx]
 
-## A closer look at reads with skipped regions from the reference:
+## A closer look at reads with skipped regions:
 N_idx <- which(cigar_op_table[ , "N"] != 0)
 qseq2[N_idx]
 rseq2[N_idx]
+
+## A variant of the "pairwise" space is the "pairwise-dense" space.
+## In that space, all indels and skipped regions are removed from 'qseq'
+## and 'rseq'.
+qseq3 <- sequenceLayer(qseq, cigar(gal),
+                       from="query", to="pairwise-dense")
+rseq3 <- sequenceLayer(rseq, cigar(gal),
+                       from="reference", to="pairwise-dense")
+
+## Sanity check: 'qseq3' and 'rseq3' should have the same shape.
+stopifnot(identical(elementLengths(qseq3), elementLengths(rseq3)))
+
+## Insertions were removed:
+qseq3[I_idx]
+rseq3[I_idx]
+
+## Deletions were removed:
+qseq3[D_idx]
+rseq3[D_idx]
+
+## Skipped regions were removed:
+qseq3[N_idx]
+rseq3[N_idx]
 
 ## ---------------------------------------------------------------------
 ## D. SANITY CHECKS
