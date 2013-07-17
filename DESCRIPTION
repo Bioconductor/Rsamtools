@@ -16,7 +16,7 @@ Depends: methods, IRanges (>= 1.19.11), GenomicRanges (>= 1.13.35),
 Imports: methods, utils, BiocGenerics (>= 0.1.3), IRanges, GenomicRanges,
 	 XVector, Biostrings, zlibbioc,
          bitops
-Suggests: ShortRead (>= 1.19.1), GenomicFeatures,
+Suggests: ShortRead (>= 1.19.10), GenomicFeatures,
           TxDb.Dmelanogaster.UCSC.dm3.ensGene, KEGG.db,
           TxDb.Hsapiens.UCSC.hg18.knownGene,
           RNAseqData.HNRNPC.bam.chr14,
