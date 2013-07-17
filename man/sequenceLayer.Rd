@@ -11,7 +11,7 @@
   \code{"reference"} space) by removing/injecting substrings from/into them,
   using the supplied CIGARs.
 
-  Its primary use is to lay the read sequences stored in a BAM file
+  Its primary use case is to lay the read sequences stored in a BAM file
   (which are considered to belong to the \code{"query"} space) alongside
   the \code{"reference"} space. It can also be used to remove the parts
   of the read sequences that correspond to soft-clipping. More generally
@@ -58,7 +58,7 @@ sequenceLayer(x, cigar, from="query", to="reference",
   operations that are \emph{visible} in it. A CIGAR operation is
   said to be \emph{visible} in a given space if it "runs along it",
   that is, if it's associated with a block of contiguous positions in
-  that space (the size of the block being the length of the CIGAR operation).
+  that space (the size of the block being the length of the operation).
   For example, the M/=/X operations are \emph{visible} in all spaces,
   the D/N operations are \emph{visible} in the \code{"reference"} space
   but not in the \code{"query"} space, the S operation is \emph{visible}
@@ -89,9 +89,9 @@ sequenceLayer(x, cigar, from="query", to="reference",
   another by (1) removing the substrings associated with operations that
   are not \emph{visible} anymore in the new space, and (2) injecting
   substrings associated with operations that become \emph{visible} in the
-  new space. The injected substrings have the length of the operation they
-  are associated with, and their content is controlled via the \code{*.letter}
-  arguments.
+  new space. Each injected substring has the length of the operation
+  associated with it, and its content is controlled via the corresponding
+  \code{*.letter} argument.
 
   For example, when going from the \code{"query"} space to the
   \code{"reference"} space (the default), the I- and S-substrings (i.e.
