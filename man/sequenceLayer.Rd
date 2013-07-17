@@ -6,14 +6,18 @@
 \title{Lay down read sequences on the reference space, based on their CIGARs}
 
 \description{
-  \code{sequenceLayer} brings strings from one space (e.g. the
+  \code{sequenceLayer} can bring strings from one space (e.g. the
   \code{"query"} space) to another (e.g. the \code{"reference"} space)
-  by injecting and/or removing portions of them based on the associated CIGARs. 
+  by removing/injecting substrings from/into them based on the supplied
+  CIGARs.
+
   Its primary use is to lay down the read sequences stored in a BAM file
   (which are considered to belong to the \code{"query"} space) on the
-  \code{"reference"} space. However it can bring sequences from/to
-  any of the 7 supported spaces: \code{"query-before-hard-clipping"},
-  \code{"query"}, \code{"query-after-soft-clipping"}, \code{"pairwise"},
+  \code{"reference"} space. It can also be used for removing the parts of
+  the read sequences that correspond to solft-clipping. More generally it
+  can bring strings from/to any of the 7 supported spaces:
+  \code{"query-before-hard-clipping"}, \code{"query"},
+  \code{"query-after-soft-clipping"}, \code{"pairwise"},
   \code{"reference"}, \code{"pairwise-N-regions-removed"}, and
   \code{"reference-N-regions-removed"}.
 }
@@ -37,8 +41,8 @@ sequenceLayer(x, cigar, from="query", to="reference",
     A single string specifying one of the 7 supported spaces listed above.
   }
   \item{D.letter, N.letter, I.letter, S.letter, H.letter}{
-    A single letter used as a filler for injections. More on this is the
-    Details section below.
+    A single letter used as a filler for injections. More on this in
+    the Details section below.
   }
 }
 
@@ -72,23 +76,25 @@ sequenceLayer(x, cigar, from="query", to="reference",
   }
 
   \code{sequenceLayer} brings a string from one space to another by
-  (1) removing its portions associated with operations that are not
-  \emph{visible} anymore in the new space and (2) injecting portions
+  (1) removing its substrings associated with operations that are not
+  \emph{visible} anymore in the new space, and (2) injecting substrings
   associated with operations that become \emph{visible} in the new space.
-  What's injected exactly is controlled via the \code{D.letter},
-  \code{N.letter}, \code{I.letter}, \code{S.letter}, and \code{H.letter}
-  arguments. For example, when going from the \code{"query"} space to the
-  \code{"reference"} space (the default), existing portions associated with
-  I/S operations are removed and new portions associated with D/N operations
-  are injected. More precisely, the new portions associated with the D
-  operation are filled with the letter specified in \code{D.letter} and
-  those associated with the N operation are filled with the letter specified
-  in \code{N.letter}. The other \code{*.letter} arguments are ignored
-  in that case.
+  The content of the injected substrings is controlled via the \code{*.letter}
+  arguments.
+
+  For example, when going from the \code{"query"} space to the
+  \code{"reference"} space (the default), the I- and S-substrings (i.e.
+  the substrings associated with I/S operations) are removed, and
+  substrings associated with D/N operations are injected. More precisely,
+  the D-substrings are filled with the letter specified in \code{D.letter},
+  and the N-substrings with the letter specified in \code{N.letter}.
+  The other \code{*.letter} arguments are ignored in that case.
+
+  
 }
 
 \value{
-  An \link{XStringSet} object of the same class and length as the \code{x}.
+  An \link{XStringSet} object of the same class and length as \code{x}.
 }
 
 \author{H. Pages}
@@ -99,17 +105,18 @@ sequenceLayer(x, cigar, from="query", to="reference",
           for stacking the read sequences (or their quality strings)
           stored in a BAM file on a region of interest.
 
-    \item The \code{\link{extractAt}} and \code{\link{replaceAt}} functions
-          for extracting/replacing arbitrary substrings from/in a string or
-          set of strings.
+    \item The \code{\link{readGAlignmentsFromBam}} function for loading read
+          sequences from a BAM file (via a \link[GenomicRanges]{GAlignments}
+          object).
+
+    \item The \code{\link[Biostrings]{extractAt}} and
+          \code{\link[Biostrings]{replaceAt}} functions in the \pkg{Biostrings}
+          package for extracting/replacing arbitrary substrings from/in a
+          string or set of strings.
 
     \item \link[GenomicRanges]{cigar-utils} in the \pkg{GenomicRanges}
           package for the CIGAR utility functions used internally by
           \code{sequenceLayer}.
-
-    \item The \code{\link{readGAlignmentsFromBam}} function for loading read
-          sequences from a BAM file (via a \link[GenomicRanges]{GAlignments}
-          object).
   }
 }
 
@@ -118,24 +125,26 @@ sequenceLayer(x, cigar, from="query", to="reference",
 ## A. FROM "query" TO "reference" SPACE
 ## ---------------------------------------------------------------------
 
-## Load read sequences from a BAM file (via a GAlignments object):
+## Load read sequences from a BAM file (they will be returned in a
+## GAlignments object):
 bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools")
 param <- ScanBamParam(what="seq")
 gal <- readGAlignmentsFromBam(bamfile, param=param)
 qseq <- mcols(gal)$seq  # the read sequences (aka query sequences)
 
-## Lay down the query sequences on the reference space. This will remove
-## the string portions that correspond to insertions (I operations) and
-## soft clipping (S operations), and will inject new portions (filled
-## with "-") where deletions (D operations) and skipped regions (N
-## operations) occurred during the alignment process:
+## Lay down the query sequences on the reference space. This will
+## remove the substrings associated with insertions to the reference
+## (I operations) and soft clipping (S operations), and will inject new
+## substrings (filled with "-") where deletions from the reference (D
+## operations) and skipped regions from the reference (N operations)
+## occurred during the alignment process:
 qseq_on_ref <- sequenceLayer(qseq, cigar(gal))
 
 ## A typical use case for doing the above is to compute 1 consensus
 ## sequence per chromosome. The code below shows how this can be done
 ## in 2 extra steps.
 
-## Step 1: Compute 1 consensus matrix per chromosome.
+## Step 1: Compute one consensus matrix per chromosome.
 qseq_on_ref_by_chrom <- splitAsList(qseq_on_ref, seqnames(gal))
 pos_by_chrom <- splitAsList(start(gal), seqnames(gal))
 
@@ -173,9 +182,68 @@ cs_by_chrom <- lapply(cm_by_chrom,
 ## B. FROM "query" TO "query-after-soft-clipping" SPACE
 ## ---------------------------------------------------------------------
 
+## Going from "query" to "query-after-soft-clipping" will simply remove
+## the substrings associated with soft clipping (S operations):
+qseq <- DNAStringSet(c("AAAGTTCGAA", "TTACGATTAN", "GGATAATTTT"))
+cigar <- c("3H10M", "2S7M1S2H", "2M1I1M3D2M4S")
+clipped_qseq <- sequenceLayer(qseq, cigar,
+                              from="query", to="query-after-soft-clipping")
+
+sequenceLayer(clipped_qseq, cigar,
+              from="query-after-soft-clipping", to="query")
+
+sequenceLayer(clipped_qseq, cigar,
+              from="query-after-soft-clipping", to="query",
+              S.letter="-")
+
 ## ---------------------------------------------------------------------
 ## C. BRING QUERY AND REFERENCE SEQUENCES TO THE "pairwise" SPACE
 ## ---------------------------------------------------------------------
+
+## Load read sequences from a BAM file:
+library(RNAseqData.HNRNPC.bam.chr14)
+bamfile <- RNAseqData.HNRNPC.bam.chr14_BAMFILES[1]
+param <- ScanBamParam(what="seq")
+gal <- readGAlignmentsFromBam(bamfile, param=param)
+qseq <- mcols(gal)$seq  # the read sequences (aka query sequences)
+
+## Load the corresponding reference sequences from the appropriate
+## BSgenome package (the reads in RNAseqData.HNRNPC.bam.chr14 were
+## aligned to hg19):
+library(BSgenome.Hsapiens.UCSC.hg19)
+rseq <- getSeq(Hsapiens, as(gal, "GRanges"))  # the reference sequences
+
+## Bring 'qseq' and 'rseq' to the "pairwise" space.
+## For 'qseq', this will remove the substrings associated with soft
+## clipping (S operations) and inject substrings (filled with "-")
+## associated with deletions from the reference (D operations) and
+## skipped regions from the reference (N operations). For 'rseq', this
+## will inject substrings (filled with "-") associated with insertions
+## to the reference (I operations).
+qseq2 <- sequenceLayer(qseq, cigar(gal),
+                       from="query", to="pairwise")
+rseq2 <- sequenceLayer(rseq, cigar(gal),
+                       from="reference", to="pairwise")
+
+## Sanity check: 'qseq2' and 'rseq2' should have the same shape.
+stopifnot(identical(elementLengths(qseq2), elementLengths(rseq2)))
+
+## A closer look at reads with insertions and deletions:
+cigar_op_table <- cigarOpTable(cigar(gal))
+head(cigar_op_table)
+
+I_idx <- which(cigar_op_table[ , "I"] >= 2)  # at least 2 insertions
+qseq2[I_idx]
+rseq2[I_idx]
+
+D_idx <- which(cigar_op_table[ , "D"] >= 2)  # at least 2 deletions
+qseq2[D_idx]
+rseq2[D_idx]
+
+## A closer look at reads with skipped regions from the reference:
+N_idx <- which(cigar_op_table[ , "N"] != 0)
+qseq2[N_idx]
+rseq2[N_idx]
 
 ## ---------------------------------------------------------------------
 ## D. SANITY CHECKS
