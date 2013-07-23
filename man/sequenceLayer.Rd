@@ -223,7 +223,8 @@ sequenceLayer(clipped_qseq, cigar,
 ## Load read sequences from a BAM file:
 library(RNAseqData.HNRNPC.bam.chr14)
 bamfile <- RNAseqData.HNRNPC.bam.chr14_BAMFILES[1]
-param <- ScanBamParam(what="seq")
+param <- ScanBamParam(what="seq",
+                      which=GRanges("chr14", IRanges(1, 25000000)))
 gal <- readGAlignmentsFromBam(bamfile, param=param)
 qseq <- mcols(gal)$seq  # the read sequences (aka query sequences)
 
