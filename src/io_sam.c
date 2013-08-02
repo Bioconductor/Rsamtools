@@ -216,6 +216,7 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
         bfile->pos0 = bam_tell(bfile->file->x.bam);
 
     Free(last_qname);
+    bam_destroy1(bam);
     return bd->iparsed;
 }
 
