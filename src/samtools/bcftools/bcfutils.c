@@ -1,6 +1,8 @@
 #define _SVID_SOURCE            /* Rsamtools: c99 drand48 */
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__FreeBSD__)
 #include <alloca.h>		/* Rsamtools */
+#elif defined(__FreeBSD__)
+#include <stdlib.h>
 #endif
 #include <string.h>
 #include <math.h>

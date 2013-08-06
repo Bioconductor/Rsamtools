@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 200112L /* Rsamtools: c99 fileno */
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__FreeBSD__)
 #include <alloca.h>             /* Rsamtools */
 #endif
 #include <math.h>
