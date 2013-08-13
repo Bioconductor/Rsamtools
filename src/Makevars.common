@@ -5,7 +5,7 @@ BAMOBJ_0 = \
   bam_pileup.o bam_lpileup.o bam_md.o razf.o faidx.o \
   $(KNETFILE_O) bam_sort.o sam_header.o bam_reheader.o kprobaln.o
 BCFOBJ_0 = \
-  bcf.o vcf.o bcfutils.o prob1.o kfunc.o index.o fet.o \
+  bcf.o vcf.o bcfutils.o prob1.o index.o fet.o \
   bcf2qcall.o
 BAMOBJ=$(BAMOBJ_0:%=samtools/%) $(PATCH_O)
 BCFOBJ=$(BCFOBJ_0:%=samtools/bcftools/%) $(PATCH_O)
