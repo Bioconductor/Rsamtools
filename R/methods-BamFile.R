@@ -119,6 +119,9 @@ setMethod(scanBam, "BamFile",
                        "0 != length(bamWhich(param))")
         stop(msg)
     }
+    if (!asMates(file))
+        bamWhat(param) <- 
+            bamWhat(param)[!bamWhat(param) %in% c("partition", "mates")]
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
@@ -346,6 +349,10 @@ setMethod(sortBam, "BamFile",
 setMethod(readGAlignmentsFromBam, "BamFile",
           function(file, index=file, ..., use.names=FALSE, param=NULL)
 {
+    if (is.null(param))
+        param <- ScanBamParam()
+    if (!asMates(file))
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
     what0 <- c("rname", "strand", "pos", "cigar")
@@ -363,6 +370,10 @@ setMethod(readGappedReadsFromBam, "BamFile",
           function(file, index=file, use.names=FALSE, param=NULL)
 {
     require(ShortRead)  # for the GappedReads() constructor
+    if (is.null(param))
+        param <- ScanBamParam()
+    if (!asMates(file))
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
     what0 <- c("rname", "strand", "pos", "cigar", "seq")
@@ -379,6 +390,10 @@ setMethod(readGappedReadsFromBam, "BamFile",
 setMethod(readGAlignmentPairsFromBam, "BamFile",
           function(file, index=file, use.names=FALSE, param=NULL)
 {
+    if (is.null(param))
+        param <- ScanBamParam()
+    if (!asMates(file))
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
     if (!isTRUE(unname(obeyQname(file)))  && !is.na(yieldSize(file))) {
@@ -401,20 +416,47 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
              group.as.pairs=TRUE)
 {
+    if (asMates(file)) 
+        bamWhat(param) <- union("mates", bamWhat(param))
+    if (!asMates(file)) 
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates")) 
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
     if (!is.na(yieldSize(file)) && !obeyQname(file))
         stop("'obeyQname(file)' must be TRUE when 'yieldSize(file)' is specified")
-    if (group.as.pairs) {
+
+    ## mate pairing algo in C, output GAlignmentsList
+    if (asMates(file)) {
+        ## 1-4 required for GAlignments
+        what0 <- c("rname", "strand", "pos", "cigar", "partition")
+        if (use.names)
+            what0 <- c(what0, "qname")
+        galist <- .matesFromBam(file, use.names, param, what0) 
+    ## findMateAlignment paring algo in R, output GAlignmentsList
+    } else if (group.as.pairs) {
         use.mcols=c(bamWhat(param), bamTag(param))
         bamWhat(param) <- union(bamWhat(param), c("flag", "mrnm", "mpos"))
         gal <- readGAlignmentsFromBam(file, use.names=TRUE, param=param)
         groupAsPairs(gal, use.mcols=use.mcols) 
-    } else {
+    ## no pairing algo, output GAlignmentsList grouped by qname
+    } else if (!group.as.pairs) {
         gal <- readGAlignmentsFromBam(file, use.names=TRUE, param=param)
         splitAsList(gal, factor(names(gal)))  ## may not be ordered
     }
 })
+
+.matesFromBam <- function(file, use.names, param, what0)
+{
+    bamcols <- .loadBamCols(file, param, what0)
+    bamcols$mates <- rep(bamcols$mates, bamcols$partition)
+    seqlengths <- .loadBamSeqlengths(file, levels(bamcols$rname))
+    gal <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
+                       cigar=bamcols$cigar, strand=bamcols$strand,
+                       seqlengths=seqlengths, names=bamcols$qname)
+    res <- .bindExtraData(gal, use.names, param, bamcols)
+    pbw <- PartitioningByWidth(bamcols$partition)
+    relist(res, pbw)
+}
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "groupAsPairs" methods.

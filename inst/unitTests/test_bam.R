@@ -305,3 +305,107 @@ test_scanBam_tag <- function()
     checkIdentical(exp, table(bam[["NM"]], useNA="always"))
 }
 
+test_scanBam_asMates_all <- function()
+{
+    scn <- scanBam(fl)[[1]]
+    scnm <- scanBam(BamFile(fl, asMates=TRUE))[[1]]
+    param <- ScanBamParam()
+    galp <- readGAlignmentPairsFromBam(fl, use.names=TRUE)
+
+    ## qname
+    checkTrue(all(scn$qname %in% scnm$qname))
+    mates <- rep(scnm$mates, scnm$partition)
+    matenames <- scnm$qname[mates == 1] 
+    checkTrue(all(names(galp) %in% matenames))
+
+    ## order
+    ## order of segments not strictly enforced
+    ## this holds only for position-sorted files
+    matepos <- scnm$pos[mates == 1]
+    lst <- split(matepos, as.factor(matenames))
+    checkTrue(all(elementLengths(lst) == 2))
+    first <- unlist(lapply(unname(lst), "[", 1))
+    second <- unlist(lapply(unname(lst), "[", 2))
+    checkTrue(all(first <= second))
+
+    ## non-mates off last
+    max1 <- max(which(scnm$mates == 1))
+    min0 <- min(which(scnm$mates == 0))
+    checkTrue(max1 < min0)
+
+    ## match GAlignmentPairs
+    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE,
+                        isUnmappedQuery=FALSE)
+    param <- ScanBamParam(flag=flag, what=scanBamWhat())
+    scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
+    checkTrue(all(scnm$qname %in% names(galp)))
+    checkTrue(all(names(galp) %in% scnm$qname))
+
+    ## yieldSize - subset
+    ## asMates=TRUE returns first 5 mates found
+    ## asMates=FALSE returns first 5 records
+    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE,
+                        isUnmappedQuery=FALSE)
+    param=ScanBamParam(flag=flag, what=scanBamWhat())
+    scn <- scanBam(BamFile(fl, yieldSize=5), param=param)[[1]]
+    scnm <- scanBam(BamFile(fl, asMates=TRUE, yieldSize=5), param=param)[[1]]
+    checkTrue(length(scn$qname) == 5)
+    checkTrue(length(scnm$qname) == 10)
+
+    ## yieldSize - all records 
+    scnm1 <- scanBam(BamFile(fl, asMates=TRUE))[[1]]
+    scnm2 <- scanBam(BamFile(fl, asMates=TRUE, yieldSize=2000))[[1]]
+    checkTrue(all(scnm1$qname %in% scnm2$qname))
+    checkTrue(all(scnm1$mates == scnm2$mates))
+    checkTrue(all(scnm1$partition == scnm2$partition))
+}
+
+test_scanBam_asMates_range <- function()
+{
+    which <- GRanges("seq1", IRanges(100, width=5))
+    param <- ScanBamParam(which=which, what=scanBamWhat())
+    scn <- scanBam(fl, param=param)[[1]]
+    scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
+    param <- ScanBamParam(which=which)
+    galp <- readGAlignmentPairsFromBam(fl, param=param, use.names=TRUE)
+
+    ## qname
+    mates <- rep(scnm$mates, scnm$partition)
+    checkTrue(all(scn$qname %in% scnm$qname))
+    matenames <- scnm$qname[mates == 1] 
+    checkTrue(all(names(galp) %in% matenames))
+    checkTrue(length(scnm$qname) == sum(scnm$partition))
+
+    ## non-mates off last
+    max1 <- max(which(scnm$mates == 1))
+    min0 <- min(which(scnm$mates == 0))
+    checkTrue(max1 < min0)
+
+    ## range - subset
+    ## asMates=FALSE returns records in range
+    ## asMates=TRUE mates all records in range 
+    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE,
+                        isUnmappedQuery=FALSE)
+    param <- ScanBamParam(which=which, flag=flag, what=scanBamWhat())
+    scn <- scanBam(fl, param=param)[[1]]
+    scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
+    checkTrue(length(scn$qname) == 8)
+    checkTrue(length(scnm$qname) == 16)
+    checkTrue(sum(scnm$mates) == 8)
+
+    ## range - all records
+    which <- GRanges(c("seq1", "seq2"), IRanges(start=c(0, 0), end=c(3000, 3000)))
+    param <- ScanBamParam(which=which, what=scanBamWhat())
+    scnm1 <- scanBam(BamFile(fl, asMates=TRUE))[[1]]
+    scnm2<- scanBam(BamFile(fl, asMates=TRUE), param=param)
+    range2A <- scnm2[[1]]
+    range2B <- scnm2[[2]]
+
+    len_range <- length(range2A$qname) + length(range2B$qname)
+    checkTrue(len_range == length(scnm1$qname))
+    mates_range <- sum(range2A$mates, range2B$mates)
+    checkTrue(mates_range == sum(scnm1$mates))
+    mates_partition <- sum(range2A$partition, range2B$partition)
+    checkTrue(mates_partition == sum(scnm1$partition))
+}
+

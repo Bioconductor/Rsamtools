@@ -114,6 +114,9 @@ int _grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
         case TAG_IDX:
             _grow_SCAN_BAM_DATA_tags(s, len);
             break;
+        case PARTITION_IDX:
+        case MATES_IDX:
+            break;
         default:
             Rf_error("[Rsamtools internal] unhandled _grow_SCAN_BAM_DATA");
             break;
@@ -123,17 +126,74 @@ int _grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
     return len;
 }
 
-SEXP _get_or_grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
+int _grow_mates_SCAN_BAM_DATA(BAM_DATA bd, int len)
 {
+    int i;
+    SEXP r, s;
     SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
-    if (len < 0) {
-        if (sbd->icnt < sbd->ncnt)
-            return VECTOR_ELT(sbd->result, bd->irange);
-        len = sbd->ncnt + bd->BLOCKSIZE;
+
+    r = VECTOR_ELT(sbd->result, bd->irange);
+
+    for (i = 0; i < LENGTH(r); ++i) {
+        if (R_NilValue == (s = VECTOR_ELT(r, i)))
+            continue;
+        switch (i) {
+        case PARTITION_IDX:
+            sbd->partition = Realloc(sbd->partition, len, int);
+            break;
+        case MATES_IDX:
+            sbd->mates = Realloc(sbd->mates, len, int);
+            break;
+        default:
+            break;
+        }
     }
 
+    return len;
+}
+
+SEXP _get_or_grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
+{
+    int mlen = len;
+    SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
+
+    if (len < 0) {
+        if (sbd->icnt >= sbd->ncnt) {
+        len = sbd->ncnt + bd->BLOCKSIZE;
+          sbd->ncnt = _grow_SCAN_BAM_DATA(bd, len);
+    }
+        if (sbd->yicnt >= sbd->yncnt) {
+            mlen = sbd->yncnt + bd->BLOCKSIZE;
+           sbd->yncnt = _grow_mates_SCAN_BAM_DATA(bd, mlen);
+        }
+    } else {
     sbd->ncnt = _grow_SCAN_BAM_DATA(bd, len);
+        sbd->yncnt = _grow_mates_SCAN_BAM_DATA(bd, mlen);
+    }
     return VECTOR_ELT(sbd->result, bd->irange);
+}
+
+void _set_mate_SCAN_BAM_DATA(int partition, int mates, void *data)
+{
+    BAM_DATA bd = (BAM_DATA) data;
+    SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
+    SEXP r = _get_or_grow_SCAN_BAM_DATA(bd, -1), s;
+    int idx = sbd->yicnt;
+    for (int i = 0; i < LENGTH(r); ++i) {
+        if (R_NilValue == (s = VECTOR_ELT(r, i)))
+            continue;
+        switch (i) {
+        case PARTITION_IDX:
+            sbd->partition[idx] = partition; 
+            break;
+        case MATES_IDX:
+            sbd->mates[idx] = mates; 
+            break;
+        default:
+            break;
+        }
+    }
+    sbd->yicnt += 1;
 }
 
 void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
@@ -244,11 +304,23 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
         case TAG_IDX:
             _grow_SCAN_BAM_DATA_tags(s, sbd->icnt);
             break;
+        case PARTITION_IDX:
+            s = Rf_lengthgets(s, sbd->yicnt);
+            SET_VECTOR_ELT(r, i, s);
+            memcpy(INTEGER(s), sbd->partition, sbd->yicnt * sizeof(int));
+            Free(sbd->partition);
+            break;
+        case MATES_IDX:
+            s = Rf_lengthgets(s, sbd->yicnt);
+            SET_VECTOR_ELT(r, i, s);
+            memcpy(INTEGER(s), sbd->mates, sbd->yicnt * sizeof(int));
+            Free(sbd->mates);
+            break;
         default:
             Rf_error("[Rsamtools internal] unhandled _finish1range_BAM_DATA");
             break;
         }
     }
 
-    sbd->icnt = sbd->ncnt = 0;
+    sbd->icnt = sbd->ncnt = sbd->yicnt = sbd->yncnt = 0;
 }

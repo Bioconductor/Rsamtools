@@ -4,11 +4,17 @@
 #include <Rdefines.h>
 #include "samtools/sam.h"
 #include "bambuffer.h"
+#include "bam_mate_iter.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct {
     samfile_t *file;
     bam_index_t *index;
     uint64_t pos0;
+    bam_mate_iter_t iter; 
 } _BAM_FILE, *BAM_FILE;
 
 #define BAMFILE(b) ((BAM_FILE) R_ExternalPtrAddr(b))
@@ -32,5 +38,9 @@ SEXP filter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
 
 void _check_isbamfile(SEXP ext, const char *lbl);
 samfile_t *_bam_tryopen(const char *filename, const char *mode, void *aux);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -22,7 +22,7 @@ typedef void (_FINISH1_FUNC) (BAM_DATA);
 
 static const char *TMPL_ELT_NMS[] = {
     "qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
-    "mrnm", "mpos", "isize", "seq", "qual", "tag"
+    "mrnm", "mpos", "isize", "seq", "qual", "tag", "partition", "mates"
     /* "vtype", "value" */
 };
 
@@ -108,6 +108,8 @@ SEXP scan_bam_template(SEXP tag)
     SET_VECTOR_ELT(tmpl, ISIZE_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, SEQ_IDX, _tmpl_DNAStringSet());
     SET_VECTOR_ELT(tmpl, QUAL_IDX, _tmpl_PhredQuality());
+    SET_VECTOR_ELT(tmpl, PARTITION_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, MATES_IDX, NEW_INTEGER(0));
     if (R_NilValue == tag) {
         SET_VECTOR_ELT(tmpl, TAG_IDX, R_NilValue);
     } else {
@@ -163,17 +165,46 @@ SEXP _read_bam_header(SEXP ext)
 static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
                          _FINISH1_FUNC finish1)
 {
+    int r = 0, result = 0;
     bam1_t *bam = bam_init1();
-    int r = 0;
     BAM_FILE bfile = _bam_file_BAM_DATA(bd);
+    int yieldSize = bd->yieldSize;
+    int ith_yield = 0, inc_yield = 1;
 
     bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
+    if (bd->asMates) {
+        bam_mates_t *bam_mates = bam_mates_new();
+        while ((r = samread_mate(bfile->file->x.bam, bfile->index, bfile->pos0,
+                                 &bfile->iter, bam_mates)) > 0) {
+            int pass = 0;
+            if (NA_INTEGER != yieldSize) {
+                if (ith_yield >= yieldSize)
+                    break;
+            }
+            /* non-mate data */
+            for (int i = 0; i < bam_mates->n; ++i) {
+                result = (*parse1) (bam_mates->bams[i], bd);
+                if (result == 1)
+                    pass = pass + 1;
+                if (result < 0) {   /* parse error: e.g., cigar buf overflow */
+                    _grow_SCAN_BAM_DATA(bd, 0);
+                    return result;
+                }
+            }
+            /* mate data */
+            if (pass > 0) {
+                _set_mate_SCAN_BAM_DATA(pass, bam_mates->mates, bd);
+                ith_yield = ++ith_yield;
+                if (NA_INTEGER != yieldSize && ith_yield == yieldSize)
+                    bfile->pos0 = bam_tell(bfile->file->x.bam);
+            }
+            bam_mates_destroy(bam_mates);
+            bam_mates = bam_mates_new();
+        }
+    } else {
     int qname_bufsize = 1000;
     char *last_qname = Calloc(qname_bufsize, char);
-    int yieldSize = bd->yieldSize,
-        obeyQname = bd->obeyQname,
-        asMates = bd->asMates;
-    int ith_yield = 0, inc_yield = 1;
+        int obeyQname = bd->obeyQname;
 
     while ((r = samread(bfile->file, bam)) >= 0) {
         if (NA_INTEGER != yieldSize) {
@@ -197,6 +228,7 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
         int result = (*parse1) (bam, bd);
         if (result < 0) {   /* parse error: e.g., cigar buffer overflow */
             _grow_SCAN_BAM_DATA(bd, 0);
+                Free(last_qname);
             return result;
         } else if (result == 0L) /* does not pass filter */
             continue;
@@ -209,13 +241,14 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
         }
     }
 
-    if (NULL != finish1)
-        (*finish1) (bd);
+        Free(last_qname);
+    }
+
     if ((NA_INTEGER == yieldSize) || (ith_yield < yieldSize))
         /* end-of-file */
         bfile->pos0 = bam_tell(bfile->file->x.bam);
-
-    Free(last_qname);
+    if (NULL != finish1)
+        (*finish1) (bd);
     bam_destroy1(bam);
     return bd->iparsed;
 }
@@ -227,8 +260,8 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
     BAM_FILE bfile = _bam_file_BAM_DATA(bd);
     samfile_t *sfile = bfile->file;
     bam_index_t *bindex = bfile->index;
-    int n_tot = bd->iparsed,
-        asMates = bd->asMates;
+    int n_tot = bd->iparsed;
+    int asMates = bd->asMates;
 
     for (int irange = 0; irange < LENGTH(space); ++irange) {
         const char *spc = translateChar(STRING_ELT(space, irange));
@@ -243,8 +276,8 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             return -1;
         }
         if (asMates)
-            bam_mate_fetch(sfile->x.bam, bindex, tid, starti, 
-                           end[irange], bd, parse1);
+            bam_fetch_mate(sfile->x.bam, bindex, tid, starti, 
+                           end[irange], bd, parse1, _set_mate_SCAN_BAM_DATA);
         else
             bam_fetch(sfile->x.bam, bindex, tid, starti, 
                       end[irange], bd, parse1);
@@ -252,6 +285,7 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             (*finish1) (bd);
         bd->irange += 1;
     }
+    // FIXME: can't yield with fetch, is n_tot necessary
     return bd->iparsed - n_tot;
 }
 
