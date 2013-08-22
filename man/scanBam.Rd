@@ -235,6 +235,17 @@ mergeBam(files, destination, ...)
     \item qual: This is the QUAL field in SAM Spec v1.4.
       Phred-encoded, phred-scaled base quality score, oriented as
       \code{seq}.
+
+    \item partition: Available only when \code{asMates=TRUE} in a 
+      BamFile object. This is an integer vector of the number of
+      records per group returned from the pairing algorithm. 
+      These values are used to create the partitioning for a
+      GAlignmentsList or GAlignmentPairs object.
+
+    \item mates: Available only when \code{asMates=TRUE} in a 
+      BamFile object. This is a integer vector indicating mate
+      status of each record; 1 for records that have been paired 
+      and 0 for non-paired.
   }
 
   \code{scanBamHeader} returns a list, with one element for each file

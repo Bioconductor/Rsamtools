@@ -196,7 +196,37 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
     sorted by \code{qname}.}
 
   \item{asMates}{A logical(1) indicating whether records should
-    be returned as mated pairs.}
+    be returned as mated pairs. When \code{TRUE} scanBam attempts
+    to pair, or \sQuote{mate}, the records and returns two additional 
+    fields of \code{partition} and \code{mates}. The \code{partition}
+    vector indicates the number of records in each group, similar to
+    \sQuote{width} in a partition object. The \code{mates} vector
+    is 1 for records that have been mated by the algorithm and 0 for
+    non-mates. The non-mates are grouped by \sQuote{qname} and may
+    be returned in groups of 1 or more (i.e., the \code{partition}
+    may be greater than 1 but the \code{mates} value will be 0 for all).
+
+    Records are considered \sQuote{mates} (i.e., mate status 1) if
+    they meet the following criteria.
+    \itemize{
+      \item {Bit 0x1 (multiple segments) is 1}.
+      \item {Bit 0x4 (segment unmapped) is 0}.
+      \item {Bit 0x8 (next segment unmapped) is 0}.
+      \item {Bit 0x40 and 0x80 (first/last segment): 
+             Segments are a pair of first/last OR
+             neither segment is marked first/last}.
+      \item {Bit 0x100 (secondary alignment): 
+             Both segments are secondary OR both not secondary}
+      \item {\sQuote{qname} match}.
+      \item {\sQuote{tid} match}.
+      \item {segment1 \sQuote{mpos} matches segment2 \sQuote{pos} AND
+             segment2 \sQuote{mpos} matches segment1 \sQuote{pos}}
+    }
+
+    Records that do not pass these criteria are returned with
+    mate status 0. Flags, tags and ranges may be specified in the
+    \code{ScanBamParam} for fine tuning of results.
+  } 
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
      further influence scanning, counting, or filtering.}
