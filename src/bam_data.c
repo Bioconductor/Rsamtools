@@ -356,9 +356,11 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
         case TAG_IDX:
             _bamtags(bam, bd, s);
             break;
-        case PARTITION_IDX:
-            break;
         case MATES_IDX:
+            sbd->mates[idx] = (NA_INTEGER == sbd->mates_flag) ?
+                NA_INTEGER : sbd->mates_flag;
+            break;
+        case PARTITION_IDX:
             break;
         default:
             Rf_error("[Rsamtools internal]: unhandled _parse1");

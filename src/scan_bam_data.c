@@ -114,8 +114,15 @@ int _grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
         case TAG_IDX:
             _grow_SCAN_BAM_DATA_tags(s, len);
             break;
-        case PARTITION_IDX:
         case MATES_IDX:
+            sbd->mates = Realloc(sbd->mates, len, int);
+            break;
+        case PARTITION_IDX:
+            if (len == sbd->ncnt + bd->BLOCKSIZE)
+                sbd->partition = Realloc(sbd->partition, 
+                     sbd->yncnt + bd->BLOCKSIZE, int);
+            else
+                sbd->partition = Realloc(sbd->partition, len, int); 
             break;
         default:
             Rf_error("[Rsamtools internal] unhandled _grow_SCAN_BAM_DATA");
@@ -126,54 +133,27 @@ int _grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
     return len;
 }
 
-int _grow_mates_SCAN_BAM_DATA(BAM_DATA bd, int len)
-{
-    int i;
-    SEXP r, s;
-    SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
-
-    r = VECTOR_ELT(sbd->result, bd->irange);
-
-    for (i = 0; i < LENGTH(r); ++i) {
-        if (R_NilValue == (s = VECTOR_ELT(r, i)))
-            continue;
-        switch (i) {
-        case PARTITION_IDX:
-            sbd->partition = Realloc(sbd->partition, len, int);
-            break;
-        case MATES_IDX:
-            sbd->mates = Realloc(sbd->mates, len, int);
-            break;
-        default:
-            break;
-        }
-    }
-
-    return len;
-}
-
 SEXP _get_or_grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
 {
-    int mlen = len;
-    SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
-
+    _SCAN_BAM_DATA *sbd = (_SCAN_BAM_DATA *) bd->extra;
     if (len < 0) {
-        if (sbd->icnt >= sbd->ncnt) {
+        if (sbd->icnt < sbd->ncnt)
+            return VECTOR_ELT(sbd->result, bd->irange);
         len = sbd->ncnt + bd->BLOCKSIZE;
-          sbd->ncnt = _grow_SCAN_BAM_DATA(bd, len);
     }
-        if (sbd->yicnt >= sbd->yncnt) {
-            mlen = sbd->yncnt + bd->BLOCKSIZE;
-           sbd->yncnt = _grow_mates_SCAN_BAM_DATA(bd, mlen);
-        }
-    } else {
+
     sbd->ncnt = _grow_SCAN_BAM_DATA(bd, len);
-        sbd->yncnt = _grow_mates_SCAN_BAM_DATA(bd, mlen);
-    }
     return VECTOR_ELT(sbd->result, bd->irange);
 }
 
-void _set_mate_SCAN_BAM_DATA(int partition, int mates, void *data)
+void _set_mates_SCAN_BAM_DATA(int mates, void *data)
+{
+    BAM_DATA bd = (BAM_DATA) data;
+    SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
+    sbd->mates_flag = mates;
+}
+
+void _set_partition_SCAN_BAM_DATA(int partition, void *data)
 {
     BAM_DATA bd = (BAM_DATA) data;
     SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
@@ -185,11 +165,6 @@ void _set_mate_SCAN_BAM_DATA(int partition, int mates, void *data)
         switch (i) {
         case PARTITION_IDX:
             sbd->partition[idx] = partition; 
-            break;
-        case MATES_IDX:
-            sbd->mates[idx] = mates; 
-            break;
-        default:
             break;
         }
     }
@@ -311,9 +286,9 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
             Free(sbd->partition);
             break;
         case MATES_IDX:
-            s = Rf_lengthgets(s, sbd->yicnt);
+            s = Rf_lengthgets(s, sbd->icnt);
             SET_VECTOR_ELT(r, i, s);
-            memcpy(INTEGER(s), sbd->mates, sbd->yicnt * sizeof(int));
+            memcpy(INTEGER(s), sbd->mates, sbd->icnt * sizeof(int));
             Free(sbd->mates);
             break;
         default:
@@ -323,4 +298,5 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
     }
 
     sbd->icnt = sbd->ncnt = sbd->yicnt = sbd->yncnt = 0;
+    sbd->mates_flag = NA_INTEGER;
 }

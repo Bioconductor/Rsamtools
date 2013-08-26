@@ -314,14 +314,13 @@ test_scanBam_asMates_all <- function()
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
-    mates <- rep(scnm$mates, scnm$partition)
-    matenames <- scnm$qname[mates == 1] 
+    matenames <- scnm$qname[scnm$mates == 1] 
     checkTrue(all(names(galp) %in% matenames))
 
     ## order
     ## order of segments not strictly enforced
     ## this holds only for position-sorted files
-    matepos <- scnm$pos[mates == 1]
+    matepos <- scnm$pos[scnm$mates == 1]
     lst <- split(matepos, as.factor(matenames))
     checkTrue(all(elementLengths(lst) == 2))
     first <- unlist(lapply(unname(lst), "[", 1))
@@ -370,9 +369,8 @@ test_scanBam_asMates_range <- function()
     galp <- readGAlignmentPairsFromBam(fl, param=param, use.names=TRUE)
 
     ## qname
-    mates <- rep(scnm$mates, scnm$partition)
     checkTrue(all(scn$qname %in% scnm$qname))
-    matenames <- scnm$qname[mates == 1] 
+    matenames <- scnm$qname[scnm$mates == 1] 
     checkTrue(all(names(galp) %in% matenames))
     checkTrue(length(scnm$qname) == sum(scnm$partition))
 
@@ -391,13 +389,13 @@ test_scanBam_asMates_range <- function()
     scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
     checkTrue(length(scn$qname) == 8)
     checkTrue(length(scnm$qname) == 16)
-    checkTrue(sum(scnm$mates) == 8)
+    checkTrue(sum(scnm$mates) == 16)
 
     ## range - all records
     which <- GRanges(c("seq1", "seq2"), IRanges(start=c(0, 0), end=c(3000, 3000)))
     param <- ScanBamParam(which=which, what=scanBamWhat())
-    scnm1 <- scanBam(BamFile(fl, asMates=TRUE))[[1]]
-    scnm2<- scanBam(BamFile(fl, asMates=TRUE), param=param)
+    scnm1 <- scanBam(BamFile(fl, asMates=TRUE))[[1]] ## get all w/ no param
+    scnm2<- scanBam(BamFile(fl, asMates=TRUE), param=param) ## get all w/ param
     range2A <- scnm2[[1]]
     range2B <- scnm2[[2]]
 

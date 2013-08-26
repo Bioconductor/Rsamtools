@@ -69,7 +69,8 @@ bam_mate_iter_t bam_mate_range_iter_new(const bam_index_t *bindex,
 }
 
 int bam_fetch_mate(bamFile fb, const bam_index_t *idx, int tid, int beg, 
-                   int end, void *data, bam_fetch_f func, set_mate_f mfunc)
+                   int end, void *data, bam_fetch_f func, 
+                   set_partition_f pfunc, set_mates_f mfunc)
 {
     int i, n_rec, parse, pass;
     bam_mates_t *mates = bam_mates_new();
@@ -77,13 +78,14 @@ int bam_fetch_mate(bamFile fb, const bam_index_t *idx, int tid, int beg,
     while ((n_rec = bam_mate_read(fb, iter, mates, true) > 0)) {
         // single yield
         pass = 0;
+        mfunc(mates->mates, data);
         for (int i = 0; i < mates->n; ++i) { 
             parse = func(mates->bams[i], data);
             if (parse == 1)
                 pass = pass + 1;
         }
         if (pass > 0)
-            mfunc(pass, mates->mates, data);
+            pfunc(pass, data);
     }
     bam_mates_destroy(mates);
     bam_mate_iter_destroy(iter);

@@ -181,7 +181,8 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
                 if (ith_yield >= yieldSize)
                     break;
             }
-            /* non-mate data */
+            /* non-mate data and 'mates' */
+            _set_mates_SCAN_BAM_DATA(bam_mates->mates, bd);
             for (int i = 0; i < bam_mates->n; ++i) {
                 result = (*parse1) (bam_mates->bams[i], bd);
                 if (result == 1)
@@ -191,9 +192,9 @@ static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
                     return result;
                 }
             }
-            /* mate data */
+            /* 'partition' */
             if (pass > 0) {
-                _set_mate_SCAN_BAM_DATA(pass, bam_mates->mates, bd);
+                _set_partition_SCAN_BAM_DATA(pass, bd);
                 ith_yield = ++ith_yield;
                 if (NA_INTEGER != yieldSize && ith_yield == yieldSize)
                     bfile->pos0 = bam_tell(bfile->file->x.bam);
@@ -277,7 +278,9 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
         }
         if (asMates)
             bam_fetch_mate(sfile->x.bam, bindex, tid, starti, 
-                           end[irange], bd, parse1, _set_mate_SCAN_BAM_DATA);
+                           end[irange], bd, parse1,
+                           _set_partition_SCAN_BAM_DATA,
+                           _set_mates_SCAN_BAM_DATA);
         else
             bam_fetch(sfile->x.bam, bindex, tid, starti, 
                       end[irange], bd, parse1);
