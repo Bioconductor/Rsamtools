@@ -448,7 +448,6 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
 .matesFromBam <- function(file, use.names, param, what0)
 {
     bamcols <- .loadBamCols(file, param, what0)
-    bamcols$mates <- rep(bamcols$mates, bamcols$partition)
     seqlengths <- .loadBamSeqlengths(file, levels(bamcols$rname))
     gal <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
