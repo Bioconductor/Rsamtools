@@ -635,25 +635,25 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
 
 setMethod("findSpliceOverlaps", c("character", "ANY"),
           function(query, subject, ignore.strand=FALSE, ...,
-                   param=ScanBamParam(), pairedEnd=FALSE)
+                   param=ScanBamParam(), singleEnd=TRUE)
 {
     findSpliceOverlaps(BamFile(query), subject, ignore.strand, ...,
-                       param=param, pairedEnd=pairedEnd)
+                       param=param, singleEnd=singleEnd)
 })
 
 setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
     function(query, subject, ignore.strand=FALSE, ...,
-             param=ScanBamParam(), pairedEnd=FALSE)
+             param=ScanBamParam(), singleEnd=TRUE)
 {
-    findSpliceOverlaps(.readRanges(query, param, pairedEnd), subject,
+    findSpliceOverlaps(.readRanges(query, param, singleEnd), subject,
                        ignore.strand, ...)
 })
 
-.readRanges <- function(bam, param, pairedEnd)
+.readRanges <- function(bam, param, singleEnd)
 {
     if (!"XS" %in% bamTag(param))
         bamTag(param) <- c(bamTag(param), "XS")
-    if (!pairedEnd)
+    if (singleEnd)
         reads <- readGAlignmentsFromBam(bam, param=param)
     else {
         reads <- readGAlignmentPairsFromBam(path(bam), param=param)
