@@ -162,98 +162,130 @@ SEXP _read_bam_header(SEXP ext)
 
 /* scan_bam framework */
 
-static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
-                         _FINISH1_FUNC finish1)
+int check_qname(char *last_qname, int bufsize, bam1_t *bam, int max) 
 {
-    int r = 0, result = 0;
-    bam1_t *bam = bam_init1();
-    BAM_FILE bfile = _bam_file_BAM_DATA(bd);
-    int yieldSize = bd->yieldSize;
-    int ith_yield = 0, inc_yield = 1;
-
-    bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
-    if (bd->asMates) {
-        bam_mates_t *bam_mates = bam_mates_new();
-        while ((r = samread_mate(bfile->file->x.bam, bfile->index, bfile->pos0,
-                                 &bfile->iter, bam_mates)) > 0) {
-            int pass = 0;
-            if (NA_INTEGER != yieldSize) {
-                if (ith_yield >= yieldSize)
-                    break;
+    if (0 != strcmp(last_qname, bam1_qname(bam))) {
+        /* stop reading */
+        if (max) {
+            return -1;
+        /* get next qname, continue reading */
+        } else {
+            if (bam->core.l_qname > bufsize) {
+                Free(last_qname);
+                bufsize = bam->core.l_qname;
+                last_qname = Calloc(bufsize, char);
             }
-            /* non-mate data and 'mates' */
-            _set_mates_SCAN_BAM_DATA(bam_mates->mates, bd);
-            for (int i = 0; i < bam_mates->n; ++i) {
-                result = (*parse1) (bam_mates->bams[i], bd);
-                if (result == 1)
-                    pass = pass + 1;
-                if (result < 0) {   /* parse error: e.g., cigar buf overflow */
-                    _grow_SCAN_BAM_DATA(bd, 0);
-                    return result;
-                }
-            }
-            /* 'partition' */
-            if (pass > 0) {
-                _set_partition_SCAN_BAM_DATA(pass, bd);
-                ith_yield = ++ith_yield;
-                if (NA_INTEGER != yieldSize && ith_yield == yieldSize)
-                    bfile->pos0 = bam_tell(bfile->file->x.bam);
-            }
-            bam_mates_destroy(bam_mates);
-            bam_mates = bam_mates_new();
+            strcpy(last_qname, bam1_qname(bam));
+            return 1;
         }
+    /* same qname, continue reading */
     } else {
-    int qname_bufsize = 1000;
-    char *last_qname = Calloc(qname_bufsize, char);
-        int obeyQname = bd->obeyQname;
+        return 0;
+    }
+}
+
+int _samread(BAM_FILE bfile, BAM_DATA bd, bam1_t *bam, 
+             int yieldSize, _PARSE1_FUNC parse1)
+{
+    int yield = 0;
+    int status = 1;
+    int r, bufsize = 1000;
+    char *last_qname = Calloc(bufsize, char);
 
     while ((r = samread(bfile->file, bam)) >= 0) {
         if (NA_INTEGER != yieldSize) {
-            if (obeyQname) {
-                if (0 != strcmp(last_qname, bam1_qname(bam))) {
-                    inc_yield = 1;
-                    if (ith_yield >= yieldSize)
-                        break;
-                    if (bam->core.l_qname > qname_bufsize) {
-                        Free(last_qname);
-                        qname_bufsize = bam->core.l_qname;
-                        last_qname = Calloc(qname_bufsize, char);
-                    }
-                    strcpy(last_qname, bam1_qname(bam));
-                } else {
-                    inc_yield = 0;
-                }
-            }
+            if (bd->obeyQname)
+                status = check_qname(last_qname, bufsize, bam, 
+                                     yield >= yieldSize);
+            if (status < 0)
+                break;
         }
-
+ 
         int result = (*parse1) (bam, bd);
         if (result < 0) {   /* parse error: e.g., cigar buffer overflow */
             _grow_SCAN_BAM_DATA(bd, 0);
                 Free(last_qname);
-            return result;
+            return yield;
         } else if (result == 0L) /* does not pass filter */
             continue;
 
-        ith_yield += inc_yield;
-        if (NA_INTEGER != yieldSize && ith_yield == yieldSize) {
+        yield += status;
+        if (NA_INTEGER != yieldSize && yield == yieldSize) { 
             bfile->pos0 = bam_tell(bfile->file->x.bam);
-            if (!obeyQname)
+            if (!bd->obeyQname) 
                 break;
         }
     }
 
-        Free(last_qname);
+    Free(last_qname);
+    return yield;
+}
+
+int _samread_mate(BAM_FILE bfile, BAM_DATA bd, bam1_t *bam,
+                  int yieldSize, _PARSE1_FUNC parse1)
+{
+    int r, yield = 0;
+
+    bam_mates_t *bam_mates = bam_mates_new();
+    while ((r = samread_mate(bfile->file->x.bam, bfile->index, bfile->pos0,
+                             &bfile->iter, bam_mates)) > 0) {
+        int pass = 0;
+        if (NA_INTEGER != yieldSize) {
+            if (yield  >= yieldSize)
+                break;
+        }
+        /* non-mate data and 'mates' */
+        _set_mates_SCAN_BAM_DATA(bam_mates->mates, bd);
+        for (int i = 0; i < bam_mates->n; ++i) {
+            int result = (*parse1) (bam_mates->bams[i], bd);
+            if (result == 1)
+                pass += 1;
+            if (result < 0) {   /* parse error: e.g., cigar buf overflow */
+                _grow_SCAN_BAM_DATA(bd, 0);
+                return yield;
+            }
+        }
+        /* 'partition' */
+        if (pass > 0) {
+            _set_partition_SCAN_BAM_DATA(pass, bd);
+            yield += 1;
+            if (NA_INTEGER != yieldSize && yield == yieldSize)
+                bfile->pos0 = bam_tell(bfile->file->x.bam);
+        }
+        bam_mates_destroy(bam_mates);
+        bam_mates = bam_mates_new();
     }
 
-    if ((NA_INTEGER == yieldSize) || (ith_yield < yieldSize))
-        /* end-of-file */
+    return yield;
+}
+
+/* read complete file */
+static int _scan_bam_all(BAM_DATA bd, _PARSE1_FUNC parse1,
+                         _FINISH1_FUNC finish1)
+{
+    bam1_t *bam = bam_init1();
+    BAM_FILE bfile = _bam_file_BAM_DATA(bd);
+    int yieldSize = bd->yieldSize;
+    int yield = 0;
+
+    bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
+    if (bd->asMates) 
+        yield = _samread_mate(bfile, bd, bam, yieldSize, parse1);
+    else
+        yield = _samread(bfile, bd, bam, yieldSize, parse1);
+
+    /* end-of-file */
+    if ((NA_INTEGER == yieldSize) || (yield < yieldSize))
         bfile->pos0 = bam_tell(bfile->file->x.bam);
     if (NULL != finish1)
         (*finish1) (bd);
     bam_destroy1(bam);
+    /* FIXME: destroy bfile? */
+
     return bd->iparsed;
 }
 
+/* read ranges */
 static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
                            _PARSE1_FUNC parse1, _FINISH1_FUNC finish1)
 {
@@ -261,7 +293,7 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
     BAM_FILE bfile = _bam_file_BAM_DATA(bd);
     samfile_t *sfile = bfile->file;
     bam_index_t *bindex = bfile->index;
-    int n_tot = bd->iparsed;
+    int initial = bd->iparsed;
     int asMates = bd->asMates;
 
     for (int irange = 0; irange < LENGTH(space); ++irange) {
@@ -284,12 +316,13 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
         else
             bam_fetch(sfile->x.bam, bindex, tid, starti, 
                       end[irange], bd, parse1);
+
         if (NULL != finish1)
             (*finish1) (bd);
         bd->irange += 1;
     }
-    // FIXME: can't yield with fetch, is n_tot necessary
-    return bd->iparsed - n_tot;
+
+    return bd->iparsed - initial;
 }
 
 static int _do_scan_bam(BAM_DATA bd, SEXP space, _PARSE1_FUNC parse1,
