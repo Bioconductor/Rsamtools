@@ -555,16 +555,19 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
     }
 }
 
-.getReadFunction <- function(singleEnd, fragments, obeyQname) 
+.getReadFunction <- function(singleEnd, fragments, obeyQname)
 {
     if (singleEnd) {
         FUN <- readGAlignmentsFromBam
     } else {
         if (fragments)
-            if (obeyQname) 
-                FUN <- readGAlignmentPairs
-            else
+            if (obeyQname)
                 FUN <- readGAlignmentsListFromBam
+            else
+                stop("when 'fragments=TRUE' Bam files must be ",
+                     "sorted by qname ('obeyQname=TRUE')")
+        else
+            FUN <- readGAlignmentPairsFromBam
     }
     FUN
 }
@@ -575,7 +578,9 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
              param=ScanBamParam())
 {
-    FUN <- .getReadFunction(singleEnd, fragments, obeyQname)
+    FUN <- .getReadFunction(singleEnd, fragments,
+                            isTRUE(all(obeyQname(reads))))
+
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
         lapply <- parallel::mclapply
 
