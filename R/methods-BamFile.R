@@ -120,8 +120,7 @@ setMethod(scanBam, "BamFile",
         stop(msg)
     }
     if (!asMates(file))
-        bamWhat(param) <- 
-            bamWhat(param)[!bamWhat(param) %in% c("partition", "mates")]
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates")) 
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
@@ -396,7 +395,7 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
         bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
-    if (!isTRUE(unname(obeyQname(file)))  && !is.na(yieldSize(file))) {
+    if (!is.na(yieldSize(file))) {
         warning("'yieldSize' set to 'NA'", immediate.=TRUE)
         yieldSize(file) <- NA_integer_
     }
@@ -413,36 +412,23 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
 })
 
 setMethod(readGAlignmentsListFromBam, "BamFile", 
-    function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
-             group.as.pairs=TRUE)
+    function(file, index=file, ..., use.names=FALSE, param=ScanBamParam())
 {
-    if (asMates(file)) 
+    if (!asMates(file)) {
+        warning("'asMates' should be true; use readGAlignments() for ",
+                "single-end data.")
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+    } else {
         bamWhat(param) <- union("mates", bamWhat(param))
-    if (!asMates(file)) 
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates")) 
+    }
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
-    if (!is.na(yieldSize(file)) && !obeyQname(file))
-        stop("'obeyQname(file)' must be TRUE when 'yieldSize(file)' is specified")
 
-    ## mate pairing algo in C, output GAlignmentsList
-    if (asMates(file)) {
-        ## 1-4 required for GAlignments
-        what0 <- c("rname", "strand", "pos", "cigar", "partition")
-        if (use.names)
-            what0 <- c(what0, "qname")
-        galist <- .matesFromBam(file, use.names, param, what0) 
-    ## findMateAlignment paring algo in R, output GAlignmentsList
-    } else if (group.as.pairs) {
-        use.mcols=c(bamWhat(param), bamTag(param))
-        bamWhat(param) <- union(bamWhat(param), c("flag", "mrnm", "mpos"))
-        gal <- readGAlignmentsFromBam(file, use.names=TRUE, param=param)
-        groupAsPairs(gal, use.mcols=use.mcols) 
-    ## no pairing algo, output GAlignmentsList grouped by qname
-    } else if (!group.as.pairs) {
-        gal <- readGAlignmentsFromBam(file, use.names=TRUE, param=param)
-        splitAsList(gal, factor(names(gal)))  ## may not be ordered
-    }
+    ## required for GAlignments
+    what0 <- c("rname", "strand", "pos", "cigar", "partition")
+    if (use.names)
+        what0 <- c(what0, "qname")
+    galist <- .matesFromBam(file, use.names=use.names, param, what0) 
 })
 
 .matesFromBam <- function(file, use.names, param, what0)
@@ -451,36 +437,26 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     seqlengths <- .loadBamSeqlengths(file, levels(bamcols$rname))
     gal <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
-                       seqlengths=seqlengths, names=bamcols$qname)
+                       seqlengths=seqlengths)
+    if (use.names)
+        names(gal) <- bamcols$qname
     res <- .bindExtraData(gal, use.names, param, bamcols)
-    pbw <- PartitioningByWidth(bamcols$partition)
+    if (asMates(file))
+        pbw <- PartitioningByWidth(bamcols$partition)
+    else
+        pbw <- PartitioningByWidth(rep(1, length(gal)))
     relist(res, pbw)
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "groupAsPairs" methods.
+### "groupAsPairs" functions. Will likely remove before Fall 2013 release.
 ###
-
-setMethod(groupAsPairs, "GAlignmentsList", 
-    function(x, ...) 
-{
-    callGeneric(unlist(x, use.names=FALSE), ...) 
-})
-
-setMethod(groupAsPairs, "GAlignments", 
-    function(x, ..., use.mcols=colnames(mcols(x))) 
-{
-    if (length(use.mcols) > 0L) {
-        if (!all(use.mcols %in% colnames(mcols(x))))
-            stop("'use.mcols' must be a subset of 'colnames(mcols(x))'")
-    }
-    .groupAsPairs(x, use.mcols=use.mcols)
-})
 
 .groupAsPairs <- function(x, use.mcols)
 {
     ## Potential mates.
-    mate <- findMateAlignment(x)
+    mate <- suppressWarnings(findMateAlignment(x))
+    dumped <- getDumpedAlignments() ## not strand compatible or not primary
     x_is_first <- .isFirstSegment.GAlignments(x)
     x_is_last <- .isLastSegment.GAlignments(x)
     first_idx <- which(!is.na(mate) & x_is_first)
@@ -504,14 +480,17 @@ setMethod(groupAsPairs, "GAlignments",
     ans_is_proper <- ans_is_proper[keep]
 
     ## Assemble GAlignmentsList.
+    ## pairs
     pairs_idx <- c(rbind(first_idx, last_idx))
-    other_idx <- seq_along(x)[-pairs_idx]
     mcols(x)$paired <- seq_along(x) %in% pairs_idx
     mcols(x) <- mcols(x)[c(use.mcols, "paired")] 
-    other_nms <- names(x)[other_idx]
-    other_elt <- splitAsList(other_nms, factor(other_nms))
-    widths <- c(rep(2, length(first_idx)), elementLengths(other_elt))
-    relist(x[c(pairs_idx, other_idx)], PartitioningByEnd(cumsum(widths)))
+    ## dumped
+    if (length(dumped) > 0) {
+        mcols(dumped)$paired <- logical(length(dumped)) 
+        mcols(dumped) <- mcols(dumped)[c(use.mcols, "paired")] 
+    }
+    widths <- c(rep(2, length(first_idx)), rep(1, length(dumped)))
+    relist(c(x[pairs_idx], dumped), PartitioningByEnd(cumsum(widths)))
 }
 
 .checkMates <- function(mate, x_is_first, x_is_last, first_idx, last_idx)
@@ -576,19 +555,13 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
     }
 }
 
-.getReadFunction <- function(singleEnd, fragments, obeyQname) 
+.getReadFunction <- function(singleEnd, fragments) 
 {
     if (singleEnd) {
         FUN <- readGAlignmentsFromBam
     } else {
         if (fragments) 
-            if (obeyQname) 
                 FUN <- readGAlignmentsListFromBam
-            else
-                stop("when 'fragments=TRUE' Bam files must be ",
-                     "sorted by qname ('obeyQname=TRUE')")
-        else
-            FUN <- readGAlignmentPairsFromBam
     }
     FUN
 }
@@ -599,8 +572,7 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
              param=ScanBamParam())
 {
-    FUN <- .getReadFunction(singleEnd, fragments,
-                            isTRUE(all(obeyQname(reads))))
+    FUN <- .getReadFunction(singleEnd, fragments)
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
         lapply <- parallel::mclapply
 

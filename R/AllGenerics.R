@@ -116,14 +116,9 @@ setGeneric("readGAlignmentPairsFromBam",
 
 setGeneric("readGAlignmentsListFromBam",
            function(file, index=file, ..., use.names=FALSE, 
-                    param=ScanBamParam(), group.as.pairs=TRUE)
+                    param=ScanBamParam())
            standardGeneric("readGAlignmentsListFromBam"),
            signature="file")
-
-setGeneric("groupAsPairs",
-           function(x, ...)
-           standardGeneric("groupAsPairs"),
-           signature="x")
 
 ## tabix
 

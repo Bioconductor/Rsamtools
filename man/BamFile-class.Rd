@@ -107,7 +107,7 @@ asMates(object, ...) <- value
 \S4method{readGappedReadsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readGAlignmentsListFromBam}{BamFile}(file, index=file, ...,
-use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
+    use.names=FALSE, param=ScanBamParam())
 
 ## counting
 
@@ -201,13 +201,11 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
     fields of \code{partition} and \code{mates}. The \code{partition}
     vector indicates the number of records in each group, similar to
     \sQuote{width} in a partition object. The \code{mates} vector
-    is 1 for records that have been mated by the algorithm and 0 for
-    non-mates. The non-mates are grouped by \sQuote{qname} and may
-    be returned in groups of 1 or more (i.e., the \code{partition}
-    may be greater than 1 but the \code{mates} value will be 0 for all).
+    is TRUE for records that have been mated by the algorithm.
+    The non-mates are grouped by \sQuote{qname} and the value for
+    \code{mates} is FALSE.
 
-    Records are considered \sQuote{mates} (i.e., mate status 1) if
-    they meet the following criteria.
+    Mate criteria:
     \itemize{
       \item {Bit 0x1 (multiple segments) is 1}.
       \item {Bit 0x4 (segment unmapped) is 0}.
@@ -224,7 +222,7 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
     }
 
     Records that do not pass these criteria are returned with
-    mate status 0. Flags, tags and ranges may be specified in the
+    mate status FALSE. Flags, tags and ranges may be specified in the
     \code{ScanBamParam} for fine tuning of results.
   } 
 
@@ -319,13 +317,6 @@ use.names=FALSE, param=ScanBamParam(), group.as.pairs=TRUE)
   \item{shift, width, weight}{See \code{\link[IRanges:coverage]{coverage}}.}
 
   \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
-
-  \item{group.as.pairs}{A logical indicating if the records should be paired
-    using the algorithm in \code{readGAlignmentPairs}. When TRUE, a metadata 
-    column named \code{paired} is returned with the result indicating
-    which records were paired using the algorithm. All other reads are 
-    grouped by read id (QNAME in SAM/BAM). Applies to 
-    \code{readGAlignmentsListFromBam} only.}
 }
 
 \section{Objects from the Class}{
