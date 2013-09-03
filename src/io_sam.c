@@ -425,14 +425,8 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                                  LOGICAL(obeyQname)[0], 
                                  LOGICAL(asMates)[0], (void *) sbd);
 
-    int status;
-    if (bd->asMates) {
-        status = _do_scan_bam(bd, space, NULL, _filter_and_parse1_mate,
-                              _finish1range_BAM_DATA);
-    } else {
-        status = _do_scan_bam(bd, space, _filter_and_parse1, NULL,
-                              _finish1range_BAM_DATA);
-    }
+    int status = _do_scan_bam(bd, space, _filter_and_parse1,
+                              _filter_and_parse1_mate, _finish1range_BAM_DATA);
     if (status < 0) {
         int idx = bd->irec;
         int parse_status = bd->parse_status;
@@ -455,13 +449,6 @@ static int _count1(const bam1_t * bam, void *data)
     return _count1_BAM_DATA(bam, (BAM_DATA) data);
 }
 
-static int _count1_mate(const bam_mates_t *mate, void *data)
-{
-    /* FIXME: not implemented */
-    Rf_error("'countBam' with asMates=TRUE not yet implemented");
-    return 0;
-}
-
 SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
 {
     SEXP result = PROTECT(NEW_LIST(2));
@@ -481,7 +468,7 @@ SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
     setAttrib(result, R_NamesSymbol, nms);
     UNPROTECT(1);
 
-    int status = _do_scan_bam(bd, space, _count1, _count1_mate, NULL);
+    int status = _do_scan_bam(bd, space, _count1, NULL, NULL);
     if (status < 0) {
         int idx = bd->irec;
         int parse_status = bd->parse_status;
