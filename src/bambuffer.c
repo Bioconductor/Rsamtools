@@ -142,6 +142,7 @@ SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
         Rf_error("bamBuffer 'parse' error code: %d", status);
     }
 
+    _Free_SCAN_BAM_DATA(sbd);
     _Free_BAM_DATA(bd);
     UNPROTECT(1);
     return result;
