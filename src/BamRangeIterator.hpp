@@ -27,7 +27,6 @@ class BamRangeIterator : public BamIterator {
 	    process(bam);
             int tid = bam->core.tid;
             int pos = bam->core.pos;
-	    bam = bam_init1();
 	    if (bam_iter_read(bfile, iter, bam) < 0) {
 		iter_done = done = true;
             } else if (complete.size() != 0) {

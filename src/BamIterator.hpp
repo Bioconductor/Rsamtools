@@ -34,7 +34,7 @@ public:
     }
 
     // process
-    void process(bam1_t *bam) {
+    void process(const bam1_t *bam) {
         // FIXME: combination of RG and qname?
         const string s = bam1_qname(bam);
         bool mates = templates[s].add_segment(bam);

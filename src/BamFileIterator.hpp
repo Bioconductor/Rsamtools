@@ -29,7 +29,6 @@ class BamFileIterator : public BamIterator {
             process(bam);
             int tid = bam->core.tid;
             int pos = bam->core.pos;
-            bam = bam_init1();
             if (bam_read1(bfile, bam) < 0) {
                 iter_done = file_done = done = true;
             } else if (complete.size() != 0) {

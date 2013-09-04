@@ -36,7 +36,7 @@ public:
 
     Template() : rg('\0') {}
 
-    Template(bam1_t *bam) : 
+    Template(const bam1_t *bam) : 
         rg('\0') { add_segment(bam); }
 
     // getters / setters
@@ -99,8 +99,8 @@ public:
 
     // add_segment
     // Returns true if segment added was a mate
-    bool add_segment(bam1_t *bam) {
-        bam = bam_dup1(bam);
+    bool add_segment(const bam1_t *bam1) {
+        bam1_t *bam = bam_dup1(bam1);
         if (!is_valid(bam)) {
             incomplete.push_back(bam);
 	    return false;
