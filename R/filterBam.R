@@ -27,7 +27,10 @@
     which <- .normalizeRangesList(bamWhich(param))
     hnames <- seqlevels(file)
     o <- order(match(names(which), hnames))
-    initialize(param, which=which[o])
+    what <- bamWhat(param)
+    if (asMates(file))
+        what <- union(what, c("mates", "partition"))
+    initialize(param, which=which[o], what=what)
 }
 
 setMethod(filterBam, "character",

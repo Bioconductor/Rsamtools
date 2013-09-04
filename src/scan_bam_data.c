@@ -3,13 +3,14 @@
 
 /* _SCAN_BAM_DATA */
 
-SCAN_BAM_DATA _Calloc_SCAN_BAM_DATA(SEXP result)
+SCAN_BAM_DATA _init_SCAN_BAM_DATA(SEXP result,  int partition_as_width)
 {
     SCAN_BAM_DATA sbd = Calloc(1, _SCAN_BAM_DATA);
     sbd->cigarhash = kh_init(str);
     sbd->result = result;
     sbd->mates_flag = NA_INTEGER;
     sbd->partition_id = 0;
+    sbd->partition_as_width = partition_as_width;
     return sbd;
 }
 
@@ -253,7 +254,10 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
             _grow_SCAN_BAM_DATA_tags(s, sbd->icnt);
             break;
         case PARTITION_IDX:
-            s = Rf_lengthgets(s, _as_rle_lengths(sbd->partition, sbd->icnt));
+            if (sbd->partition_as_width)
+                s = Rf_lengthgets(s, _as_width(sbd->partition, sbd->icnt));
+            else
+                s = Rf_lengthgets(s, sbd->icnt);
             SET_VECTOR_ELT(r, i, s);
             memcpy(INTEGER(s), sbd->partition, Rf_length(s) * sizeof(int));
             Free(sbd->partition);

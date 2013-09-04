@@ -418,7 +418,7 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
     SEXP result =
         PROTECT(_scan_bam_result_init(template_list, names, space));
-    SCAN_BAM_DATA sbd = _Calloc_SCAN_BAM_DATA(result);
+    SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result, TRUE);
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
@@ -490,7 +490,7 @@ void scan_bam_cleanup()
 
 /* filterBam */
 
-static int _prefilter1(const bam1_t * bam, void *data)
+static int _prefilter1(const bam1_t *bam, void *data)
 {
     BAM_DATA bd = (BAM_DATA) data;
     bd->irec += 1;
@@ -501,18 +501,30 @@ static int _prefilter1(const bam1_t * bam, void *data)
     return 1;
 }
 
-static int _prefilter1_mate(const bam_mates_t *mate, void *data)
+static int _prefilter1_mate(const bam_mates_t *mates, void *data)
 {
-    /* FIXME: implement */
-    Rf_error("'filterBam' with asMates=TRUE not yet implemented");
-    return 0;
+    BAM_DATA bd = (BAM_DATA) data;
+    BAM_BUFFER buf = (BAM_BUFFER) bd->extra;
+    int parsed;
+
+    buf->partition_id += 1;
+    buf->mate_flag = mates->mates;
+    parsed = 0;
+    for (int i = 0; i < mates->n; ++i)
+        parsed += _prefilter1(mates->bams[i], data);
+
+    if (parsed == 0)
+        buf->partition_id -= 1;
+
+    return parsed;
 }
 
 SEXP
 _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP yieldSize, SEXP obeyQname, SEXP asMates)
 {
-    SEXP ext = PROTECT(bambuffer(INTEGER(yieldSize)[0]));
+    SEXP ext = PROTECT(bambuffer(INTEGER(yieldSize)[0],
+                                 LOGICAL(asMates)[0]));
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  0, INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
@@ -545,13 +557,6 @@ static int _filter1(const bam1_t * bam, void *data)
     return 1;
 }
 
-static int _filter1_mate(const bam_mates_t *mate, void *data)
-{
-    /* FIXME: implement */
-    Rf_error("'filterBam' with asMates=TRUE not yet implemented");
-    return 1;
-}
-
 SEXP
 _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
             SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode)
@@ -566,8 +571,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
                                     CHAR(STRING_ELT(fout_mode, 0)), header);
     bd->extra = f_out;
 
-    int status =
-        _do_scan_bam(bd, space, _filter1, _filter1_mate, NULL);
+    int status = _do_scan_bam(bd, space, _filter1, NULL, NULL);
     if (status < 0) {
         int idx = bd->irec;
         int parse_status = bd->parse_status;

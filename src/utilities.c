@@ -74,9 +74,9 @@ void _as_factor(SEXP vec, const char **lvls, const int n_lvls)
 /*
   change vec from an integer vector to integer vector of run lengths
 
-     _as_rle_lengths(c(1, 1, 2, 2, 2, 3, 4, 4)) == c(2, 3, 1, 2)
+     _as_width(c(1, 1, 2, 2, 2, 3, 4, 4)) == c(2, 3, 1, 2)
  */
-int _as_rle_lengths(int *val, const int len)
+int _as_width(int *val, const int len)
 {
     int j = 0;
 

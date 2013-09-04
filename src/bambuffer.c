@@ -8,12 +8,17 @@
 
 static SEXP BAMBUFFER_TAG = NULL;
 
-BAM_BUFFER bambuffer_new(int n)
+BAM_BUFFER bambuffer_new(int n, int as_mates)
 {
     BAM_BUFFER buf = Calloc(1, _BAM_BUFFER);
     buf->i = 0;
     buf->n = n;
     buf->buffer = Calloc(n, bam1_t *);
+    if (as_mates) {
+        buf->as_mates = TRUE;
+        buf->mates = Calloc(n, int);
+        buf->partition = Calloc(n, int);
+    }
     return buf;
 }
 
@@ -22,8 +27,16 @@ void bambuffer_push(BAM_BUFFER buf, const bam1_t *bam)
     if (buf->i == buf->n) {
         buf->n *= 1.3;
         buf->buffer = Realloc(buf->buffer, buf->n, bam1_t *);
+        if (buf->as_mates) {
+            buf->mates = Realloc(buf->mates, buf->n, int);
+            buf->partition = Realloc(buf->partition, buf->n, int);
+        }
     }
     buf->buffer[buf->i] = bam_dup1(bam);
+    if (buf->as_mates) {
+        buf->mates[buf->i] = buf->mate_flag;
+        buf->partition[buf->i] = buf->partition_id;
+    }
     buf->i += 1;
 }
 
@@ -38,6 +51,10 @@ void bambuffer_free(BAM_BUFFER buf)
 {
     bambuffer_reset(buf);
     Free(buf->buffer);
+    if (buf->as_mates) {
+        Free(buf->mates);
+        Free(buf->partition);
+    }
     Free(buf);
 }
 
@@ -58,9 +75,9 @@ SEXP bambuffer_init()
     return R_NilValue;
 }
 
-SEXP bambuffer(int yieldSize)
+SEXP bambuffer(int yieldSize, int as_mates)
 {
-    BAM_BUFFER buf = bambuffer_new(yieldSize);
+    BAM_BUFFER buf = bambuffer_new(yieldSize, as_mates);
     SEXP ext = PROTECT(R_MakeExternalPtr(buf, BAMBUFFER_TAG, NULL));
     R_RegisterCFinalizerEx(ext, _bambuffer_finalizer, TRUE);
     UNPROTECT(1);
@@ -74,19 +91,23 @@ SEXP bambuffer_length(SEXP bufext)
 }
 
 SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-                     SEXP bufext, SEXP reverseComplement, SEXP template_list)
+                     SEXP bufext, SEXP reverseComplement,
+                     SEXP partitionAsWidth, SEXP templateList)
 {
     _check_isbamfile(ext, "bamBuffer, 'parse'");
     _checkparams(space, keepFlags, isSimpleCigar);
     _checkext(bufext, BAMBUFFER_TAG, "bamBuffer 'parse'");
     if (!(IS_LOGICAL(reverseComplement) && (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");
-    _bam_check_template_list(template_list);
+    if (!(IS_LOGICAL(partitionAsWidth) && (1L == LENGTH(partitionAsWidth))))
+        Rf_error("'partitionAsWidth' must be logical(1)");
+    _bam_check_template_list(templateList);
     
-    SEXP names = GET_ATTR(template_list, R_NamesSymbol);
+    SEXP names = GET_ATTR(templateList, R_NamesSymbol);
     SEXP result =
-        PROTECT(_scan_bam_result_init(template_list, names, space));
-    SCAN_BAM_DATA sbd = _Calloc_SCAN_BAM_DATA(result);
+        PROTECT(_scan_bam_result_init(templateList, names, space));
+    SCAN_BAM_DATA sbd =
+        _init_SCAN_BAM_DATA(result, LOGICAL(partitionAsWidth)[0]);
     BAM_DATA bd = _init_BAM_DATA(ext, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  NA_INTEGER, 0, 0, (void *) sbd);
@@ -95,6 +116,10 @@ SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     _grow_SCAN_BAM_DATA(bd, buf->n);
 
     for (int i = 0; i < buf->i; ++i) {
+        if (buf->as_mates) {
+            sbd->mates_flag = buf->mates[i];
+            sbd->partition_id = buf->partition[i];
+        }
         int result = _parse1_BAM_DATA(buf->buffer[i], bd);
         if (result < 0) {   /* parse error: e.g., cigar buffer overflow */
             _grow_SCAN_BAM_DATA(bd, 0);

@@ -7,7 +7,7 @@ SEXP _get_encoding_lookup(const char *from, const char *to);
 SEXP _get_lkup(const char *baseclass);
 void _as_factor_SEXP(SEXP vec, SEXP lvls);
 void _as_factor(SEXP vec, const char **lvls, const int n_lvls);
-int _as_rle_lengths(int *val, const int len);
+int _as_width(int *val, const int len);
 SEXP _as_XStringSet(const char **key, int len, const char *baseclass);
 SEXP _as_PhredQuality(const char **key, int len);
 void _reverse(char *buf, int len);

@@ -14,12 +14,13 @@ typedef struct {
     const char **cigar, **seq, **qual;
     khash_t(str) *cigarhash;
     int icnt, ncnt,
-        mates_flag, partition_id; /* set prior to parsing 1 bam record */
+        mates_flag, partition_id, /* set prior to parsing 1 bam record */
+        partition_as_width;
     SEXP result;
 } _SCAN_BAM_DATA, *SCAN_BAM_DATA;
 
 
-SCAN_BAM_DATA _Calloc_SCAN_BAM_DATA(SEXP result);
+SCAN_BAM_DATA _init_SCAN_BAM_DATA(SEXP result, int partition_as_width);
 void _Free_SCAN_BAM_DATA(SCAN_BAM_DATA sbd);
 int _grow_SCAN_BAM_DATA(BAM_DATA bd, int len);
 void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,

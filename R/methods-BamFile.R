@@ -156,6 +156,7 @@ setMethod(countBam, "BamFile",
 
     tmpl <- .scanBam_template(param)
     reverseComplement <- bamReverseComplement(param)
+    partitionAsWidth <- FALSE
 
     dest <- .Call(.bamfile_open, destination, path(file), "wb")
     n_tot <- 0L
@@ -176,7 +177,7 @@ setMethod(countBam, "BamFile",
             } else break
 
         ans <- .io_bam(.bambuffer_parse, file, param=param,
-                       buf, reverseComplement, tmpl)
+                       buf, reverseComplement, partitionAsWidth, tmpl)
         ans <- DataFrame(.loadBamColsFromScan(unname(ans), param))
         ans <- eval(filter, ans)
         n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
@@ -209,8 +210,16 @@ setMethod(filterBam, "BamFile",
     else
         .io_bam(.filter_bamfile, file, param=param, destination, "wb")
 
-    if (indexDestination)
+    if (indexDestination) {
+        if (asMates(file)) {
+            ## FIXME: filtering by mates requires expensive re-sort!
+            fl <- tempfile()
+            file.rename(destination, fl)
+            sortBam(fl, destination)
+            file.rename(paste0(destination, ".bam"), destination)
+        }
         indexBam(destination)
+    }
     destination
 })
 
