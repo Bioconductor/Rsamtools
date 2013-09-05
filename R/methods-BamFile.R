@@ -106,6 +106,8 @@ setMethod(scanBam, "BamFile",
         open(file)
         on.exit(close(file))
     }
+    if (obeyQname(file) && asMates(file))
+        warning("'obeyQname=TRUE' ignored when 'asMates=TRUE'")
     if (!missing(index))
         warning("'index' ignored for scanBam,BamFile-method")
     if (!is(param, "ScanBamParam")) {
@@ -528,6 +530,7 @@ setMethod("summarizeOverlaps", c("GRanges", "BamFile"),
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
              param=ScanBamParam())
 {
+    .checkArgs(fragments=fragments, singleEnd=singleEnd, bam=reads)
     .dispatchBamFiles(features, BamFileList(reads), mode, ignore.strand, ..., 
                       inter.feature=inter.feature, singleEnd=singleEnd, 
                       fragments=fragments, param=param)
@@ -538,10 +541,20 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE, 
              param=ScanBamParam())
 {
+    .checkArgs(fragments=fragments, singleEnd=singleEnd, bam=reads)
     .dispatchBamFiles(features, BamFileList(reads), mode, ignore.strand, ..., 
                       inter.feature=inter.feature, singleEnd=singleEnd, 
                       fragments=fragments, param=param)
 })
+
+.checkArgs <- function(fragments, singleEnd, bam)
+{
+    if (!all(fragments && obeyQname(reads)))
+        stop("when 'fragments=TRUE' Bam files must be ",
+             "sorted by qname ('obeyQname=TRUE')")
+    if (singleEnd && asMates(reads))
+        stop("cannot specify both singleEnd=TRUE and asMates=TRUE")
+}
 
 .dispatchOverlaps <- GenomicRanges:::.dispatchOverlaps
 .countWithYieldSize <- function(FUN, features, bf, mode, ignore.strand, 

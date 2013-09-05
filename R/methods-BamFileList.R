@@ -19,7 +19,8 @@ BamFileList <-
             stop("duplicate 'reads' paths not allowed; use distinct names()")
     } else if (any(duplicated(names(reads))))
         stop("duplicate 'names(reads)' file paths not allowed")
-    reads <- BamFileList(reads, yieldSize=yieldSize, obeyQname=!singleEnd)
+    reads <- BamFileList(reads, yieldSize=yieldSize, obeyQname=FALSE,
+                         asMates=!singleEnd)
     summarizeOverlaps(features, reads, mode, ignore.strand, ...,
                       inter.feature=inter.feature, singleEnd=singleEnd,
                       fragments=fragments)
