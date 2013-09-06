@@ -549,10 +549,10 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
 
 .checkArgs <- function(fragments, singleEnd, bam)
 {
-    if (!all(fragments && obeyQname(reads)))
+    if (!all(fragments && obeyQname(bam)))
         stop("when 'fragments=TRUE' Bam files must be ",
              "sorted by qname ('obeyQname=TRUE')")
-    if (singleEnd && asMates(reads))
+    if (singleEnd && asMates(bam))
         stop("cannot specify both singleEnd=TRUE and asMates=TRUE")
 }
 

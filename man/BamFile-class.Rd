@@ -94,15 +94,16 @@ asMates(object, ...) <- value
 
 \S4method{scanBamHeader}{BamFile}(files, ...)
 \S4method{seqinfo}{BamFile}(x)
-\S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
-\S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
-\S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
     filter=FilterRules(), indexDestination=TRUE,
     param=ScanBamParam(what=scanBamWhat()))
 \S4method{indexBam}{BamFile}(files, ...)
 \S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
 \S4method{mergeBam}{BamFileList}(files, destination, ...)
+
+## reading
+
+\S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
 \S4method{readGAlignmentsFromBam}{BamFile}(file, index=file, ..., use.names=FALSE, param=NULL)
 \S4method{readGappedReadsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
@@ -111,212 +112,98 @@ asMates(object, ...) <- value
 
 ## counting
 
-\S4method{summarizeOverlaps}{GRanges,character}(features, reads, mode,
-    ignore.strand=FALSE, ..., yieldSize=1000000L, inter.feature=TRUE,
-    singleEnd=TRUE, fragments=TRUE, param=ScanBamParam())
-\S4method{summarizeOverlaps}{GRangesList,character}(features, reads, mode,
-    ignore.strand=FALSE, ..., yieldSize=1000000L, inter.feature=TRUE,
-    singleEnd=TRUE, fragments=TRUE, param=ScanBamParam())
-\S4method{summarizeOverlaps}{GRanges,BamFileList}(features, reads, mode, 
-    ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
-    fragments=TRUE, param=ScanBamParam()) 
-\S4method{summarizeOverlaps}{GRangesList,BamFileList}(features, reads, mode, 
-    ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
-    fragments=TRUE, param=ScanBamParam()) 
-\S4method{summarizeOverlaps}{GRanges,BamFile}(features, reads, mode, 
-    ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
-    fragments=TRUE, param=ScanBamParam()) 
-\S4method{summarizeOverlaps}{GRangesList,BamFile}(features, reads, mode, 
-    ignore.strand=FALSE, ..., inter.feature=TRUE, singleEnd=TRUE, 
-    fragments=TRUE, param=ScanBamParam()) 
-
-\S4method{findSpliceOverlaps}{character,ANY}(query, subject, ignore.strand=FALSE, ...,
-    param=ScanBamParam(), singleEnd=TRUE)
-\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ...,
-    param=ScanBamParam(), singleEnd=TRUE)
-
-\S4method{coverage}{BamFile}(x, shift=0L, width=NULL, weight=1L, ..., param = ScanBamParam())
-
+\S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
+\S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{quickCountBam}{BamFile}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
+\S4method{coverage}{BamFile}(x, shift=0L, width=NULL, weight=1L, ..., param = ScanBamParam())
+\S4method{summarizeOverlaps}{GRanges,BamFile}(features, reads, mode, ignore.strand=FALSE, ..., 
+    inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE, param=ScanBamParam()) 
+\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., 
+    param=ScanBamParam(), singleEnd=TRUE)
 }
 
 \arguments{
 
-  \item{...}{Additional arguments.
+    \item{...}{Additional arguments.
 
-    For \code{BamFileList}, this can either be a single character vector
-    of paths to BAM files, or several instances of \code{BamFile}
-    objects. When a character vector of paths, a second named argument
-    \sQuote{index} can be a \code{character()} vector of length equal to
-    the first argument specifying the paths to the index files, or
-    \code{character()} to indicate that no index file is available. See
-    \code{\link{BamFile}}.
+      For \code{BamFileList}, this can either be a single character vector
+      of paths to BAM files, or several instances of \code{BamFile}
+      objects. When a character vector of paths, a second named argument
+      \sQuote{index} can be a \code{character()} vector of length equal to
+      the first argument specifying the paths to the index files, or
+      \code{character()} to indicate that no index file is available. See
+      \code{\link{BamFile}}.
 
-    For \code{coverage}, the arguments are passed to the
-    \code{\link[GenomicRanges:coverage,GAlignments-method]{coverage}}
-    method for \code{GAlignments} objects.
+      For \code{coverage}, the arguments are passed to the
+      \code{\link[GenomicRanges:coverage,GAlignments-method]{coverage}}
+      method for \code{GAlignments} objects.
 
-    For \code{summarizeOverlaps}, providing
-    \code{count.mapped.reads=TRUE} include additional passes through the
-    BAM file to collect statistics like those from \code{countBam}.
+      For \code{summarizeOverlaps}, providing
+      \code{count.mapped.reads=TRUE} include additional passes through the
+      BAM file to collect statistics like those from \code{countBam}.
 
-  }
-
-  \item{con}{An instance of \code{BamFile}.}
-
-  \item{x, object, file, files}{A character vector of BAM file paths
-    (for \code{BamFile}) or a \code{BamFile} instance (for other
-    methods).}
-
-  \item{index}{character(1); the BAM index file path (for
-    \code{BamFile}); ignored for all other methods on this page.}
-
-  \item{yieldSize}{Number of records to yield each time the file is read
-    from using \code{scanBam}. Only valid when
-    \code{length(bamWhich(param)) == 0}. \code{yieldSize} does not alter
-    existing yield sizes, include \code{NA}, when creating a
-    \code{BamFileList} from \code{BamFile} instances.}
-
-  \item{filter}{A \code{\link{FilterRules}} instance. Functions in the
-    \code{FilterRules} instance should expect a single \code{DataFrame}
-    argument representing all information specified by
-    \code{param}. Each function must return a \code{logical} vector,
-    usually of length equal to the number of rows of the
-    \code{DataFrame}. Return values are used to include (when
-    \code{TRUE}) corresponding records in the filtered BAM file.}
-
-  \item{destination}{character(1) file path to write filtered reads to.}
-
-  \item{indexDestination}{logical(1) indicating whether the destination
-    file should also be indexed.}
-
-  \item{byQname, maxMemory}{See \code{\link{sortBam}}.}
-
-  \item{obeyQname, value}{A logical(1) indicating whether the file is
-    sorted by \code{qname}.}
-
-  \item{asMates}{A logical(1) indicating whether records should
-    be returned as mated pairs. When \code{TRUE} scanBam attempts
-    to pair, or \sQuote{mate}, the records and returns two additional 
-    fields of \code{partition} and \code{mates}. The \code{partition}
-    vector indicates the number of records in each group, similar to
-    \sQuote{width} in a partition object. The \code{mates} vector
-    is TRUE for records that have been mated by the algorithm.
-    The non-mates are grouped by \sQuote{qname} and the value for
-    \code{mates} is FALSE.
-
-    Mate criteria:
-    \itemize{
-      \item {Bit 0x1 (multiple segments) is 1}.
-      \item {Bit 0x4 (segment unmapped) is 0}.
-      \item {Bit 0x8 (next segment unmapped) is 0}.
-      \item {Bit 0x40 and 0x80 (first/last segment): 
-             Segments are a pair of first/last OR
-             neither segment is marked first/last}.
-      \item {Bit 0x100 (secondary alignment): 
-             Both segments are secondary OR both not secondary}
-      \item {\sQuote{qname} match}.
-      \item {\sQuote{tid} match}.
-      \item {segment1 \sQuote{mpos} matches segment2 \sQuote{pos} AND
-             segment2 \sQuote{mpos} matches segment1 \sQuote{pos}}
     }
 
-    Records that do not pass these criteria are returned with
-    mate status FALSE. Flags, tags and ranges may be specified in the
-    \code{ScanBamParam} for fine tuning of results.
-  } 
+    \item{con}{An instance of \code{BamFile}.}
 
-  \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
-     further influence scanning, counting, or filtering.}
+    \item{x, object, file, files}{A character vector of BAM file paths
+      (for \code{BamFile}) or a \code{BamFile} instance (for other
+      methods).}
 
-  \item{use.names}{Construct the names of the returned object
-     from the query template names (QNAME field)? If not (the default),
-     then the returned object has no names.}
+    \item{index}{character(1); the BAM index file path (for
+      \code{BamFile}); ignored for all other methods on this page.}
 
-  \item{rw}{Mode of file; ignored.}
+    \item{yieldSize}{Number of records to yield each time the file
+      is read from with \code{scanBam}. See \sQuote{Fields}
+      section for details.}
 
-  \item{reads}{
-    A \code{\linkS4class{BamFileList}} that represents the data to be
-    counted by \code{summarizeOverlaps}.}
+    \item{asMates}{Logical indicating if records should be paired
+      as mates. See \sQuote{Fields} section for details.}
 
-  \item{features}{
-    A \link{GRanges} or a \link{GRangesList} object of genomic regions of 
-    interest. When a \link{GRanges} is supplied, each row is considered a 
-    feature. When a \link{GRangesList} is supplied, each higher list-level is
-    considered a feature. This distinction is important when defining an overlap
-    between a read and a feature. See ?\code{summarizeOverlaps} for details.}
+    \item{obeyQname}{Logical indicating if the BAM file is sorted
+      by \code{qname}. Use not encouraged in Bioconductor > 2.12.
+      See \sQuote{Fields} section for details.}
 
-  \item{mode}{
-    A function that defines the method to be used when a read overlaps
-    more than one feature. Pre-defined options are "Union",
-    "IntersectionStrict", or "IntersectionNotEmpty" and are designed
-    after the counting modes available in the HTSeq package by Simon
-    Anders (see references).
+    \item{value}{Logical value for setting \code{asMates} and
+      \code{obeyQname} in a BamFile instance.}
 
-    \itemize{
-      \item "Union" : (Default) Reads that overlap any portion of exactly one 
-            feature are counted. Reads that overlap multiple features are 
-            discarded. 
-      \item "IntersectionStrict" : A read must fall completely "within" the
-            feature to be counted. If a read overlaps multiple features but
-            falls "within" only one, the read is counted for that feature.
-            If the read is "within" multiple features, the read is discarded. 
-      \item "IntersectionNotEmpty" : A read must fall in a unique disjoint
-            region of a feature to be counted. When a read overlaps multiple
-            features, the features are partitioned into disjoint intervals. 
-            Regions that are shared between the features are discarded leaving
-            only the unique disjoint regions. If the read overlaps one of 
-            these remaining regions, it is assigned to the feature the
-            unique disjoint region came from.
-   }}
+    \item{filter}{A \code{\link{FilterRules}} instance. Functions in the
+      \code{FilterRules} instance should expect a single \code{DataFrame}
+      argument representing all information specified by
+      \code{param}. Each function must return a \code{logical} vector,
+      usually of length equal to the number of rows of the
+      \code{DataFrame}. Return values are used to include (when
+      \code{TRUE}) corresponding records in the filtered BAM file.}
 
-  \item{ignore.strand}{
-    A logical value indicating if strand should be considered when matching.}
+    \item{destination}{character(1) file path to write filtered reads to.}
 
-  \item{inter.feature}{
-    A logical indicating if the counting \code{mode} should be aware of
-    overlapping features. When TRUE (default), reads mapping to multiple
-    features are dropped (i.e., not counted). When FALSE, these reads are
-    retained and a count is assigned to each feature they map to.
+    \item{indexDestination}{logical(1) indicating whether the destination
+      file should also be indexed.}
 
-    There are 6 possible combinations of the \code{mode} and
-    \code{inter.feature} arguments. When \code{inter.feature=FALSE} the
-    behavior of modes \sQuote{Union} and \sQuote{IntersectionStrict} are 
-    essentially \sQuote{countOverlaps} with \sQuote{type=any} and
-    \code{type=within}, respectively. \sQuote{IntersectionNotEmpty} does
-    not reduce to a simple countOverlaps because common (shared) regions 
-    of the annotation are removed before counting.}
+    \item{byQname, maxMemory}{See \code{\link{sortBam}}.}
 
-  \item{singleEnd}{
-    A logical value indicating if reads are single or paired-end.}
+    \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
+       further influence scanning, counting, or filtering.}
 
-  \item{fragments}{
-    A logical value indicating if singletons, reads with unmapped pairs
-    and other fragments should be included in the counting. When 
-    \code{fragments=FALSE} only reads paired with the algorithm described
-    at ?findMateAlignment are counted. When \code{fragments=TRUE} (default)
-    all singletons, reads with unmapped pairs and other fragments are
-    counted in addition to the reads paired with the ?findMateAlignment 
-    algorithm. This argument applies to paired-end reads only so
-    \code{singleEnd} must be FALSE.}
+    \item{use.names}{Construct the names of the returned object
+       from the query template names (QNAME field)? If not (the default),
+       then the returned object has no names.}
 
-  \item{query}{
-    \code{character} name of a Bam file, a \link[Rsamtools]{BamFile},
-    \linkS4class{GAlignments}, \linkS4class{GAlignmentPairs}
-    or a \linkS4class{GRangesList} object containing the reads.
+    \item{rw}{Mode of file; ignored.}
 
-    Paired-end reads can be supplied in a Bam file or 
-    \linkS4class{GAlignmentPairs} object. Single-end may
-    be in a Bam file, \linkS4class{GAlignments} or \linkS4class{GRanges}
-    object.}
+    \item{ignore.strand}{
+      A logical value indicating if strand should be considered when matching.}
 
-  \item{subject}{
-    A \link[GenomicFeatures]{TranscriptDb}, or \link{GRangesList} containing
-    the annotations.}
+    \item{shift, width, weight}{See \code{\link[IRanges:coverage]{coverage}}.}
 
-  \item{shift, width, weight}{See \code{\link[IRanges:coverage]{coverage}}.}
+    \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
 
-  \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
+    \item{features, reads, mode, inter.feature, fragments, singleEnd}{
+      See \code{\link[GenomicRanges:summarizeOverlaps]{summarizeOverlaps}}} 
+
+    \item{query, subject}{
+      See \code{\link[GenomicRanges:findSpliceOverlaps]{findSpliceOverlaps}}} 
+
 }
 
 \section{Objects from the Class}{
@@ -328,14 +215,48 @@ asMates(object, ...) <- value
 \section{Fields}{
 
   The \code{BamFile} class inherits fields from the
-  \code{\linkS4class{RsamtoolsFile}} class and has field:
+  \code{\linkS4class{RsamtoolsFile}} class and has fields:
 
   \describe{
+    \item{yieldSize: }{Number of records to yield each time the file 
+      is read from using \code{scanBam}. Only valid when
+      \code{length(bamWhich(param)) == 0}. Setting \code{yieldSize} 
+      on a \code{BamFileList} does not alter existing yield sizes
+      set on the individual \code{BamFile} instances.}
 
-    \item{obeyQname}{A logical(0) indicating if the file was sorted by qname.}
-    \item{asMates}{A logical(0) indicating if the records should be returned as
-      mated pairs.}
+    \item{asMates: }{A logical(0) indicating if the records should be 
+      returned as mated pairs. When \code{TRUE} scanBam attempts
+      to pair, or \sQuote{mate}, the records and returns two additional 
+      fields of \code{partition} and \code{mates}. The \code{partition}
+      vector indicates the number of records in each group, similar to
+      \sQuote{width} in a partition object. The \code{mates} vector
+      is TRUE for records that have been mated by the algorithm.
+      The non-mates are grouped by \sQuote{qname} and the value for
+      \code{mates} is FALSE.
 
+      Mate criteria:
+      \itemize{
+        \item Bit 0x1 (multiple segments) is 1.
+        \item Bit 0x4 (segment unmapped) is 0.
+        \item Bit 0x8 (next segment unmapped) is 0.
+        \item Bit 0x40 and 0x80 (first/last segment): 
+              Segments are a pair of first/last OR
+              neither segment is marked first/last.
+        \item Bit 0x100 (secondary alignment): 
+              Both segments are secondary OR both not secondary
+        \item \sQuote{qname} match.
+        \item \sQuote{tid} match.
+        \item segment1 \sQuote{mpos} matches segment2 \sQuote{pos} AND
+              segment2 \sQuote{mpos} matches segment1 \sQuote{pos}
+      }
+
+      Records not passing these criteria are returned with mate status
+      FALSE. Flags, tags and ranges may be specified in the
+      \code{ScanBamParam} for fine tuning of results.}
+
+      \item{obeyQname: }{A logical(0) indicating if the file was sorted by qname.
+        Note: In Bioconductor > 2.12 the prefered approach to reading
+        paired-end data is to use \code{asMates=TRUE}.}
   }
 }
 
@@ -433,16 +354,41 @@ asMates(object, ...) <- value
   }
 
 }
+
 \author{Martin Morgan and Marc Carlson}
 
 \seealso{
-  \code{\link[GenomicRanges:summarizeOverlaps]{summarizeOverlaps}} 
+  \itemize{
+    \item \code{\link{readGAlignmentsFromBam}} 
+    \item \code{\link{readGAlignmentPairsFromBam}} 
+    \item \code{\link{readGAlignmentsListFromBam}} 
+    \item \code{\link[GenomicRanges:summarizeOverlaps]{summarizeOverlaps}} 
+    \item \code{\link[GenomicRanges:findSpliceOverlaps]{findSpliceOverlaps}} 
+  }
 }
 
 \examples{
 
 ##
-## Iterating over Bam files.
+## BamFile options.
+##
+
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+bf <- BamFile(fl)
+bf
+
+## When 'asMates=TRUE' scanBam() reads the data in as
+## pairs. See 'asMates' above for details of the pairing
+## algorithm.
+asMates(bf) <- TRUE
+
+## When 'yieldSize' is set, scanBam() will iterate
+## through the file in chunks.
+yieldSize(bf) <- 500 
+
+
+##
+## Reading Bam files.
 ##
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
@@ -454,15 +400,14 @@ bf
 identical(scanBam(bf), scanBam(fl))
 close(bf)
 
-## chunks of size 1000
+## Use 'yieldSize' to iterate through a file in chunks.
 bf <- open(BamFile(fl, yieldSize=1000)) 
 while (nrec <- length(scanBam(bf)[[1]][[1]]))
     cat("records:", nrec, "\n")
 close(bf)
 
+## Repeatedly visit multiple ranges in the BamFile. 
 rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
-
-## repeatedly visit 'bf'
 bf <- open(BamFile(fl))
 sapply(seq_len(length(rng)), function(i, bamFile, rng) {
     param <- ScanBamParam(which=rng[i], what="seq")
@@ -471,17 +416,8 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
 }, bf, rng)
 close(bf)
 
-##
-## summarizeOverlaps().
-##
-
-## See ?'summarizeOverlaps' in the GenomicRanges package for examples.
-
-##
-## findSpliceOverlaps. 
-##
-
-## See ?'findSpliceOverlaps' for examples 
+## See ?'summarizeOverlaps' and ?'findSpliceOverlaps' in the 
+## GenomicRanges package for examples with these functions.
 }
 
 \keyword{classes}
