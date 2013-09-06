@@ -425,10 +425,11 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
 setMethod(readGAlignmentsListFromBam, "BamFile", 
     function(file, index=file, ..., use.names=FALSE, param=ScanBamParam())
 {
+    ## FIXME: turn on when summarizeOverlaps() is hooked into new pairing algo
     if (!asMates(file)) {
-        warning("'asMates' should be true; use readGAlignments() for ",
-                "single-end data.")
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+    #    warning("'asMates' should be true; use readGAlignments() for ",
+    #            "single-end data.")
+    #    bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     } else {
         bamWhat(param) <- union("mates", bamWhat(param))
     }
