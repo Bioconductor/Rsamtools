@@ -108,7 +108,7 @@ SEXP scan_bam_template(SEXP tag)
     SET_VECTOR_ELT(tmpl, SEQ_IDX, _tmpl_DNAStringSet());
     SET_VECTOR_ELT(tmpl, QUAL_IDX, _tmpl_PhredQuality());
     SET_VECTOR_ELT(tmpl, PARTITION_IDX, NEW_INTEGER(0));
-    SET_VECTOR_ELT(tmpl, MATES_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, MATES_IDX, NEW_LOGICAL(0));
     if (R_NilValue == tag) {
         SET_VECTOR_ELT(tmpl, TAG_IDX, R_NilValue);
     } else {

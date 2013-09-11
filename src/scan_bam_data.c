@@ -8,7 +8,7 @@ SCAN_BAM_DATA _init_SCAN_BAM_DATA(SEXP result,  int partition_as_width)
     SCAN_BAM_DATA sbd = Calloc(1, _SCAN_BAM_DATA);
     sbd->cigarhash = kh_init(str);
     sbd->result = result;
-    sbd->mates_flag = NA_INTEGER;
+    sbd->mates_flag = NA_LOGICAL;
     sbd->partition_id = 0;
     sbd->partition_as_width = partition_as_width;
     return sbd;
@@ -275,5 +275,5 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
     }
 
     sbd->icnt = sbd->ncnt = 0;
-    sbd->mates_flag = NA_INTEGER;
+    sbd->mates_flag = NA_LOGICAL;
 }

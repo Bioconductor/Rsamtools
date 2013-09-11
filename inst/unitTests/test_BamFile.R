@@ -109,13 +109,13 @@ test_BamFile_asMates_all <- function()
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
-    matenames <- scnm$qname[scnm$mates == 1] 
+    matenames <- scnm$qname[scnm$mates] 
     checkTrue(all(names(galp) %in% matenames))
 
     ## order
     ## order of segments not strictly enforced
     ## this holds only for position-sorted files
-    matepos <- scnm$pos[scnm$mates == 1]
+    matepos <- scnm$pos[scnm$mates]
     lst <- split(matepos, as.factor(matenames))
     checkTrue(all(elementLengths(lst) == 2))
     first <- unlist(lapply(unname(lst), "[", 1))
@@ -123,8 +123,8 @@ test_BamFile_asMates_all <- function()
     checkTrue(all(first <= second))
 
     ## non-mates off last
-    max1 <- max(which(scnm$mates == 1))
-    min0 <- min(which(scnm$mates == 0))
+    max1 <- max(which(scnm$mates))
+    min0 <- min(which(!scnm$mates))
     checkTrue(max1 < min0)
 
     ## match GAlignmentPairs
@@ -165,13 +165,13 @@ test_BamFile_asMates_range <- function()
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
-    matenames <- scnm$qname[scnm$mates == 1] 
+    matenames <- scnm$qname[scnm$mates] 
     checkTrue(all(names(galp) %in% matenames))
     checkTrue(length(scnm$qname) == sum(scnm$partition))
 
     ## non-mates off last
-    max1 <- max(which(scnm$mates == 1))
-    min0 <- min(which(scnm$mates == 0))
+    max1 <- max(which(scnm$mates))
+    min0 <- min(which(!scnm$mates))
     checkTrue(max1 < min0)
 
     ## range - subset
