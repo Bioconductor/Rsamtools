@@ -22,7 +22,7 @@ public:
 
     typedef map<string, Template> Templates;
     Templates templates;
-    queue<list<bam1_t *> > complete, incomplete;
+    queue<list<const bam1_t *> > complete, incomplete;
 
     // constructor / destructor
     BamIterator(const bam_index_t *bindex) :
@@ -46,67 +46,43 @@ public:
     }
 
     // yield
-    void yield(bamFile bfile, bam_mates_t *result, bool do_mate_all) {
+    void yield(bamFile bfile, bam_mates_t *result) {
         if (complete.size() == 0)
-            iterate(bfile);
-        if (complete.size() == 0) {
-            if (do_mate_all)
-                mate_all(bfile);
-            else
-                append_incomplete();
-        } 
+            iterate_complete(bfile);
+        if (complete.size() == 0)
+            iterate_incomplete(bfile);
 
-        list<bam1_t *> elts;
+        list<const bam1_t *> elts;
+        bool mated = false;
         if (complete.size() != 0) {
             elts = complete.front();
             complete.pop();
-            bam_mates_realloc(result, elts.size());
-            result->mates = true;
+            mated = true;
         } else if (incomplete.size() != 0) {
             elts = incomplete.front();
             incomplete.pop();
-            bam_mates_realloc(result, elts.size());
-            result->mates = false;
-        } else {
-            bam_mates_realloc(result, 0);
         }
 
+        bam_mates_realloc(result, elts.size(), mated);
         for (int i = 0; !elts.empty(); ++i) {
             result->bams[i] = elts.front();
             elts.pop_front();
         }
     }
 
-    // mate_all (BamRangeIterator only)
-    void mate_all(bamFile bfile) {
-        int64_t pos = bam_tell(bfile);
+    virtual void iterate_complete(bamFile bfile) = 0;
+
+    virtual void iterate_incomplete(bamFile bfile) {
         Templates::iterator it;
         for (it = templates.begin(); it != templates.end(); ++it) {
-            // mate all segments in 'inprogress'
-            while (it->second.mate(bfile, bindex)) {
-                complete.push(it->second.get_complete());
-            }
             // push 'incomplete'
-            list<bam1_t *> tmpl = it->second.cleanup();
-            if (tmpl.size())
-                incomplete.push(tmpl);
-        }
-        templates.clear();
-        bam_seek(bfile, pos, SEEK_SET);
-    }
-
-    // append_incomplete (BamFileIterator only)
-    void append_incomplete() {
-        Templates::iterator it;
-        for (it = templates.begin(); it != templates.end(); ++it) {
-            list<bam1_t *> tmpl = it->second.cleanup();
+            list<const bam1_t *> tmpl = it->second.cleanup();
             if (tmpl.size())
                 incomplete.push(tmpl);
         }
         templates.clear();
     }
 
-    virtual void iterate(bamFile bfile) = 0;
 };
 
 #endif

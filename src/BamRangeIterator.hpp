@@ -11,7 +11,7 @@ class BamRangeIterator : public BamIterator {
 
     bam_iter_t iter;
 
-    void iterate(bamFile bfile) {
+    void iterate_complete(bamFile bfile) {
 	if (iter_done)
 	    return;
 	if (NULL == bam) {	// first record 
@@ -34,6 +34,18 @@ class BamRangeIterator : public BamIterator {
 		    done = (bam->core.tid != tid) || (bam->core.pos != pos);
 		}
 	} while (!done);
+    }
+
+    void iterate_incomplete(bamFile bfile) {
+        int64_t pos = bam_tell(bfile);
+        Templates::iterator it;
+        for (it = templates.begin(); it != templates.end(); ++it) {
+            // mate all segments in 'inprogress'
+            while (it->second.mate_inprogress_segments(bfile, bindex))
+                complete.push(it->second.get_complete());
+        }
+        BamIterator::iterate_incomplete(bfile);
+        bam_seek(bfile, pos, SEEK_SET);
     }
 
 public:

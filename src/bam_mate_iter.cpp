@@ -22,15 +22,15 @@ bam_mates_t *bam_mates_new()
 {
     bam_mates_t *mates = Calloc(1, bam_mates_t);
     mates->n = 0;
-    mates->mates = false;
+    mates->mated = false;
     mates->bams = NULL;
     return mates;
 }
 
-void bam_mates_realloc(bam_mates_t *mates, int n)
+void bam_mates_realloc(bam_mates_t *mates, int n, int mated)
 {
     for (int i = 0; i < mates->n; ++i) {
-        bam_destroy1(mates->bams[i]);
+        bam_destroy1((bam1_t *) mates->bams[i]);
         mates->bams[i] = NULL;
     }
 
@@ -39,23 +39,22 @@ void bam_mates_realloc(bam_mates_t *mates, int n)
 	Free(mates->bams);
 	mates->bams = NULL;
     } else
-	mates->bams = Realloc(mates->bams, n, bam1_t *);
+	mates->bams = Realloc(mates->bams, n, const bam1_t *);
     mates->n = n;
-    mates->mates = false;
+    mates->mated = mated;
 }
 
 void bam_mates_destroy(bam_mates_t *mates)
 {
     for (int i = 0; i < mates->n; ++i)
-	bam_destroy1(mates->bams[i]);
+	bam_destroy1((bam1_t *) mates->bams[i]);
     Free(mates->bams);
     Free(mates);
 }
 
-int bam_mate_read(bamFile fb, bam_mate_iter_t iter, bam_mates_t *mates,
-                  bool do_mate_all)
+int bam_mate_read(bamFile fb, bam_mate_iter_t iter, bam_mates_t *mates)
 {
-    iter->b_iter->yield(fb, mates, do_mate_all);
+    iter->b_iter->yield(fb, mates);
     return mates->n;
 }
 
@@ -74,7 +73,7 @@ int bam_fetch_mate(bamFile fb, const bam_index_t *idx, int tid, int beg,
     int n_rec;
     bam_mates_t *mates = bam_mates_new();
     bam_mate_iter_t iter = bam_mate_range_iter_new(idx, tid, beg, end);
-    while ((n_rec = bam_mate_read(fb, iter, mates, true) > 0))
+    while ((n_rec = bam_mate_read(fb, iter, mates) > 0))
         func(mates, data);
     bam_mate_iter_destroy(iter);
     bam_mates_destroy(mates);
@@ -98,7 +97,7 @@ int samread_mate(bamFile fb, const bam_index_t *bindex, uint64_t pos0,
     iter = *iter_p;
     iter->b_iter->iter_done = false;
     // single yield
-    return bam_mate_read(fb, iter, mates, false);
+    return bam_mate_read(fb, iter, mates);
 }
 
 

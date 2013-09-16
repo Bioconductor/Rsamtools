@@ -13,7 +13,7 @@ class BamFileIterator : public BamIterator {
 
     bool file_done;
 
-    void iterate(bamFile bfile) {
+    void iterate_complete(bamFile bfile) {
         if (iter_done | file_done)
             return;
         if (NULL == bam) {    // first record 

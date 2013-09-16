@@ -8,7 +8,7 @@
 using namespace std;
 
 class Template {
-    typedef list<bam1_t *> Segments;
+    typedef list<const bam1_t *> Segments;
     typedef Segments::iterator iterator;
     typedef Segments::const_iterator const_iterator;
 
@@ -44,13 +44,13 @@ public:
         return (inprogress.size() + complete.size() + incomplete.size()); 
     }
 
-    list<bam1_t *> get_incomplete() {
+    list<const bam1_t *> get_incomplete() {
         Segments segments(incomplete);
         incomplete.clear();
         return segments;
     }
 
-    list<bam1_t *> get_complete() {
+    list<const bam1_t *> get_complete() {
         Segments segments(complete);
         complete.clear();
         return segments;
@@ -108,11 +108,11 @@ public:
 
         // new template
         if (size() == 0) {
-            inprogress.push_back(bam);
-            qname = bam1_qname(inprogress.front());
-            uint8_t *aux = bam_aux_get(inprogress.front(), "RG");
+            qname = bam1_qname(bam);
+            uint8_t *aux = bam_aux_get(bam, "RG");
             if (aux != 0)
                 rg = bam_aux2Z(aux);
+            inprogress.push_back(bam);
         // existing template with 'inprogress' records
         } else if (inprogress.size() > 0) {
             Segments::iterator it = inprogress.begin();
@@ -120,9 +120,8 @@ public:
                 if (is_mate(bam, *it)) {
                     complete.push_back(*it);
                     complete.push_back(bam);
-                    Segments::iterator it0 = it++;
-                    inprogress.erase(it0); 
-	    return true;
+                    inprogress.erase(it); 
+                    return true;
                 } else it++;
             }
             inprogress.push_back(bam);
@@ -130,53 +129,53 @@ public:
         } else {
             inprogress.push_back(bam);
         }
-		return false;
-	}
-
-    // find_mate (BamRangeIterator only)
-    bool find_mate(const bam1_t *curr, bamFile bfile, const bam_index_t *bindex) {
-        bool mates = false;
-	const int tid = curr->core.mtid;
-	const int beg = curr->core.mpos;
-
-	if (beg == -1)
-            return mates;    // no mate available
-
-	bam1_t *bam = bam_init1();
-	bam_iter_t iter = bam_iter_query(bindex, tid, beg, beg + 1);
-	while (bam_iter_read(bfile, iter, bam) >= 0) {
-            if ((is_valid(bam)) && is_template(bam) && is_mate(curr, bam)) {
-                // FIXME: is_mate also checked in add_segment
-                add_segment(bam);
-                mates = true;
-                break;
-            }
-}
-	bam_destroy1(bam);
-	bam_iter_destroy(iter);
-        return mates;
+        return false;
     }
 
     // mate (BamRangeIterator only)
-    bool mate(bamFile bfile, const bam_index_t * bindex) {
+    bool mate_inprogress_segments(bamFile bfile, const bam_index_t * bindex) {
         // search for mate for each 'inprogress' segment
-        for (iterator it = inprogress.begin(); it != inprogress.end(); ++it)
-           if (find_mate(*it, bfile, bindex))
-               break;
+        bam1_t *bam = bam_init1();
 
+        iterator it = inprogress.begin();
+        while (it != inprogress.end()) {
+            bool mate_found = false;
+            const bam1_t *curr = *it;
+            const int tid = curr->core.mtid;
+            const int beg = curr->core.mpos;
+
+            bam_iter_t iter = bam_iter_query(bindex, tid, beg, beg + 1);
+            while (bam_iter_read(bfile, iter, bam) >= 0) {
+                if (beg == -1)
+                    break;      // no mate available
+                if (is_valid(bam) && is_template(bam) && is_mate(curr, bam)) {
+                    mate_found = true;
+                    break;
+                }
+            }
+            bam_iter_destroy(iter);
+            if (mate_found) {
+                iterator it0 = it++;
+                complete.push_back(bam_dup1(bam));
+                complete.push_back(curr);
+                inprogress.erase(it0);
+            } else it++;
+        }
+
+        bam_destroy1(bam);
         return complete.size() > 0;
     }
 
     // cleanup
     // move 'inprogress' to 'incomplete', return 'incomplete'
-    list<bam1_t *> cleanup() {
+    list<const bam1_t *> cleanup() {
         if (complete.size())
             Rf_error("Error in cleanup: 'complete' not empty");
 
         if  (!inprogress.empty()) {
             incomplete.splice(incomplete.end(), inprogress);
             inprogress.clear();
-    }
+        }
 
         return get_incomplete();
     }
