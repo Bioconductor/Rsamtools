@@ -461,68 +461,6 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "groupAsPairs" functions. Will likely remove before Fall 2013 release.
-###
-
-.groupAsPairs <- function(x, use.mcols)
-{
-    ## Potential mates.
-    mate <- suppressWarnings(findMateAlignment(x))
-    dumped <- getDumpedAlignments() ## not strand compatible or not primary
-    x_is_first <- .isFirstSegment.GAlignments(x)
-    x_is_last <- .isLastSegment.GAlignments(x)
-    first_idx <- which(!is.na(mate) & x_is_first)
-    last_idx <- mate[first_idx]
-    .checkMates(mate, x_is_first, x_is_last, first_idx, last_idx)
-
-    ## Check the 0x2 bit (isProperPair).
-    x_is_proper <- as.logical(bamFlagAsBitMatrix(mcols(x)$flag,
-                              bitnames="isProperPair"))
-    ans_is_proper <- x_is_proper[first_idx]
-
-    ## Check pairs for discordant seqnames or strand.
-    x_is_discordant <- (as.character(seqnames(x)[first_idx]) !=
-                        as.character(seqnames(x)[last_idx])) | 
-                       (as.character(strand(x)[first_idx]) ==
-                        as.character(strand(x)[last_idx]))
-    keep <- which(!x_is_discordant)
-    first_idx <- first_idx[keep]
-    last_idx <- last_idx[keep]
-    ## FIXME: is this ever FALSE?
-    ans_is_proper <- ans_is_proper[keep]
-
-    ## Assemble GAlignmentsList.
-    ## pairs
-    pairs_idx <- c(rbind(first_idx, last_idx))
-    mcols(x)$paired <- seq_along(x) %in% pairs_idx
-    mcols(x) <- mcols(x)[c(use.mcols, "paired")] 
-    ## dumped
-    if (length(dumped) > 0) {
-        mcols(dumped)$paired <- logical(length(dumped)) 
-        mcols(dumped) <- mcols(dumped)[c(use.mcols, "paired")] 
-    }
-    widths <- c(rep(2, length(first_idx)), rep(1, length(dumped)))
-    relist(c(x[pairs_idx], dumped), PartitioningByEnd(cumsum(widths)))
-}
-
-.checkMates <- function(mate, x_is_first, x_is_last, first_idx, last_idx)
-{
-    ## Fundamental property of the 'mate' vector: it's a permutation of order
-    ## 2 and with no fixed point on the set of indices for which 'mate' is
-    ## not NA.
-    ## Check there are no fixed points.
-    if (!all(first_idx != last_idx))
-        stop("findMateAlignment() returned an invalid 'mate' vector")
-    ## Check order 2 (i.e. permuting a 2nd time brings back the original
-    ## set of indices).
-    if (!identical(mate[last_idx], first_idx))
-        stop("findMateAlignment() returned an invalid 'mate' vector")
-    ## One more sanity check.
-    if (!all(x_is_last[last_idx]))
-        stop("findMateAlignment() returned an invalid 'mate' vector")
-}
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "summarizeOverlaps" methods.
 ###
 

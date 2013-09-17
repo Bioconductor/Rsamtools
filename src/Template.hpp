@@ -72,29 +72,36 @@ public:
 
     // is_template
     bool is_template(const bam1_t *mate) const {
-	return (readgroup_q(mate) == 0) && (qname_q(mate) == 0);
+        return (readgroup_q(mate) == 0) && (qname_q(mate) == 0);
     }
 
     // is_mate
     // 1. Bit 0x40 and 0x80: Segments are a pair of first/last OR
     //    neither segment is marked first/last
     // 2. Bit 0x100: Both segments are secondary OR both not secondary
-    // 3. tid match
-    // 4. segment1 mpos matches segment2 pos AND
-    //    segment2 mpos matches segment1 pos
+    // 3. Bit 0x10 and 0x20: Segments are on opposite strands
+    // 4. mpos match:
+    //      segment1 mpos matches segment2 pos AND
+    //      segment2 mpos matches segment1 pos
+    // 5. tid match
     bool is_mate(const bam1_t *bam, const bam1_t *mate) const {
         const bool bam_read1 = bam->core.flag & BAM_FREAD1;
-        const bool bam_read2 = bam->core.flag & BAM_FREAD2;
-        const bool bam_secondary = bam->core.flag & BAM_FSECONDARY;
         const bool mate_read1 = mate->core.flag & BAM_FREAD1;
+        const bool bam_read2 = bam->core.flag & BAM_FREAD2;
         const bool mate_read2 = mate->core.flag & BAM_FREAD2;
+        const bool bam_secondary = bam->core.flag & BAM_FSECONDARY;
         const bool mate_secondary = mate->core.flag & BAM_FSECONDARY;
-	return
+        const bool bam_rev = bam->core.flag & BAM_FREVERSE;
+        const bool mate_rev = mate->core.flag & BAM_FREVERSE;
+        const bool bam_mrev = bam->core.flag & BAM_FMREVERSE;
+        const bool mate_mrev = mate->core.flag & BAM_FMREVERSE;
+        return
             ((bam_read1 == mate_read2) || (bam_read2 == mate_read1)) &&
             (bam_secondary == mate_secondary) &&
-	    (bam->core.mtid == mate->core.tid) &&
-            (bam->core.pos == mate->core.mpos) &&
-	    (bam->core.mpos == mate->core.pos);
+            ((bam_rev == mate_mrev) || (bam_mrev == mate_rev)) &&
+            (bam->core.pos == mate->core.mpos) && 
+            (bam->core.mpos == mate->core.pos) &&
+            (bam->core.mtid == mate->core.tid);
     }
 
     // add_segment
