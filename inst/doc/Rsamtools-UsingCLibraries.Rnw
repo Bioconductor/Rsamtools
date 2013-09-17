@@ -2,26 +2,14 @@
 %\VignetteDepends{}
 %\VignetteKeywords{Short read, I/0, samtools}
 %\VignettePackage{Rsamtools}
-\documentclass[]{article}
+\documentclass{article}
 
-\usepackage{times}
-\usepackage{hyperref}
-
-\newcommand{\Rfunction}[1]{{\texttt{#1}}}
-\newcommand{\Robject}[1]{{\texttt{#1}}}
-\newcommand{\Rpackage}[1]{{\textit{#1}}}
-\newcommand{\Rmethod}[1]{{\texttt{#1}}}
-\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
-\newcommand{\Rclass}[1]{{\textit{#1}}}
-\newcommand{\Rcode}[1]{{\texttt{#1}}}
-
-\newcommand{\software}[1]{\textsf{#1}}
-\newcommand{\R}{\software{R}}
-\newcommand{\Rsamtools}{\Rpackage{Rsamtools}}
+<<style, echo=FALSE, results=tex>>=
+BiocStyle::latex()
+@
 \newcommand{\bam}{\texttt{BAM}}
-\newcommand{\Bioconductor}{\software{Bioconductor}}
 
-\title{Using samtools C libraries with \Rsamtools}
+\title{Using samtools C libraries with \Biocpkg{Rsamtools}}
 \author{Martin Morgan}
 \date{Modified: 21 March, 2011. Compiled: \today}
 
@@ -29,30 +17,32 @@
 
 \maketitle
 
+\tableofcontents
+
 This document is meant for package developers wanting to use the
 \href{http://samtools.sourceforge.net/}{samtools} C libraries provided
-by \Rsamtools{}. The instructions here are based on the `Writing R
+by \Biocpkg{Rsamtools}. The instructions here are based on the `Writing R
 Extensions' manual associated with R-2.13; consult the current version
 of the manual for up-to-date instructions.
 
 \section{Background}
 
-\Rsamtools{} arranges to install static versions of the \verb|libbam|
+\Biocpkg{Rsamtools} arranges to install static versions of the \verb|libbam|
 and \verb|libbcf| libraries. The idea is that other packages can use
 these to implement C functionality that uses these libraries. This
 means that the samtools libraries are available in a consistent
 version to users across platforms, without requiring installation of
 additional software.
 
-\Rsamtools{} takes the following approach. On installation,
-\Rsamtools{} contains a snapshot of the samtools library source code
-under \verb|src/samtools|. \Rsamtools{} makes static version(s) of the
+\Biocpkg{Rsamtools} takes the following approach. On installation,
+\Biocpkg{Rsamtools} contains a snapshot of the samtools library source code
+under \verb|src/samtools|. \Biocpkg{Rsamtools} makes static version(s) of the
 samtools libraries \verb|libbam.a| and \verb|libbcf.a|. These static
-libraries are specific to the operating system on which \Rsamtools{}
+libraries are specific to the operating system on which \Biocpkg{Rsamtools}
 is being installed, are found under \verb|usrlib${R_ARCH}| in the user
 library location specified by the mechanism (e.g.,
 \Rfunction{biocLite}, \Rfunction{install.packages}) used to install
-\Rsamtools. At the same time, \Rsamtools{} copies headers required to
+\Biocpkg{Rsamtools}. At the same time, \Biocpkg{Rsamtools} copies headers required to
 use the library to the location \verb|include/samtools|.
 
 \section{Use}
@@ -70,7 +60,7 @@ files as, for instance,
 \begin{verbatim}
 #include "samtools/bam.h"
 \end{verbatim}
-The content of the include files can be found in the \Rsamtools{}
+The content of the include files can be found in the \Biocpkg{Rsamtools}
 source (under \verb|src/samtools|) or at their installed location.
 
 Linking to the static libraries is accomplished by including the

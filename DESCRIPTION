@@ -21,6 +21,6 @@ Suggests: ShortRead (>= 1.19.10), GenomicFeatures,
           TxDb.Hsapiens.UCSC.hg18.knownGene,
           RNAseqData.HNRNPC.bam.chr14,
           BSgenome.Hsapiens.UCSC.hg19,
-          pasillaBamSubset, RUnit
+          pasillaBamSubset, RUnit, BiocStyle
 LinkingTo: IRanges, XVector, Biostrings
 biocViews: DataImport, Sequencing, HighThroughputSequencing

@@ -2,32 +2,22 @@
 %\VignetteDepends{}
 %\VignetteKeywords{Short read, I/0, samtools}
 %\VignettePackage{Rsamtools}
-\documentclass[]{article}
+\documentclass{article}
 
-\usepackage{times}
-\usepackage{hyperref}
-
-\newcommand{\Rfunction}[1]{{\texttt{#1}}}
-\newcommand{\Robject}[1]{{\texttt{#1}}}
-\newcommand{\Rpackage}[1]{{\textit{#1}}}
-\newcommand{\Rmethod}[1]{{\texttt{#1}}}
-\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
-\newcommand{\Rclass}[1]{{\textit{#1}}}
-\newcommand{\Rcode}[1]{{\texttt{#1}}}
-
-\newcommand{\software}[1]{\textsf{#1}}
-\newcommand{\R}{\software{R}}
-\newcommand{\Rsamtools}{\Rpackage{Rsamtools}}
+<<style, echo=FALSE, results=tex>>=
+BiocStyle::latex()
+@
 \newcommand{\bam}{\texttt{BAM}}
 
-
-\title{An Introduction to \Rpackage{Rsamtools}}
+\title{An Introduction to \Biocpkg{Rsamtools}}
 \author{Martin Morgan}
 \date{Modified: 18 March, 2010. Compiled: \today}
 
 \begin{document}
 
 \maketitle
+
+\tableofcontents
 
 <<options,echo=FALSE>>=
 options(width=60)
@@ -39,7 +29,7 @@ library(Rsamtools)
 
 \section{Introduction}
 
-The \Rsamtools{} package provides an interface to \bam{} files. \bam{}
+The \Biocpkg{Rsamtools} package provides an interface to \bam{} files. \bam{}
 files are produced by \software{samtools} and other software, and
 represent a flexible format for storing `short' reads aligned to
 reference genomes. \bam{} files typically contain sequence and base
@@ -55,11 +45,11 @@ can be accessed without retrieving the entire (large!) file.  A full
 description is available in the \bam{} format specification
 (\url{http://samtools.sourceforge.net/SAM1.pdf})
 
-The main purpose of the \Rsamtools{} package is to import \bam{} files
-into \R{}. \Rsamtools{} also provides some facility for file access
+The main purpose of the \Biocpkg{Rsamtools} package is to import \bam{} files
+into \R{}. \Biocpkg{Rsamtools} also provides some facility for file access
 such as record counting, index file creation, and filtering to create
 new files containing subsets of the original. An important use case
-for \Rsamtools{} is as a starting point for creating \R{} objects
+for \Biocpkg{Rsamtools} is as a starting point for creating \R{} objects
 suitable for a diversity of work flows, e.g., \Rclass{AlignedRead}
 objects in the \Rpackage{ShortRead} package (for quality assessment
 and read manipulation), or \Rclass{GAlignments} objects in
@@ -69,15 +59,15 @@ explore \software{samtools} and related software efforts.
 
 \section{Input}
 
-The essential capability provided by \Rsamtools{} is \bam{}
+The essential capability provided by \Biocpkg{Rsamtools} is \bam{}
 input. This is accomplished with the \Rfunction{scanBam}
 function. \Rfunction{scanBam} takes as input the name of the \bam{}
-file to be parsed.  In addition, the \Rfunarg{param} argument
+file to be parsed.  In addition, the \Rcode{param} argument
 determines which genomic coordinates of the \bam{} file, and what
-components of each record, will be input. \Rfunarg{param} is an
+components of each record, will be input. \R{param} is an
 instance of the \Rclass{ScanBamParam} class. To create a
-\Rfunarg{param} object, call \Rfunction{ScanBamParam}. Here we create
-a \Rfunarg{param} object to extract reads aligned to three distinct
+\Rcode{param} object, call \Rfunction{ScanBamParam}. Here we create
+a \Rcode{param} object to extract reads aligned to three distinct
 ranges (one on \Rcode{seq1}, two on \Rcode{seq2}). From each of read
 in those ranges, we specify that we would like to extract the
 reference name (\Rcode{rname}, e.g., \Rcode{seq1}), strand, alignment
@@ -100,14 +90,14 @@ bam <- scanBam(bamFile, param=param)
 
 Like \Rfunction{scan}, \Rfunction{scanBam} returns a \Robject{list} of
 values. Each element of the list corresponds to a range specified by
-the \Rfunarg{which} argument to \Rfunction{ScanBamParam}. 
+the \Rcode{which} argument to \Rfunction{ScanBamParam}. 
 <<scanBam-elts-1>>=
 class(bam)
 names(bam)
 @ 
 %% 
 Each element is itself a list, containing the elements specified by
-the \Rfunarg{what} and \Rfunarg{tag} arguments to
+the \Rcode{what} and \Rcode{tag} arguments to
 \Rfunction{ScanBamParam}. 
 <<scanBam-elts-2>>=
 class(bam[[1]])
@@ -141,7 +131,7 @@ This might be further transformed, e.g., to a \Rclass{DataFrame}, with
 head(do.call("DataFrame", lst))
 @ 
 Often, an alternative is to use a \Rclass{ScanBamParam} object with
-desired fields specified in \Rfunarg{what} as an argument to
+desired fields specified in \Rcode{what} as an argument to
 \Rfunction{GenomicRanges::readGAlignments}; the specified fields
 are added as columns to the returned \Rclass{GAlignments}.
 
@@ -153,7 +143,7 @@ list.files(dirname(bamFile), pattern="ex1.bam(.bai)?")
 %% 
 Indexing provides two significant benefits. First, an index allows a
 \bam{} file to be efficiently accessed by range. A corollary is that
-providing a \Rfunarg{which} argument to \Rfunction{ScanBamParam}
+providing a \Rcode{which} argument to \Rfunction{ScanBamParam}
 requires an index. Second, coordinates for extracting information from
 a \bam{} file can be derived from the index, so a portion of a remote
 \bam{} file can be retrieved with local access only to the index. For
@@ -183,9 +173,9 @@ causes \Rfunction{scanBam} to report that the ``EOF marker is
 absent''; this message can safely be ignored.
 
 \bam{} files may be read by functions in packages other than
-\Rsamtools{}. In \Rpackage{ShortRead}, \Rfunction{readAligned} invoked
-with \Rfunarg{type="bam"} will read \bam{} files in to an
-\Rclass{AlignedRead} object. This function takes a \Rfunarg{param}
+\Biocpkg{Rsamtools}. In \Rpackage{ShortRead}, \Rfunction{readAligned} invoked
+with \Rcode{type="bam"} will read \bam{} files in to an
+\Rclass{AlignedRead} object. This function takes a \Rcode{param}
 argument, just as \Rfunction{scanBam}, so the user can control which
 portions of the file are input. Similar input facilities are available
 through the \Rfunction{readGAlignments} function in
@@ -193,7 +183,7 @@ through the \Rfunction{readGAlignments} function in
 
 Additional ways of interacting with \bam{} files include
 \Rfunction{scanBamHeader} (to extract header information) and
-\Rfunction{countBam} (to count records matching \Rfunarg{param}).
+\Rfunction{countBam} (to count records matching \Rcode{param}).
 \Rfunction{filterBam} filters reads from the source file according to
 the criteria of the \Rclass{ScanBamParam} parameter, writing reads
 passing the filter to a new file.  The function \Rfunction{sortBam}
@@ -209,7 +199,7 @@ sorts a previously unsorted \bam{}, while The function
 \bam{} files can be large, containing more information on more genomic
 regions than are of immediate interest or than can fit in memory. The
 first strategy for dealing with this is to select, using the
-\Rfunarg{what} and \Rfunarg{which} arguments to
+\Rcode{what} and \Rcode{which} arguments to
 \Rfunction{ScanBamParam}, just those portions of the \bam{} file that
 are essential to the current analysis, e.g., specifying
 \Rcode{what=c(`rname', 'qname', 'pos')} when wishing to calculate
@@ -316,9 +306,9 @@ slxMaq09 <- local({
 %% 
 We now assemble the \Rclass{BamViews} instance from these objects; we
 also provide information to annotated the \bam{} files (with the
-\Rfunarg{bamSamples} function argument, which is a \Rclass{DataFrame}
+\Rcode{bamSamples} function argument, which is a \Rclass{DataFrame}
 instance with each row corresponding to a \bam{} file) and the
-instance as a whole (with \Rfunarg{bamExperiment}, a simple named
+instance as a whole (with \Rcode{bamExperiment}, a simple named
 \Rclass{list} containing information structured as the user sees fit).
 <<BamViews-construct, keep.source=TRUE>>=
 bamExperiment <- 
@@ -338,7 +328,7 @@ The \Rclass{BamViews} object can be queried for its component parts, e.g.,
 bamExperiment(bv)
 @ 
 %% 
-More usefully, Methods in \Rpackage{Rsamtools} are designed to work
+More usefully, Methods in \Biocpkg{Rsamtools} are designed to work
 with \Rclass{BamViews} objects, retrieving data from all files in the
 view. These operations can take substantial time and require reliable
 network access.
@@ -357,7 +347,7 @@ idxFiles <- mapply(download.file, indexFiles,
 %% 
 and then queries the 1000 genomes project for reads overlapping our
 transcripts; by loading the \Rpackage{parallel} package, we tell
-\Rsamtools{} to use as many cores as are available on our machine (the
+\Biocpkg{Rsamtools} to use as many cores as are available on our machine (the
 \Rpackage{parallel} package does not provide parallel functionality on
  Windows computers)
 <<readGAlignmentsFromBam, eval=FALSE>>=
@@ -426,8 +416,8 @@ summary(colSums(m))
 
 \section{Directions}
 
-This vignette has summarized facilities in the \Rsamtools{}
-package. Important additional packages include \Rpackage{GenomeRanges}
+This vignette has summarized facilities in the \Biocpkg{Rsamtools}
+package. Important additional packages include \Rpackage{GenomicRanges}
 (for representing and manipulating gapped alignments),
 \Rpackage{ShortRead} for I/O and quality assessment of ungapped short
 read alignments, \Rpackage{Biostrings} and \Rpackage{BSgenome} for DNA
