@@ -1,9 +1,13 @@
 #ifndef TEMPLATE_H
 #define TEMPALTE_H
 
+#include <map>
+#include <queue>
+#include <string>
 #include <algorithm>
 #include <list>
 #include "samtools/sam.h"
+#include "scan_bam_data.h"
 
 using namespace std;
 
@@ -13,50 +17,34 @@ class Template {
     typedef Segments::const_iterator const_iterator;
 
     char *rg, *qname;
-    Segments inprogress, complete, incomplete; 
+    Segments inprogress; 
 
     // FIXME: check RG retrieval
     const int readgroup_q(const bam1_t *mate) const {
-	uint8_t *aux = bam_aux_get(mate, "RG");
-	char *rg0 = '\0';
-	if (aux != 0)
-	    rg0 = bam_aux2Z(aux);
+    uint8_t *aux = bam_aux_get(mate, "RG");
+    char *rg0 = '\0';
+    if (aux != 0)
+        rg0 = bam_aux2Z(aux);
 
         if (rg =='\0' && rg0 == '\0') /* both null ok */
             return 0;
         else
-	return strcmp(rg, rg0);
+            return strcmp(rg, rg0);
     }
 
     const int qname_q(const bam1_t *mate) const {
-	return strcmp(qname, bam1_qname(mate));
+        return strcmp(qname, bam1_qname(mate));
     }
 
 public:
 
     Template() : rg('\0') {}
 
-    Template(const bam1_t *bam) : 
-        rg('\0') { add_segment(bam); }
-
-    // getters / setters
     size_t size() const { 
-        return (inprogress.size() + complete.size() + incomplete.size()); 
+        return (inprogress.size()); 
     }
 
-    list<const bam1_t *> get_incomplete() {
-        Segments segments(incomplete);
-        incomplete.clear();
-        return segments;
-    }
-
-    list<const bam1_t *> get_complete() {
-        Segments segments(complete);
-        complete.clear();
-        return segments;
-    }
-
-    // is_valid
+    // is_valid checks the following bit flags:
     // 1. Bit 0x1 (multiple segments) is 1 
     // 2. Bit 0x4 (segment unmapped) is 0
     // 3. Bit 0x8 (next segment unmapped) is 0
@@ -70,12 +58,11 @@ public:
                 !mate_unmapped && (bam->core.mpos != -1);
     }
 
-    // is_template
     bool is_template(const bam1_t *mate) const {
         return (readgroup_q(mate) == 0) && (qname_q(mate) == 0);
     }
 
-    // is_mate
+    // is_mate checks the following bit flags:
     // 1. Bit 0x40 and 0x80: Segments are a pair of first/last OR
     //    neither segment is marked first/last
     // 2. Bit 0x100: Both segments are secondary OR both not secondary
@@ -104,17 +91,18 @@ public:
             (bam->core.mtid == mate->core.tid);
     }
 
-    // add_segment
     // Returns true if segment added was a mate
-    bool add_segment(const bam1_t *bam1) {
+    bool add_segment(const bam1_t *bam1,
+                     queue<list<const bam1_t *> > &complete,
+                     list<const bam1_t *> &invalid) {
         bam1_t *bam = bam_dup1(bam1);
         if (!is_valid(bam)) {
-            incomplete.push_back(bam);
-	    return false;
+            invalid.push_back(bam);
+            return false;
         }
 
         // new template
-        if (size() == 0) {
+        if (inprogress.empty()) {
             qname = bam1_qname(bam);
             uint8_t *aux = bam_aux_get(bam, "RG");
             if (aux != 0)
@@ -125,8 +113,10 @@ public:
             Segments::iterator it = inprogress.begin();
             while (it != inprogress.end()) {
                 if (is_mate(bam, *it)) {
-                    complete.push_back(*it);
-                    complete.push_back(bam);
+                    list<const bam1_t *> tmp;
+                    tmp.push_back(*it);
+                    tmp.push_back(bam); 
+                    complete.push(tmp);
                     inprogress.erase(it); 
                     return true;
                 } else it++;
@@ -139,12 +129,13 @@ public:
         return false;
     }
 
-    // mate (BamRangeIterator only)
-    bool mate_inprogress_segments(bamFile bfile, const bam_index_t * bindex) {
-        // search for mate for each 'inprogress' segment
+    // (BamRangeIterator only)
+    void mate_inprogress_segments(bamFile bfile, const bam_index_t * bindex,
+                                  queue<list<const bam1_t *> > &complete) {
         bam1_t *bam = bam_init1();
 
         iterator it = inprogress.begin();
+        // search for mate for each 'inprogress' segment
         while (it != inprogress.end()) {
             bool mate_found = false;
             const bam1_t *curr = *it;
@@ -152,9 +143,10 @@ public:
             const int beg = curr->core.mpos;
 
             bam_iter_t iter = bam_iter_query(bindex, tid, beg, beg + 1);
+            // search all records that overlap the iterator
             while (bam_iter_read(bfile, iter, bam) >= 0) {
                 if (beg == -1)
-                    break;      // no mate available
+                    break;
                 if (is_valid(bam) && is_template(bam) && is_mate(curr, bam)) {
                     mate_found = true;
                     break;
@@ -163,28 +155,24 @@ public:
             bam_iter_destroy(iter);
             if (mate_found) {
                 iterator it0 = it++;
-                complete.push_back(bam_dup1(bam));
-                complete.push_back(curr);
+                list<const bam1_t *> tmp;
+                tmp.push_back(curr); 
+                tmp.push_back(bam_dup1(bam));
+                complete.push(tmp);
                 inprogress.erase(it0);
             } else it++;
         }
 
         bam_destroy1(bam);
-        return complete.size() > 0;
     }
 
     // cleanup
-    // move 'inprogress' to 'incomplete', return 'incomplete'
-    list<const bam1_t *> cleanup() {
-        if (complete.size())
-            Rf_error("Error in cleanup: 'complete' not empty");
-
+    // move template 'inprogress' to iterator 'invalid'
+    void cleanup(list<const bam1_t *> &invalid) {
         if  (!inprogress.empty()) {
-            incomplete.splice(incomplete.end(), inprogress);
+            invalid.splice(invalid.end(), inprogress);
             inprogress.clear();
         }
-
-        return get_incomplete();
     }
 
 };

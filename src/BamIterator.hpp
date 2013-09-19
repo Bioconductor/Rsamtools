@@ -5,11 +5,7 @@
 #ifndef BAMITERATOR_H
 #define BAMITERATOR_H
 
-#include <map>
-#include <queue>
-#include <string>
 #include "Template.hpp"
-#include "scan_bam_data.h" // new header
 
 
 class BamIterator {
@@ -22,7 +18,8 @@ public:
 
     typedef map<string, Template> Templates;
     Templates templates;
-    queue<list<const bam1_t *> > complete, incomplete;
+    queue<list<const bam1_t *> > complete;
+    list<const bam1_t *> invalid;
 
     // constructor / destructor
     BamIterator(const bam_index_t *bindex) :
@@ -37,9 +34,8 @@ public:
     void process(const bam1_t *bam) {
         // FIXME: combination of RG and qname?
         const string s = bam1_qname(bam);
-        bool mates = templates[s].add_segment(bam);
+        bool mates = templates[s].add_segment(bam, complete, invalid);
         if (mates) {
-            complete.push(templates[s].get_complete());
             if (templates[s].size() == 0)
                 templates.erase(s);
         }
@@ -47,20 +43,20 @@ public:
 
     // yield
     void yield(bamFile bfile, bam_mates_t *result) {
-        if (complete.size() == 0)
-            iterate_complete(bfile);
-        if (complete.size() == 0)
-            iterate_incomplete(bfile);
+        if (complete.empty())
+            iterate_inprogress(bfile);
+        if (complete.empty())
+            finalize_inprogress(bfile);
 
         list<const bam1_t *> elts;
         bool mated = false;
-        if (complete.size() != 0) {
+        if (!complete.empty()) {
             elts = complete.front();
             complete.pop();
             mated = true;
-        } else if (incomplete.size() != 0) {
-            elts = incomplete.front();
-            incomplete.pop();
+        } else if (!invalid.empty()) {
+            elts.push_back(invalid.front());
+            invalid.pop_front();
         }
 
         bam_mates_realloc(result, elts.size(), mated);
@@ -70,16 +66,13 @@ public:
         }
     }
 
-    virtual void iterate_complete(bamFile bfile) = 0;
+    virtual void iterate_inprogress(bamFile bfile) = 0;
 
-    virtual void iterate_incomplete(bamFile bfile) {
+    virtual void finalize_inprogress(bamFile bfile) {
         Templates::iterator it;
-        for (it = templates.begin(); it != templates.end(); ++it) {
-            // push 'incomplete'
-            list<const bam1_t *> tmpl = it->second.cleanup();
-            if (tmpl.size())
-                incomplete.push(tmpl);
-        }
+        // push 'inprogress' to 'invalid'
+        for (it = templates.begin(); it != templates.end(); ++it)
+            it->second.cleanup(invalid);
         templates.clear();
     }
 

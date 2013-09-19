@@ -27,21 +27,21 @@ bam_mates_t *bam_mates_new()
     return mates;
 }
 
-void bam_mates_realloc(bam_mates_t *mates, int n, int mated)
+void bam_mates_realloc(bam_mates_t *result, int n, int mated)
 {
-    for (int i = 0; i < mates->n; ++i) {
-        bam_destroy1((bam1_t *) mates->bams[i]);
-        mates->bams[i] = NULL;
+    for (int i = 0; i < result->n; ++i) {
+        bam_destroy1((bam1_t *) result->bams[i]);
+        result->bams[i] = NULL;
     }
 
     // Realloc(p, 0, *) fails inappropriately
     if (n == 0) {
-	Free(mates->bams);
-	mates->bams = NULL;
+	Free(result->bams);
+	result->bams = NULL;
     } else
-	mates->bams = Realloc(mates->bams, n, const bam1_t *);
-    mates->n = n;
-    mates->mated = mated;
+	result->bams = Realloc(result->bams, n, const bam1_t *);
+    result->n = n;
+    result->mated = mated;
 }
 
 void bam_mates_destroy(bam_mates_t *mates)

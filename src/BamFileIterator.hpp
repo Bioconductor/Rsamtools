@@ -13,7 +13,7 @@ class BamFileIterator : public BamIterator {
 
     bool file_done;
 
-    void iterate_complete(bamFile bfile) {
+    void iterate_inprogress(bamFile bfile) {
         if (iter_done | file_done)
             return;
         if (NULL == bam) {    // first record 
@@ -31,7 +31,7 @@ class BamFileIterator : public BamIterator {
             int pos = bam->core.pos;
             if (bam_read1(bfile, bam) < 0) {
                 iter_done = file_done = done = true;
-            } else if (complete.size() != 0) {
+            } else if (!complete.empty()) {
                 // stop if something to yield AND finished position
                 done = (bam->core.tid != tid) || (bam->core.pos != pos);
             } 
