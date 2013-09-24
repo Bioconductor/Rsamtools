@@ -84,7 +84,7 @@ test_TabixFile_header_remote <- function()
 
     fl <- sprintf("%s/%s",
         "http://1000genomes.s3.amazonaws.com/release",
-        "20110521/ALL.chr22.phase1_release_v2.20101123.snps_indels_svs.vcf.gz")
+        "20110521/ALL.chr22.phase1_release_v3.20101123.snps_indels_svs.vcf.gz")
 
     if (!tryCatch({ open(con <- url(fl)); close(con) },
                   error=function(...) FALSE))
