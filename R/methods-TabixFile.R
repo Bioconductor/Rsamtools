@@ -83,6 +83,13 @@ setMethod(seqnamesTabix, "character", function(file, ...) {
     .seqnamesTabix(TabixFile(file))
 })
 
+countTabix <-
+    function(file, ...)
+{
+    tbxsym <- getNativeSymbolInfo(".tabix_count", "Rsamtools")
+    scanTabix(file, ..., tbxsym=tbxsym)
+}
+
 .tabix_scan <-
     function(file, ..., space, start, end,
              tbxsym=getNativeSymbolInfo(".tabix_as_character",

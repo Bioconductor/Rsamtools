@@ -19,6 +19,7 @@
 \alias{scanTabix,TabixFile,missing-method}
 \alias{scanTabix,character,ANY-method}
 \alias{scanTabix,character,missing-method}
+\alias{countTabix}
 
 \title{Manipulate tabix indexed tab-delimited files.}
 
@@ -61,6 +62,8 @@ TabixFileList(..., yieldSize=NA_integer_)
 \S4method{scanTabix}{character,ANY}(file, ..., param)
 \S4method{scanTabix}{character,missing}(file, ..., param)
 
+countTabix(file, ...)
+
 }
 
 \arguments{
@@ -68,7 +71,8 @@ TabixFileList(..., yieldSize=NA_integer_)
   \item{con}{An instance of \code{TabixFile}.}
 
   \item{file}{For TabixFile(), A character(1) vector to the tabix file
-    path; can be remote (http://, ftp://). For others, a
+    path; can be remote (http://, ftp://). For \code{countTabix}, a
+    character(1) or \code{TabixFile} instance. For others, a
     \code{TabixFile} instance.}
 
   \item{index}{A character(1) vector of the tabix file index.}
@@ -147,6 +151,10 @@ TabixFileList(..., yieldSize=NA_integer_)
       while indexing, and the header (preceeded by comment character, at
       start of file) lines.}
 
+    \item{countTabix}{Return the number of records in each range of
+      \code{param}, or the count of all records in the file (when
+      \code{param} is missing).}
+
     \item{scanTabix}{For \code{signature(file="TabixFile")}, Visit the
       path in \code{path(file)}, returning the result of
       \code{\link{scanTabix}} applied to the specified path. For
@@ -171,6 +179,8 @@ fl <- system.file("extdata", "example.gtf.gz", package="Rsamtools",
 tbx <- TabixFile(fl)
 
 param <- GRanges(c("chr1", "chr2"), IRanges(c(1, 1), width=100000))
+countTabix(tbx)
+countTabix(tbx, param=param)
 res <- scanTabix(tbx, param=param)
 sapply(res, length)
 res[["chr1:1-100000"]][1:2]

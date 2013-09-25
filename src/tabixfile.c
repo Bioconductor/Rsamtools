@@ -270,6 +270,25 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
     return record;
 }
 
+SEXP tabix_count(tabix_t *tabix, ti_iter_t iter, const int size, SEXP state)
+{
+    const ti_conf_t *conf = ti_get_conf(tabix->idx);
+    const char *line;
+    int linelen, irec = 0;
+
+    if (R_NilValue != state)
+        Rf_error("[internal] expected 'NULL' state in tabix_count");
+
+    while (NULL != (line = ti_read(tabix, iter, &linelen)))
+    {
+        if (conf->meta_char == *line)
+            continue;
+        irec += 1;
+    }
+
+    return ScalarInteger(irec);
+}
+
 SEXP scan_tabix(SEXP ext, SEXP space, SEXP yield, SEXP fun, SEXP state)
 {
     _checkparams(space, R_NilValue, R_NilValue);

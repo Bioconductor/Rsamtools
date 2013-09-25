@@ -15,6 +15,7 @@ typedef SEXP SCAN_FUN(tabix_t *tabix, ti_iter_t iter, const int size,
                       SEXP state);
 
 SCAN_FUN tabix_as_character;
+SCAN_FUN tabix_count;
 
 SEXP tabixfile_init();
 SEXP tabixfile_open(SEXP filename, SEXP indexname);
