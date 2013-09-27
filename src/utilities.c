@@ -430,17 +430,17 @@ SEXP find_mate_within_groups(SEXP group_sizes,
                              SEXP x_pos, SEXP x_rnext, SEXP x_pnext)
 {
     SEXP ans;
-    int x_len, ngroup, n, group_size, offset, i, i2, j, j2, ok,
+    int x_len, *ans_p, ngroup, n, group_size, offset, i, i2, j, j2, ok,
         x_flag_elt, x_rname_elt, x_pos_elt, x_rnext_elt, x_pnext_elt,
         y_flag_elt, y_rname_elt, y_pos_elt, y_rnext_elt, y_pnext_elt,
         ans_i2_is_na, ans_j2_is_na;
 
     x_len = check_x_or_y(R_NilValue, x_flag, x_rname, x_pos,
                          x_rnext, x_pnext, "x");
-    ngroup = LENGTH(group_sizes);
     PROTECT(ans = NEW_INTEGER(x_len));
-    for (i = 0; i < x_len; i++)
-        INTEGER(ans)[i] = NA_INTEGER;
+    for (i = 0, ans_p = INTEGER(ans); i < x_len; i++, ans_p++)
+        *ans_p = NA_INTEGER;
+    ngroup = LENGTH(group_sizes);
     for (n = offset = 0; n < ngroup; n++, offset += group_size) {
         group_size = INTEGER(group_sizes)[n];
         for (i = 1; i < group_size; i++) {
@@ -472,16 +472,16 @@ SEXP find_mate_within_groups(SEXP group_sizes,
                 if (!ok)
                     continue;
                 ans_i2_is_na = INTEGER(ans)[i2] == NA_INTEGER;
+                INTEGER(ans)[i2] = ans_i2_is_na ? j2 + 1 : 0;
                 ans_j2_is_na = INTEGER(ans)[j2] == NA_INTEGER;
-                if (ans_i2_is_na && ans_j2_is_na) {
-                    INTEGER(ans)[i2] = j2 + 1;
-                    INTEGER(ans)[j2] = i2 + 1;
-                    continue;
-                }
-                INTEGER(ans)[i2] = ans_i2_is_na ? -(j2 + 1) : 0;
-                INTEGER(ans)[j2] = ans_j2_is_na ? -(i2 + 1) : 0;
+                INTEGER(ans)[j2] = ans_j2_is_na ? i2 + 1 : 0;
             }
         }
+    }
+    for (i = 0, ans_p = INTEGER(ans); i < x_len; i++, ans_p++) {
+        if (*ans_p != NA_INTEGER && *ans_p != 0
+         && INTEGER(ans)[*ans_p - 1] == 0)
+            *ans_p = -(*ans_p);
     }
     UNPROTECT(1);
     return ans;
