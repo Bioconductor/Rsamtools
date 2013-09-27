@@ -229,7 +229,7 @@ setMethod(show, "ScanBamParam",
     cat("bamReverseComplement: ", bamReverseComplement(object), "\n",
         sep="")
     cat("bamTag:", paste(bamTag(object), collapse=", "), "\n")
-    cat("bamWhich:", length(bamWhich(object)), "elements\n")
+    cat("bamWhich:", sum(elementLengths(bamWhich(object))), "ranges\n")
     what <- paste("bamWhat: ", paste(bamWhat(object), collapse=", "))
     cat(strwrap(what, exdent=2), sep="\n")
 })
