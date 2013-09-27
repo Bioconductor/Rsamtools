@@ -108,7 +108,8 @@ asMates(object, ...) <- value
                        with.which_label=FALSE)
 \S4method{readGappedReadsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL,
                        with.which_label=FALSE)
-\S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
+\S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL,
+                           with.which_label=FALSE)
 \S4method{readGAlignmentsListFromBam}{BamFile}(file, index=file, ...,
     use.names=FALSE, param=ScanBamParam())
 
@@ -364,8 +365,8 @@ asMates(object, ...) <- value
     \item \code{\link{readGAlignmentsFromBam}} 
     \item \code{\link{readGAlignmentPairsFromBam}} 
     \item \code{\link{readGAlignmentsListFromBam}} 
-    \item \code{\link[GenomicRanges:summarizeOverlaps]{summarizeOverlaps}} 
-    \item \code{\link[GenomicRanges:findSpliceOverlaps]{findSpliceOverlaps}} 
+    \item \code{\link[GenomicRanges]{summarizeOverlaps}} 
+    \item \code{\link[GenomicRanges]{findSpliceOverlaps}} 
   }
 }
 

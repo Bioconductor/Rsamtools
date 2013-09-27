@@ -112,7 +112,8 @@ setGeneric("readGappedReadsFromBam",
            signature="file")
 
 setGeneric("readGAlignmentPairsFromBam",
-           function(file, index=file, use.names=FALSE, param=NULL)
+           function(file, index=file, use.names=FALSE, param=NULL,
+                    with.which_label=FALSE)
            standardGeneric("readGAlignmentPairsFromBam"),
            signature="file")
 

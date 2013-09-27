@@ -216,12 +216,20 @@ test_readGAlignmentPairsFromBam_which <- function()
     ## 4 non-overlapping regions of interest: first two regions only overlap
     ## with first p001 mate and last two regions only with last p001 mate.
     my_ROI <- GRanges("chr2", IRanges(c(10, 15, 110, 115), width=1))
-    param <- ScanBamParam(tag="pi", which=my_ROI[c(1, 3)])
+    my_ROI_labels <- c("chr2:10-10", "chr2:15-15",
+                       "chr2:110-110", "chr2:115-115")
+    param <- ScanBamParam(tag="pi", which=my_ROI[c(1, 4)])
     target1 <- readGAlignmentPairsFromBam(toy_bamfile, use.names=TRUE,
-                                          param=param)
+                                          param=param, with.which_label=TRUE)
     checkTrue(validObject(target1, complete=TRUE))
+    checkIdentical(1L, length(target1))
+    checkIdentical(Rle(factor(my_ROI_labels[1], levels=my_ROI_labels[c(1, 4)])),
+                   mcols(first(target1))$which_label)
+    checkIdentical(Rle(factor(my_ROI_labels[4], levels=my_ROI_labels[c(1, 4)])),
+                   mcols(last(target1))$which_label)
+    mcols(target1@first)$which_label <- mcols(target1@last)$which_label <- NULL
 
-    ## No pairs
+    ## Checking all possible combinations of ranges in 'which'.
     check_my_ROI_subsets <- function(subset)
     {
         check_my_ROI_subset <- function(i)

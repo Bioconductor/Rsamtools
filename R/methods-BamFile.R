@@ -306,7 +306,9 @@ setMethod(sortBam, "BamFile",
             } else {
                 run_lens <- sapply(res, function(x) length(x[[1L]]))
             }
-            ans3 <- list(which_label=Rle(which_label, run_lens))
+            which_label <- Rle(factor(which_label, levels=which_label),
+                               run_lens)
+            ans3 <- list(which_label=which_label)
         }
     }
     ## Extract the "what" cols.
@@ -432,14 +434,15 @@ setMethod(readGappedReadsFromBam, "BamFile",
 })
 
 setMethod(readGAlignmentPairsFromBam, "BamFile",
-          function(file, index=file, use.names=FALSE, param=NULL)
+          function(file, index=file, use.names=FALSE, param=NULL,
+                   with.which_label=FALSE)
 {
+    if (!isTRUEorFALSE(use.names))
+        stop("'use.names' must be TRUE or FALSE")
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
         bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
-    if (!isTRUEorFALSE(use.names))
-        stop("'use.names' must be TRUE or FALSE")
     if (!is.na(yieldSize(file))) {
         warning("'yieldSize' set to 'NA'", immediate.=TRUE)
         yieldSize(file) <- NA_integer_
@@ -447,11 +450,14 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
     flag0 <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
     what0 <- c("flag", "mrnm", "mpos")
     param2 <- .normargParam(param, flag0, what0)
-    galn <- readGAlignmentsFromBam(file, use.names=TRUE, param=param2)
+    galn <- readGAlignmentsFromBam(file, use.names=TRUE, param=param2,
+                                   with.which_label=with.which_label)
     if (is.null(param)) {
         use.mcols <- FALSE
     } else {
         use.mcols <- c(bamWhat(param), bamTag(param))
+        if (with.which_label)
+            use.mcols <- c(use.mcols, "which_label")
     }
     makeGAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
 })

@@ -32,7 +32,8 @@ readGAlignmentsFromBam(file, index=file, ..., use.names=FALSE, param=NULL,
 readGappedReadsFromBam(file, index=file, use.names=FALSE, param=NULL,
                        with.which_label=FALSE)
 
-readGAlignmentPairsFromBam(file, index=file, use.names=FALSE, param=NULL)
+readGAlignmentPairsFromBam(file, index=file, use.names=FALSE, param=NULL,
+                           with.which_label=FALSE)
 
 readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
                            param=ScanBamParam())
@@ -73,20 +74,22 @@ readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
     mapped are loaded).}
 
   \item{with.which_label}{\code{TRUE} or \code{FALSE}. Only supported
-    by \code{readGAlignmentsFromBam} and \code{readGappedReadsFromBam}
-    at the moment. If \code{TRUE} and if \code{param} has a \code{which}
-    component, a \code{"which_label"} metadata column is added to the
-    returned \link[GenomicRanges]{GAlignments} or
-    \link[ShortRead]{GappedReads} object. The purpose of this metadata
-    column is to unambiguously identify the range in \code{which} where
-    each element in the returned object originates from.
-    The labels used to identify the ranges are normally of the form
-    \code{"seq1:12250-246500"} i.e. they're the same as the names found
-    on the outer list that \code{\link{scanBam}} would return
-    if called with the same \code{param} argument. If some ranges are
-    duplicated, then the labels are made unique by appending a unique
+    by \code{readGAlignmentsFromBam}, \code{readGappedReadsFromBam},
+    and \code{readGAlignmentPairsFromBam} at the moment. If \code{TRUE}
+    and if \code{param} has a \code{which} component, a \code{"which_label"}
+    metadata column is added to the returned \link[GenomicRanges]{GAlignments}
+    or \link[ShortRead]{GappedReads} object, or to the \code{\link{first}}
+    and \code{\link{last}} components of the returned
+    \link[GenomicRanges]{GAlignmentPairs} object.
+    The purpose of this metadata column is to unambiguously identify
+    the range in \code{which} where each element in the returned object
+    originates from. The labels used to identify the ranges are normally
+    of the form \code{"seq1:12250-246500"}, that is, they're the same as
+    the names found on the outer list that \code{\link{scanBam}} would
+    return if called with the same \code{param} argument. If some ranges
+    are duplicated, then the labels are made unique by appending a unique
     suffix to all of them. The \code{"which_label"} metadata column is
-    represented as a character-\link[IRanges]{Rle}.}
+    represented as a factor-\link[IRanges]{Rle}.}
 }
 
 \details{
