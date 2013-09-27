@@ -26,9 +26,11 @@ object from a BAM file.
 }
 
 \usage{
-readGAlignmentsFromBam(file, index=file, ..., use.names=FALSE, param=NULL)
+readGAlignmentsFromBam(file, index=file, ..., use.names=FALSE, param=NULL,
+                       with.which_label=FALSE)
 
-readGappedReadsFromBam(file, index=file, use.names=FALSE, param=NULL)
+readGappedReadsFromBam(file, index=file, use.names=FALSE, param=NULL,
+                       with.which_label=FALSE)
 
 readGAlignmentPairsFromBam(file, index=file, use.names=FALSE, param=NULL)
 
@@ -69,6 +71,22 @@ readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
     hasUnmappedMate=FALSE)} for \code{readGAlignmentPairsFromBam}
     (i.e. only records corresponding to paired-end reads with both ends
     mapped are loaded).}
+
+  \item{with.which_label}{\code{TRUE} or \code{FALSE}. Only supported
+    by \code{readGAlignmentsFromBam} and \code{readGappedReadsFromBam}
+    at the moment. If \code{TRUE} and if \code{param} has a \code{which}
+    component, a \code{"which_label"} metadata column is added to the
+    returned \link[GenomicRanges]{GAlignments} or
+    \link[ShortRead]{GappedReads} object. The purpose of this metadata
+    column is to unambiguously identify the range in \code{which} where
+    each element in the returned object originates from.
+    The labels used to identify the ranges are normally of the form
+    \code{"seq1:12250-246500"} i.e. they're the same as the names found
+    on the outer list that \code{\link{scanBam}} would return
+    if called with the same \code{param} argument. If some ranges are
+    duplicated, then the labels are made unique by appending a unique
+    suffix to all of them. The \code{"which_label"} metadata column is
+    represented as a character-\link[IRanges]{Rle}.}
 }
 
 \details{
@@ -208,6 +226,12 @@ gal4
 which <- IRangesList(seq2=IRanges(c(1563, 1567), width=1))
 param <- ScanBamParam(which=which)
 gal5 <- readGAlignmentsFromBam(bamfile, param=param)
+gal5
+
+## Use 'with.which_label=TRUE' to identify the range in 'which'
+## where each element in 'gal5' originates from.
+gal5 <- readGAlignmentsFromBam(bamfile, param=param,
+                               with.which_label=TRUE)
 gal5
 
 ## Using the 'param' arg to load tags. Except for MF and Aq, the tags

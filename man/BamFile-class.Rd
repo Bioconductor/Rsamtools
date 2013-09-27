@@ -104,8 +104,10 @@ asMates(object, ...) <- value
 ## reading
 
 \S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
-\S4method{readGAlignmentsFromBam}{BamFile}(file, index=file, ..., use.names=FALSE, param=NULL)
-\S4method{readGappedReadsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
+\S4method{readGAlignmentsFromBam}{BamFile}(file, index=file, ..., use.names=FALSE, param=NULL,
+                       with.which_label=FALSE)
+\S4method{readGappedReadsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL,
+                       with.which_label=FALSE)
 \S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL)
 \S4method{readGAlignmentsListFromBam}{BamFile}(file, index=file, ...,
     use.names=FALSE, param=ScanBamParam())

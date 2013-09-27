@@ -1,22 +1,25 @@
 setMethod(readGAlignmentsFromBam, "character",
-          function(file, index=file, ..., use.names=FALSE, param=NULL)
+          function(file, index=file, ..., use.names=FALSE, param=NULL,
+                   with.which_label=FALSE)
 {
     if (missing(index) && (is.null(param) || 0L == length(bamWhich(param))))
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
     readGAlignmentsFromBam(bam, character(), ..., use.names=use.names,
-                           param=param)
+                           param=param, with.which_label=with.which_label)
 })
 
 setMethod(readGappedReadsFromBam, "character",
-          function(file, index=file, use.names=FALSE, param=NULL)
+          function(file, index=file, use.names=FALSE, param=NULL,
+                   with.which_label=FALSE)
 {
     if (missing(index) && (is.null(param) || 0L == length(bamWhich(param))))
         index <- character(0)
     bam <- open(BamFile(file, index), "rb")
     on.exit(close(bam))
-    readGappedReadsFromBam(bam, character(), use.names=use.names, param=param)
+    readGappedReadsFromBam(bam, character(), use.names=use.names,
+                           param=param, with.which_label=with.which_label)
 })
 
 setMethod(readGAlignmentPairsFromBam, "character",

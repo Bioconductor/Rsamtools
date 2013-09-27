@@ -76,7 +76,8 @@ bamDirname(x, ...) <- value
 ## Input
 \S4method{scanBam}{BamViews}(file, index = file, ..., param = ScanBamParam(what=scanBamWhat()))
 \S4method{countBam}{BamViews}(file, index = file, ..., param = ScanBamParam())
-\S4method{readGAlignmentsFromBam}{BamViews}(file, index=file, ..., use.names=FALSE, param=NULL)
+\S4method{readGAlignmentsFromBam}{BamViews}(file, index=file, ..., use.names=FALSE, param=NULL,
+                       with.which_label=FALSE)
 
 ## Show
 \S4method{show}{BamViews}(object)
