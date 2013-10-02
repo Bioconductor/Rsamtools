@@ -1,6 +1,10 @@
 useDynLib(Rsamtools, .registration=TRUE)
 
+import(methods)
+
 import(zlibbioc)
+
+import(XVector)
 
 importFrom(bitops, bitAnd)
 

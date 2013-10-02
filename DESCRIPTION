@@ -13,9 +13,7 @@ License: Artistic-2.0 | file LICENSE
 LazyLoad: yes
 Depends: methods, IRanges (>= 1.19.11), GenomicRanges (>= 1.13.35),
          XVector, Biostrings (>= 2.29.7)
-Imports: methods, utils, BiocGenerics (>= 0.1.3), IRanges, GenomicRanges,
-	 XVector, Biostrings, zlibbioc,
-         bitops
+Imports: utils, BiocGenerics (>= 0.1.3), zlibbioc, bitops
 Suggests: ShortRead (>= 1.19.10), GenomicFeatures,
           TxDb.Dmelanogaster.UCSC.dm3.ensGene, KEGG.db,
           TxDb.Hsapiens.UCSC.hg18.knownGene,
