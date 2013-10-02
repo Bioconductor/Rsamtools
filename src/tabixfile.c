@@ -125,6 +125,14 @@ SEXP index_tabix(SEXP filename, SEXP format, SEXP seq, SEXP begin, SEXP end,
     return filename;
 }
 
+const char *_tabix_read(tabix_t *t, ti_iter_t iter, int *len)
+{
+    const char *line = ti_read(t, iter, len);
+    if (t->fp->errcode)
+        Rf_error("read line failed; corrupt or invalid file?");
+    return line;
+}
+
 SEXP _header_lines(tabix_t * tabix, const ti_conf_t * conf)
 {
     const int GROW_BY = 100;
@@ -141,7 +149,7 @@ SEXP _header_lines(tabix_t * tabix, const ti_conf_t * conf)
 
     PROTECT_WITH_INDEX(lns = NEW_CHARACTER(0), &pidx);
     curr_off = bgzf_tell(tabix->fp);
-    while (NULL != (s = ti_read(tabix, iter, &len))) {
+    while (NULL != (s = _tabix_read(tabix, iter, &len))) {
         if ((int) (*s) != conf->meta_char)
             break;
 	curr_off = bgzf_tell(tabix->fp);
@@ -237,7 +245,7 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
     if (R_NilValue != state)
         Rf_error("[internal] expected 'NULL' state in tabix_as_character");
 
-    while (NULL != (line = ti_read(tabix, iter, &linelen)))
+    while (NULL != (line = _tabix_read(tabix, iter, &linelen)))
     {
         if (conf->meta_char == *line)
             continue;
@@ -279,7 +287,7 @@ SEXP tabix_count(tabix_t *tabix, ti_iter_t iter, const int size, SEXP state)
     if (R_NilValue != state)
         Rf_error("[internal] expected 'NULL' state in tabix_count");
 
-    while (NULL != (line = ti_read(tabix, iter, &linelen)))
+    while (NULL != (line = _tabix_read(tabix, iter, &linelen)))
     {
         if (conf->meta_char == *line)
             continue;

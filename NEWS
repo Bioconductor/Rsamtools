@@ -24,6 +24,8 @@ BUG FIXES
 
     o close razip files only once.
 
+    o report tabix input errors
+
 CHANGES IN VERSION 1.12.0
 -------------------------
 
