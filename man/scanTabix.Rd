@@ -45,6 +45,26 @@ scanTabix(file, ..., param)
 
 }
 
+
+\section{Error}{
+
+  \code{scanTabix} signals errors using \code{signalCondition}. The
+  following errors are signaled:
+
+  \describe{
+
+    \item{\code{scanTabix_param}}{\code{yieldSize(file)} must be NA when
+      more than one range is specified.}
+
+    \item{\code{scanTabix_io}}{A read error occured while inputing the
+      tabix file. This might be because the file is corrupt, or of
+      incorrect format (e.g., when \code{path} points to a plain text
+      file but \code{index} is present, implying that \code{path} should
+      be a \code{bgzip}ed file.}
+
+  }
+}
+
 \references{
 
   \url{http://samtools.sourceforge.net/tabix.shtml}

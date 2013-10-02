@@ -105,16 +105,21 @@ countTabix <-
             msg <- sprintf("'%s' must be '%s' when '%s'",
                            "yieldSize(file)", "NA_integer_",
                            "0 != length(start(param))")
-            stop(msg)
+            cond <- simpleError(msg)
+            class(cond) <- c("scanTabix_param", class(cond))
+            stop(cond)
         }
 
         result <- .Call(.scan_tabix, .extptr(file),
                         list(space, start, end), yieldSize(file),
                         tbxsym$address, tbxstate)
         setNames(result, sprintf("%s:%d-%d", space, start, end))
-    }, error=function(err) {
-        stop("scanTabix: ", conditionMessage(err), "\n  path: ",
-             path(file), call.=FALSE)
+    }, scanTabix_param=function(err) stop(err), error=function(err) {
+        msg <- sprintf("scanTabix: %s\n  path: %s\n  index: %s\n",
+                       conditionMessage(err), path(file), index(file))
+        cond <- simpleError(msg)
+        class(cond) <- c("scanTabix_io", class(err))
+        stop(cond)
     })
 }
 
