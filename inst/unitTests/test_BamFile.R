@@ -112,16 +112,6 @@ test_BamFile_asMates_all <- function()
     matenames <- scnm$qname[scnm$mates] 
     checkTrue(all(names(galp) %in% matenames))
 
-    ## order
-    ## order of segments not strictly enforced
-    ## this holds only for position-sorted files
-    matepos <- scnm$pos[scnm$mates]
-    lst <- split(matepos, as.factor(matenames))
-    checkTrue(all(elementLengths(lst) == 2))
-    first <- unlist(lapply(unname(lst), "[", 1))
-    second <- unlist(lapply(unname(lst), "[", 2))
-    checkTrue(all(first <= second))
-
     ## non-mates off last
     max1 <- max(which(scnm$mates))
     min0 <- min(which(!scnm$mates))

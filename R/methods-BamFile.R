@@ -480,7 +480,7 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     what0 <- c("rname", "strand", "pos", "cigar", "partition")
     if (use.names)
         what0 <- c(what0, "qname")
-    galist <- .matesFromBam(file, use.names=use.names, param, what0) 
+    .matesFromBam(file, use.names=use.names, param, what0) 
 })
 
 .matesFromBam <- function(file, use.names, param, what0)
@@ -490,14 +490,19 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     gal <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
                        seqlengths=seqlengths)
-    if (use.names)
-        names(gal) <- bamcols$qname
-    res <- .bindExtraData(gal, use.names, param, bamcols)
+    res <- .bindExtraData(gal, use.names=FALSE, param, bamcols)
     if (asMates(file))
         pbw <- PartitioningByWidth(bamcols$partition)
     else
         pbw <- PartitioningByWidth(rep(1, length(gal)))
-    relist(res, pbw)
+
+    galist <- relist(res, pbw)
+    ## FIXME: no need to split when 'partition' is fixed
+    if (use.names) {
+        nms <- unique(relist(bamcols$qname, pbw))
+        names(galist) <- nms
+    } 
+    galist
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

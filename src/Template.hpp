@@ -66,11 +66,12 @@ public:
     // 1. Bit 0x40 and 0x80: Segments are a pair of first/last OR
     //    neither segment is marked first/last
     // 2. Bit 0x100: Both segments are secondary OR both not secondary
-    // 3. Bit 0x10 and 0x20: Segments are on opposite strands
-    // 4. mpos match:
+    // 3. Bit 0x2: Both segments properly aligned OR both not properly aligned 
+    // 4. Bit 0x10 and 0x20: Segments are on opposite strands
+    // 5. mpos match:
     //      segment1 mpos matches segment2 pos AND
     //      segment2 mpos matches segment1 pos
-    // 5. tid match
+    // 6. tid match
     bool is_mate(const bam1_t *bam, const bam1_t *mate) const {
         const bool bam_read1 = bam->core.flag & BAM_FREAD1;
         const bool mate_read1 = mate->core.flag & BAM_FREAD1;
@@ -78,17 +79,34 @@ public:
         const bool mate_read2 = mate->core.flag & BAM_FREAD2;
         const bool bam_secondary = bam->core.flag & BAM_FSECONDARY;
         const bool mate_secondary = mate->core.flag & BAM_FSECONDARY;
+        const bool bam_proper = bam->core.flag & BAM_FPROPER_PAIR;
+        const bool mate_proper = mate->core.flag & BAM_FPROPER_PAIR;
         const bool bam_rev = bam->core.flag & BAM_FREVERSE;
         const bool mate_rev = mate->core.flag & BAM_FREVERSE;
         const bool bam_mrev = bam->core.flag & BAM_FMREVERSE;
         const bool mate_mrev = mate->core.flag & BAM_FMREVERSE;
         return
-            ((bam_read1 == mate_read2) || (bam_read2 == mate_read1)) &&
+            ((bam_read1 ^ bam_read2) && (mate_read1 ^ mate_read2)) &&
+            (bam_read1 != mate_read1) &&
             (bam_secondary == mate_secondary) &&
+            (bam_proper == mate_proper) &&
             ((bam_rev == mate_mrev) || (bam_mrev == mate_rev)) &&
             (bam->core.pos == mate->core.mpos) && 
             (bam->core.mpos == mate->core.pos) &&
             (bam->core.mtid == mate->core.tid);
+    }
+
+    void add_to_complete(const bam1_t *bam, const bam1_t *mate,
+                         queue<list<const bam1_t *> > &complete) {
+        list<const bam1_t *> tmp;
+        if (bam->core.flag & BAM_FREAD1) {
+            tmp.push_back(bam);
+            tmp.push_back(mate);
+        } else {
+            tmp.push_back(mate);
+            tmp.push_back(bam);
+        } 
+        complete.push(tmp);
     }
 
     // Returns true if segment added was a mate
@@ -113,10 +131,7 @@ public:
             Segments::iterator it = inprogress.begin();
             while (it != inprogress.end()) {
                 if (is_mate(bam, *it)) {
-                    list<const bam1_t *> tmp;
-                    tmp.push_back(*it);
-                    tmp.push_back(bam); 
-                    complete.push(tmp);
+                    add_to_complete(bam, *it, complete);
                     inprogress.erase(it); 
                     return true;
                 } else it++;
@@ -155,10 +170,7 @@ public:
             bam_iter_destroy(iter);
             if (mate_found) {
                 iterator it0 = it++;
-                list<const bam1_t *> tmp;
-                tmp.push_back(curr); 
-                tmp.push_back(bam_dup1(bam));
-                complete.push(tmp);
+                add_to_complete(bam_dup1(bam), curr, complete);
                 inprogress.erase(it0);
             } else it++;
         }
