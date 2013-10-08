@@ -111,7 +111,7 @@ asMates(object, ...) <- value
 \S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL,
                            with.which_label=FALSE)
 \S4method{readGAlignmentsListFromBam}{BamFile}(file, index=file, ...,
-    use.names=FALSE, param=ScanBamParam())
+    use.names=FALSE, param=ScanBamParam(), with.which_label=FALSE)
 
 ## counting
 
@@ -229,13 +229,11 @@ asMates(object, ...) <- value
 
     \item{asMates: }{A logical(0) indicating if the records should be 
       returned as mated pairs. When \code{TRUE} scanBam attempts
-      to pair, or \sQuote{mate}, the records and returns two additional 
-      fields of \code{partition} and \code{mates}. The \code{partition}
-      vector indicates the number of records in each group, similar to
-      \sQuote{width} in a partition object. The \code{mates} vector
+      to \code{mate} (pair) the records and returns two additional 
+      fields of \code{.partition} (numeric) and \code{mates} (logical). 
+      \code{.partition} is the number of records in each mate or non-mate 
+      group, similar to \code{width} in a partition object. \code{mates} 
       is TRUE for records that have been mated by the algorithm.
-      The non-mates are grouped by \sQuote{qname} and the value for
-      \code{mates} is FALSE.
 
       Mate criteria:
       \itemize{
@@ -243,14 +241,15 @@ asMates(object, ...) <- value
         \item Bit 0x4 (segment unmapped) is 0.
         \item Bit 0x8 (next segment unmapped) is 0.
         \item Bit 0x40 and 0x80 (first/last segment): 
-              Segments are a pair of first/last OR
-              neither segment is marked first/last.
+              Segments are a pair of first/last
         \item Bit 0x100 (secondary alignment): 
               Both segments are secondary OR both not secondary
-        \item \sQuote{qname} match.
-        \item \sQuote{tid} match.
-        \item segment1 \sQuote{mpos} matches segment2 \sQuote{pos} AND
-              segment2 \sQuote{mpos} matches segment1 \sQuote{pos}
+        \item Bit 0x2 (properly aligned):
+              Both segments are properly aligned 
+        \item \code{qname} match.
+        \item \code{tid} match.
+        \item segment1 \code{mpos} matches segment2 \code{pos} AND
+              segment2 \code{mpos} matches segment1 \code{pos}
       }
 
       Records not passing these criteria are returned with mate status
@@ -259,7 +258,8 @@ asMates(object, ...) <- value
 
       \item{obeyQname: }{A logical(0) indicating if the file was sorted by qname.
         Note: In Bioconductor > 2.12 the prefered approach to reading
-        paired-end data is to use \code{asMates=TRUE}.}
+        paired-end data is to use \code{asMates=TRUE} instead of
+        \code{obeyQname}.}
   }
 }
 
@@ -347,10 +347,9 @@ asMates(object, ...) <- value
       See \code{\link{readGAlignmentsFromBam}}.}
 
     \item{readGAlignmentsListFromBam}{
-      Visit the Bam file in \code{path(file)}. When \code{yieldSize} is
-      set on the BamFile, the file must be sorted by qname, 
-      see ?\code{sortBam}. For a full description of the method see
-      \code{\link{readGAlignmentsListFromBam}}.} 
+      Visit the Bam file in \code{path(file)}, returning the result
+      of \code{readGAlignmentsListFromBam} applied to the specified path.
+      See \code{\link{readGAlignmentsListFromBam}}.} 
 
     \item{show}{Compactly display the object.}
 

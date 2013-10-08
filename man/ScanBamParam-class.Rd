@@ -113,10 +113,11 @@ bamFlagTest(flag, value)
     record. Tags are identified by two-letter codes, so all elements of
     \code{tag} must have exactly 2 characters.}
 
-  \item{what}{A character vector naming the fields to
-    return. \code{scanBamWhat()} returns a vector of available
-    fields. Fields are described on the \code{\link{scanBam}} help
-    page.}
+  \item{what}{A character vector naming the fields to return
+    \code{scanBamWhat()} returns a vector of available fields. The one 
+    exception is the \code{.partition} field which can only be returned 
+    when using the \code{scanBam} function. Fields are described on the 
+    \code{\link{scanBam}} help page.}
 
   \item{which}{A \code{\linkS4class{GRanges}},
     \code{\linkS4class{RangesList}}, \code{\linkS4class{RangedData}}, or

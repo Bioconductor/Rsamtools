@@ -36,7 +36,7 @@ readGAlignmentPairsFromBam(file, index=file, use.names=FALSE, param=NULL,
                            with.which_label=FALSE)
 
 readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
-                           param=ScanBamParam())
+                           param=ScanBamParam(), with.which_label=FALSE)
 }
 
 \arguments{
@@ -114,30 +114,33 @@ readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
 
   \code{readGAlignmentsListFromBam} pairs records into \sQuote{mates}
   acording to the criteria below. A \code{GAlignmentsList} is 
-  returned with a metadata column, \sQuote{mates}, indicating mate 
+  returned with a \sQuote{mates} metadata column which indicates mate 
   status. The mates are returned first followed by non-mates. When
   the \sQuote{file} argument is a BamFile, \sQuote{asMates=TRUE}
-  must be set. See the \sQuote{asMates} section of 
-  \code{?\link{BamFile}} for details. 
+  must be set, otherwise the data are treated as single-end reads. 
+  See the \sQuote{asMates} section of \code{?\link{BamFile}} for details. 
 
     Mate criteria:
     \itemize{
-      \item {Bit 0x1 (multiple segments) is 1}.
-      \item {Bit 0x4 (segment unmapped) is 0}.
-      \item {Bit 0x8 (next segment unmapped) is 0}.
-      \item {Bit 0x40 and 0x80 (first/last segment): 
+      \item Bit 0x1 (multiple segments) is 1.
+      \item Bit 0x4 (segment unmapped) is 0.
+      \item Bit 0x8 (next segment unmapped) is 0.
+      \item Bit 0x40 and 0x80 (first/last segment): 
              Segments are a pair of first/last OR
-             neither segment is marked first/last}.
-      \item {Bit 0x100 (secondary alignment): 
-             Both segments are secondary OR both not secondary}
-      \item {\sQuote{qname} match}.
-      \item {\sQuote{tid} match}.
-      \item {segment1 \sQuote{mpos} matches segment2 \sQuote{pos} AND
-             segment2 \sQuote{mpos} matches segment1 \sQuote{pos}}
+             neither segment is marked first/last.
+      \item Bit 0x100 (secondary alignment): 
+            Both segments are secondary OR both not secondary
+      \item Bit 0x2 (properly aligned):
+            Both segments are properly aligned 
+      \item \sQuote{qname} match.
+      \item \sQuote{tid} match.
+      \item segment1 \sQuote{mpos} matches segment2 \sQuote{pos} AND
+             segment2 \sQuote{mpos} matches segment1 \sQuote{pos}
     } 
-  Records that do not pass these criteria are returned with
-  mate status FALSE. Flags, tags and ranges may be specified in the
-  \code{ScanBamParam} for fine tuning of results.
+
+    Records not passing these criteria are returned with mate status
+    FALSE. Flags, tags and ranges may be specified in the
+    \code{ScanBamParam} for fine tuning of results.
 
   See \code{?\link[GenomicRanges]{GAlignmentsList-class}} for a 
   description of \link[GenomicRanges]{GAlignmentsList} objects.
@@ -288,7 +291,7 @@ table(elementLengths(galist1))
 ## When 'file' is a BamFile, 'asMates' must be TRUE. If FALSE,
 ## the data are treated as single-end and each list element of the
 ## GAlignmentsList will be of length 1. For single-end data 
-## use readGAlignements().
+## use readGAlignments().
 bf <- BamFile(fl, yieldSize=3, asMates=TRUE)
 readGAlignmentsList(bf)
 

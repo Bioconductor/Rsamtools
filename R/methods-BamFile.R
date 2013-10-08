@@ -122,7 +122,7 @@ setMethod(scanBam, "BamFile",
         stop(msg)
     }
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates")) 
+        bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates")) 
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
@@ -395,7 +395,7 @@ setMethod(readGAlignmentsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates"))
     what0 <- c("rname", "strand", "pos", "cigar")
     if (use.names)
         what0 <- c(what0, "qname")
@@ -419,7 +419,7 @@ setMethod(readGappedReadsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates"))
     what0 <- c("rname", "strand", "pos", "cigar", "seq")
     if (use.names)
         what0 <- c(what0, "qname")
@@ -442,7 +442,7 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates"))
     if (!is.na(yieldSize(file))) {
         warning("'yieldSize' set to 'NA'", immediate.=TRUE)
         yieldSize(file) <- NA_integer_
@@ -463,13 +463,14 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
 })
 
 setMethod(readGAlignmentsListFromBam, "BamFile", 
-    function(file, index=file, ..., use.names=FALSE, param=ScanBamParam())
+    function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
+             with.which_label=FALSE)
 {
     ## FIXME: turn on when summarizeOverlaps() is hooked into new pairing algo
     if (!asMates(file)) {
     #    warning("'asMates' should be true; use readGAlignments() for ",
     #            "single-end data.")
-    #    bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+    #    bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates"))
     } else {
         bamWhat(param) <- union("mates", bamWhat(param))
     }
@@ -477,27 +478,30 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
         stop("'use.names' must be TRUE or FALSE")
 
     ## required for GAlignments
-    what0 <- c("rname", "strand", "pos", "cigar", "partition")
+    what0 <- c("rname", "strand", "pos", "cigar", ".partition")
     if (use.names)
         what0 <- c(what0, "qname")
-    .matesFromBam(file, use.names=use.names, param, what0) 
+    .matesFromBam(file, use.names, param, what0, with.which_label) 
 })
 
-.matesFromBam <- function(file, use.names, param, what0)
+.matesFromBam <- function(file, use.names, param, what0, with.which_label)
 {
-    bamcols <- .load_bamcols_from_bamfile(file, param, what0)
+    bamcols <- .load_bamcols_from_bamfile(file, param, what0, 
+                                          with.which_label=with.which_label)
     seqlengths <- .load_seqlengths_from_bamfile(file, levels(bamcols$rname))
     gal <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
                        seqlengths=seqlengths)
-    res <- .bindExtraData(gal, use.names=FALSE, param, bamcols)
+
+    ## .partition not returned
+    bamWhat(param) <- setdiff(bamWhat(param), ".partition")
+    res <- .bindExtraData(gal, use.names=FALSE, param, bamcols) 
     if (asMates(file))
-        pbw <- PartitioningByWidth(bamcols$partition)
+        pbw <- PartitioningByWidth(bamcols$.partition)
     else
         pbw <- PartitioningByWidth(rep(1, length(gal)))
 
     galist <- relist(res, pbw)
-    ## FIXME: no need to split when 'partition' is fixed
     if (use.names) {
         nms <- unique(relist(bamcols$qname, pbw))
         names(galist) <- nms

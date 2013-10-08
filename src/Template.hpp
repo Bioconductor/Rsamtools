@@ -17,7 +17,7 @@ class Template {
     typedef Segments::const_iterator const_iterator;
 
     char *rg, *qname;
-    Segments inprogress; 
+    Segments inprogress, invalid; 
 
     // FIXME: check RG retrieval
     const int readgroup_q(const bam1_t *mate) const {
@@ -66,7 +66,7 @@ public:
     // 1. Bit 0x40 and 0x80: Segments are a pair of first/last OR
     //    neither segment is marked first/last
     // 2. Bit 0x100: Both segments are secondary OR both not secondary
-    // 3. Bit 0x2: Both segments properly aligned OR both not properly aligned 
+    // 3. Bit 0x2: Both segments properly aligned 
     // 4. Bit 0x10 and 0x20: Segments are on opposite strands
     // 5. mpos match:
     //      segment1 mpos matches segment2 pos AND
@@ -89,7 +89,7 @@ public:
             ((bam_read1 ^ bam_read2) && (mate_read1 ^ mate_read2)) &&
             (bam_read1 != mate_read1) &&
             (bam_secondary == mate_secondary) &&
-            (bam_proper == mate_proper) &&
+            (bam_proper && mate_proper) &&
             ((bam_rev == mate_mrev) || (bam_mrev == mate_rev)) &&
             (bam->core.pos == mate->core.mpos) && 
             (bam->core.mpos == mate->core.pos) &&
@@ -111,8 +111,7 @@ public:
 
     // Returns true if segment added was a mate
     bool add_segment(const bam1_t *bam1,
-                     queue<list<const bam1_t *> > &complete,
-                     list<const bam1_t *> &invalid) {
+                     queue<list<const bam1_t *> > &complete) {
         bam1_t *bam = bam_dup1(bam1);
         if (!is_valid(bam)) {
             invalid.push_back(bam);
@@ -179,10 +178,12 @@ public:
     }
 
     // cleanup
-    // move template 'inprogress' to iterator 'invalid'
-    void cleanup(list<const bam1_t *> &invalid) {
-        if  (!inprogress.empty()) {
-            invalid.splice(invalid.end(), inprogress);
+    // move 'inprogress' and 'invalid' to iterator 'unmated'
+    void cleanup(queue<list<const bam1_t *> > &unmated) {
+        if  (!invalid.empty()) 
+            inprogress.splice(inprogress.end(), invalid);
+        if (!inprogress.empty()) {
+            unmated.push(inprogress);
             inprogress.clear();
         }
     }

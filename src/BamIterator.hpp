@@ -19,7 +19,7 @@ public:
     typedef map<string, Template> Templates;
     Templates templates;
     queue<list<const bam1_t *> > complete;
-    list<const bam1_t *> invalid;
+    queue<list<const bam1_t *> > unmated;
 
     // constructor / destructor
     BamIterator(const bam_index_t *bindex) :
@@ -34,7 +34,7 @@ public:
     void process(const bam1_t *bam) {
         // FIXME: combination of RG and qname?
         const string s = bam1_qname(bam);
-        bool mates = templates[s].add_segment(bam, complete, invalid);
+        bool mates = templates[s].add_segment(bam, complete);
         if (mates) {
             if (templates[s].size() == 0)
                 templates.erase(s);
@@ -54,9 +54,9 @@ public:
             elts = complete.front();
             complete.pop();
             mated = true;
-        } else if (!invalid.empty()) {
-            elts.push_back(invalid.front());
-            invalid.pop_front();
+        } else if (!unmated.empty()) {
+            elts = unmated.front();
+            unmated.pop();
         }
 
         bam_mates_realloc(result, elts.size(), mated);
@@ -70,9 +70,9 @@ public:
 
     virtual void finalize_inprogress(bamFile bfile) {
         Templates::iterator it;
-        // push 'inprogress' to 'invalid'
+        // push 'inprogress' and 'invalid' to 'unmated'
         for (it = templates.begin(); it != templates.end(); ++it)
-            it->second.cleanup(invalid);
+            it->second.cleanup(unmated);
         templates.clear();
     }
 

@@ -119,7 +119,7 @@ setGeneric("readGAlignmentPairsFromBam",
 
 setGeneric("readGAlignmentsListFromBam",
            function(file, index=file, ..., use.names=FALSE, 
-                    param=ScanBamParam())
+                    param=ScanBamParam(), with.which_label=FALSE)
            standardGeneric("readGAlignmentsListFromBam"),
            signature="file")
 
