@@ -477,7 +477,6 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
 
-    ## required for GAlignments
     what0 <- c("rname", "strand", "pos", "cigar", ".partition")
     if (use.names)
         what0 <- c(what0, "qname")
@@ -492,20 +491,24 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     gal <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
                        seqlengths=seqlengths)
-
     ## .partition not returned
     bamWhat(param) <- setdiff(bamWhat(param), ".partition")
-    res <- .bindExtraData(gal, use.names=FALSE, param, bamcols) 
-    if (asMates(file))
+    res <- .bindExtraData(gal, use.names=FALSE, param, bamcols)
+ 
+    if (asMates(file)) {
         pbw <- PartitioningByWidth(bamcols$.partition)
-    else
+        galist <- relist(res, pbw)
+        mcols(galist)$mates <- unique(relist(bamcols$mates, pbw))
+    } else {
         pbw <- PartitioningByWidth(rep(1, length(gal)))
+        galist <- relist(res, pbw)
+    }
 
-    galist <- relist(res, pbw)
     if (use.names) {
         nms <- unique(relist(bamcols$qname, pbw))
         names(galist) <- nms
-    } 
+    }
+
     galist
 }
 
