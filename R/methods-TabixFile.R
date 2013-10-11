@@ -115,8 +115,9 @@ countTabix <-
                         tbxsym$address, tbxstate)
         setNames(result, sprintf("%s:%d-%d", space, start, end))
     }, scanTabix_param=function(err) stop(err), error=function(err) {
-        msg <- sprintf("scanTabix: %s\n  path: %s\n  index: %s\n",
-                       conditionMessage(err), path(file), index(file))
+        msg <- paste0("scanTabix: ", conditionMessage(err),
+                      "\n path: ", path(file), "\n index: ",
+                      index(file))
         cond <- simpleError(msg)
         class(cond) <- c("scanTabix_io", class(err))
         stop(cond)
