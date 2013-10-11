@@ -122,7 +122,7 @@ setMethod(scanBam, "BamFile",
         stop(msg)
     }
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates")) 
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates")) 
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
@@ -158,7 +158,6 @@ setMethod(countBam, "BamFile",
 
     tmpl <- .scanBam_template(param)
     reverseComplement <- bamReverseComplement(param)
-    partitionAsWidth <- FALSE
 
     dest <- .Call(.bamfile_open, destination, path(file), "wb")
     n_tot <- 0L
@@ -178,8 +177,8 @@ setMethod(countBam, "BamFile",
                 next
             } else break
 
-        ans <- .io_bam(.bambuffer_parse, file, param=param,
-                       buf, reverseComplement, partitionAsWidth, tmpl)
+        ans <- .io_bam(.bambuffer_parse, file, param=param, buf,
+                       reverseComplement, tmpl)
         ans <- DataFrame(.load_bamcols_from_scanBam_res(ans, param))
         ans <- eval(filter, ans)
         n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
@@ -395,7 +394,7 @@ setMethod(readGAlignmentsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     what0 <- c("rname", "strand", "pos", "cigar")
     if (use.names)
         what0 <- c(what0, "qname")
@@ -419,7 +418,7 @@ setMethod(readGappedReadsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     what0 <- c("rname", "strand", "pos", "cigar", "seq")
     if (use.names)
         what0 <- c(what0, "qname")
@@ -442,7 +441,7 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     if (!is.na(yieldSize(file))) {
         warning("'yieldSize' set to 'NA'", immediate.=TRUE)
         yieldSize(file) <- NA_integer_
@@ -466,18 +465,17 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
              with.which_label=FALSE)
 {
-    ## FIXME: turn on when summarizeOverlaps() is hooked into new pairing algo
     if (!asMates(file)) {
-    #    warning("'asMates' should be true; use readGAlignments() for ",
-    #            "single-end data.")
-    #    bamWhat(param) <- setdiff(bamWhat(param), c(".partition", "mates"))
+        warning("'asMates' should be TRUE; use readGAlignments() for ",
+                "single-end data.")
+        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
     } else {
         bamWhat(param) <- union("mates", bamWhat(param))
     }
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
 
-    what0 <- c("rname", "strand", "pos", "cigar", ".partition")
+    what0 <- c("rname", "strand", "pos", "cigar", "partition")
     if (use.names)
         what0 <- c(what0, "qname")
     .matesFromBam(file, use.names, param, what0, with.which_label) 
@@ -491,25 +489,13 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     gal <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
                        cigar=bamcols$cigar, strand=bamcols$strand,
                        seqlengths=seqlengths)
-    ## .partition not returned
-    bamWhat(param) <- setdiff(bamWhat(param), ".partition")
-    res <- .bindExtraData(gal, use.names=FALSE, param, bamcols)
- 
-    if (asMates(file)) {
-        pbw <- PartitioningByWidth(bamcols$.partition)
-        galist <- relist(res, pbw)
-        mcols(galist)$mates <- unique(relist(bamcols$mates, pbw))
-    } else {
-        pbw <- PartitioningByWidth(rep(1, length(gal)))
-        galist <- relist(res, pbw)
-    }
+    gal <- .bindExtraData(gal, use.names=FALSE, param, bamcols)
+    gal <- split(gal, bamcols$partition)
 
-    if (use.names) {
-        nms <- unique(relist(bamcols$qname, pbw))
-        names(galist) <- nms
-    }
+    if (use.names)
+        names(gal) <- unique(split(bamcols$qname, bamcols$partition))
 
-    galist
+    gal
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

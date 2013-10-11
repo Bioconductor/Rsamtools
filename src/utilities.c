@@ -71,33 +71,6 @@ void _as_factor(SEXP vec, const char **lvls, const int n_lvls)
     UNPROTECT(1);
 }
 
-/*
-  change vec from an integer vector to integer vector of run lengths
-
-     _as_width(c(1, 1, 2, 2, 2, 3, 4, 4)) == c(2, 3, 1, 2)
- */
-int _as_width(int *val, const int len)
-{
-    int j = 0;
-
-    if (len != 0) {
-        int prev = val[0];
-        int n = 1;
-        for (int i = 1; i < len; ++i) {
-            if (val[i] == prev)
-                ++n;
-            else {
-                val[j++] = n;
-                prev = val[i];
-                n = 1;
-            }
-        }
-        val[j++] = n;
-    }
-
-    return j;
-}
-
 SEXP _as_XStringSet(const char **key, int len, const char *baseclass)
 {
     char classname[40];         /* longest string should be "DNAStringSet" */

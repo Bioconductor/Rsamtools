@@ -91,23 +91,19 @@ SEXP bambuffer_length(SEXP bufext)
 }
 
 SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-                     SEXP bufext, SEXP reverseComplement,
-                     SEXP partitionAsWidth, SEXP templateList)
+                     SEXP bufext, SEXP reverseComplement, SEXP templateList)
 {
     _check_isbamfile(ext, "bamBuffer, 'parse'");
     _checkparams(space, keepFlags, isSimpleCigar);
     _checkext(bufext, BAMBUFFER_TAG, "bamBuffer 'parse'");
     if (!(IS_LOGICAL(reverseComplement) && (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");
-    if (!(IS_LOGICAL(partitionAsWidth) && (1L == LENGTH(partitionAsWidth))))
-        Rf_error("'partitionAsWidth' must be logical(1)");
     _bam_check_template_list(templateList);
     
     SEXP names = GET_ATTR(templateList, R_NamesSymbol);
     SEXP result =
         PROTECT(_scan_bam_result_init(templateList, names, space));
-    SCAN_BAM_DATA sbd =
-        _init_SCAN_BAM_DATA(result, LOGICAL(partitionAsWidth)[0]);
+    SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
     BAM_DATA bd = _init_BAM_DATA(ext, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  NA_INTEGER, 0, 0, (void *) sbd);

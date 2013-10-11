@@ -15,8 +15,7 @@ SEXP bambuffer_init();
 SEXP bambuffer(int yieldSize, int as_mates);
 SEXP bambuffer_length(SEXP bufext);
 SEXP bambuffer_parse(SEXP bamext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-                     SEXP bufext, SEXP reverseComplement,
-                     SEXP partitionAsWidth, SEXP template_list);
+                     SEXP bufext, SEXP reverseComplement, SEXP template_list);
 SEXP bambuffer_write(SEXP bufext, SEXP bamext, SEXP filter);
 
 BAM_BUFFER bambuffer_new(int n, int as_mates);

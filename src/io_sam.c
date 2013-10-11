@@ -21,7 +21,7 @@ typedef void (_FINISH1_FUNC) (BAM_DATA);
 
 static const char *TMPL_ELT_NMS[] = {
     "qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
-    "mrnm", "mpos", "isize", "seq", "qual", "tag", ".partition", "mates"
+    "mrnm", "mpos", "isize", "seq", "qual", "tag", "partition", "mates"
     /* "vtype", "value" */
 };
 
@@ -416,7 +416,7 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
     SEXP result =
         PROTECT(_scan_bam_result_init(template_list, names, space));
-    SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result, TRUE);
+    SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],

@@ -73,7 +73,7 @@ static const R_CallMethodDef callMethods[] = {
     {".bambuffer_init", (DL_FUNC) & bambuffer_init, 0},
     {".bambuffer", (DL_FUNC) & bambuffer, 1},
     {".bambuffer_length", (DL_FUNC) & bambuffer_length, 1},
-    {".bambuffer_parse", (DL_FUNC) & bambuffer_parse, 8},
+    {".bambuffer_parse", (DL_FUNC) & bambuffer_parse, 7},
     {".bambuffer_write", (DL_FUNC) & bambuffer_write, 3},
     {NULL, NULL, 0}
 };

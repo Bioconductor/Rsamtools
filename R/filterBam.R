@@ -29,7 +29,7 @@
     o <- order(match(names(which), hnames))
     what <- bamWhat(param)
     if (asMates(file))
-        what <- union(what, c("mates", ".partition"))
+        what <- union(what, c("mates", "partition"))
     initialize(param, which=which[o], what=what)
 }
 

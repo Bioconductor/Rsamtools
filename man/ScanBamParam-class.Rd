@@ -115,7 +115,7 @@ bamFlagTest(flag, value)
 
   \item{what}{A character vector naming the fields to return
     \code{scanBamWhat()} returns a vector of available fields. The one 
-    exception is the \code{.partition} field which can only be returned 
+    exception is the \code{partition} field which can only be returned 
     when using the \code{scanBam} function. Fields are described on the 
     \code{\link{scanBam}} help page.}
 
