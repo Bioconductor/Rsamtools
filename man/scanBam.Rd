@@ -236,19 +236,14 @@ mergeBam(files, destination, ...)
       Phred-encoded, phred-scaled base quality score, oriented as
       \code{seq}.
 
-    \item mates: Returned when \code{asMates=TRUE} in a BamFile
+    \item mates: Returned (always) when \code{asMates=TRUE} in a BamFile
       object. This is a logical vector indicating mate status of 
       each record.
 
-    \item partition: Returned when \code{asMates=TRUE} in a 
-      BamFile object. This integer vector is the number of records
-      in each mate or non-mate group. In general, the length of 
-      \code{partition} will be shorter than the other list elements returned
-      by \code{scanBam}. The sum of the values of \code{partition} vector
-      is equal to the total number of records. \code{partition} values are
-      used to create the partitioning for a GAlignmentsList object
-      and are not returned as a metadata column when using
-      \code{readGAlignmentsList} or \code{readGAlignmentPairs}.
+    \item partition: This is an integer vector of unique group ids
+      returned when \code{asMates=TRUE} in a BamFile object.
+      \code{partition} values are used to create the partitioning 
+      for a \code{GAlignmentsList} object.
   }
 
   \code{scanBamHeader} returns a list, with one element for each file

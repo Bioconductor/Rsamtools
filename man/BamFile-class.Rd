@@ -227,13 +227,12 @@ asMates(object, ...) <- value
       on a \code{BamFileList} does not alter existing yield sizes
       set on the individual \code{BamFile} instances.}
 
-    \item{asMates: }{A logical(0) indicating if the records should be 
+    \item{asMates: }{A logical indicating if the records should be 
       returned as mated pairs. When \code{TRUE} scanBam attempts
       to \code{mate} (pair) the records and returns two additional 
-      fields of \code{partition} (numeric) and \code{mates} (logical). 
-      \code{partition} is the number of records in each mate or non-mate 
-      group, similar to \code{width} in a partition object. \code{mates} 
-      is TRUE for records that have been mated by the algorithm.
+      fields of \code{partition} and \code{mates}. \code{partition} is 
+      an integer vector of unique group ids; \code{mates} is a logical
+      that is TRUE for records successfully paired by the algorithm.
 
       Mate criteria:
       \itemize{
