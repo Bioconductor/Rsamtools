@@ -530,9 +530,9 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
         if (asMates(bam))
             stop("cannot specify both singleEnd=TRUE and asMates=TRUE")
     } else {
-        if (fragments && !obeyQname(bam))
-            stop("when 'fragments=TRUE' Bam files must be ",
-                 "sorted by qname ('obeyQname=TRUE')")
+        if (fragments && !asMates(bam))
+            stop("when 'fragments=TRUE', 'asMates' must be ",
+                 "TRUE in the BamFile")
     }
 }
 
@@ -557,13 +557,13 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
     }
 }
 
-.getReadFunction <- function(singleEnd, fragments, obeyQname)
+.getReadFunction <- function(singleEnd, fragments, asMates)
 {
     if (singleEnd) {
         FUN <- readGAlignmentsFromBam
     } else {
         if (fragments)
-            if (obeyQname)
+            if (asMates)
                 FUN <- readGAlignmentsListFromBam
             else
                 stop("when 'fragments=TRUE' Bam files must be ",
@@ -581,7 +581,7 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
              param=ScanBamParam())
 {
     FUN <- .getReadFunction(singleEnd, fragments,
-                            isTRUE(all(obeyQname(reads))))
+                            isTRUE(all(asMates(reads))))
 
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
         lapply <- parallel::mclapply
