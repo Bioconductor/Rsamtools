@@ -567,15 +567,19 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
     if (singleEnd) {
         FUN <- readGAlignmentsFromBam
     } else {
-        if (fragments)
+        if (fragments) {
             if (asMates)
                 FUN <- readGAlignmentsListFromBam
-            else
+            else if (obeyQname)
+                FUN <- readGAlignmentsListFromBam
+            else if (!obeyQname)
                 stop("when 'fragments=TRUE' Bam files must be ",
                      "sorted by qname ('obeyQname=TRUE')")
-        else
+       } else {
             FUN <- readGAlignmentPairsFromBam
+       }
     }
+
     FUN
 }
 
