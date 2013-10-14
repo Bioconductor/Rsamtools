@@ -141,7 +141,7 @@ test_BamFile_asMates_all <- function()
     scnm2 <- scanBam(BamFile(fl, asMates=TRUE, yieldSize=2000))[[1]]
     checkTrue(all(scnm1$qname %in% scnm2$qname))
     checkTrue(all(scnm1$mates == scnm2$mates))
-    checkTrue(all(scnm1$partition == scnm2$partition))
+    checkTrue(all(scnm1$groupid == scnm2$groupid))
 }
 
 test_BamFile_asMates_range <- function()
@@ -157,7 +157,7 @@ test_BamFile_asMates_range <- function()
     checkTrue(all(scn$qname %in% scnm$qname))
     matenames <- scnm$qname[scnm$mates] 
     checkTrue(all(names(galp) %in% matenames))
-    checkTrue(length(scnm$qname) == length(scnm$partition))
+    checkTrue(length(scnm$qname) == length(scnm$groupid))
 
     ## non-mates off last
     max1 <- max(which(scnm$mates))

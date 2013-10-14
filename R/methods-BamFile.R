@@ -122,7 +122,7 @@ setMethod(scanBam, "BamFile",
         stop(msg)
     }
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates")) 
+        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates")) 
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
@@ -394,7 +394,7 @@ setMethod(readGAlignmentsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
     what0 <- c("rname", "strand", "pos", "cigar")
     if (use.names)
         what0 <- c(what0, "qname")
@@ -418,7 +418,7 @@ setMethod(readGappedReadsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
     what0 <- c("rname", "strand", "pos", "cigar", "seq")
     if (use.names)
         what0 <- c(what0, "qname")
@@ -441,7 +441,7 @@ setMethod(readGAlignmentPairsFromBam, "BamFile",
     if (is.null(param))
         param <- ScanBamParam()
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
     if (!is.na(yieldSize(file))) {
         warning("'yieldSize' set to 'NA'", immediate.=TRUE)
         yieldSize(file) <- NA_integer_
@@ -468,14 +468,14 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     if (!asMates(file)) {
         warning("'asMates' should be TRUE; use readGAlignments() for ",
                 "single-end data.")
-        bamWhat(param) <- setdiff(bamWhat(param), c("partition", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
     } else {
         bamWhat(param) <- union("mates", bamWhat(param))
     }
     if (!isTRUEorFALSE(use.names))
         stop("'use.names' must be TRUE or FALSE")
 
-    what0 <- c("rname", "strand", "pos", "cigar", "partition")
+    what0 <- c("rname", "strand", "pos", "cigar", "groupid")
     if (use.names)
         what0 <- c(what0, "qname")
     .matesFromBam(file, use.names, param, what0, with.which_label) 
@@ -490,10 +490,10 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
                        cigar=bamcols$cigar, strand=bamcols$strand,
                        seqlengths=seqlengths)
     gal <- .bindExtraData(gal, use.names=FALSE, param, bamcols)
-    gal <- split(gal, bamcols$partition)
+    gal <- split(gal, bamcols$groupid)
 
     if (use.names)
-        names(gal) <- unique(split(bamcols$qname, bamcols$partition))
+        names(gal) <- unique(split(bamcols$qname, bamcols$groupid))
 
     gal
 }

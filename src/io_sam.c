@@ -21,7 +21,7 @@ typedef void (_FINISH1_FUNC) (BAM_DATA);
 
 static const char *TMPL_ELT_NMS[] = {
     "qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
-    "mrnm", "mpos", "isize", "seq", "qual", "tag", "partition", "mates"
+    "mrnm", "mpos", "isize", "seq", "qual", "tag", "groupid", "mates"
     /* "vtype", "value" */
 };
 
