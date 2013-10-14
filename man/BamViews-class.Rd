@@ -143,6 +143,8 @@ bamDirname(x, ...) <- value
      from the query template names (QNAME field)? If not (the default),
      then the returned object has no names.}
 
+  \item{with.which_label}{See \code{?readGAlignmentsFromBam}.}
+
   \item{reads}{
     Missing when a \code{\linkS4class{BamViews}} is the only argument
     supplied to \code{summarizeOverlaps}. \code{reads} are the files 

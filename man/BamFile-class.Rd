@@ -192,6 +192,8 @@ asMates(object, ...) <- value
        from the query template names (QNAME field)? If not (the default),
        then the returned object has no names.}
 
+    \item{with.which_label}{See \code{?readGAlignmentsFromBam}.}
+
     \item{rw}{Mode of file; ignored.}
 
     \item{ignore.strand}{

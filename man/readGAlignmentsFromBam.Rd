@@ -73,14 +73,17 @@ readGAlignmentsListFromBam(file, index=file, ..., use.names=FALSE,
     (i.e. only records corresponding to paired-end reads with both ends
     mapped are loaded).}
 
-  \item{with.which_label}{\code{TRUE} or \code{FALSE}. Only supported
-    by \code{readGAlignmentsFromBam}, \code{readGappedReadsFromBam},
-    and \code{readGAlignmentPairsFromBam} at the moment. If \code{TRUE}
-    and if \code{param} has a \code{which} component, a \code{"which_label"}
-    metadata column is added to the returned \link[GenomicRanges]{GAlignments}
-    or \link[ShortRead]{GappedReads} object, or to the \code{\link{first}}
-    and \code{\link{last}} components of the returned
-    \link[GenomicRanges]{GAlignmentPairs} object.
+  \item{with.which_label}{\code{TRUE} or \code{FALSE} (the default).
+    If \code{TRUE} and if \code{param} has a \code{which} component,
+    a \code{"which_label"} metadata column is added to the returned
+    \link[GenomicRanges]{GAlignments} or \link[ShortRead]{GappedReads}
+    object, or to the \code{\link{first}} and \code{\link{last}} components
+    of the returned \link[GenomicRanges]{GAlignmentPairs} object.
+    In the case of \code{readGAlignmentsListFromBam}, it's added as an
+    \emph{inner} metadata column, that is, the metadata column is placed
+    on the \link[GenomicRanges]{GAlignments} object obtained by unlisting
+    the returned \link[GenomicRanges]{GAlignmentsList} object.
+
     The purpose of this metadata column is to unambiguously identify
     the range in \code{which} where each element in the returned object
     originates from. The labels used to identify the ranges are normally
