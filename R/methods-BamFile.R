@@ -468,7 +468,7 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
     if (!asMates(file)) {
         warning("'asMates' should be TRUE; use readGAlignments() for ",
                 "single-end data.")
-        bamWhat(param) <- setdiff(bamWhat(param), "mates")
+        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
     } else {
         bamWhat(param) <- union("mates", bamWhat(param))
     }
@@ -562,7 +562,7 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
     }
 }
 
-.getReadFunction <- function(singleEnd, fragments, asMates)
+.getReadFunction <- function(singleEnd, fragments, obeyQname, asMates)
 {
     if (singleEnd) {
         FUN <- readGAlignmentsFromBam
@@ -585,7 +585,8 @@ setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
              inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
              param=ScanBamParam())
 {
-    FUN <- .getReadFunction(singleEnd, fragments,
+    FUN <- .getReadFunction(singleEnd, fragments, 
+                            isTRUE(all(obeyQname(reads))),
                             isTRUE(all(asMates(reads))))
 
     if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
