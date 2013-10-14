@@ -36,12 +36,13 @@ setMethod(readGAlignmentPairsFromBam, "character",
 
 setMethod(readGAlignmentsListFromBam, "character",
           function(file, index=file, ..., use.names=FALSE, 
-                   param=ScanBamParam())
+                   param=ScanBamParam(), with.which_label=FALSE)
 {
     if (missing(index) && (is.null(param) || 0L == length(bamWhich(param))))
         index <- character(0)
     bam <- open(BamFile(file, index, asMates=TRUE), "rb")
     on.exit(close(bam))
-    readGAlignmentsListFromBam(bam, character(), use.names=use.names, param=param)
+    readGAlignmentsListFromBam(bam, character(), use.names=use.names, 
+                               param=param, with.which_label=with.which_label)
 })
 
