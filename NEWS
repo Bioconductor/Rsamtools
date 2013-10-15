@@ -4,23 +4,46 @@ CHANGES IN VERSION 1.14.0
 NEW FEATURES
 
     o seqinfo(FaFile) returns available information on sequences and
-    lengths on Fa (indexed fasta) files.
+      lengths on Fa (indexed fasta) files.
 
     o filterBam accepts FilterRules call-backs for arbitrary
-    filtering.
+      filtering.
 
     o add isIncomplete,BamFile-method to test for end-of-file
 
     o add count.mapped.reads to summarizeOverlaps,*,BamFileList-method;
-    set to TRUE to collect read and nucleotide counts via countBam.
+      set to TRUE to collect read and nucleotide counts via countBam.
 
     o add summarizeOverlaps,*,character-method to count simple file
-    paths
+      paths
+
+    o add sequenceLayer() and stackStringsFromBam()
+
+    o add 'with.which_label' arg to readGAlignmentsFromBam(),
+      readGappedReadsFromBam(), readGAlignmentPairsFromBam(), and
+      readGAlignmentsListFromBam()
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o rename:
+        readBamGappedAlignments() -> readGAlignmentsFromBam() 
+        readBamGappedReads() -> readGappedReadsFromBam()
+        readBamGappedAlignmentPairs() -> readGAlignmentPairsFromBam()
+        readBamGAlignmentsList() -> readGAlignmentsListFromBam()
+        makeGappedAlignmentPairs() -> makeGAlignmentPairs()
+
+    o speedup findMateAlignment()
+
+DEPRECATED AND DEFUNCT
+
+    o deprecate readBamGappedAlignments(), readBamGappedReads(),
+      readBamGappedAlignmentPairs(), readBamGAlignmentsList(), and
+      makeGappedAlignmentPairs()
 
 BUG FIXES
 
     o scanVcfHeader tolerates records without ID fields, and with
-    fields named similar to ID.
+      fields named similar to ID.
 
     o close razip files only once.
 
