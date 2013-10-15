@@ -39,6 +39,7 @@ setMethod("summarizeOverlaps", c("GRangesList", "character"),
 {
     if (any(duplicated(names(reads))))
         stop("duplicate 'names(reads)' not allowed")
+    .checkArgs(reads, singleEnd, fragments)
     .dispatchBamFiles(features, reads, mode, ignore.strand, ..., 
                       inter.feature=inter.feature, singleEnd=singleEnd, 
                       fragments=fragments, param=param)

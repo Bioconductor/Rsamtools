@@ -120,7 +120,7 @@ asMates(object, ...) <- value
 \S4method{quickCountBam}{BamFile}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
 \S4method{coverage}{BamFile}(x, shift=0L, width=NULL, weight=1L, ..., param = ScanBamParam())
 \S4method{summarizeOverlaps}{GRanges,BamFile}(features, reads, mode, ignore.strand=FALSE, ..., 
-    inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE, param=ScanBamParam()) 
+    inter.feature=TRUE, singleEnd=TRUE, fragments=FALSE, param=ScanBamParam()) 
 \S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., 
     param=ScanBamParam(), singleEnd=TRUE)
 }
@@ -164,8 +164,10 @@ asMates(object, ...) <- value
       as mates. See \sQuote{Fields} section for details.}
 
     \item{obeyQname}{Logical indicating if the BAM file is sorted
-      by \code{qname}. Use not encouraged in Bioconductor > 2.12.
-      See \sQuote{Fields} section for details.}
+      by \code{qname}. In Bioconductor > 2.12 paired-end files do
+      not need to be sorted by \code{qname}. Instead use
+      \code{asMates=TRUE} for reading paired-end data. See 
+      \sQuote{Fields} section for details.}
 
     \item{value}{Logical value for setting \code{asMates} and
       \code{obeyQname} in a BamFile instance.}
@@ -257,10 +259,15 @@ asMates(object, ...) <- value
       FALSE. Flags, tags and ranges may be specified in the
       \code{ScanBamParam} for fine tuning of results.}
 
-      \item{obeyQname: }{A logical(0) indicating if the file was sorted by qname.
-        Note: In Bioconductor > 2.12 the prefered approach to reading
-        paired-end data is to use \code{asMates=TRUE} instead of
-        \code{obeyQname}.}
+      \item{obeyQname: }{A logical(0) indicating if the file was sorted by 
+        qname. In Bioconductor > 2.12 paired-end files do not need to be 
+        sorted by \code{qname}. Instead set \code{asMates=TRUE} in the
+        \code{BamFile} when using \code{readGAlignmentsListFromBam}.
+
+        When counting paired-end data with \code{summarizeOverlaps}, 
+        setting \code{singleEnd=FALSE} will trigger paired-end reading and 
+        counting. It is fine to also set \code{asMates=TRUE} in the 
+        \code{BamFile} but is not necessary if \code{singleEnd=FALSE}.}
   }
 }
 
