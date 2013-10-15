@@ -261,7 +261,7 @@ setMethod(show, "BamViews", function(object) {
 
 setMethod("summarizeOverlaps", c("BamViews", "missing"),
 function(features, reads, mode, ignore.strand=FALSE, 
-         ..., inter.feature=TRUE, singleEnd=TRUE, fragments=TRUE,
+         ..., inter.feature=TRUE, singleEnd=TRUE, fragments=FALSE,
          param=ScanBamParam())
 {
     se <- callGeneric(bamRanges(features), BamFileList(bamPaths(features)), 
