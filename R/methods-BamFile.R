@@ -466,9 +466,7 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
              with.which_label=FALSE)
 {
     if (!asMates(file)) {
-        warning("'asMates' should be TRUE; use readGAlignments() for ",
-                "single-end data.")
-        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
+        #bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
     } else {
         bamWhat(param) <- union("mates", bamWhat(param))
     }
@@ -491,14 +489,14 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
                        seqlengths=seqlengths)
     gal <- .bindExtraData(gal, use.names=FALSE, param, bamcols,
                           with.which_label=with.which_label)
-    if (!asMates(file))
-        f <- seq_along(gal)
-    else
-        f <- bamcols$groupid 
-    gal <- split(gal, f)
-
+    if (asMates(file)) {
+        gal <- unname(split(gal, bamcols$groupid))
+        mcols(gal)$mates <- unique(splitAsList(bamcols$mates, bamcols$groupid))
+    } else {
+        gal <- unname(split(gal, seq_along(gal)))
+    }
     if (use.names)
-        names(gal) <- unique(split(bamcols$qname, f))
+        names(gal) <- unique(splitAsList(bamcols$qname, bamcols$groupid))
 
     gal
 }

@@ -1,0 +1,85 @@
+%\VignetteIndexEntry{Using samtools C libraries}
+%\VignetteDepends{}
+%\VignetteKeywords{Short read, I/0, samtools}
+%\VignettePackage{Rsamtools}
+\documentclass{article}
+
+<<style, echo=FALSE, results=tex>>=
+BiocStyle::latex()
+@
+\newcommand{\bam}{\texttt{BAM}}
+
+\title{Using samtools C libraries with \Biocpkg{Rsamtools}}
+\author{Martin Morgan}
+\date{Modified: 21 March, 2011. Compiled: \today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+This document is meant for package developers wanting to use the
+\href{http://samtools.sourceforge.net/}{samtools} C libraries provided
+by \Biocpkg{Rsamtools}. The instructions here are based on the `Writing R
+Extensions' manual associated with R-2.13; consult the current version
+of the manual for up-to-date instructions.
+
+\section{Background}
+
+\Biocpkg{Rsamtools} arranges to install static versions of the \verb|libbam|
+and \verb|libbcf| libraries. The idea is that other packages can use
+these to implement C functionality that uses these libraries. This
+means that the samtools libraries are available in a consistent
+version to users across platforms, without requiring installation of
+additional software.
+
+\Biocpkg{Rsamtools} takes the following approach. On installation,
+\Biocpkg{Rsamtools} contains a snapshot of the samtools library source code
+under \verb|src/samtools|. \Biocpkg{Rsamtools} makes static version(s) of the
+samtools libraries \verb|libbam.a| and \verb|libbcf.a|. These static
+libraries are specific to the operating system on which \Biocpkg{Rsamtools}
+is being installed, are found under \verb|usrlib${R_ARCH}| in the user
+library location specified by the mechanism (e.g.,
+\Rfunction{biocLite}, \Rfunction{install.packages}) used to install
+\Biocpkg{Rsamtools}. At the same time, \Biocpkg{Rsamtools} copies headers required to
+use the library to the location \verb|include/samtools|.
+
+\section{Use}
+
+To use these libraries, the third party package developer needs to (1)
+discover the appropriate header files when their package is built, and
+(2) locate the static library when their package is used.
+
+To discover appropriate header files at package installation time, add
+\begin{verbatim}
+LinkingTo: Rsamtools
+\end{verbatim}
+to the \verb|DESCRIPTION| file, and reference the relevant include
+files as, for instance,
+\begin{verbatim}
+#include "samtools/bam.h"
+\end{verbatim}
+The content of the include files can be found in the \Biocpkg{Rsamtools}
+source (under \verb|src/samtools|) or at their installed location.
+
+Linking to the static libraries is accomplished by including the
+following code in \verb|src/Makevars.win| on Windows:
+\begin{verbatim}
+SAMVARS=$(shell echo 'cat(system.file("usretc", .Platform[["r_arch"]],\
+              "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
+      "${R_HOME}/bin/R" --vanilla --slave)
+include $(SAMVARS)
+\end{verbatim}
+or otherwise in \verb|src/Makevars|:
+\begin{verbatim}
+SAMVARS=`echo 'cat(system.file("usretc", .Platform[["r_arch"]],\
+              "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
+      "${R_HOME}/bin/R" --vanilla --slave`
+include $(SAMVARS)
+\end{verbatim}
+This updates the environment variables \verb|$PKG_CPPFLAGS| and
+\verb|$PKG_LIBS|; if your \verb|Makefile| modifies these also, be sure
+to use syntax like \verb|PKG_LIBS+=-l...|.
+
+\end{document}
