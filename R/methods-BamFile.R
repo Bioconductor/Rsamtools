@@ -466,7 +466,7 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
              with.which_label=FALSE)
 {
     if (!asMates(file)) {
-        #bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
+        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
     } else {
         bamWhat(param) <- union("mates", bamWhat(param))
     }
@@ -493,6 +493,7 @@ setMethod(readGAlignmentsListFromBam, "BamFile",
         gal <- unname(split(gal, bamcols$groupid))
         mcols(gal)$mates <- unique(splitAsList(bamcols$mates, bamcols$groupid))
     } else {
+        ## groupid=NULL when asMates=FALSE
         gal <- unname(split(gal, seq_along(gal)))
     }
     if (use.names)
