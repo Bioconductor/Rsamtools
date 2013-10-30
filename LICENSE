@@ -1,4 +1,5 @@
-All files in the src/samtools subdirectory are licensed as follows:
+All files in the src/samtools subdirectory, and
+inst/extdata/ex1.sam are licensed as follows:
 
 The MIT License
 
