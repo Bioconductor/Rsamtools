@@ -523,8 +523,5 @@ makeGAlignmentPairs <- function(x, use.names=FALSE, use.mcols=FALSE)
 ###
 
 makeGappedAlignmentPairs <- function(...)
-{
-    .Deprecated("makeGAlignmentPairs")
-    makeGAlignmentPairs(...)
-}
+    .Defunct("makeGAlignmentPairs")
 

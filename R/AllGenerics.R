@@ -177,26 +177,14 @@ setGeneric("isOpen")
 ###
 
 readBamGappedAlignments <- function(...)
-{
-    .Deprecated("readGAlignmentsFromBam")
-    readGAlignmentsFromBam(...)
-}
+    .Defunct("readGAlignmentsFromBam")
 
 readBamGappedReads <- function(...)
-{
-    .Deprecated("readGappedReadsFromBam")
-    readGappedReadsFromBam(...)
-}
+    .Defunct("readGappedReadsFromBam")
 
 readBamGappedAlignmentPairs <- function(...)
-{
-    .Deprecated("readGAlignmentPairsFromBam")
-    readGAlignmentPairsFromBam(...)
-}
+    .Defunct("readGAlignmentPairsFromBam")
 
 readBamGAlignmentsList <- function(...)
-{
-    .Deprecated("readGAlignmentsListFromBam")
-    readGAlignmentsListFromBam(...)
-}
+    .Defunct("readGAlignmentsListFromBam")
 
