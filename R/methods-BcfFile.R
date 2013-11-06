@@ -105,6 +105,12 @@ setMethod(isOpen, "BcfFile",
         df
     })
 
+    ## 'GT' first in order
+    if (length(tbls))
+        if (length(tbls$FORMAT))
+            if (any(GT <- rownames(tbls$FORMAT) %in% "GT"))
+                tbls$FORMAT <- rbind(tbls$FORMAT[GT,], tbls$FORMAT[!GT,]) 
+
     SimpleList(Reference=header[["Reference"]],
                Sample=header[["Sample"]],
                Header=c(DataFrameList(META=meta), tbls[unique(tags)]))
