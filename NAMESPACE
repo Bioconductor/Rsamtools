@@ -17,11 +17,9 @@ importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
 import(IRanges)
 
 importFrom(GenomicRanges, GRanges, GAlignments, GAlignmentPairs,
-           Seqinfo, seqinfo, Union, IntersectionNotEmpty, IntersectionStrict,
-           findSpliceOverlaps)
+           Seqinfo, seqinfo, Union, IntersectionNotEmpty, IntersectionStrict)
 
-importMethodsFrom(GenomicRanges, seqnames, strand, summarizeOverlaps,
-                  findSpliceOverlaps)
+importMethodsFrom(GenomicRanges, seqnames, strand)
 
 importClassesFrom(GenomicRanges, GRanges,
                   GAlignments, GAlignmentPairs, GAlignmentsList, Seqinfo)
@@ -38,8 +36,7 @@ exportPattern("^[^\\.]")
 
 export(path)
 
-exportMethods(length, names, "[", "[[", show, getSeq, seqinfo,
-              summarizeOverlaps, findSpliceOverlaps)
+exportMethods(length, names, "[", "[[", show, getSeq, seqinfo)
 
 S3method(close, BamFile)
 S3method(close, BcfFile)

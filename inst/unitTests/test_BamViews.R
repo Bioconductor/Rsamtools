@@ -113,32 +113,6 @@ test_BamViews_auto.range <- function()
                    bamRanges(bv))
 }
     
-test_BamViews_readGAlignmentsFromBam <- function()
-{
-    checkTrue(validObject(readGAlignmentsFromBam(BamViews())))
-    src <- system.file("unitTests", "cases", package="Rsamtools")
-    fl <- c(system.file("extdata", "ex1.bam", package="Rsamtools"),
-            file.path(src, "ex1_shuf1000.bam"))
-    bv <- BamViews(fl, auto.range=TRUE)
-    rng <- bamRanges(bv)
-    aln <- readGAlignmentsFromBam(bv)
-    checkEquals(length(bamPaths(bv)), length(aln))
-
-    fl <- c(fl, tempfile())
-    bv <- BamViews(fl, bamRanges=rng)
-    msg <- NULL
-    suppressWarnings({
-        tryCatch({
-            aln <- readGAlignmentsFromBam(bv)
-        }, error=function(err) {
-            msg <<- conditionMessage(err)
-        })
-    })
-    tst <- sprintf("'readGAlignmentsFromBam' failed on '%s'",
-                   names(bv)[3])
-    checkIdentical(tst, msg)
-}
-
 .scanBam_ok <-
     function(target, current)
 {

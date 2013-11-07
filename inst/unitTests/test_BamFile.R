@@ -104,6 +104,7 @@ test_BamFile_asMates_all <- function()
 {
     scn <- scanBam(fl)[[1]]
     scnm <- scanBam(BamFile(fl, asMates=TRUE))[[1]]
+    library(GenomicAlignments)
     param <- ScanBamParam()
     galp <- readGAlignmentPairsFromBam(fl, use.names=TRUE)
 
@@ -150,6 +151,7 @@ test_BamFile_asMates_range <- function()
     param <- ScanBamParam(which=which, what=scanBamWhat())
     scn <- scanBam(fl, param=param)[[1]]
     scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
+    library(GenomicAlignments)
     param <- ScanBamParam(which=which)
     galp <- readGAlignmentPairsFromBam(fl, param=param, use.names=TRUE)
 

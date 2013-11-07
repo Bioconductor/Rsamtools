@@ -225,27 +225,6 @@ setMethod(countBam, "BamViews",
     .BamViews_delegate("countBam", file, fun, ..., param=param)
 })
 
-setMethod(readGAlignmentsFromBam, "BamViews",
-          function(file, index=file, ..., use.names=FALSE, param=NULL,
-                   with.which_label=FALSE)
-{
-    if (missing(index))
-        index <- bamIndicies(file)
-    if (is.null(param)) {
-        param <- ScanBamParam(which=bamRanges(file))
-    } else if (!identical(bamRanges(file), bamWhich(param))) {
-        warning("'bamRanges(file)' and 'bamWhich(param)' differ; using 'bamRanges(file)'")
-        bamWhich(param) <- bamRanges(file)
-    }
-    fun <- function(i, bamViews, verbose)
-        readGAlignmentsFromBam(file=bamPaths(bamViews)[i],
-                               index=bamIndicies(bamViews)[i],
-                               use.names=use.names,
-                               param=param,
-                               with.which_label=with.which_label)
-    .BamViews_delegate("readGAlignmentsFromBam", file, fun)
-})
-
 ## show
 setMethod(show, "BamViews", function(object) {
     cat(class(object), "dim:",
@@ -256,19 +235,3 @@ setMethod(show, "BamViews", function(object) {
         "\n")
 })
 
-
-## summarizeOverlaps methods
-
-setMethod("summarizeOverlaps", c("BamViews", "missing"),
-function(features, reads, mode, ignore.strand=FALSE, 
-         ..., inter.feature=TRUE, singleEnd=TRUE, fragments=FALSE,
-         param=ScanBamParam())
-{
-    se <- callGeneric(bamRanges(features), BamFileList(bamPaths(features)), 
-                      mode, ignore.strand, ..., inter.feature=inter.feature, 
-                      singleEnd=singleEnd, fragments=fragments, param=param)
-    colData(se)$bamSamples <- bamSamples(features)
-    colData(se)$bamIndicies <- bamIndicies(features)
-    exptData(se)$bamExperiment <- bamExperiment(features)
-    se 
-})

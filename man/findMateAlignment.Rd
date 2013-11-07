@@ -34,6 +34,7 @@ flushDumpedAlignments()
     columns \code{flag}, \code{mrnm}, and \code{mpos}. Typically obtained
     by loading aligned paired-end reads from a BAM file with:
     \preformatted{
+    library(GenomicAlignments)
     param <- ScanBamParam(what=c("flag", "mrnm", "mpos"))
     x <- readGAlignmentsFromBam(..., use.names=TRUE, param=param)
     }
@@ -52,8 +53,8 @@ flushDumpedAlignments()
 \subsection{Pairing algorithm used by findMateAlignment}{
 \code{findMateAlignment} is the power horse used by higher-level
 functions like \code{makeGAlignmentPairs} and
-\code{\link{readGAlignmentPairsFromBam}} for pairing the records
-loaded from a BAM file containing aligned paired-end reads.
+\code{\link[GenomicAlignments]{readGAlignmentPairsFromBam}} for pairing
+the records loaded from a BAM file containing aligned paired-end reads.
 
 It implements the following pairing algorithm:
 \itemize{
@@ -110,7 +111,8 @@ the file contains only primary reads) is optimal for the pairing algorithm.
 A greater value, say > 3, will significantly degrade its performance.
 An easy way to avoid this degradation is to load only primary alignments
 by setting the \code{isNotPrimaryRead} flag to \code{FALSE} in ScanBamParam().
-See examples in \code{?readGAlignmentPairsFromBam} for how to do this.
+See examples in \code{?\link[GenomicAlignments]{readGAlignmentPairsFromBam}}
+in the \pkg{GenomicAlignments} package for how to do this.
 }
 
 \subsection{Ambiguous pairing}{
@@ -186,8 +188,9 @@ with ambiguous pairing, and dumping them in a place from which they can be
 retrieved later (i.e. after \code{findMateAlignment} has returned) for
 further examination (see "Dumped alignments" subsection below for the details).
 In other words, alignments that cannot be paired unambiguously are not paired
-at all. Concretely, this means that \code{\link{readGAlignmentPairs}}
-is guaranteed to return a \link[GenomicRanges]{GAlignmentPairs} object
+at all. Concretely, this means that
+\code{\link[GenomicAlignments]{readGAlignmentPairs}} is guaranteed to return
+a \link[GenomicRanges]{GAlignmentPairs} object
 where every pair was formed in an non-ambiguous way. Note that, in practice,
 this approach doesn't seem to leave aside a lot of records because ambiguous
 pairing events seem pretty rare.
@@ -235,14 +238,16 @@ automatically flushed at the beginning of a call to \code{findMateAlignment}.
 \seealso{
   \link[GenomicRanges]{GAlignments-class},
   \link[GenomicRanges]{GAlignmentPairs-class},
-  \code{\link{readGAlignmentsFromBam}},
-  \code{\link{readGAlignmentPairsFromBam}}
+  \code{\link[GenomicAlignments]{readGAlignmentsFromBam}},
+  \code{\link[GenomicAlignments]{readGAlignmentPairsFromBam}}
 }
 
 \examples{
 bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools",
                        mustWork=TRUE)
 param <- ScanBamParam(what=c("flag", "mrnm", "mpos"))
+
+library(GenomicAlignments)  # for readGAlignmentsFromBam()
 x <- readGAlignmentsFromBam(bamfile, use.names=TRUE, param=param)
 mate <- findMateAlignment(x)
 head(mate)

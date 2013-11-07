@@ -132,7 +132,7 @@ head(do.call("DataFrame", lst))
 @ 
 Often, an alternative is to use a \Rclass{ScanBamParam} object with
 desired fields specified in \Rcode{what} as an argument to
-\Rfunction{GenomicRanges::readGAlignments}; the specified fields
+\Rfunction{GenomicAlignments::readGAlignments}; the specified fields
 are added as columns to the returned \Rclass{GAlignments}.
 
 The \bam{} file in the previous example includes an index, represented
@@ -179,7 +179,7 @@ with \Rcode{type="bam"} will read \bam{} files in to an
 argument, just as \Rfunction{scanBam}, so the user can control which
 portions of the file are input. Similar input facilities are available
 through the \Rfunction{readGAlignments} function in
-\Rpackage{GenomicRanges}.  
+\Rpackage{GenomicAlignments}.  
 
 Additional ways of interacting with \bam{} files include
 \Rfunction{scanBamHeader} (to extract header information) and
@@ -351,6 +351,7 @@ transcripts; by loading the \Rpackage{parallel} package, we tell
 \Rpackage{parallel} package does not provide parallel functionality on
  Windows computers)
 <<readGAlignmentsFromBam, eval=FALSE>>=
+library(GenomicAlignments)
 library(parallel)
 options(srapply_fapply="parallel", mc.cores=detectCores())
 olaps <- readGAlignmentsFromBam(bv)

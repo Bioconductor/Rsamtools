@@ -99,30 +99,6 @@ setGeneric("BamViews",
            standardGeneric("BamViews"),
            signature="bamRanges")
 
-setGeneric("readGAlignmentsFromBam",
-           function(file, index=file, ..., use.names=FALSE, param=NULL,
-                    with.which_label=FALSE)
-           standardGeneric("readGAlignmentsFromBam"),
-           signature="file")
-
-setGeneric("readGappedReadsFromBam",
-           function(file, index=file, use.names=FALSE, param=NULL,
-                    with.which_label=FALSE)
-           standardGeneric("readGappedReadsFromBam"),
-           signature="file")
-
-setGeneric("readGAlignmentPairsFromBam",
-           function(file, index=file, use.names=FALSE, param=NULL,
-                    with.which_label=FALSE)
-           standardGeneric("readGAlignmentPairsFromBam"),
-           signature="file")
-
-setGeneric("readGAlignmentsListFromBam",
-           function(file, index=file, ..., use.names=FALSE, 
-                    param=ScanBamParam(), with.which_label=FALSE)
-           standardGeneric("readGAlignmentsListFromBam"),
-           signature="file")
-
 ## tabix
 
 setGeneric("seqnamesTabix", function(file, ...)
@@ -170,21 +146,4 @@ setGeneric("asMates<-",
            function(object, ..., value) standardGeneric("asMates<-"))
 
 setGeneric("isOpen")
-
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Old stuff.
-###
-
-readBamGappedAlignments <- function(...)
-    .Defunct("readGAlignmentsFromBam")
-
-readBamGappedReads <- function(...)
-    .Defunct("readGappedReadsFromBam")
-
-readBamGappedAlignmentPairs <- function(...)
-    .Defunct("readGAlignmentPairsFromBam")
-
-readBamGAlignmentsList <- function(...)
-    .Defunct("readGAlignmentsListFromBam")
 

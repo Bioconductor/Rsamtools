@@ -32,10 +32,6 @@
 \alias{filterBam,BamFile-method}
 \alias{indexBam,BamFile-method}
 \alias{sortBam,BamFile-method}
-\alias{readGAlignmentsFromBam,BamFile-method}
-\alias{readGappedReadsFromBam,BamFile-method}
-\alias{readGAlignmentPairsFromBam,BamFile-method}
-\alias{readGAlignmentsListFromBam,BamFile-method}
 
 \alias{mergeBam,BamFileList-method}
 % counting 
@@ -50,7 +46,6 @@
 \alias{findSpliceOverlaps,character,ANY-method}
 \alias{findSpliceOverlaps,BamFile,ANY-method}
 \alias{quickCountBam,BamFile-method}
-\alias{coverage,BamFile-method}
 
 \alias{show,BamFile-method}
 \alias{show,BamFileList-method}
@@ -104,21 +99,12 @@ asMates(object, ...) <- value
 ## reading
 
 \S4method{scanBam}{BamFile}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
-\S4method{readGAlignmentsFromBam}{BamFile}(file, index=file, ..., use.names=FALSE, param=NULL,
-                       with.which_label=FALSE)
-\S4method{readGappedReadsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL,
-                       with.which_label=FALSE)
-\S4method{readGAlignmentPairsFromBam}{BamFile}(file, index=file, use.names=FALSE, param=NULL,
-                           with.which_label=FALSE)
-\S4method{readGAlignmentsListFromBam}{BamFile}(file, index=file, ...,
-    use.names=FALSE, param=ScanBamParam(), with.which_label=FALSE)
 
 ## counting
 
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{quickCountBam}{BamFile}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
-\S4method{coverage}{BamFile}(x, shift=0L, width=NULL, weight=1L, ..., param = ScanBamParam())
 \S4method{summarizeOverlaps}{GRanges,BamFile}(features, reads, mode, ignore.strand=FALSE, ..., 
     inter.feature=TRUE, singleEnd=TRUE, fragments=FALSE, param=ScanBamParam()) 
 \S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., 
@@ -136,10 +122,6 @@ asMates(object, ...) <- value
       the first argument specifying the paths to the index files, or
       \code{character()} to indicate that no index file is available. See
       \code{\link{BamFile}}.
-
-      For \code{coverage}, the arguments are passed to the
-      \code{\link[GenomicRanges:coverage,GAlignments-method]{coverage}}
-      method for \code{GAlignments} objects.
 
       For \code{summarizeOverlaps}, providing
       \code{count.mapped.reads=TRUE} include additional passes through the
@@ -190,18 +172,10 @@ asMates(object, ...) <- value
     \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
        further influence scanning, counting, or filtering.}
 
-    \item{use.names}{Construct the names of the returned object
-       from the query template names (QNAME field)? If not (the default),
-       then the returned object has no names.}
-
-    \item{with.which_label}{See \code{?readGAlignmentsFromBam}.}
-
     \item{rw}{Mode of file; ignored.}
 
     \item{ignore.strand}{
       A logical value indicating if strand should be considered when matching.}
-
-    \item{shift, width, weight}{See \code{\link[IRanges:coverage]{coverage}}.}
 
     \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
 
@@ -262,7 +236,8 @@ asMates(object, ...) <- value
       \item{obeyQname: }{A logical(0) indicating if the file was sorted by 
         qname. In Bioconductor > 2.12 paired-end files do not need to be 
         sorted by \code{qname}. Instead set \code{asMates=TRUE} in the
-        \code{BamFile} when using \code{readGAlignmentsListFromBam}.
+        \code{BamFile} when using the \code{readGAlignmentsListFromBam}
+        function from the \pkg{GenomicAlignments} package.
 
         When counting paired-end data with \code{summarizeOverlaps}, 
         setting \code{singleEnd=FALSE} will trigger paired-end reading and 
@@ -347,18 +322,6 @@ asMates(object, ...) <- value
       by \code{mergeBam,character-method} are also available for
       \code{BamFileList}.}
 
-    \item{readGAlignmentsFromBam, readGappedReadsFromBam,
-          readGAlignmentPairsFromBam}{
-      Visit the path in \code{path(file)}, returning the result of
-      \code{readGAlignmentsFromBam}, \code{readGappedReadsFromBam},
-      or \code{readGAlignmentPairsFromBam} applied to the specified path.
-      See \code{\link{readGAlignmentsFromBam}}.}
-
-    \item{readGAlignmentsListFromBam}{
-      Visit the Bam file in \code{path(file)}, returning the result
-      of \code{readGAlignmentsListFromBam} applied to the specified path.
-      See \code{\link{readGAlignmentsListFromBam}}.} 
-
     \item{show}{Compactly display the object.}
 
   }
@@ -369,10 +332,13 @@ asMates(object, ...) <- value
 
 \seealso{
   \itemize{
-    \item \code{\link{readGAlignmentsFromBam}} 
-    \item \code{\link{readGAlignmentPairsFromBam}} 
-    \item \code{\link{readGAlignmentsListFromBam}} 
+    \item The \code{\link[GenomicAlignments]{readGAlignmentsFromBam}},
+          \code{\link[GenomicAlignments]{readGAlignmentPairsFromBam}},
+          and \code{\link[GenomicAlignments]{readGAlignmentsListFromBam}}
+          functions defined in the \pkg{GenomicAlignments} package.
+
     \item \code{\link[GenomicRanges]{summarizeOverlaps}} 
+
     \item \code{\link[GenomicRanges]{findSpliceOverlaps}} 
   }
 }

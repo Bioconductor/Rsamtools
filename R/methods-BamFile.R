@@ -144,6 +144,77 @@ setMethod(countBam, "BamFile",
     .countBam_postprocess(x, file, param)
 })
 
+### 'x' must be a list of length >= 1 where all the elements have the same
+### type so combining them is straightforward.
+.quickUnlist <- function(x)
+{
+    x1 <- x[[1L]]
+    if (is.factor(x1)) {
+        ## Fast unlisting of a list of factors that have all
+        ## the same levels in the same order.
+        structure(unlist(x), class="factor", levels=levels(x1))
+    } else {
+        do.call(c, x)  # doesn't work on list of factors
+    }
+}
+
+### NOTE: Not exported but used in the GenomicAlignments package!
+### 'bamfile' must be a BamFile object. Returns a named list with 1 element
+### per loaded column.
+load_bamcols_from_scanBam_res <- function(res, param, with.which_label=FALSE)
+{
+    if (!isTRUEorFALSE(with.which_label))
+        stop("'with.which_label' must be TRUE or FALSE")
+    which_label <- names(res)
+    names(res) <- NULL
+    ## Compute the "which_label" col.
+    ans3 <- list()
+    if (with.which_label) {
+        if (is.null(which_label)) {
+            warning("'which_label' is ignored when 'param' is missing or ",
+                    "doesn't have a 'which' component")
+        } else {
+            ## We want unique labels.
+            if (anyDuplicated(which_label))
+                which_label <- paste0(which_label, ".", seq_along(which_label))
+            ## Currently scanBam() should always output a 'res' of length != 0
+            ## but we test anyway just in case one day this changes.
+            if (length(res) == 0L) {
+                run_lens <- integer(0)
+            } else {
+                run_lens <- sapply(res, function(x) length(x[[1L]]))
+            }
+            which_label <- Rle(factor(which_label, levels=which_label),
+                               run_lens)
+            ans3 <- list(which_label=which_label)
+        }
+    }
+    ## Extract the "what" cols.
+    ans1 <- lapply(setNames(bamWhat(param), bamWhat(param)),
+                   function(nm) {
+                       tmp <- lapply(res, "[[", nm)
+                       .quickUnlist(tmp)
+                   })
+    ## Extract the "tag" cols.
+    ans2 <- lapply(setNames(bamTag(param), bamTag(param)),
+                   function(nm) {
+                       tmp <- lapply(res,
+                                     function(res_elt) {
+                                         tag <- res_elt[["tag"]]
+                                         tag_elt <- tag[[nm]]
+                                         ## Fill empty tag with NAs.
+                                         if (is.null(tag_elt)) {
+                                             count <- length(res_elt[["rname"]])
+                                             tag_elt <- rep.int(NA, count)
+                                         }
+                                         tag_elt
+                                     })
+                       .quickUnlist(tmp)
+                   })
+    ## Put all the cols together and return them.
+    c(ans1, ans2, ans3)
+}
+
 .filterBam_FilterRules <-
     function(file, destination, filter, param)
 {
@@ -179,7 +250,7 @@ setMethod(countBam, "BamFile",
 
         ans <- .io_bam(.bambuffer_parse, file, param=param, buf,
                        reverseComplement, tmpl)
-        ans <- DataFrame(.load_bamcols_from_scanBam_res(ans, param))
+        ans <- DataFrame(load_bamcols_from_scanBam_res(ans, param))
         ans <- eval(filter, ans)
         n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
     }
@@ -235,435 +306,6 @@ setMethod(sortBam, "BamFile",
                 byQname=byQname, maxMemory=maxMemory)
 })
 
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "readGAlignmentsFromBam", "readGappedReadsFromBam",
-### "readGAlignmentPairsFromBam", and "readGAlignmentsListFromBam" methods.
-###
-
-### A "flag filter" is represented as a 'flag' vector of length 2 with names
-### keep0 and keep1. The .combineBamFlagFilters() function performs a logical
-### AND between 2 "flag filters". It returns a "flag filter".
-.combineBamFlagFilters <- function(flagfilterA, flagfilterB)
-{
-    if (!identical(names(flagfilterA), c("keep0", "keep1"))
-     || !identical(names(flagfilterB), c("keep0", "keep1")))
-        stop("input must be BAM flag filters")
-    ans <- bamFlagAND(flagfilterA, flagfilterB)
-    if (!all(bamFlagAsBitMatrix(ans[["keep0"]]) |
-             bamFlagAsBitMatrix(ans[["keep1"]])))
-        stop("BAM flag filters to combine are incompatible")
-    ans
-}
-
-.normargParam <- function(param, flag0, what0)
-{
-    if (is.null(param))
-        param <- ScanBamParam()
-    bamFlag(param) <-
-        .combineBamFlagFilters(bamFlag(param, asInteger=TRUE), flag0)
-    bamWhat(param) <- union(bamWhat(param), what0)
-    param
-}
-
-### 'x' must be a list of length >= 1 where all the elements have the same
-### type so combining them is straightforward.
-.quickUnlist <- function(x)
-{
-    x1 <- x[[1L]]
-    if (is.factor(x1)) {
-        ## Fast unlisting of a list of factors that have all
-        ## the same levels in the same order.
-        structure(unlist(x), class="factor", levels=levels(x1))
-    } else {
-        do.call(c, x)  # doesn't work on list of factors
-    }
-}
-
-### 'bamfile' must be a BamFile object.
-### Returns a named list with 1 element per loaded column.
-.load_bamcols_from_scanBam_res <- function(res, param, with.which_label=FALSE)
-{
-    if (!isTRUEorFALSE(with.which_label))
-        stop("'with.which_label' must be TRUE or FALSE")
-    which_label <- names(res)
-    names(res) <- NULL
-    ## Compute the "which_label" col.
-    ans3 <- list()
-    if (with.which_label) {
-        if (is.null(which_label)) {
-            warning("'which_label' is ignored when 'param' is missing or ",
-                    "doesn't have a 'which' component")
-        } else {
-            ## We want unique labels.
-            if (anyDuplicated(which_label))
-                which_label <- paste0(which_label, ".", seq_along(which_label))
-            ## Currently scanBam() should always output a 'res' of length != 0
-            ## but we test anyway just in case one day this changes.
-            if (length(res) == 0L) {
-                run_lens <- integer(0)
-            } else {
-                run_lens <- sapply(res, function(x) length(x[[1L]]))
-            }
-            which_label <- Rle(factor(which_label, levels=which_label),
-                               run_lens)
-            ans3 <- list(which_label=which_label)
-        }
-    }
-    ## Extract the "what" cols.
-    ans1 <- lapply(setNames(bamWhat(param), bamWhat(param)),
-                   function(nm) {
-                       tmp <- lapply(res, "[[", nm)
-                       .quickUnlist(tmp)
-                   })
-    ## Extract the "tag" cols.
-    ans2 <- lapply(setNames(bamTag(param), bamTag(param)),
-                   function(nm) {
-                       tmp <- lapply(res,
-                                     function(res_elt) {
-                                         tag <- res_elt[["tag"]]
-                                         tag_elt <- tag[[nm]]
-                                         ## Fill empty tag with NAs.
-                                         if (is.null(tag_elt)) {
-                                             count <- length(res_elt[["rname"]])
-                                             tag_elt <- rep.int(NA, count)
-                                         }
-                                         tag_elt
-                                     })
-                       .quickUnlist(tmp)
-                   })
-    ## Put all the cols together and return them.
-    c(ans1, ans2, ans3)
-}
-
-.load_bamcols_from_bamfile <- function(bamfile, param, what0, ...,
-                                       with.which_label=FALSE)
-{
-    flag0 <- scanBamFlag(isUnmappedQuery=FALSE)
-    param <- .normargParam(param, flag0, what0)
-    res <- scanBam(bamfile, ..., param=param)
-    if (length(res) == 0L)  # should never happen
-        stop("scanBam() returned a list of length zero")
-    .load_bamcols_from_scanBam_res(res, param,
-                                   with.which_label=with.which_label)
-}
-
-.load_seqlengths_from_bamfile <- function(file, seqlevels)
-{
-    seqlengths <- scanBamHeader(file)[["targets"]]
-    if (is.null(seqlengths))
-        return(NULL)
-    bad <- setdiff(seqlevels, names(seqlengths))
-    if (length(bad) == 0L)
-        return(seqlengths)
-    bad <- paste(bad, collapse="' '")
-    msg <- sprintf("'rname' lengths not in BamFile header; seqlengths not used\n  file: %s\n  missing rname(s): '%s'",
-                   path(file), bad)
-    warning(msg)
-    NULL
-}
-
-### 'x' must be a GAlignments object.
-.bindExtraData <- function(x, use.names, param, bamcols,
-                           with.which_label=FALSE)
-{
-    if (use.names)
-        names(x) <- bamcols$qname
-    if (is.null(param))
-        return(x)
-    colnames <- c(bamWhat(param), bamTag(param))
-    if (with.which_label)
-        colnames <- c(colnames, "which_label")
-    if (length(colnames) != 0L) {
-        df <- do.call(DataFrame, bamcols[colnames])
-        ## Sadly, the DataFrame() constructor is mangling the duplicated
-        ## colnames to make them unique. Since we of course don't want this,
-        ## we need to fix them.
-        colnames(df) <- colnames
-        mcols(x) <- df
-    }
-    x
-}
-
-setMethod(readGAlignmentsFromBam, "BamFile",
-          function(file, index=file, ..., use.names=FALSE, param=NULL,
-                   with.which_label=FALSE)
-{
-    if (!isTRUEorFALSE(use.names))
-        stop("'use.names' must be TRUE or FALSE")
-    if (is.null(param))
-        param <- ScanBamParam()
-    if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
-    what0 <- c("rname", "strand", "pos", "cigar")
-    if (use.names)
-        what0 <- c(what0, "qname")
-    bamcols <- .load_bamcols_from_bamfile(file, param, what0, ...,
-                                          with.which_label=with.which_label)
-    seqlengths <- .load_seqlengths_from_bamfile(file, levels(bamcols[["rname"]]))
-    ans <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
-                       cigar=bamcols$cigar, strand=bamcols$strand,
-                       seqlengths=seqlengths)
-    .bindExtraData(ans, use.names, param, bamcols,
-                   with.which_label=with.which_label)
-})
-
-setMethod(readGappedReadsFromBam, "BamFile",
-          function(file, index=file, use.names=FALSE, param=NULL,
-                   with.which_label=FALSE)
-{
-    require(ShortRead)  # for the GappedReads() constructor
-    if (!isTRUEorFALSE(use.names))
-        stop("'use.names' must be TRUE or FALSE")
-    if (is.null(param))
-        param <- ScanBamParam()
-    if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
-    what0 <- c("rname", "strand", "pos", "cigar", "seq")
-    if (use.names)
-        what0 <- c(what0, "qname")
-    bamcols <- .load_bamcols_from_bamfile(file, param, what0,
-                                          with.which_label=with.which_label)
-    seqlengths <- .load_seqlengths_from_bamfile(file, levels(bamcols[["rname"]]))
-    ans <- GappedReads(seqnames=bamcols$rname, pos=bamcols$pos,
-                       cigar=bamcols$cigar, strand=bamcols$strand,
-                       qseq=bamcols$seq, seqlengths=seqlengths)
-    .bindExtraData(ans, use.names, param, bamcols,
-                   with.which_label=with.which_label)
-})
-
-setMethod(readGAlignmentPairsFromBam, "BamFile",
-          function(file, index=file, use.names=FALSE, param=NULL,
-                   with.which_label=FALSE)
-{
-    if (!isTRUEorFALSE(use.names))
-        stop("'use.names' must be TRUE or FALSE")
-    if (is.null(param))
-        param <- ScanBamParam()
-    if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
-    if (!is.na(yieldSize(file))) {
-        warning("'yieldSize' set to 'NA'", immediate.=TRUE)
-        yieldSize(file) <- NA_integer_
-    }
-    flag0 <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE)
-    what0 <- c("flag", "mrnm", "mpos")
-    param2 <- .normargParam(param, flag0, what0)
-    galn <- readGAlignmentsFromBam(file, use.names=TRUE, param=param2,
-                                   with.which_label=with.which_label)
-    if (is.null(param)) {
-        use.mcols <- FALSE
-    } else {
-        use.mcols <- c(bamWhat(param), bamTag(param))
-        if (with.which_label)
-            use.mcols <- c(use.mcols, "which_label")
-    }
-    makeGAlignmentPairs(galn, use.names=use.names, use.mcols=use.mcols)
-})
-
-setMethod(readGAlignmentsListFromBam, "BamFile", 
-    function(file, index=file, ..., use.names=FALSE, param=ScanBamParam(),
-             with.which_label=FALSE)
-{
-    if (!asMates(file)) {
-        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates"))
-    } else {
-        bamWhat(param) <- union("mates", bamWhat(param))
-    }
-    if (!isTRUEorFALSE(use.names))
-        stop("'use.names' must be TRUE or FALSE")
-
-    what0 <- c("rname", "strand", "pos", "cigar", "groupid")
-    if (use.names)
-        what0 <- c(what0, "qname")
-    .matesFromBam(file, use.names, param, what0, with.which_label) 
-})
-
-.matesFromBam <- function(file, use.names, param, what0, with.which_label)
-{
-    bamcols <- .load_bamcols_from_bamfile(file, param, what0, 
-                                          with.which_label=with.which_label)
-    seqlengths <- .load_seqlengths_from_bamfile(file, levels(bamcols$rname))
-    gal <- GAlignments(seqnames=bamcols$rname, pos=bamcols$pos,
-                       cigar=bamcols$cigar, strand=bamcols$strand,
-                       seqlengths=seqlengths)
-    gal <- .bindExtraData(gal, use.names=FALSE, param, bamcols,
-                          with.which_label=with.which_label)
-    if (asMates(file)) {
-        gal <- unname(split(gal, bamcols$groupid))
-        mcols(gal)$mates <- unique(splitAsList(bamcols$mates, bamcols$groupid))
-    } else {
-        ## groupid=NULL when asMates=FALSE
-        gal <- unname(split(gal, seq_along(gal)))
-    }
-    if (use.names)
-        names(gal) <- unique(splitAsList(bamcols$qname, bamcols$groupid))
-
-    gal
-}
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "summarizeOverlaps" methods.
-###
-
-setMethod("summarizeOverlaps", c("GRanges", "BamFile"),
-    function(features, reads, mode, ignore.strand=FALSE, ..., 
-             inter.feature=TRUE, singleEnd=TRUE, fragments=FALSE,
-             param=ScanBamParam())
-{
-    .checkArgs(reads, singleEnd, fragments)
-    .dispatchBamFiles(features, BamFileList(reads), mode, ignore.strand, ..., 
-                      inter.feature=inter.feature, singleEnd=singleEnd, 
-                      fragments=fragments, param=param)
-})
-
-setMethod("summarizeOverlaps", c("GRangesList", "BamFile"),
-    function(features, reads, mode, ignore.strand=FALSE, ..., 
-             inter.feature=TRUE, singleEnd=TRUE, fragments=FALSE, 
-             param=ScanBamParam())
-{
-    .checkArgs(reads, singleEnd, fragments)
-    .dispatchBamFiles(features, BamFileList(reads), mode, ignore.strand, ..., 
-                      inter.feature=inter.feature, singleEnd=singleEnd, 
-                      fragments=fragments, param=param)
-})
-
-.checkArgs <- function(bam, singleEnd, fragments)
-{
-    if (singleEnd) {
-        if (all(isTRUE(asMates(bam))))
-            stop("cannot specify both 'singleEnd=TRUE' and 'asMates=TRUE'")
-        if (fragments)
-            stop("when 'fragments=TRUE', 'singleEnd' should be FALSE")
-    ## all paired-end reading now goes through new C algo
-    } else {
-        asMates(bam) <- TRUE
-    }
-}
-
-.dispatchOverlaps <- GenomicRanges:::.dispatchOverlaps
-.countWithYieldSize <- function(FUN, features, bf, mode, ignore.strand, 
-                                inter.feature, param)
-{
-    if (is.na(yieldSize(bf))) {
-        x <- FUN(bf, param=param)
-        .dispatchOverlaps(features, x, mode, ignore.strand, inter.feature)
-    } else {
-        if (!isOpen(bf)) {
-            open(bf)
-            on.exit(close(bf))
-        }
-        ct <- integer(length(features))
-        while (length(x <- FUN(bf, param=param))) {
-            ct <- ct + .dispatchOverlaps(features, x, mode, ignore.strand,
-                                         inter.feature) 
-        }
-        ct
-    }
-}
-
-.getReadFunction <- function(singleEnd, fragments)
-{
-    if (singleEnd) {
-        FUN <- readGAlignmentsFromBam
-    } else {
-        if (fragments)
-            FUN <- readGAlignmentsListFromBam
-        else 
-            FUN <- readGAlignmentPairsFromBam
-    }
-
-    FUN
-}
-
-.dispatchBamFiles <-
-    function(features, reads, mode, ignore.strand, ...,
-             count.mapped.reads=FALSE,
-             inter.feature=TRUE, singleEnd=TRUE, fragments=FALSE,
-             param=ScanBamParam())
-{
-    FUN <- .getReadFunction(singleEnd, fragments)
-
-    if ("package:parallel" %in% search() & .Platform$OS.type != "windows")
-        lapply <- parallel::mclapply
-
-    cts <- lapply(setNames(seq_along(reads), names(reads)), 
-               function(i, FUN, reads, features, mode, ignore.strand, 
-                        inter.feature, param) {
-                   bf <- reads[[i]]
-                   .countWithYieldSize(FUN, features, bf, mode, ignore.strand, 
-                                       inter.feature, param) 
-               }, FUN, reads, features, mode=match.fun(mode), ignore.strand, 
-               inter.feature, param
-           ) 
-
-    counts <- as.matrix(do.call(cbind, cts))
-    if (count.mapped.reads) {
-        countBam <- countBam(reads)
-        flag <- scanBamFlag(isUnmappedQuery=FALSE)
-        param <- ScanBamParam(flag=flag, what="seq")
-        colData <- DataFrame(countBam[c("records", "nucleotides")],
-                             mapped=countBam(reads, param=param)$records,
-                             row.names=colnames(counts))
-    } else {
-        colData <- DataFrame(row.names=colnames(counts))
-    }
-    SummarizedExperiment(assays=SimpleList(counts=counts),
-                         rowData=features, colData=colData)
-}
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "findSpliceOverlaps" methods.
-###
-
-setMethod("findSpliceOverlaps", c("character", "ANY"),
-          function(query, subject, ignore.strand=FALSE, ...,
-                   param=ScanBamParam(), singleEnd=TRUE)
-{
-    findSpliceOverlaps(BamFile(query), subject, ignore.strand, ...,
-                       param=param, singleEnd=singleEnd)
-})
-
-setMethod("findSpliceOverlaps", c("BamFile", "ANY"),
-    function(query, subject, ignore.strand=FALSE, ...,
-             param=ScanBamParam(), singleEnd=TRUE)
-{
-    findSpliceOverlaps(.readRanges(query, param, singleEnd), subject,
-                       ignore.strand, ...)
-})
-
-.readRanges <- function(bam, param, singleEnd)
-{
-    if (!"XS" %in% bamTag(param))
-        bamTag(param) <- c(bamTag(param), "XS")
-    if (singleEnd)
-        reads <- readGAlignmentsFromBam(bam, param=param)
-    else {
-        reads <- readGAlignmentPairsFromBam(path(bam), param=param)
-        first_xs <- mcols(first(reads))$XS
-        last_xs <- mcols(last(reads))$XS
-        if (!is.null(first_xs) && !is.null(last_xs)) {
-            xs <- first_xs
-            xs[is.na(xs)] <- last_xs[is.na(xs)]
-            mcols(reads)$XS <- xs
-        }
-    }
- 
-    metadata(reads)$bamfile <- bam
- 
-    reads
-}
-
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "coverage" methods.
-###
-
-setMethod("coverage", "BamFile",
-          function(x, shift=0L, width=NULL, weight=1L, ...,
-                   param = ScanBamParam())
-          coverage(readGAlignmentsFromBam(x, param = param),
-                   shift=shift, width=width, weight=weight, ...)
-          )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### "quickCountBam" methods.
