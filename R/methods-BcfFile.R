@@ -43,17 +43,20 @@ setMethod(isOpen, "BcfFile",
     h <- h[!duplicated(h)]
     ## simple key=value pairs --> DataFrame
     rex <- "^[[:alnum:]]+=[^<]"
-    x <- strsplit(grep(rex, h, value=TRUE), "=")
-    rnms <- sapply(x, "[[", 1)
-    if (is(rnms, "character")) {
-        if (any(duplicated(rnms))) { 
-            warning("duplicate keys in header will be forced to unique ",
-                    "rownames")
-            rnms <- make.unique(rnms)
+    if (length(h1 <- grep(rex, h, value=TRUE))) {
+        idx <- regexpr("=", h1, fixed=TRUE) ## first match
+        rnms <- substring(h1, 1, idx - 1)
+        if (is(rnms, "character")) {
+            if (any(duplicated(rnms))) { 
+                warning("duplicate keys in header will be forced to unique ",
+                        "rownames")
+                rnms <- make.unique(rnms)
+            }
         }
-    }
-    meta <- DataFrame(row.names=rnms,
-                      Value=sapply(x, "[[", 2))
+        meta <- DataFrame(row.names=rnms, Value=substring(h1, idx + 1))
+    } else {
+        meta <- DataFrame()
+    } 
 
     ## key=<values> as SimpleList of DataFrame's
     rex <- "^([[:alnum:]]+)=<(.*)>"
