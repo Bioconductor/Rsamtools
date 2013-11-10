@@ -1,4 +1,4 @@
-// BamIterator.hpp:
+// BamIterator.h:
 // Virtual iterator class with concrete subclasses of
 // BamRangeIterator and BamFileIterator.
 
@@ -6,7 +6,7 @@
 #define BAMITERATOR_H
 
 #include <set>
-#include "Template.hpp"
+#include "Template.h"
 
 
 class BamIterator {

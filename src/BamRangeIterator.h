@@ -1,10 +1,10 @@
-// BamFileIterator.hpp:
+// BamFileIterator.h:
 // Iterator used when reading ranges from a bam file.
 
 #ifndef BAMRANGEITERATOR_H
 #define BAMRANGEITERATOR_H
 
-#include "BamIterator.hpp"
+#include "BamIterator.h"
 
 
 class BamRangeIterator : public BamIterator {

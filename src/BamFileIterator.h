@@ -1,10 +1,10 @@
-// BamFileIterator.hpp:
+// BamFileIterator.h:
 // Iterator used when reading a complete bam file.
 
 #ifndef BAMFILEITERATOR_H
 #define BAMFILEITERATOR_H
 
-#include "BamIterator.hpp"
+#include "BamIterator.h"
 
 
 class BamFileIterator : public BamIterator {

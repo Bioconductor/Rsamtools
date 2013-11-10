@@ -1,6 +1,6 @@
 #include <Rdefines.h>
-#include "BamRangeIterator.hpp"
-#include "BamFileIterator.hpp"
+#include "BamRangeIterator.h"
+#include "BamFileIterator.h"
 #include "bam_mate_iter.h"
 
 #ifdef __cplusplus
