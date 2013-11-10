@@ -22,7 +22,7 @@ bam_mates_t *bam_mates_new()
 {
     bam_mates_t *mates = Calloc(1, bam_mates_t);
     mates->n = 0;
-    mates->mated = false;
+    mates->mated = NA_INTEGER;
     mates->bams = NULL;
     return mates;
 }

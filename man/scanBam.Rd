@@ -242,8 +242,8 @@ mergeBam(files, destination, ...)
       for a \code{GAlignmentsList} object.
 
     \item mates: Returned (always) when \code{asMates=TRUE} in a BamFile
-      object. This is a logical vector indicating mate status of 
-      each record.
+      object. This is a factor indicating status (\code{mated},
+      \code{ambiguous}, \code{unmated}) of each record.
   }
 
   \code{scanBamHeader} returns a list, with one element for each file

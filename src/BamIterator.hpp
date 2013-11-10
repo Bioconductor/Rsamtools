@@ -5,6 +5,7 @@
 #ifndef BAMITERATOR_H
 #define BAMITERATOR_H
 
+#include <set>
 #include "Template.hpp"
 
 
@@ -19,7 +20,9 @@ public:
     typedef map<string, Template> Templates;
     Templates templates;
     queue<list<const bam1_t *> > complete;
+    queue<list<const bam1_t *> > ambiguous;
     queue<list<const bam1_t *> > unmated;
+    set<string> touched_templates;
 
     // constructor / destructor
     BamIterator(const bam_index_t *bindex) :
@@ -30,15 +33,22 @@ public:
             bam_destroy1(bam);
     }
 
+    void mate_touched_templates() {
+        for (set<string>::iterator it=touched_templates.begin();
+             it != touched_templates.end(); ++it) {
+            templates[*it].mate(complete);
+            if (templates[*it].empty())
+                templates.erase(*it);
+        }
+        touched_templates.clear();
+    }
+
     // process
     void process(const bam1_t *bam) {
         // FIXME: combination of RG and qname?
         const string s = bam1_qname(bam);
-        bool mates = templates[s].add_segment(bam, complete);
-        if (mates) {
-            if (templates[s].size() == 0)
-                templates.erase(s);
-        }
+        if (templates[s].add_segment(bam))
+            touched_templates.insert(s);
     }
 
     // yield
@@ -49,14 +59,18 @@ public:
             finalize_inprogress(bfile);
 
         list<const bam1_t *> elts;
-        bool mated = false;
+        int mated = 1;
         if (!complete.empty()) {
             elts = complete.front();
             complete.pop();
-            mated = true;
+        } else if (!ambiguous.empty()) {
+            elts = ambiguous.front();
+            ambiguous.pop();
+            mated = 2;
         } else if (!unmated.empty()) {
             elts = unmated.front();
             unmated.pop();
+            mated = 3;
         }
 
         bam_mates_realloc(result, elts.size(), mated);
@@ -70,9 +84,10 @@ public:
 
     virtual void finalize_inprogress(bamFile bfile) {
         Templates::iterator it;
-        // push 'inprogress' and 'invalid' to 'unmated'
+        // push 'Template::ambiguous' to 'ambiguous',
+        // 'Template::inprogress' and 'Template::invalid' to 'unmated'
         for (it = templates.begin(); it != templates.end(); ++it)
-            it->second.cleanup(unmated);
+            it->second.cleanup(ambiguous, unmated);
         templates.clear();
     }
 

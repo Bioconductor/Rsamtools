@@ -148,6 +148,7 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
 				 int irange)
 {
     /* FIXME: replace mrnm '=' with rname */
+    const char *mates_lvls[] = { "mated", "ambiguous", "unmated" };
     int i, j;
     SEXP r, s, strand_lvls;
     r = VECTOR_ELT(sbd->result, irange);
@@ -262,6 +263,7 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
             s = Rf_lengthgets(s, sbd->icnt);
             SET_VECTOR_ELT(r, i, s);
             memcpy(INTEGER(s), sbd->mates, sbd->icnt * sizeof(int));
+            _as_factor(s, mates_lvls, 3);
             Free(sbd->mates);
             break;
         default:

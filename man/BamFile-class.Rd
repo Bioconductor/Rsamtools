@@ -205,12 +205,15 @@ asMates(object, ...) <- value
       on a \code{BamFileList} does not alter existing yield sizes
       set on the individual \code{BamFile} instances.}
 
-    \item{asMates: }{A logical indicating if the records should be 
-      returned as mated pairs. When \code{TRUE} scanBam attempts
-      to \code{mate} (pair) the records and returns two additional 
-      fields of \code{groupid} and \code{mates}. \code{groupid} is 
-      an integer vector of unique group ids; \code{mates} is a logical
-      that is TRUE for records successfully paired by the algorithm.
+    \item{asMates: }{A logical indicating if the records should be
+      returned as mated pairs. When \code{TRUE} \code{scanBam} attempts
+      to mate (pair) the records and returns two additional fields
+      \code{groupid} and \code{mates}. \code{groupid} is an integer
+      vector of unique group ids; \code{mates} is a factor with level
+      \code{mated} for records successfully paired by the algorithm,
+      \code{ambiguous} for records that are possibly mates but cannot be
+      assigned unambiguously, or \code{unmated} for reads that did not
+      have valid mates.
 
       Mate criteria:
       \itemize{
@@ -229,9 +232,8 @@ asMates(object, ...) <- value
               segment2 \code{mpos} matches segment1 \code{pos}
       }
 
-      Records not passing these criteria are returned with mate status
-      FALSE. Flags, tags and ranges may be specified in the
-      \code{ScanBamParam} for fine tuning of results.}
+      Flags, tags and ranges may be specified in the \code{ScanBamParam}
+      for fine tuning of results.}
 
       \item{obeyQname: }{A logical(0) indicating if the file was sorted by 
         qname. In Bioconductor > 2.12 paired-end files do not need to be 

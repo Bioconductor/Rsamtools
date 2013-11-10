@@ -110,12 +110,12 @@ test_BamFile_asMates_all <- function()
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
-    matenames <- scnm$qname[scnm$mates] 
+    matenames <- scnm$qname[scnm$mates == "mated"] 
     checkTrue(all(names(galp) %in% matenames))
 
     ## non-mates off last
-    max1 <- max(which(scnm$mates))
-    min0 <- min(which(!scnm$mates))
+    max1 <- max(which(scnm$mates == "mated"))
+    min0 <- min(which(scnm$mates != "mated"))
     checkTrue(max1 < min0)
 
     ## match GAlignmentPairs
@@ -162,8 +162,8 @@ test_BamFile_asMates_range <- function()
     checkTrue(length(scnm$qname) == length(scnm$groupid))
 
     ## non-mates off last
-    max1 <- max(which(scnm$mates))
-    min0 <- min(which(!scnm$mates))
+    max1 <- max(which(scnm$mates == "mated"))
+    min0 <- min(which(scnm$mates != "mated"))
     checkTrue(max1 < min0)
 
     ## range - subset
@@ -176,7 +176,7 @@ test_BamFile_asMates_range <- function()
     scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
     checkTrue(length(scn$qname) == 8)
     checkTrue(length(scnm$qname) == 16)
-    checkTrue(sum(scnm$mates) == 16)
+    checkTrue(sum(scnm$mates == "mated") == 16)
 
     ## range - all records
     which <- GRanges(c("seq1", "seq2"), IRanges(start=c(0, 0), end=c(3000, 3000)))
@@ -188,8 +188,8 @@ test_BamFile_asMates_range <- function()
 
     len_range <- length(range2A$qname) + length(range2B$qname)
     checkTrue(len_range == length(scnm1$qname))
-    mates_range <- sum(range2A$mates, range2B$mates)
-    checkTrue(mates_range == sum(scnm1$mates))
+    mates_range <- sum(range2A$mates == "mated", range2B$mates == "mated")
+    checkTrue(mates_range == sum(scnm1$mates == "mated"))
     mates_partition <- length(range2A$.partition) + length(range2B$.partition)
     checkTrue(mates_partition == length(scnm1$.partition))
 }

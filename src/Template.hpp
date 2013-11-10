@@ -17,7 +17,7 @@ class Template {
     typedef Segments::const_iterator const_iterator;
 
     char *rg, *qname;
-    Segments inprogress, invalid; 
+    Segments inprogress, ambiguous, invalid; 
 
     // FIXME: check RG retrieval
     const int readgroup_q(const bam1_t *mate) const {
@@ -40,8 +40,9 @@ public:
 
     Template() : rg('\0') {}
 
-    size_t size() const { 
-        return (inprogress.size()); 
+    bool empty() const {
+        return inprogress.empty() && invalid.empty() &&
+            ambiguous.empty();
     }
 
     // is_valid checks the following bit flags:
@@ -97,8 +98,8 @@ public:
     }
 
     void add_to_complete(const bam1_t *bam, const bam1_t *mate,
-                         queue<list<const bam1_t *> > &complete) {
-        list<const bam1_t *> tmp;
+                         queue<Segments> &complete) {
+        Segments tmp;
         if (bam->core.flag & BAM_FREAD1) {
             tmp.push_back(bam);
             tmp.push_back(mate);
@@ -110,8 +111,7 @@ public:
     }
 
     // Returns true if segment added was a mate
-    bool add_segment(const bam1_t *bam1,
-                     queue<list<const bam1_t *> > &complete) {
+    bool add_segment(const bam1_t *bam1) {
         bam1_t *bam = bam_dup1(bam1);
         if (!is_valid(bam)) {
             invalid.push_back(bam);
@@ -124,66 +124,106 @@ public:
             uint8_t *aux = bam_aux_get(bam, "RG");
             if (aux != 0)
                 rg = bam_aux2Z(aux);
-            inprogress.push_back(bam);
-        // existing template with 'inprogress' records
-        } else if (inprogress.size() > 0) {
-            Segments::iterator it = inprogress.begin();
-            while (it != inprogress.end()) {
-                if (is_mate(bam, *it)) {
-                    add_to_complete(bam, *it, complete);
-                    inprogress.erase(it); 
-                    return true;
-                } else it++;
-            }
-            inprogress.push_back(bam);
-        // existing template with no 'inprogress' records
-        } else {
-            inprogress.push_back(bam);
         }
-        return false;
+        inprogress.push_back(bam);
+        return true;
+    }
+
+    void mate(queue<Segments> &complete) {
+        const int unmated=-1, multiple=-2, processed=-3;
+        vector<pair<int, const bam1_t *> >
+            status(inprogress.size(), pair<int, const bam1_t *>(unmated, NULL));
+        Segments::iterator it0;
+
+        // identify unambiguous and ambigous mates
+        it0 = inprogress.begin();
+        for (int i = 0; i < inprogress.size(); ++i) {
+            status[i].second = *it0;
+            Segments::iterator it1 = it0;
+            for (int j = i + 1; j < inprogress.size(); ++j) {
+                ++it1;
+                if (is_mate(*it0, *it1)) {
+                    status[i].first = status[i].first == unmated ? j : multiple;
+                    status[j].first = status[j].first == unmated ? i : multiple;
+                }
+            }
+            ++it0;
+        }
+
+        // process unambiguous and ambigous mates
+        for (int i = 0; i < status.size(); ++i) {
+            if (status[i].first == unmated)
+                continue;
+            if (status[i].first >= 0 && status[status[i].first].first >= 0) {
+                // unambiguous mates
+                add_to_complete(status[i].second,
+                                status[status[i].first].second,
+                                complete);
+                status[status[i].first].first = processed;
+                status[i].first = processed;
+            } else if (status[i].first != processed) {
+                // ambigous mates, added to 'ambigous' queue
+                ambiguous.push_back(status[i].second);
+                status[i].first = processed;
+            }
+            ++it0;
+        }
+
+        // remove segments that have been assigned to complete or
+        // ambiguous queue
+        it0 = inprogress.begin();
+        for (int i = 0; i != status.size(); ++i) {
+            if (status[i].first == processed) {
+                it0 = inprogress.erase(it0);
+            } else {
+                ++it0;
+            }
+        }
     }
 
     // (BamRangeIterator only)
     void mate_inprogress_segments(bamFile bfile, const bam_index_t * bindex,
-                                  queue<list<const bam1_t *> > &complete) {
+                                  queue<Segments> &complete) {
+        Segments found(inprogress);
         bam1_t *bam = bam_init1();
 
-        iterator it = inprogress.begin();
         // search for mate for each 'inprogress' segment
-        while (it != inprogress.end()) {
-            bool mate_found = false;
+        iterator it = found.begin();
+        while (it != found.end()) {
+            bool touched = false;
             const bam1_t *curr = *it;
             const int tid = curr->core.mtid;
             const int beg = curr->core.mpos;
 
-            bam_iter_t iter = bam_iter_query(bindex, tid, beg, beg + 1);
             // search all records that overlap the iterator
+            bam_iter_t iter = bam_iter_query(bindex, tid, beg, beg + 1);
             while (bam_iter_read(bfile, iter, bam) >= 0) {
                 if (beg == -1)
                     break;
-                if (is_valid(bam) && is_template(bam) && is_mate(curr, bam)) {
-                    mate_found = true;
-                    break;
-                }
+                if (is_valid(bam) && is_template(bam) && is_mate(curr, bam))
+                    touched = touched || add_segment(bam);
             }
             bam_iter_destroy(iter);
-            if (mate_found) {
-                iterator it0 = it++;
-                add_to_complete(bam_dup1(bam), curr, complete);
-                inprogress.erase(it0);
-            } else it++;
+
+            if (touched)
+                mate(complete);
+
+            ++it;
         }
 
         bam_destroy1(bam);
     }
 
-    // cleanup
-    // move 'inprogress' and 'invalid' to iterator 'unmated'
-    void cleanup(queue<list<const bam1_t *> > &unmated) {
-        if  (!invalid.empty()) 
+    // cleanup: move 'ambigous' to ambigous_queue; move 'inprogress'
+    // and 'invalid' to iterator 'invalid_queue'
+    void cleanup(queue<Segments> &ambiguous_queue,
+                 queue<Segments> &invalid_queue) {
+        if (!ambiguous.empty())
+            ambiguous_queue.push(ambiguous);
+        if  (!invalid.empty())
             inprogress.splice(inprogress.end(), invalid);
         if (!inprogress.empty()) {
-            unmated.push(inprogress);
+            invalid_queue.push(inprogress);
             inprogress.clear();
         }
     }

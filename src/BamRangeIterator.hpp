@@ -31,9 +31,10 @@ class BamRangeIterator : public BamIterator {
 		iter_done = done = true;
             } else if (!complete.empty()) {
 		// stop if something to yield AND finished position
-		    done = (bam->core.tid != tid) || (bam->core.pos != pos);
-		}
+                done = (bam->core.tid != tid) || (bam->core.pos != pos);
+            }
 	} while (!done);
+        mate_touched_templates();
     }
 
     void finalize_inprogress(bamFile bfile) {
