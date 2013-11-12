@@ -64,7 +64,7 @@ rng <- with(tbl, {
     rng0
 })
 
-library(Rsamtools)
+library(GenomicAlignments)
 library(multicore)
 bv <- BamViews(fls, sub(".bai", "", indexFiles),
                bamRanges=GRanges(seqnames=seqnames(rng),

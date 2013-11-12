@@ -53,7 +53,7 @@ for \Biocpkg{Rsamtools} is as a starting point for creating \R{} objects
 suitable for a diversity of work flows, e.g., \Rclass{AlignedRead}
 objects in the \Rpackage{ShortRead} package (for quality assessment
 and read manipulation), or \Rclass{GAlignments} objects in
-\Rpackage{GenomicRanges} package (for RNA-seq and other
+\Rpackage{GenomicAlignments} package (for RNA-seq and other
 applications). Those desiring more functionality are encouraged to
 explore \software{samtools} and related software efforts.
 
@@ -179,7 +179,7 @@ with \Rcode{type="bam"} will read \bam{} files in to an
 argument, just as \Rfunction{scanBam}, so the user can control which
 portions of the file are input. Similar input facilities are available
 through the \Rfunction{readGAlignments} function in
-\Rpackage{GenomicAlignments}.  
+\Rpackage{GenomicAlignments}.
 
 Additional ways of interacting with \bam{} files include
 \Rfunction{scanBamHeader} (to extract header information) and
