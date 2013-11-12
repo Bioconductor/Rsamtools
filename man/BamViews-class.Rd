@@ -29,8 +29,6 @@
 \alias{countBam,BamViews-method}
 \alias{show,BamViews-method}
 
-\alias{summarizeOverlaps,BamViews,missing-method}
-
 
 \title{Views into a set of BAM files}
 \description{
@@ -78,12 +76,6 @@ bamDirname(x, ...) <- value
 
 ## Show
 \S4method{show}{BamViews}(object)
-
-## Counting
-\S4method{summarizeOverlaps}{BamViews,missing}(
-    features, reads, mode, ignore.strand=FALSE, ..., inter.feature=TRUE,
-    singleEnd=TRUE, fragments=FALSE, param=ScanBamParam()) 
-
 }
 
 \arguments{
@@ -135,73 +127,6 @@ bamDirname(x, ...) <- value
 
   \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
      further influence scanning or counting.}
-
-  \item{reads}{
-    Missing when a \code{\linkS4class{BamViews}} is the only argument
-    supplied to \code{summarizeOverlaps}. \code{reads} are the files 
-    specified in \code{bamPaths} of the \code{\linkS4class{BamViews}} object.}
-
-  \item{features}{
-    A \code{\linkS4class{BamFileList}}. \code{features} are extracted from 
-    the \code{bamRanges} of the \code{\linkS4class{BamViews}} object.
-
-    Metadata from \code{bamPaths} and \code{bamSamples} are stored in the
-    \code{colData} slot of the \code{\linkS4class{SummarizedExperiment}} 
-    object. \code{bamExperiment} metadata are in the \code{exptData}
-    slot. }
-
-  \item{mode}{
-    A function that defines the method to be used when a read overlaps
-    more than one feature. Pre-defined options are "Union",
-    "IntersectionStrict", or "IntersectionNotEmpty" and are designed
-    after the counting modes available in the HTSeq package by Simon
-    Anders (see references).
-
-    \itemize{
-      \item "Union" : (Default) Reads that overlap any portion of exactly one 
-            feature are counted. Reads that overlap multiple features are 
-            discarded. 
-      \item "IntersectionStrict" : A read must fall completely "within" the
-            feature to be counted. If a read overlaps multiple features but
-            falls "within" only one, the read is counted for that feature.
-            If the read is "within" multiple features, the read is discarded. 
-      \item "IntersectionNotEmpty" : A read must fall in a unique disjoint
-            region of a feature to be counted. When a read overlaps multiple
-            features, the features are partitioned into disjoint intervals. 
-            Regions that are shared between the features are discarded leaving
-            only the unique disjoint regions. If the read overlaps one of 
-            these remaining regions, it is assigned to the feature the
-            unique disjoint region came from.
-   }}
-
-  \item{ignore.strand}{
-    A logical value indicating if strand should be considered when matching.}
-
-  \item{singleEnd}{
-    A logical value indicating if the bam files contain single or paired-end
-    reads.}
-
-  \item{inter.feature}{
-    A logical indicating if the counting \code{mode} should be aware of
-    overlapping features. When TRUE (default), reads mapping to multiple
-    features are dropped (i.e., not counted). When FALSE, these reads are
-    retained and a count is assigned to each feature they map to.
-
-    There are 6 possible combinations of the \code{mode} and
-    \code{inter.feature} arguments. When \code{inter.feature=FALSE} the
-    behavior of modes \sQuote{Union} and \sQuote{IntersectionNotEmpty} are the
-    same resulting in 5 distinct ways to count.}
-
-  \item{fragments}{
-    A logical value indicating if singletons, reads with unmapped pairs
-    and other fragments should be included in the counting. When
-    \code{fragments=FALSE} only reads paired with the algorithm described
-    at ?findMateAlignment are counted. When \code{fragments=TRUE} (default)
-    all singletons, reads with unmapped pairs and other fragments are
-    counted in addition to the reads paired with the ?findMateAlignment
-    algorithm. This argument applies to paired-end reads only so
-    \code{singleEnd} must be TRUE.}
-
 }
 
 \section{Objects from the Class}{
@@ -304,14 +229,6 @@ bamDirname(x, ...) <- value
 }
 \author{Martin Morgan}
 
-\seealso{
-  \code{\link[GenomicAlignments]{readGAlignmentsFromBam}} in the
-  \pkg{GenomicAlignments} package.
-  The \code{GenomicRanges} package is where the \code{summarizeOverlaps}
-  method originates.
-}
-
-
 \examples{
 fls <- system.file("extdata", "ex1.bam", package="Rsamtools",
                    mustWork=TRUE)
@@ -325,20 +242,6 @@ v[1:5,]
 bamRanges(v[c(1:5, 11:15),])
 bamDirname(v) <- getwd()
 v
-
-##---------------------------------------------------------------------------
-## summarizeOverlaps() with BamViews
-##
-
-## bamSamples and bamPaths metadata are included in the colData.
-## bamExperiment metadata is put into the exptData slot.
-fl <- system.file("extdata", "ex1.bam", package="Rsamtools", mustWork=TRUE)
-rngs <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
-samp <- DataFrame(info="test", row.names="ex1")
-view <- BamViews(fl, bamSamples=samp, bamRanges=rngs)
-se <- summarizeOverlaps(view, mode=Union, ignore.strand=TRUE)
-colData(se)
-exptData(se)
 }
 
 \keyword{classes}

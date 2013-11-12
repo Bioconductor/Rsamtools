@@ -35,12 +35,6 @@
 
 \alias{mergeBam,BamFileList-method}
 % counting 
-\alias{summarizeOverlaps,GRanges,character-method}
-\alias{summarizeOverlaps,GRangesList,character-method}
-\alias{summarizeOverlaps,GRanges,BamFileList-method}
-\alias{summarizeOverlaps,GRangesList,BamFileList-method}
-\alias{summarizeOverlaps,GRanges,BamFile-method}
-\alias{summarizeOverlaps,GRangesList,BamFile-method}
 \alias{findSpliceOverlaps,character-method}
 \alias{findSpliceOverlaps,BamFile-method}
 \alias{findSpliceOverlaps,character,ANY-method}
@@ -105,8 +99,6 @@ asMates(object, ...) <- value
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{quickCountBam}{BamFile}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
-\S4method{summarizeOverlaps}{GRanges,BamFile}(features, reads, mode, ignore.strand=FALSE, ..., 
-    inter.feature=TRUE, singleEnd=TRUE, fragments=FALSE, param=ScanBamParam()) 
 \S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., 
     param=ScanBamParam(), singleEnd=TRUE)
 }
@@ -122,11 +114,6 @@ asMates(object, ...) <- value
       the first argument specifying the paths to the index files, or
       \code{character()} to indicate that no index file is available. See
       \code{\link{BamFile}}.
-
-      For \code{summarizeOverlaps}, providing
-      \code{count.mapped.reads=TRUE} include additional passes through the
-      BAM file to collect statistics like those from \code{countBam}.
-
     }
 
     \item{con}{An instance of \code{BamFile}.}
@@ -178,9 +165,6 @@ asMates(object, ...) <- value
       A logical value indicating if strand should be considered when matching.}
 
     \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
-
-    \item{features, reads, mode, inter.feature, fragments, singleEnd}{
-      See \code{\link[GenomicRanges:summarizeOverlaps]{summarizeOverlaps}}} 
 
     \item{query, subject}{
       See \code{\link[GenomicRanges:findSpliceOverlaps]{findSpliceOverlaps}}} 
@@ -339,7 +323,7 @@ asMates(object, ...) <- value
           and \code{\link[GenomicAlignments]{readGAlignmentsListFromBam}}
           functions defined in the \pkg{GenomicAlignments} package.
 
-    \item \code{\link[GenomicRanges]{summarizeOverlaps}} 
+    \item \code{\link[GenomicAlignments]{summarizeOverlaps}} 
 
     \item \code{\link[GenomicRanges]{findSpliceOverlaps}} 
   }
@@ -394,8 +378,8 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
 }, bf, rng)
 close(bf)
 
-## See ?'summarizeOverlaps' and ?'findSpliceOverlaps' in the 
-## GenomicRanges package for examples with these functions.
+## See ?'findSpliceOverlaps' in the GenomicRanges package for
+## examples with this function.
 }
 
 \keyword{classes}

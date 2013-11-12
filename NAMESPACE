@@ -17,7 +17,7 @@ importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
 import(IRanges)
 
 importFrom(GenomicRanges, GRanges, GAlignments, GAlignmentPairs,
-           Seqinfo, seqinfo, Union, IntersectionNotEmpty, IntersectionStrict)
+           Seqinfo, seqinfo)
 
 importMethodsFrom(GenomicRanges, seqnames, strand)
 
