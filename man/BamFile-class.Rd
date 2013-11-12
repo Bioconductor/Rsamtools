@@ -161,13 +161,16 @@ asMates(object, ...) <- value
 
     \item{rw}{Mode of file; ignored.}
 
-    \item{ignore.strand}{
-      A logical value indicating if strand should be considered when matching.}
-
     \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
 
     \item{query, subject}{
       See \code{\link[GenomicRanges:findSpliceOverlaps]{findSpliceOverlaps}}} 
+
+    \item{ignore.strand}{
+      A logical value indicating if strand should be considered when matching.}
+
+    \item{singleEnd}{
+      See \code{\link[GenomicAlignments]{summarizeOverlaps}}.}
 
 }
 

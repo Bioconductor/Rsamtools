@@ -161,7 +161,7 @@ setMethod(countBam, "BamFile",
 ### NOTE: Not exported but used in the GenomicAlignments package!
 ### 'bamfile' must be a BamFile object. Returns a named list with 1 element
 ### per loaded column.
-load_bamcols_from_scanBam_res <- function(res, param, with.which_label=FALSE)
+.load_bamcols_from_scanBam_res <- function(res, param, with.which_label=FALSE)
 {
     if (!isTRUEorFALSE(with.which_label))
         stop("'with.which_label' must be TRUE or FALSE")
@@ -250,7 +250,7 @@ load_bamcols_from_scanBam_res <- function(res, param, with.which_label=FALSE)
 
         ans <- .io_bam(.bambuffer_parse, file, param=param, buf,
                        reverseComplement, tmpl)
-        ans <- DataFrame(load_bamcols_from_scanBam_res(ans, param))
+        ans <- DataFrame(.load_bamcols_from_scanBam_res(ans, param))
         ans <- eval(filter, ans)
         n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
     }
