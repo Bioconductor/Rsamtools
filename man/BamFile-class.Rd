@@ -34,11 +34,7 @@
 \alias{sortBam,BamFile-method}
 
 \alias{mergeBam,BamFileList-method}
-% counting 
-\alias{findSpliceOverlaps,character-method}
-\alias{findSpliceOverlaps,BamFile-method}
-\alias{findSpliceOverlaps,character,ANY-method}
-\alias{findSpliceOverlaps,BamFile,ANY-method}
+% counting
 \alias{quickCountBam,BamFile-method}
 
 \alias{show,BamFile-method}
@@ -99,8 +95,6 @@ asMates(object, ...) <- value
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{quickCountBam}{BamFile}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
-\S4method{findSpliceOverlaps}{BamFile,ANY}(query, subject, ignore.strand=FALSE, ..., 
-    param=ScanBamParam(), singleEnd=TRUE)
 }
 
 \arguments{
@@ -162,16 +156,6 @@ asMates(object, ...) <- value
     \item{rw}{Mode of file; ignored.}
 
     \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
-
-    \item{query, subject}{
-      See \code{\link[GenomicRanges:findSpliceOverlaps]{findSpliceOverlaps}}} 
-
-    \item{ignore.strand}{
-      A logical value indicating if strand should be considered when matching.}
-
-    \item{singleEnd}{
-      See \code{\link[GenomicAlignments]{summarizeOverlaps}}.}
-
 }
 
 \section{Objects from the Class}{
@@ -326,9 +310,10 @@ asMates(object, ...) <- value
           and \code{\link[GenomicAlignments]{readGAlignmentsListFromBam}}
           functions defined in the \pkg{GenomicAlignments} package.
 
-    \item \code{\link[GenomicAlignments]{summarizeOverlaps}} 
-
-    \item \code{\link[GenomicRanges]{findSpliceOverlaps}} 
+    \item \code{\link[GenomicAlignments]{summarizeOverlaps}} and
+          \link[GenomicAlignments]{findSpliceOverlaps-methods} in the
+          \pkg{GenomicAlignments} package for methods that work on a
+          \link{BamFile} object.
   }
 }
 
@@ -380,9 +365,6 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
     alphabetFrequency(bam[["seq"]], baseOnly=TRUE, collapse=TRUE)
 }, bf, rng)
 close(bf)
-
-## See ?'findSpliceOverlaps' in the GenomicRanges package for
-## examples with this function.
 }
 
 \keyword{classes}
