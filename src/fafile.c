@@ -154,20 +154,17 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
     cachedXVectorList cached_ans = cache_XVectorList(ans);
 
     for (int i = 0; i < n; ++i) {
-        int len;
-        char *seqp = faidx_fetch_seq(fai, (char *) CHAR(STRING_ELT(seq, i)),
-                                     startp[i] - 1, endp[i] - 1, &len);
-        if (NULL == seqp)
+        cachedCharSeq cached_ans_elt = get_cachedXRawList_elt(&cached_ans, i);
+        int len = faidx_fetch_seq2(fai, CHAR(STRING_ELT(seq, i)),
+                                   startp[i] - 1, endp[i] - 1,
+                                   (char *) cached_ans_elt.seq);
+        if (len == -1)
             Rf_error(" record %d (%s:%d-%d) failed", i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
+        //printf("%d\n", len);
         if (len < widthp[i])
             Rf_error(" record %d (%s:%d-%d) was truncated", i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
-        cachedCharSeq cached_ans_elt = get_cachedXRawList_elt(&cached_ans, i);
-        /* cached_ans_elt->seq is a const char * so we need to cast it to
-           char * in order to write to it */
-        memcpy((char *) cached_ans_elt.seq, seqp, len * sizeof(char));
-        free(seqp);
         if (translate(&cached_ans_elt, INTEGER(lkup), LENGTH(lkup)) != 0)
             Rf_error(" record %d (%s:%d-%d) contains invalid DNA letters",
                      i + 1,
