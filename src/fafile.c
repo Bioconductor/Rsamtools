@@ -104,6 +104,31 @@ SEXP n_fa(SEXP ext)
     return ScalarInteger(faidx_fetch_nseq(fai));
 }
 
+/*
+ * Copy/pasted from Biostrings/src/XStringSet_io.c
+ * TODO: Put it in XVector C API for sharing.
+ */
+static int translate(cachedCharSeq *seq_data, const int *lkup, int lkup_length)
+{
+    char *dest;
+    int nbinvalid, i, j, key, val;
+
+    /* seq_data->seq is a const char * so we need to cast it to
+       char * before we can write to it */
+    dest = (char *) seq_data->seq;
+    nbinvalid = j = 0;
+    for (i = 0; i < seq_data->length; i++) {
+        key = (unsigned char) seq_data->seq[i];
+        if (key >= lkup_length || (val = lkup[key]) == NA_INTEGER) {
+            nbinvalid++;
+            continue;
+        }
+        dest[j++] = val;
+    }
+    seq_data->length = j;
+    return nbinvalid;
+}
+
 SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
 {
     _checkext(ext, FAFILE_TAG, "isOpen");
@@ -120,9 +145,14 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
     if (NULL == fai)
         Rf_error("'index' not available");
 
-    CharAEAE dna = new_CharAEAE(32767, 0);
+    SEXP width = PROTECT(NEW_INTEGER(n));
+    int *startp = INTEGER(start), *endp = INTEGER(end),
+        *widthp = INTEGER(width);
+    for (int i = 0; i < n; ++i)
+        widthp[i] = endp[i] - startp[i] + 1;
+    SEXP ans = PROTECT(alloc_XRawList("DNAStringSet", "DNAString", width));
+    cachedXVectorList cached_ans = cache_XVectorList(ans);
 
-    int *startp = INTEGER(start), *endp = INTEGER(end);
     for (int i = 0; i < n; ++i) {
         int len;
         char *seqp = faidx_fetch_seq(fai, (char *) CHAR(STRING_ELT(seq, i)),
@@ -130,9 +160,19 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
         if (NULL == seqp)
             Rf_error(" record %d (%s:%d-%d) failed", i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
-        append_string_to_CharAEAE(&dna, seqp);
+        if (len < widthp[i])
+            Rf_error(" record %d (%s:%d-%d) was truncated", i + 1,
+                     (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
+        cachedCharSeq cached_ans_elt = get_cachedXRawList_elt(&cached_ans, i);
+        /* cached_ans_elt->seq is a const char * so we need to cast it to
+           char * in order to write to it */
+        memcpy((char *) cached_ans_elt.seq, seqp, len * sizeof(char));
         free(seqp);
+        if (translate(&cached_ans_elt, INTEGER(lkup), LENGTH(lkup)) != 0)
+            Rf_error(" record %d (%s:%d-%d) contains invalid DNA letters",
+                     i + 1,
+                     (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
     }
-
-    return new_XRawList_from_CharAEAE("DNAStringSet", "DNAString", &dna, lkup);
+    UNPROTECT(2);
+    return ans;
 }
