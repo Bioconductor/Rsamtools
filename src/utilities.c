@@ -96,12 +96,12 @@ SEXP _as_XStringSet(const char **key, int len, const char *baseclass)
         INTEGER(width)[i] = strlen(key[i]);
     PROTECT(ans = alloc_XRawList(classname, baseclass, width));
 
-    cachedXVectorList cache;
-    cachedCharSeq dest;
-    cache = cache_XVectorList(ans);
+    XVectorList_holder holder;
+    Chars_holder dest;
+    holder = hold_XVectorList(ans);
     for (i = 0; i < len; ++i) {
         const char *seq = key[i];
-        dest = get_cachedXRawList_elt(&cache, i);
+        dest = get_elt_from_XRawList_holder(&holder, i);
         Ocopy_bytes_to_i1i2_with_lkup(0, dest.length - 1, (char *) dest.seq,
                                       dest.length, seq, strlen(seq), lkup0,
                                       lkup_length);

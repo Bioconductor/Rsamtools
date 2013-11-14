@@ -108,7 +108,7 @@ SEXP n_fa(SEXP ext)
  * Copy/pasted from Biostrings/src/XStringSet_io.c
  * TODO: Put it in XVector C API for sharing.
  */
-static int translate(cachedCharSeq *seq_data, const int *lkup, int lkup_length)
+static int translate(Chars_holder *seq_data, const int *lkup, int lkup_length)
 {
     char *dest;
     int nbinvalid, i, j, key, val;
@@ -151,13 +151,13 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
     for (int i = 0; i < n; ++i)
         widthp[i] = endp[i] - startp[i] + 1;
     SEXP ans = PROTECT(alloc_XRawList("DNAStringSet", "DNAString", width));
-    cachedXVectorList cached_ans = cache_XVectorList(ans);
+    XVectorList_holder ans_holder = hold_XVectorList(ans);
 
     for (int i = 0; i < n; ++i) {
-        cachedCharSeq cached_ans_elt = get_cachedXRawList_elt(&cached_ans, i);
+        Chars_holder ans_elt_holder = get_elt_from_XRawList_holder(&ans_holder, i);
         int len = faidx_fetch_seq2(fai, CHAR(STRING_ELT(seq, i)),
                                    startp[i] - 1, endp[i] - 1,
-                                   (char *) cached_ans_elt.seq);
+                                   (char *) ans_elt_holder.seq);
         if (len == -1)
             Rf_error(" record %d (%s:%d-%d) failed", i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
@@ -165,7 +165,7 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
         if (len < widthp[i])
             Rf_error(" record %d (%s:%d-%d) was truncated", i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
-        if (translate(&cached_ans_elt, INTEGER(lkup), LENGTH(lkup)) != 0)
+        if (translate(&ans_elt_holder, INTEGER(lkup), LENGTH(lkup)) != 0)
             Rf_error(" record %d (%s:%d-%d) contains invalid DNA letters",
                      i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
