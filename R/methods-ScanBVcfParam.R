@@ -66,6 +66,7 @@ bcfSamples <- function(object) slot(object, "samples")
 bcfTrimEmpty <- function(object) slot(object, "trimEmpty")
 bcfWhich <- function(object) slot(object, "which")
 
+.some <- BiocGenerics:::selectSome
 setMethod(show, "ScanBVcfParam", function(object)
 {
     .ptags <- function(tags) {
@@ -82,8 +83,8 @@ setMethod(show, "ScanBVcfParam", function(object)
     cat(sprintf("%s: %d elements\n", .clslbl("Which"),
                 length(bcfWhich(object))))
     cat(.clslbl("Fixed:"), .ptags(bcfFixed(object)), "\n")
-    cat(.clslbl("Info:"), .ptags(bcfInfo(object)), "\n")
-    cat(.clslbl("Geno:"), .ptags(bcfGeno(object)), "\n")
-    cat(.clslbl("Samples:"), .ptags(bcfSamples(object)), "\n")
+    cat(.clslbl("Info:"), .some(bcfInfo(object)), "\n")
+    cat(.clslbl("Geno:"), .some(bcfGeno(object)), "\n")
+    cat(.clslbl("Samples:"), .some(bcfSamples(object)), "\n")
 })
 
