@@ -179,8 +179,8 @@ asMates(object, ...) <- value
     \item{asMates: }{A logical indicating if the records should be
       returned as mated pairs. When \code{TRUE} \code{scanBam} attempts
       to mate (pair) the records and returns two additional fields
-      \code{groupid} and \code{mates}. \code{groupid} is an integer
-      vector of unique group ids; \code{mates} is a factor with level
+      \code{groupid} and \code{mate_status}. \code{groupid} is an integer
+      vector of unique group ids; \code{mate_status} is a factor with level
       \code{mated} for records successfully paired by the algorithm,
       \code{ambiguous} for records that are possibly mates but cannot be
       assigned unambiguously, or \code{unmated} for reads that did not
@@ -188,19 +188,14 @@ asMates(object, ...) <- value
 
       Mate criteria:
       \itemize{
-        \item Bit 0x1 (multiple segments) is 1.
-        \item Bit 0x4 (segment unmapped) is 0.
-        \item Bit 0x8 (next segment unmapped) is 0.
-        \item Bit 0x40 and 0x80 (first/last segment): 
-              Segments are a pair of first/last
-        \item Bit 0x100 (secondary alignment): 
-              Both segments are secondary OR both not secondary
-        \item Bit 0x2 (properly aligned):
-              Both segments are properly aligned 
-        \item \code{qname} match.
-        \item \code{tid} match.
-        \item segment1 \code{mpos} matches segment2 \code{pos} AND
-              segment2 \code{mpos} matches segment1 \code{pos}
+        \item Bit 0x40 and 0x80: Segments are a pair of first/last OR
+              neither segment is marked first/last
+        \item Bit 0x100: Both segments are secondary OR both not secondary
+        \item Bit 0x10 and 0x20: Segments are on opposite strands
+        \item mpos match:
+              segment1 mpos matches segment2 pos AND
+              segment2 mpos matches segment1 pos
+        \item tid match
       }
 
       Flags, tags and ranges may be specified in the \code{ScanBamParam}

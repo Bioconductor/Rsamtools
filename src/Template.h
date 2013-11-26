@@ -67,12 +67,11 @@ public:
     // 1. Bit 0x40 and 0x80: Segments are a pair of first/last OR
     //    neither segment is marked first/last
     // 2. Bit 0x100: Both segments are secondary OR both not secondary
-    // 3. Bit 0x2: Both segments properly aligned 
-    // 4. Bit 0x10 and 0x20: Segments are on opposite strands
-    // 5. mpos match:
+    // 3. Bit 0x10 and 0x20: Segments are on opposite strands
+    // 4. mpos match:
     //      segment1 mpos matches segment2 pos AND
     //      segment2 mpos matches segment1 pos
-    // 6. tid match
+    // 5. tid match
     bool is_mate(const bam1_t *bam, const bam1_t *mate) const {
         const bool bam_read1 = bam->core.flag & BAM_FREAD1;
         const bool mate_read1 = mate->core.flag & BAM_FREAD1;
@@ -80,8 +79,6 @@ public:
         const bool mate_read2 = mate->core.flag & BAM_FREAD2;
         const bool bam_secondary = bam->core.flag & BAM_FSECONDARY;
         const bool mate_secondary = mate->core.flag & BAM_FSECONDARY;
-        const bool bam_proper = bam->core.flag & BAM_FPROPER_PAIR;
-        const bool mate_proper = mate->core.flag & BAM_FPROPER_PAIR;
         const bool bam_rev = bam->core.flag & BAM_FREVERSE;
         const bool mate_rev = mate->core.flag & BAM_FREVERSE;
         const bool bam_mrev = bam->core.flag & BAM_FMREVERSE;
@@ -90,8 +87,7 @@ public:
             ((bam_read1 ^ bam_read2) && (mate_read1 ^ mate_read2)) &&
             (bam_read1 != mate_read1) &&
             (bam_secondary == mate_secondary) &&
-            (bam_proper && mate_proper) &&
-            ((bam_rev == mate_mrev) || (bam_mrev == mate_rev)) &&
+            (!bam_rev == mate_mrev || bam_rev == !mate_rev) &&
             (bam->core.pos == mate->core.mpos) && 
             (bam->core.mpos == mate->core.pos) &&
             (bam->core.mtid == mate->core.tid);
@@ -135,7 +131,7 @@ public:
             status(inprogress.size(), pair<int, const bam1_t *>(unmated, NULL));
         Segments::iterator it0;
 
-        // identify unambiguous and ambigous mates
+        // identify unambiguous and ambiguous mates
         it0 = inprogress.begin();
         for (int i = 0; i < inprogress.size(); ++i) {
             status[i].second = *it0;
@@ -214,8 +210,8 @@ public:
         bam_destroy1(bam);
     }
 
-    // cleanup: move 'ambigous' to ambigous_queue; move 'inprogress'
-    // and 'invalid' to iterator 'invalid_queue'
+    // cleanup: move 'ambiguous' to ambiguous_queue; move 'inprogress'
+    // and 'invalid' to 'invalid_queue'
     void cleanup(queue<Segments> &ambiguous_queue,
                  queue<Segments> &invalid_queue) {
         if (!ambiguous.empty())

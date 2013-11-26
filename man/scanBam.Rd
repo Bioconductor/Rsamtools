@@ -241,7 +241,7 @@ mergeBam(files, destination, ...)
       \code{groupid} values are used to create the partitioning 
       for a \code{GAlignmentsList} object.
 
-    \item mates: Returned (always) when \code{asMates=TRUE} in a BamFile
+    \item mate_status: Returned (always) when \code{asMates=TRUE} in a BamFile
       object. This is a factor indicating status (\code{mated},
       \code{ambiguous}, \code{unmated}) of each record.
   }

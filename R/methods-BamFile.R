@@ -122,7 +122,7 @@ setMethod(scanBam, "BamFile",
         stop(msg)
     }
     if (!asMates(file))
-        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mates")) 
+        bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mate_status")) 
     reverseComplement <- bamReverseComplement(param)
     tmpl <- .scanBam_template(param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
