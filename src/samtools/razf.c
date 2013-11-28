@@ -687,7 +687,7 @@ int razf_skip(RAZF* rz, int size){
 		}
 		if(rz->buf_flush) continue;
 		rz->buf_len = _razf_read(rz, rz->outbuf, RZ_BUFFER_SIZE);
-		if(rz->z_eof || rz->z_err) break;
+		if((rz->buf_len == 0  && rz->z_eof) || rz->z_err) break; /* MTM */
 	}
 	rz->out += ori_size - size;
 	return ori_size - size;
@@ -802,6 +802,8 @@ void razf_close(RAZF *rz){
 #ifndef _RZ_READONLY
 		razf_end_flush(rz);
 		deflateEnd(rz->stream);
+		razf_flush(rz);
+		add_zindex(rz, rz->in, rz->out);
 #ifdef _USE_KNETFILE
 		save_zindex(rz, rz->x.fpw);
 		if(is_big_endian()){

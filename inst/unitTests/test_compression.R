@@ -10,3 +10,10 @@ test_bgzip_openclose <- function()
     checkIdentical(TRUE, file.remove(fout))
     checkIdentical(0L, unlink(d, recursive=TRUE))
 }
+
+test_razip_small_files <- function()
+{
+    src <- system.file("extdata", "ce2dict1.fa", package="Rsamtools")
+    file.copy(src, dest <- tempfile())
+    checkIdentical(readLines(src), readLines(dest))
+}
