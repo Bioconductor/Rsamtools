@@ -362,6 +362,7 @@ download this data each time the vignette is run, we instead load it
 from disk
 %% 
 <<olaps>>=
+library(GenomicAlignments)
 load(system.file("extdata", "olaps.Rda", package="Rsamtools"))
 olaps
 head(olaps[[1]])
