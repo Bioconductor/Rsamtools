@@ -23,6 +23,10 @@ setGeneric("asBam",
            function(file, destination, ...)
            standardGeneric("asBam"))
 
+setGeneric("asSam",
+           function(file, destination, ...)
+           standardGeneric("asSam"))
+
 setGeneric("sortBam",
            function(file, destination, ...)
            standardGeneric("sortBam"))

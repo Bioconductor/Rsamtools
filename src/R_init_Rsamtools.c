@@ -32,7 +32,7 @@ static const R_CallMethodDef callMethods[] = {
     {".prefilter_bamfile", (DL_FUNC) & prefilter_bamfile, 7},
     {".filter_bamfile", (DL_FUNC) & filter_bamfile, 6},
     /* as_bam.c */
-    {".as_bam", (DL_FUNC) & as_bam, 2},
+    {".as_bam", (DL_FUNC) & as_bam, 3},
     /* io_sam.c */
     {".scan_bam_template", (DL_FUNC) & scan_bam_template, 1},
     {".scan_bam_cleanup", (DL_FUNC) & scan_bam_cleanup, 0},

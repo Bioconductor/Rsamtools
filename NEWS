@@ -1,6 +1,10 @@
 CHANGES IN VERSION 1.15.0
 -------------------------
 
+NEW FEATURES
+
+    o asSam converts BAM files to SAM files
+
 BUG FIXES
 
     o scanFa returns correct sequence at the very end of files

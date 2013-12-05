@@ -5,7 +5,6 @@
 
 SEXP read_bam_header(SEXP fname, SEXP mode);
 SEXP scan_bam_template(SEXP tags);
-SEXP as_bam(SEXP fname, SEXP destination);
 SEXP sort_bam(SEXP fname, SEXP destinationPrefix, SEXP isByQname,
               SEXP maxMemory);
 SEXP merge_bam(SEXP fnames, SEXP destination, SEXP overwrite,

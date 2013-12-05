@@ -9,6 +9,8 @@
 \alias{scanBamHeader,character-method}
 \alias{asBam}
 \alias{asBam,character-method}
+\alias{asSam}
+\alias{asSam,character-method}
 \alias{indexBam}
 \alias{indexBam,character-method}
 \alias{filterBam}
@@ -43,6 +45,9 @@ asBam(file, destination, ...)
 \S4method{asBam}{character}(file, destination, ...,
     overwrite=FALSE, indexDestination=TRUE)
 
+asSam(file, destination, ...)
+\S4method{asSam}{character}(file, destination, ..., overwrite=FALSE)
+
 filterBam(file, destination, index=file, ...)
 \S4method{filterBam}{character}(file, destination, index=file, ...,
     filter=FilterRules(), indexDestination=TRUE,
@@ -75,8 +80,8 @@ mergeBam(files, destination, ...)
 
   \item{destination}{The character(1) file name of the location where
     the sorted, filtered, or merged output file will be created. For
-    \code{asBam} and \code{sortBam} this is without the \dQuote{.bam}
-    file suffix.}
+    \code{asBam} \code{asSam}, and \code{sortBam} this is without the
+    \dQuote{.bam} file suffix.}
 
   \item{region}{A RangedData() instance with \code{>= 1} rows,
     specifying the region of the BAM files to merged.}
@@ -132,6 +137,9 @@ mergeBam(files, destination, ...)
   \code{samtools view -Sb file > destination}. The 'BAM' file is sorted
   and an index created on the destination (with extension '.bai') when
   \code{indexDestination=TRUE}.
+
+  \code{asSam} converts 'BAM' files to 'SAM' files, equivalent to the
+  \code{samtools view file > destination}.
 
   \code{filterBam} parses records in \code{file}. Records satisfying the
   \code{bamWhich} \code{bamFlag} and \code{bamSimpleCigar} criteria of
@@ -253,7 +261,7 @@ mergeBam(files, destination, ...)
   list corresponding to tags (e.g., \sQuote{@SQ}) found in the header,
   and the associated tag values.
 
-  \code{asBam} returns the file name of the BAM file.
+  \code{asBam}, \code{asSam} return the file name of the destination file.
 
   \code{sortBam} returns the file name of the sorted file.
 

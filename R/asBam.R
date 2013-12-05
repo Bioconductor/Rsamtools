@@ -1,3 +1,29 @@
+setMethod(asSam, "character",
+    function(file, destination, ..., overwrite=FALSE)
+{
+    file <- .normalizePath(file)
+    destination <- .normalizePath(destination)
+    d0 <- paste(destination, "sam", sep=".")
+
+    if (!overwrite && file.exists(d0)) {
+        msg <- sprintf("'%s' exists, '%s' is FALSE\n  %s: %s",
+                       "destination", "overwrite", "destination",
+                       d0)
+        stop(msg)
+    }
+
+    tryCatch({
+        result <- .Call(.as_bam, file, d0, FALSE)
+        if (!file.exists(d0))
+            stop("failed to create 'SAM' file")
+    }, error=function(err) {
+        msg <- sprintf("'asSam' %s\n  SAM file: '%s'\n",
+                       conditionMessage(err), file)
+        stop(msg)
+    })
+    d0
+})
+
 setMethod(asBam, "character",
     function(file, destination, ...,
              overwrite=FALSE, indexDestination=TRUE)
@@ -8,14 +34,14 @@ setMethod(asBam, "character",
 
     ofl <- tempfile()
     on.exit(unlink(ofl))
+    if (!overwrite && file.exists(d0)) {
+        msg <- sprintf("'%s' exists, '%s' is FALSE\n  %s: %s",
+                       "destination", "overwrite", "destination",
+                       d0)
+        stop(msg)
+    }
     tryCatch({
-        if (!overwrite && file.exists(d0)) {
-            msg <- sprintf("'%s' exists, '%s' is FALSE\n  %s: %s",
-                           "destination", "overwrite", "destination",
-                           d0)
-            stop(msg)
-        }
-        result <- .Call(.as_bam, file, ofl)
+        result <- .Call(.as_bam, file, ofl, TRUE)
         if (!file.exists(ofl))
             stop("failed to create 'BAM' file")
         if (indexDestination) {
