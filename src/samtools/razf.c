@@ -802,8 +802,8 @@ void razf_close(RAZF *rz){
 #ifndef _RZ_READONLY
 		razf_end_flush(rz);
 		deflateEnd(rz->stream);
-		razf_flush(rz);
-		add_zindex(rz, rz->in, rz->out);
+		razf_flush(rz);                  /* MTM */
+		add_zindex(rz, rz->in, rz->out); /* MTM */
 #ifdef _USE_KNETFILE
 		save_zindex(rz, rz->x.fpw);
 		if(is_big_endian()){
