@@ -22,7 +22,7 @@ importFrom(GenomicRanges, GRanges, GAlignments, GAlignmentPairs,
 importMethodsFrom(GenomicRanges, seqnames, strand)
 
 importClassesFrom(GenomicRanges, GRanges,
-                  GAlignments, GAlignmentPairs, GAlignmentsList, Seqinfo)
+                  GAlignments, GAlignmentPairs, Seqinfo)
 
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
