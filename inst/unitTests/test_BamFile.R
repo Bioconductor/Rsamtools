@@ -157,7 +157,7 @@ test_BamFile_asMates_range <- function()
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
-    matenames <- scnm$qname[scnm$mate_status] 
+    matenames <- scnm$qname[scnm$mate_status == "mated"] 
     checkTrue(all(names(galp) %in% matenames))
     checkTrue(length(scnm$qname) == length(scnm$groupid))
 

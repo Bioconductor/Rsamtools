@@ -84,10 +84,10 @@ test_TabixFile_header_remote <- function()
 
     fl <- sprintf("%s/%s",
         "http://1000genomes.s3.amazonaws.com/release",
-        "20110521/ALL.chr22.phase1_release_v3.20101123.snps_indels_svs.vcf.gz")
+        "20110521/ALL.chr22.phase1_release_v3.20101123.snps_indels_svs.genotypes.vcf.gz")
 
-    if (!tryCatch({ open(con <- url(fl)); close(con) },
-                  error=function(...) FALSE))
+    if (!is.null(tryCatch({open(con <- url(fl)); close(con)},
+                 error=function(...) FALSE)))
         return(TRUE)
 
     obs <- headerTabix(fl)
@@ -96,5 +96,5 @@ test_TabixFile_header_remote <- function()
     checkIdentical(exp, obs$indexColumns)
     checkIdentical(0L, obs$skip)
     checkIdentical("#", obs$comment)
-    checkIdentical(29L, length(obs$header))
+    checkIdentical(30L, length(obs$header))
 }
