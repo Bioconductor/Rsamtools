@@ -5,6 +5,12 @@ NEW FEATURES
 
     o asSam converts BAM files to SAM files
 
+    o razip, bgzip re-compress directly from .gz files
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o bgzip default extension changed to '.bgz'
+
 BUG FIXES
 
     o scanFa returns correct sequence at the very end of files

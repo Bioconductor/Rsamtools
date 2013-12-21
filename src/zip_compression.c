@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <errno.h>
+#include <zlib.h>
 #include "zip_compression.h"
 #include "bgzf.h"
 #include "razf.h"
@@ -35,33 +36,25 @@ void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
     }
 }
 
-void _zip_close(int infd, int outfd)
-{
-    if (-1L == close(infd))
-        _zip_error("closing input after compression: %s",
-                   strerror(errno), infd, outfd);
-    if (outfd >= 0) {
-	if (-1L == close(outfd))
-	    Rf_error("closing output after compression: %s",
-		     strerror(errno));
-    }
-}
-
 SEXP bgzip(SEXP file, SEXP dest)
 {
     static const int BUF_SIZE = 64 * 1024;
     void *buffer;
     int infd, outfd, cnt;
+    gzFile in;
     BGZF *outp;
 
     buffer = R_alloc(BUF_SIZE, sizeof(void *));
 
     _zip_open(file, dest, &infd, &outfd);
+    in = gzdopen(infd, "rb");
+    if (NULL == in)
+        _zip_error("opening input 'file'", NULL, infd, outfd);
     outp = bgzf_dopen(outfd, "w");
     if (NULL == outp)
         _zip_error("opening output 'dest'", NULL, infd, outfd);
 
-    while (0 < (cnt = read(infd, buffer, BUF_SIZE)))
+    while (0 < (cnt = gzread(in, buffer, BUF_SIZE)))
         if (0 > bgzf_write(outp, buffer, cnt))
             _zip_error("writing compressed output", NULL, infd, outfd);
     if (0 > cnt)
@@ -70,7 +63,8 @@ SEXP bgzip(SEXP file, SEXP dest)
 
     if (0 > bgzf_close(outp))
         Rf_error("closing compressed output");
-    _zip_close(infd, -1);
+    if (gzclose(in) != Z_OK)
+        _zip_error("closing input after compression", NULL, infd, outfd);
 
     return dest;
 }
@@ -80,16 +74,19 @@ SEXP razip(SEXP file, SEXP dest)
     static const int WINDOW_SIZE = 4096;
     void *buffer;
     int infd, outfd, cnt;
+    gzFile in;
     RAZF *outp;
 
     _zip_open(file, dest, &infd, &outfd);
-
+    in = gzdopen(infd, "rb");
+    if (NULL == in)
+        _zip_error("opening input 'file'", NULL, infd, outfd);
     outp = razf_dopen(outfd, "w");
     if (NULL == outp)
         _zip_error("opening output 'dest'", NULL, infd, outfd);
 
     buffer = R_alloc(WINDOW_SIZE, sizeof(const int));
-    while (0 < (cnt = read(infd, buffer, WINDOW_SIZE)))
+    while (0 < (cnt = gzread(in, buffer, WINDOW_SIZE)))
         if (0 > razf_write(outp, buffer, cnt))
             _zip_error("writing compressed output", NULL, infd, outfd);
     if (0 > cnt)
@@ -97,7 +94,8 @@ SEXP razip(SEXP file, SEXP dest)
                    strerror(errno), infd, outfd);
 
     razf_close(outp);
-    _zip_close(infd, -1);
+    if (gzclose(in) != Z_OK)
+        _zip_error("closing input after compression", NULL, infd, outfd);
 
     return dest;
 }

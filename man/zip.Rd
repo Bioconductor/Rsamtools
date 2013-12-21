@@ -18,15 +18,17 @@
 }
 \usage{
 
-bgzip(file, dest=sprintf("\%s.gz", file), overwrite = FALSE)
-razip(file, dest=sprintf("\%s.rz", file), overwrite = FALSE)
+bgzip(file, dest=sprintf("\%s.bgz", sub("\\.gz$", "", file)),
+      overwrite = FALSE)
+razip(file, dest=sprintf("\%s.rz", sub("\\.gz$", "", file)),
+      overwrite = FALSE)
 
 }
 
 \arguments{
 
-  \item{file}{A character(1) path to an existing file. This file will be
-    compressed.}
+  \item{file}{A character(1) path to an existing uncompressed or
+    gz-compressed file. This file will be compressed.}
 
   \item{dest}{A character(1) path to a file. This will be the compressed
     file. If \code{dest} exists, then it is only over-written when

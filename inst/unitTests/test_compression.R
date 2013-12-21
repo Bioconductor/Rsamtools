@@ -17,3 +17,13 @@ test_razip_small_files <- function()
     file.copy(src, dest <- tempfile())
     checkIdentical(readLines(src), readLines(dest))
 }
+
+test_razip_gzcompressed <- function()
+{
+    src <- system.file("extdata", "ce2dict1.fa", package="Rsamtools")
+    writeLines(readLines(src), gzfile(gzdest <- tempfile()))
+    rzdest <- razip(gzdest)
+    indexFa(rzdest)
+    fa <- scanFa(rzdest, param=as(seqinfo(FaFile(rzdest)), "GRanges"))
+    checkIdentical(fa, readDNAStringSet(src))
+}
