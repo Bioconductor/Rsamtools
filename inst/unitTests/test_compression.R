@@ -20,10 +20,18 @@ test_razip_small_files <- function()
 
 test_razip_gzcompressed <- function()
 {
-    src <- system.file("extdata", "ce2dict1.fa", package="Rsamtools")
-    writeLines(readLines(src), gzfile(gzdest <- tempfile()))
+    file.copy(system.file("extdata", "ce2dict1.fa", package="Rsamtools"),
+              src <- tempfile())
+    con <- gzfile(gzdest <- tempfile(), "wb")
+    writeLines(readLines(src), con, sep="\n")
+    close(con)
     rzdest <- razip(gzdest)
-    indexFa(rzdest)
-    fa <- scanFa(rzdest, param=as(seqinfo(FaFile(rzdest)), "GRanges"))
-    checkIdentical(fa, readDNAStringSet(src))
+    checkIdentical(src, indexFa(src))
+    checkIdentical(gzdest, indexFa(gzdest))
+    checkIdentical(rzdest, indexFa(rzdest))
+    src <- scanFa(src, param=as(seqinfo(FaFile(rzdest)), "GRanges"))
+    rz <- scanFa(rzdest, param=as(seqinfo(FaFile(rzdest)), "GRanges"))
+    gz <- scanFa(rzdest, param=as(seqinfo(FaFile(rzdest)), "GRanges"))
+    checkIdentical(as.character(src), as.character(rz))
+    checkIdentical(as.character(src), as.character(gz))
 }

@@ -18,9 +18,9 @@
 }
 \usage{
 
-bgzip(file, dest=sprintf("\%s.bgz", sub("\\.gz$", "", file)),
+bgzip(file, dest=sprintf("\%s.bgz", sub("\\\\.gz$", "", file)),
       overwrite = FALSE)
-razip(file, dest=sprintf("\%s.rz", sub("\\.gz$", "", file)),
+razip(file, dest=sprintf("\%s.rz", sub("\\\\.gz$", "", file)),
       overwrite = FALSE)
 
 }

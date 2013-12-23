@@ -138,10 +138,10 @@ public:
 
         // identify unambiguous and ambiguous mates
         it0 = inprogress.begin();
-        for (int i = 0; i < inprogress.size(); ++i) {
+        for (unsigned int i = 0; i < inprogress.size(); ++i) {
             status[i].second = *it0;
             Segments::iterator it1 = it0;
-            for (int j = i + 1; j < inprogress.size(); ++j) {
+            for (unsigned int j = i + 1; j < inprogress.size(); ++j) {
                 ++it1;
                 if (is_mate(*it0, *it1)) {
                     status[i].first = status[i].first == unmated ? j : multiple;
@@ -152,7 +152,7 @@ public:
         }
 
         // process unambiguous and ambigous mates
-        for (int i = 0; i < status.size(); ++i) {
+        for (unsigned int i = 0; i < status.size(); ++i) {
             if (status[i].first == unmated)
                 continue;
             if (status[i].first >= 0 && status[status[i].first].first >= 0) {
@@ -173,7 +173,7 @@ public:
         // remove segments that have been assigned to complete or
         // ambiguous queue
         it0 = inprogress.begin();
-        for (int i = 0; i != status.size(); ++i) {
+        for (unsigned int i = 0; i != status.size(); ++i) {
             if (status[i].first == processed) {
                 it0 = inprogress.erase(it0);
             } else {
