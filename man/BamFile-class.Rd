@@ -308,7 +308,7 @@ asMates(object, ...) <- value
     \item \code{\link[GenomicAlignments]{summarizeOverlaps}} and
           \link[GenomicAlignments]{findSpliceOverlaps-methods} in the
           \pkg{GenomicAlignments} package for methods that work on a
-          \link{BamFile} object.
+          \link{BamFile} and \link{BamFileList} objects.
   }
 }
 
