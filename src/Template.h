@@ -1,5 +1,5 @@
 #ifndef TEMPLATE_H
-#define TEMPALTE_H
+#define TEMPLATE_H
 
 #include <map>
 #include <queue>
@@ -22,11 +22,11 @@ class Template {
     // FIXME: check RG retrieval
     const int readgroup_q(const bam1_t *mate) const {
     uint8_t *aux = bam_aux_get(mate, "RG");
-    char *rg0 = '\0';
+    char *rg0 = NULL;
     if (aux != 0)
         rg0 = bam_aux2Z(aux);
 
-        if (rg =='\0' && rg0 == '\0') /* both null ok */
+        if (rg == NULL && rg0 == NULL) /* both null ok */
             return 0;
         else
             return strcmp(rg, rg0);
@@ -38,7 +38,7 @@ class Template {
 
 public:
 
-    Template() : rg('\0') {}
+    Template() : rg(NULL) {}
 
     bool empty() const {
         return inprogress.empty() && invalid.empty() &&
