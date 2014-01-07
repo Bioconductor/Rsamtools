@@ -206,11 +206,7 @@ asMates(object, ...) <- value
         sorted by \code{qname}. Instead set \code{asMates=TRUE} in the
         \code{BamFile} when using the \code{readGAlignmentsListFromBam}
         function from the \pkg{GenomicAlignments} package.
-
-        When counting paired-end data with \code{summarizeOverlaps}, 
-        setting \code{singleEnd=FALSE} will trigger paired-end reading and 
-        counting. It is fine to also set \code{asMates=TRUE} in the 
-        \code{BamFile} but is not necessary if \code{singleEnd=FALSE}.}
+      }
   }
 }
 
