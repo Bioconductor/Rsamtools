@@ -142,6 +142,14 @@ faidx_t *fai_build_core(RAZF *rz)
 	return idx;
 }
 
+// HP - Jan 13, 2014: I've no idea why the original authors of the fai_save()
+// and fai_read() functions below decided to use the (long) type instead of
+// (long long) for the sequence offsets on Windows. Problem with this is that
+// these functions then break if the FASTA file contains sequences with offsets
+// > LONG_MAX which turns out to be 2^31-1 on Windows, hence not big enough if
+// the FASTA file contains the full genome sequences for Human and other
+// mammals. So I modified fai_save() and fai_read() to always use (long long).
+
 void fai_save(const faidx_t *fai, FILE *fp)
 {
 	khint_t k;
@@ -150,11 +158,12 @@ void fai_save(const faidx_t *fai, FILE *fp)
 		faidx1_t x;
 		k = kh_get(s, fai->hash, fai->name[i]);
 		x = kh_value(fai->hash, k);
-#ifdef _WIN32
-		fprintf(fp, "%s\t%d\t%ld\t%d\t%d\n", fai->name[i], (int)x.len, (long)x.offset, (int)x.line_blen, (int)x.line_len);
-#else
+// HP - Jan 13, 2014: See above note.
+//#ifdef _WIN32
+//		fprintf(fp, "%s\t%d\t%ld\t%d\t%d\n", fai->name[i], (int)x.len, (long)x.offset, (int)x.line_blen, (int)x.line_len);
+//#else
 		fprintf(fp, "%s\t%d\t%lld\t%d\t%d\n", fai->name[i], (int)x.len, (long long)x.offset, (int)x.line_blen, (int)x.line_len);
-#endif
+//#endif
 	}
 }
 
@@ -163,22 +172,24 @@ faidx_t *fai_read(FILE *fp)
 	faidx_t *fai;
 	char *buf, *p;
 	int len, line_len, line_blen;
-#ifdef _WIN32
-	long offset;
-#else
+// HP - Jan 13, 2014: See above note.
+//#ifdef _WIN32
+//	long offset;
+//#else
 	long long offset;
-#endif
+//#endif
 	fai = (faidx_t*)calloc(1, sizeof(faidx_t));
 	fai->hash = kh_init(s);
 	buf = (char*)calloc(0x10000, 1);
 	while (!feof(fp) && fgets(buf, 0x10000, fp)) {
 		for (p = buf; *p && isgraph(*p); ++p);
 		*p = 0; ++p;
-#ifdef _WIN32
-		sscanf(p, "%d%ld%d%d", &len, &offset, &line_blen, &line_len);
-#else
+// HP - Jan 13, 2014: See above note.
+//#ifdef _WIN32
+//		sscanf(p, "%d%ld%d%d", &len, &offset, &line_blen, &line_len);
+//#else
 		sscanf(p, "%d%lld%d%d", &len, &offset, &line_blen, &line_len);
-#endif
+//#endif
 		fai_insert_index(fai, buf, len, line_len, line_blen, offset);
 	}
 	free(buf);
@@ -463,7 +474,7 @@ int faidx_fetch_seq2(const faidx_t *fai,			/* HP */
 	char c;							/* HP */
 	khiter_t iter;						/* HP */
 	faidx1_t val;						/* HP */
-	uint64_t offset;					/* HP */
+	int64_t offset;						/* HP */
 								/* HP */
 	// Adjust position					/* HP */
 	iter = kh_get(s, fai->hash, c_name);			/* HP */
@@ -477,7 +488,7 @@ int faidx_fetch_seq2(const faidx_t *fai,			/* HP */
 								/* HP */
 	// Now retrieve the sequence				/* HP */
 	l = 0;							/* HP */
-	offset = val.offset +					/* HP */
+	offset = (int64_t) val.offset +				/* HP */
 		 p_beg_i / val.line_blen * val.line_len +	/* HP */
 		 p_beg_i % val.line_blen;			/* HP */
 	razf_seek(fai->rz, offset, SEEK_SET);			/* HP */
