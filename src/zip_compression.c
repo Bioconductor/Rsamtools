@@ -14,8 +14,9 @@ void _zip_error(const char *txt, const char *err, int infd, int outfd)
 
 void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
 {
-    int oflag = O_WRONLY | O_CREAT | O_TRUNC;
+    int iflag = O_RDONLY, oflag = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef _WIN32
+    iflag |= O_BINARY;
     oflag |= O_BINARY;
 #endif
 
@@ -24,7 +25,7 @@ void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
     if (!IS_CHARACTER(dest) || 1L != Rf_length(dest))
         Rf_error("'dest' must be character(1)");
 
-    *infd = open(translateChar(STRING_ELT(file, 0)), O_RDONLY);
+    *infd = open(translateChar(STRING_ELT(file, 0)), iflag);
     if (0 > *infd)
         Rf_error("opening 'file': %s", strerror(errno));
 
@@ -58,7 +59,7 @@ SEXP bgzip(SEXP file, SEXP dest)
         if (0 > bgzf_write(outp, buffer, cnt))
             _zip_error("writing compressed output", NULL, infd, outfd);
     if (0 > cnt)
-        _zip_error("reading compressed output: %s",
+        _zip_error("reading compressed input: %s",
                    strerror(errno), infd, outfd);
 
     if (0 > bgzf_close(outp))
@@ -90,7 +91,7 @@ SEXP razip(SEXP file, SEXP dest)
         if (0 > razf_write(outp, buffer, cnt))
             _zip_error("writing compressed output", NULL, infd, outfd);
     if (0 > cnt)
-        _zip_error("reading compressed output: %s",
+        _zip_error("reading compressed input: %s",
                    strerror(errno), infd, outfd);
 
     razf_close(outp);
