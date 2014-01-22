@@ -4,17 +4,12 @@ setGeneric(".RsamtoolsFileList",
            signature="...")
 
 setMethod(.RsamtoolsFileList, "character",
-    function(file, index=file, ..., yieldSize=NA_integer_, class)
+    function(file, ..., yieldSize=NA_integer_, class)
 {
-    fun <- function(elt, idx=character(), yieldSize, class) {
-        do.call(class, list(elt, index=idx, yieldSize=yieldSize))
-    }
-    listData <- if (0L == length(index)) {
-        Map(fun, file, MoreArgs=list(yieldSize=yieldSize, class=class))
-    } else {
-        Map(fun, file, index,
-            MoreArgs=list(yieldSize=yieldSize, class=class))
-    }
+    fun <- function(elt, ..., yieldSize, class)
+        do.call(class, list(elt, ..., yieldSize=yieldSize))
+    listData <- 
+        Map(fun, file, ..., MoreArgs=list(yieldSize=yieldSize, class=class))
     new(paste0(class, "List"), listData=listData)
 })
 

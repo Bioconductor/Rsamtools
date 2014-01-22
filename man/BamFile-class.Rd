@@ -239,8 +239,8 @@ asMates(object, ...) <- value
 
     \item{path}{Returns a character(1) vector of BAM path names.}
 
-    \item{index}{Returns a character(1) vector of BAM index path
-      names.}
+    \item{index}{Returns a character(0) or character(1) vector of BAM
+      index path names.}
 
     \item{yieldSize, yieldSize<-}{Return or set an integer(1) vector
       indicating yield size.}

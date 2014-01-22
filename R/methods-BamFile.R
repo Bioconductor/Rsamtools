@@ -16,6 +16,18 @@ BamFile <-
     function(file, index=file, ..., yieldSize=NA_integer_, 
              obeyQname=FALSE, asMates=FALSE)
 {
+    if (missing(file) || !isSingleString(file))
+        stop("'file' must be character(1) and not NA")
+    if (missing(index) && file.exists(file)) {
+        idx <- sprintf("%s.bai", file)
+        index <- if (file.exists(idx))
+            idx
+        else character(0)
+    } else if (!(isSingleString(index) || 0L == length(index))) {
+        txt <- "'index', when present, must be character(0) or character(1)
+            with nchar(index) > 0 and not NA"
+        stop(paste(strwrap(txt), collapse="\n  "))
+    }
     .RsamtoolsFile(.BamFile, .normalizePath(file),
                    .normalizePath(index), yieldSize=yieldSize,
                    obeyQname=obeyQname, asMates=asMates, ...)
@@ -122,9 +134,9 @@ setMethod(scanBam, "BamFile",
         stop(msg)
     }
     if (0L == length(bamWhat(param)) && 0L == length(bamTag(param))) {
-        txt <- "'bamWhat(param)' and 'bamTag(param)' are length 0;
-                 no fields selected"
-        warning(strwrap(txt))
+        txt <- "no BAM fields selected for input (niether 'bamWhat(param)'
+                nor 'bamTag(param)' defined)"
+        warning(paste(strwrap(txt), collapse="\n  "))
     }
     if (!asMates(file))
         bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mate_status")) 
