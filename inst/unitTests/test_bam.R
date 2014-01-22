@@ -168,11 +168,11 @@ test_scanBam_what_overflow <- function()
     which <- RangesList(seq1=IRanges(1000, 536870912L-1L))
     p1 <- ScanBamParam(which=which, what=scanBamWhat())
     checkTrue(validObject(scanBam(fl, param=p1)))
-    which <- RangesList(seq1=IRanges(1000, 536870912L))
-    checkTrue(validObject(scanBam(fl, param=ScanBamParam(which=which))))
-    which <- RangesList(seq1=IRanges(1000, 536870912L+1L))
-    checkException(scanBam(fl, param=ScanBamParam(which=which)),
-                   silent=TRUE)
+    bamWhich(p1) <- RangesList(seq1=IRanges(1000, 536870912L))
+    checkTrue(validObject(scanBam(fl, param=p1)))
+    bamWhich(p1) <- RangesList(seq1=IRanges(1000, 536870912L+1L))
+    xx <- tryCatch(scanBam(fl, param=p1), error=conditionMessage)
+    checkIdentical("'end' must be <= 536870912", strsplit(xx, "\n")[[1]][1])
     checkTrue(validObject(scanBam(fl)));
 }
 

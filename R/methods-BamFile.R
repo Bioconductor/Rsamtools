@@ -121,6 +121,11 @@ setMethod(scanBam, "BamFile",
                        "0 != length(bamWhich(param))")
         stop(msg)
     }
+    if (0L == length(bamWhat(param)) && 0L == length(bamTag(param))) {
+        txt <- "'bamWhat(param)' and 'bamTag(param)' are length 0;
+                 no fields selected"
+        warning(strwrap(txt))
+    }
     if (!asMates(file))
         bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mate_status")) 
     reverseComplement <- bamReverseComplement(param)
