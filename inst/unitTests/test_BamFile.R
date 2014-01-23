@@ -55,6 +55,35 @@ test_BamFile_yield <- function()
     close(bf)
 }
 
+test_BamFileList_constructor <- function()
+{
+    checkTrue(validObject(res <- BamFileList(fl)))
+    checkIdentical(fl, path(res[[1]]))
+    checkIdentical(sprintf("%s.bai", fl), index(res[[1]]))
+    
+    checkTrue(validObject(res <- BamFileList(fl, fl)))
+    checkIdentical(fl, path(res[[1]]))
+    checkIdentical(fl, index(res[[1]]))
+    ## old-style index=character()
+    checkTrue(validObject(res <- BamFileList(fl, index=character())))
+    checkIdentical(fl, path(res[[1]]))
+    checkIdentical(character(), index(res[[1]]))
+
+    ## vector of files
+    fl <- c(fl, fl)
+    checkTrue(validObject(res <- BamFileList(fl)))
+    checkIdentical(fl, unname(path(res)))
+    checkIdentical(sprintf("%s.bai", fl), unname(sapply(res, index)))
+
+    checkTrue(validObject(res <- BamFileList(fl, fl)))
+    checkIdentical(fl, unname(path(res)))
+    checkIdentical(fl, unname(sapply(res, index)))
+    ## old-style index=character()
+    checkTrue(validObject(res <- BamFileList(fl, index=character())))
+    checkIdentical(fl, unname(path(res)))
+    checkIdentical(list(character(), character()), unname(lapply(res, index)))
+}
+
 test_BamFileList_yield <- function()
 {
     bfl <- unname(BamFileList(c(fl, fl), yieldSize=100))
