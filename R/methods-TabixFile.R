@@ -46,9 +46,9 @@ indexTabix <-
         format <- 
             if (!missing(format)) match.arg(format)
             else character()
-        idx <- .Call(.index_tabix, file, format,
-                     as.integer(seq), as.integer(start),
-                     as.integer(end), skip, comment, zeroBased)
+        .Call(.index_tabix, file, format, as.integer(seq),
+              as.integer(start), as.integer(end), skip, comment,
+              zeroBased)
         sprintf("%s.tbi", file)
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", file)
@@ -102,9 +102,8 @@ countTabix <-
         }
 
         if (0L != length(start) && !is.na(yieldSize(file))) {
-            msg <- sprintf("'%s' must be '%s' when '%s'",
-                           "yieldSize(file)", "NA_integer_",
-                           "0 != length(start(param))")
+            msg <- sprintf("'%s' must be '%s' when range specified",
+                           "yieldSize(file)", "NA_integer_")
             cond <- simpleError(msg)
             class(cond) <- c("scanTabix_param", class(cond))
             stop(cond)

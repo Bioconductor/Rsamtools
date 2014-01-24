@@ -83,7 +83,7 @@
         `3`="      - secondary alignment.......",
         `4`="  o record is unmapped............"
     )
-    width1 <- nchar(SUBGROUP2DESC[1L]) + 3L
+    ## width1 <- nchar(SUBGROUP2DESC[1L]) + 3L
     width2 <- width3 <- 9L
     cat("\nDetails for group ", group, ":\n", sep="")
     #.printSummaryHeader(width1, width2, width3)
