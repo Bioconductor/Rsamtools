@@ -43,9 +43,9 @@ setGeneric("filterBam",
            function(file, destination, index=file, ...)
            standardGeneric("filterBam"))
 
-setGeneric("quickCountBam",
-           function(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
-           standardGeneric("quickCountBam"),
+setGeneric("quickBamFlagSummary",
+           function(file, ..., param=ScanBamParam(), main.groups.only=FALSE)
+           standardGeneric("quickBamFlagSummary"),
            signature="file")
 
 setGeneric("indexFa",

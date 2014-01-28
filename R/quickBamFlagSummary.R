@@ -1,5 +1,5 @@
 ### =========================================================================
-### quickCountBam()
+### quickBamFlagSummary()
 ### -------------------------------------------------------------------------
 
 .runlen <- function(x) runLength(Rle(x))
@@ -121,22 +121,12 @@
                           N_unmapped_rec_per_uqname)
 }
 
-quickBamCounts <- function(file, index=file, param=NULL,
-                           main.groups.only=FALSE)
-{
-    .Deprecated("quickCountBam", "Rsamtools")
-    if (is.null(param))
-        param <- ScanBamParam()
-    file = BamFile(file, index)
-    quickCountBam(file, param=param, mainGroupsOnly=main.groups.only)
-}
-    
-setMethod(quickCountBam, "list",
-    function(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
+setMethod(quickBamFlagSummary, "list",
+    function(file, ..., param=ScanBamParam(), main.groups.only=FALSE)
 {
     what0 <- c("qname", "flag")
-    if (!isTRUEorFALSE(mainGroupsOnly)) {
-        stop("'mainGroupsOnly' must be TRUE or FALSE")
+    if (!isTRUEorFALSE(main.groups.only)) {
+        stop("'main.groups.only' must be TRUE or FALSE")
     } else if (!all(what0 %in% names(file))) {
         stop("'file' must contain elements ",
              paste(sQuote(what0), collapse=" "))
@@ -184,7 +174,7 @@ setMethod(quickCountBam, "list",
                       N_last_rec_per_uqname,
                       N_other_rec_per_uqname)
 
-    if (mainGroupsOnly)
+    if (main.groups.only)
         return(invisible(NULL))
     if (length(N_1seg_rec_per_uqname) != 0L &&
         length(N_mseg_rec_per_uqname != 0L))
@@ -202,10 +192,32 @@ setMethod(quickCountBam, "list",
     invisible(NULL)
 })
 
-setMethod(quickCountBam, "character",
+setMethod(quickBamFlagSummary, "character",
     function(file, index=file, ..., param=ScanBamParam(),
-             mainGroupsOnly=FALSE)
+             main.groups.only=FALSE)
 {
     file <- BamFile(index)
-    quickCountBam(file, param=param, mainGroupsOnly=mainGroupsOnly)
+    quickBamFlagSummary(file, param=param, main.groups.only=main.groups.only)
 })
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Old stuff.
+###
+
+quickCountBam <- function(file, ..., param=ScanBamParam(),
+                          mainGroupsOnly=FALSE)
+{
+    .Deprecated("quickBamFlagSummary", "Rsamtools")
+    if (is.null(param))
+        param <- ScanBamParam()
+    file <- BamFile(file, ...)
+    quickBamFlagSummary(file, param=param, main.groups.only=mainGroupsOnly)
+}
+
+quickBamCounts <- function(file, index=file, param=NULL,
+                           main.groups.only=FALSE)
+{
+    .Defunct("quickBamFlagSummary", "Rsamtools")
+}
+

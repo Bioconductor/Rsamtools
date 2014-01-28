@@ -325,11 +325,11 @@ setMethod(sortBam, "BamFile",
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### "quickCountBam" methods.
+### "quickBamFlagSummary" methods.
 ###
 
-setMethod(quickCountBam, "BamFile",
-    function(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
+setMethod(quickBamFlagSummary, "BamFile",
+    function(file, ..., param=ScanBamParam(), main.groups.only=FALSE)
 {
     what0 <- c("qname", "flag")
     if (length(bamWhat(param)) != 0L)
@@ -343,7 +343,7 @@ setMethod(quickCountBam, "BamFile",
         res0[["flag"]] <- do.call(c, lapply(res, "[[", "flag"))
     } 
 
-    quickCountBam(res0, param=param, mainGroupsOnly=mainGroupsOnly)
+    quickBamFlagSummary(res0, param=param, main.groups.only=main.groups.only)
 })
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

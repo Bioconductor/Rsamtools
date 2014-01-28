@@ -1,24 +1,24 @@
-\name{quickCountBam}
+\name{quickBamFlagSummary}
 
-\alias{quickCountBam}
-\alias{quickCountBam,character-method}
-\alias{quickCountBam,list-method}
+\alias{quickBamFlagSummary}
+\alias{quickBamFlagSummary,character-method}
+\alias{quickBamFlagSummary,list-method}
 
 \title{Group the records of a BAM file based on their flag bits and count
        the number of records in each group}
 
 \description{
-\code{quickCountBam} groups the records of a BAM file based on their flag
+\code{quickBamFlagSummary} groups the records of a BAM file based on their flag
 bits and counts the number of records in each group.
 }
 
 \usage{
-quickCountBam(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
+quickBamFlagSummary(file, ..., param=ScanBamParam(), main.groups.only=FALSE)
 
-\S4method{quickCountBam}{character}(file, index=file, ..., param=ScanBamParam(),
-    mainGroupsOnly=FALSE)
+\S4method{quickBamFlagSummary}{character}(file, index=file, ..., param=ScanBamParam(),
+    main.groups.only=FALSE)
 
-\S4method{quickCountBam}{list}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
+\S4method{quickBamFlagSummary}{list}(file, ..., param=ScanBamParam(), main.groups.only=FALSE)
 }
 
 \arguments{
@@ -36,7 +36,7 @@ quickCountBam(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
   \item{param}{An instance of \code{\linkS4class{ScanBamParam}}.
     This determines which records are considered in the counting.}
 
-  \item{mainGroupsOnly}{If \code{TRUE}, then the counting is performed
+  \item{main.groups.only}{If \code{TRUE}, then the counting is performed
     for the main groups only.
   }
 }
@@ -62,7 +62,7 @@ quickCountBam(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
 \examples{
 bamfile <- system.file("extdata", "ex1.bam", package="Rsamtools",
                        mustWork=TRUE)
-quickCountBam(bamfile)
+quickBamFlagSummary(bamfile)
 }
 
 \keyword{manip}

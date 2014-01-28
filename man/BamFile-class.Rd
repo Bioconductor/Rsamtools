@@ -35,7 +35,7 @@
 
 \alias{mergeBam,BamFileList-method}
 % counting
-\alias{quickCountBam,BamFile-method}
+\alias{quickBamFlagSummary,BamFile-method}
 
 \alias{show,BamFile-method}
 \alias{show,BamFileList-method}
@@ -94,7 +94,7 @@ asMates(object, ...) <- value
 
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
-\S4method{quickCountBam}{BamFile}(file, ..., param=ScanBamParam(), mainGroupsOnly=FALSE)
+\S4method{quickBamFlagSummary}{BamFile}(file, ..., param=ScanBamParam(), main.groups.only=FALSE)
 }
 
 \arguments{
@@ -155,7 +155,7 @@ asMates(object, ...) <- value
 
     \item{rw}{Mode of file; ignored.}
 
-    \item{mainGroupsOnly}{See \code{\link{quickCountBam}}.}
+    \item{main.groups.only}{See \code{\link{quickBamFlagSummary}}.}
 }
 
 \section{Objects from the Class}{

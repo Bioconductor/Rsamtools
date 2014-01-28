@@ -1,6 +1,7 @@
 \name{Deprecated and Defunct}
 \title{Rsamtools Deprecated and Defunct}
 
+\alias{quickCountBam}
 \alias{quickBamCounts}
 \alias{bgzipTabix}
 
