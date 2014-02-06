@@ -95,15 +95,14 @@ setMethod(isOpen, "BcfFile",
         if (1L == length(desc))
             entries[[desc]] <- gsub("\"", "", entries[[desc]])
         id <- which("ID" == toupper(names(entries)))
-        if (length(id)) {
-            df <- do.call(DataFrame, entries[-id])
+        if (length(id) > 0L) {
             if (any(duplicated(entries[[id]]))) 
                 warning("duplicate ID's in header will be forced to unique ",
                         "rownames")
-            rownames(df) <- make.unique(entries[[id]])
+            df <- DataFrame(entries[-id], row.names=make.unique(entries[[id]]))
         } else {
             ## ID is not a required field
-            df <- do.call(DataFrame, entries)
+            df <- DataFrame(entries)
         }
         df
     })
