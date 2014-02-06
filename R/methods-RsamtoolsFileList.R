@@ -26,8 +26,8 @@ setMethod(.RsamtoolsFileList, "ANY",
     function(..., yieldSize=NA_integer_, class)
 {
     list <- list(...)
-    if (length(list) == 1 && is.list(list[[1L]])) 
-        list <- list[[1L]]
+    if (length(list) == 1 && (is.list(list[[1L]]) || is(list[[1L]], "List")))
+        list <- as.list(list[[1L]])
     new(paste0(class, "List"), listData=list)
 })
 
