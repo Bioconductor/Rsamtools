@@ -28,6 +28,8 @@
 .normalizePath <-
     function(path)
 {
+    if (is(path, "RsamtoolsFile"))
+        path <- path(path)
     idx <- !grepl("^(ftp)|(http)://", path)
     ## expand ~/, but don't chase links (i.e., don't normalizePath())
     path[idx] <- path.expand(path[idx])
