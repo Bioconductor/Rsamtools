@@ -16,7 +16,8 @@ importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
 
 import(IRanges)
 
-importFrom(GenomicRanges, GRanges, Seqinfo, seqinfo, seqlevels)
+importFrom(GenomicRanges, GRanges, makeSeqnameIds, Seqinfo, seqinfo,
+           seqlevels)
 
 importMethodsFrom(GenomicRanges, seqnames, strand)
 

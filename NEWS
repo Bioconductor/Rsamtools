@@ -11,6 +11,9 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
     o bgzip default extension changed to '.bgz'
 
+    o seqinfo,BamFile-method attempts to return seqnames in 'natural'
+      order, e.g., chr1, chr2, ...
+
 BUG FIXES
 
     o scanFa returns correct sequence at the very end of files

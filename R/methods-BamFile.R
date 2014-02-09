@@ -77,7 +77,8 @@ setMethod(seqinfo, "BamFile",
           function(x)
 {
     h <- scanBamHeader(x)[["targets"]]
-    Seqinfo(names(h), unname(h))
+    o <- order(makeSeqnameIds(names(h)))
+    Seqinfo(names(h)[o], unname(h)[o])
 })
 
 setMethod(obeyQname, "BamFile",
