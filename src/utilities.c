@@ -15,12 +15,12 @@ SEXP _get_namespace(const char *pkg)
     return nmspc;
 }
 
-SEXP _get_strand_levels()
+void _as_strand(SEXP vec)
 {
     SEXP nmspc = PROTECT(_get_namespace("Rsamtools"));
-    SEXP ans = eval(findVar(install(".STRAND_LEVELS"), nmspc), nmspc);
-    UNPROTECT(1);
-    return ans;
+    SEXP lvls = PROTECT(eval(findVar(install(".STRAND_LEVELS"), nmspc), nmspc));
+    _as_factor_SEXP(vec, lvls);
+    UNPROTECT(2);
 }
 
 SEXP _get_encoding_lookup(const char *from, const char *to)

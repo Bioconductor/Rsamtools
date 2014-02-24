@@ -2,11 +2,11 @@
 #define _UTILITIES_H_
 
 SEXP _get_namespace(const char *pkg);
-SEXP _get_strand_levels();
 SEXP _get_encoding_lookup(const char *from, const char *to);
 SEXP _get_lkup(const char *baseclass);
 void _as_factor_SEXP(SEXP vec, SEXP lvls);
 void _as_factor(SEXP vec, const char **lvls, const int n_lvls);
+void _as_strand(SEXP vec);
 SEXP _as_XStringSet(const char **key, int len, const char *baseclass);
 SEXP _as_PhredQuality(const char **key, int len);
 void _reverse(char *buf, int len);
