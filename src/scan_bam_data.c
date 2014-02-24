@@ -114,7 +114,8 @@ int _grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
             sbd->qual = Realloc(sbd->qual, len, const char *);
             break;
         case TAG_IDX:
-            _grow_SCAN_BAM_DATA_tags(s, len);
+            if (R_NilValue != s)
+                _grow_SCAN_BAM_DATA_tags(s, len);
             break;
         case PARTITION_IDX:
             sbd->partition = Realloc(sbd->partition, len, int);
@@ -150,7 +151,7 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
     /* FIXME: replace mrnm '=' with rname */
     const char *mates_lvls[] = { "mated", "ambiguous", "unmated" };
     int i, j;
-    SEXP r, s, strand_lvls;
+    SEXP r, s;
     r = VECTOR_ELT(sbd->result, irange);
     for (i = 0; i < LENGTH(r); ++i) {
         if (R_NilValue == (s = VECTOR_ELT(r, i)))
@@ -174,9 +175,7 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
             s = Rf_lengthgets(s, sbd->icnt);
             SET_VECTOR_ELT(r, i, s);
             memcpy(INTEGER(s), sbd->strand, sbd->icnt * sizeof(int));
-            PROTECT(strand_lvls = _get_strand_levels());
-            _as_factor_SEXP(s, strand_lvls);
-            UNPROTECT(1);
+            _as_strand(s);
             Free(sbd->strand);
             break;
         case POS_IDX:

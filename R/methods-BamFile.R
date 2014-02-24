@@ -128,12 +128,6 @@ setMethod(scanBam, "BamFile",
                        "param", "ScanBamParam", class(param))
         stop(msg)
     }
-    if (0L != length(bamWhich(param)) && !is.na(yieldSize(file))) {
-        msg <- sprintf("'%s' must be '%s' when '%s'",
-                       "yieldSize(file)", "NA_integer_",
-                       "0 != length(bamWhich(param))")
-        stop(msg)
-    }
     if (0L == length(bamWhat(param)) && 0L == length(bamTag(param))) {
         txt <- "no BAM fields selected for input (niether 'bamWhat(param)'
                 nor 'bamTag(param)' defined)"
@@ -142,7 +136,7 @@ setMethod(scanBam, "BamFile",
     if (!asMates(file))
         bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mate_status")) 
     reverseComplement <- bamReverseComplement(param)
-    tmpl <- .scanBam_template(param)
+    tmpl <- .scanBam_template(file, param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
                  yieldSize(file), tmpl, obeyQname(file), 
                  asMates(file), param=param)
@@ -213,6 +207,7 @@ setMethod(countBam, "BamFile",
                        tmp <- lapply(res, "[[", nm)
                        .quickUnlist(tmp)
                    })
+
     ## Extract the "tag" cols.
     ans2 <- lapply(setNames(bamTag(param), bamTag(param)),
                    function(nm) {
@@ -245,26 +240,18 @@ setMethod(countBam, "BamFile",
     if (is.na(yieldSize))
         yieldSize <- 1000000L
 
-    tmpl <- .scanBam_template(param)
+    tmpl <- .scanBam_template(file, param)
     reverseComplement <- bamReverseComplement(param)
 
     dest <- .Call(.bamfile_open, destination, path(file), "wb")
+    on.exit(.Call(.bamfile_close, dest))
+
     n_tot <- 0L
     repeat {
-        if (nRange) {                   # by range
-            if (iRange > nRange)
-                break
-            which0 <- IRangesList(which[iRange])
-            names(which0) <- names(which)[iRange]
-            param <- initialize(param, which=which0)
-            iRange <- iRange + 1L
-        }
         buf <- .io_bam(.prefilter_bamfile, file, param=param,
                        yieldSize, obeyQname(file), asMates(file))
         if (0L == .Call(.bambuffer_length, buf))
-            if (nRange) {
-                next
-            } else break
+            break
 
         ans <- .io_bam(.bambuffer_parse, file, param=param, buf,
                        reverseComplement, tmpl)
@@ -273,7 +260,6 @@ setMethod(countBam, "BamFile",
         n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
     }
 
-    .Call(.bamfile_close, dest)
     destination
 }
 

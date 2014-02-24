@@ -14,6 +14,10 @@ SIGNIFICANT USER-VISIBLE CHANGES
     o seqinfo,BamFile-method attempts to return seqnames in 'natural'
       order, e.g., chr1, chr2, ...
 
+    o yieldSize now works on BAM files queried with ranges. Successive
+      ranges are input until the total number of records first equals
+      or exceeds yieldSize..
+
 BUG FIXES
 
     o scanFa returns correct sequence at the very end of files

@@ -46,13 +46,20 @@ test_BamFile_yield <- function()
     while(length(res <- scanBam(bf)[[1]][[1]]))
         it <- append(it, length(res))
     close(bf)
-    checkIdentical(c(1000L, 1000L, 1000L, 307L), it)
+    exp <- c(1000L, 1000L, 1000L, 307L)
+    checkIdentical(exp, it)
 
-    open(bf)
-    rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
-    param <- ScanBamParam(which=rng)
-    checkException(scanBam(bf, param=param), silent=TRUE)
+    bf <- open(BamFile(fl, yieldSize=500))
+    which <- GenomicRanges::tileGenome(seqlengths(bf), tilewidth=500,
+                                       cut.last.tile.in.chrom=TRUE)
+    param <- ScanBamParam(what="rname", which=which)
+    it <- integer()
+    while(res <- sum(unlist(scanBam(bf, param=param), use.names=FALSE)))
+        it <- append(it, res)
     close(bf)
+    checkIdentical(6L, length(it))
+    ## over-count, since reads overlap more than one range
+    checkIdentical(5472L, sum(it))
 }
 
 test_BamFileList_constructor <- function()

@@ -34,7 +34,7 @@ _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
                          5 * BAM_INIT_SIZE : BAM_INIT_SIZE, 32768);
     bd->parse_status = BAM_PARSE_STATUS_OK;
     bd->bfile = BAMFILE(ext);
-    bd->irange = 0;
+    bd->irange = bd->bfile->irange0;
     bd->nrange = nrange;
     bd->irec = bd->iparsed = 0;
     bd->keep_flag[0] = INTEGER(flag)[0];

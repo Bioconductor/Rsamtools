@@ -102,12 +102,13 @@ SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     
     SEXP names = GET_ATTR(templateList, R_NamesSymbol);
     SEXP result =
-        PROTECT(_scan_bam_result_init(templateList, names, space));
+        PROTECT(_scan_bam_result_init(templateList, names, R_NilValue,
+                                      BAMFILE(ext)));
     SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
-    BAM_DATA bd = _init_BAM_DATA(ext, space, keepFlags, isSimpleCigar,
+    BAM_DATA bd = _init_BAM_DATA(ext, R_NilValue, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  NA_INTEGER, 0, 0, (void *) sbd);
-
+    bd->irange = 0;             /* everything parsed to 'irange' 0 */
     BAM_BUFFER buf = BAMBUFFER(bufext);
     _grow_SCAN_BAM_DATA(bd, buf->n);
 
@@ -141,6 +142,7 @@ SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     _Free_SCAN_BAM_DATA(sbd);
     _Free_BAM_DATA(bd);
     UNPROTECT(1);
+
     return result;
 }
 

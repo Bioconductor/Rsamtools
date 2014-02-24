@@ -170,11 +170,13 @@ asMates(object, ...) <- value
   \code{\linkS4class{RsamtoolsFile}} class and has fields:
 
   \describe{
-    \item{yieldSize: }{Number of records to yield each time the file 
-      is read from using \code{scanBam}. Only valid when
-      \code{length(bamWhich(param)) == 0}. Setting \code{yieldSize} 
-      on a \code{BamFileList} does not alter existing yield sizes
-      set on the individual \code{BamFile} instances.}
+
+    \item{yieldSize: }{Number of records to yield each time the file is
+      read from using \code{scanBam} or, when \code{length(bamWhich())
+      != 0}, a threshold which yields records in complete ranges whose
+      sum first exceeds \code{yieldSize}. Setting \code{yieldSize} on a
+      \code{BamFileList} does not alter existing yield sizes set on the
+      individual \code{BamFile} instances.}
 
     \item{asMates: }{A logical indicating if the records should be
       returned as mated pairs. When \code{TRUE} \code{scanBam} attempts

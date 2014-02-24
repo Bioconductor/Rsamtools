@@ -14,6 +14,7 @@ typedef struct {
     samfile_t *file;
     bam_index_t *index;
     uint64_t pos0;
+    int irange0;
     bam_mate_iter_t iter; 
 } _BAM_FILE, *BAM_FILE;
 

@@ -34,7 +34,7 @@ static const R_CallMethodDef callMethods[] = {
     /* as_bam.c */
     {".as_bam", (DL_FUNC) & as_bam, 3},
     /* io_sam.c */
-    {".scan_bam_template", (DL_FUNC) & scan_bam_template, 1},
+    {".scan_bam_template", (DL_FUNC) & scan_bam_template, 2},
     {".scan_bam_cleanup", (DL_FUNC) & scan_bam_cleanup, 0},
     {".sort_bam", (DL_FUNC) & sort_bam, 4},
     {".merge_bam", (DL_FUNC) & merge_bam, 8},

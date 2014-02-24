@@ -59,6 +59,14 @@ void _bam_check_template_list(SEXP template_list)
             Rf_error("'template' names do not match scan_bam_template\n'");
 }
 
+static SEXP _tmpl_strand()
+{
+    SEXP strand = PROTECT(NEW_INTEGER(0));
+    _as_strand(strand);
+    UNPROTECT(1);
+    return strand;
+}
+
 static SEXP _tmpl_DNAStringSet()
 {
     CharAEAE aeae = new_CharAEAE(0, 0);
@@ -88,7 +96,7 @@ static SEXP _tmpl_PhredQuality()
     return result;
 }
 
-SEXP scan_bam_template(SEXP tag)
+SEXP scan_bam_template(SEXP rname, SEXP tag)
 {
     if (R_NilValue != tag)
         if (!IS_CHARACTER(tag))
@@ -96,13 +104,13 @@ SEXP scan_bam_template(SEXP tag)
     SEXP tmpl = PROTECT(NEW_LIST(N_TMPL_ELTS));
     SET_VECTOR_ELT(tmpl, QNAME_IDX, NEW_CHARACTER(0));
     SET_VECTOR_ELT(tmpl, FLAG_IDX, NEW_INTEGER(0));
-    SET_VECTOR_ELT(tmpl, RNAME_IDX, NEW_INTEGER(0));
-    SET_VECTOR_ELT(tmpl, STRAND_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, RNAME_IDX, rname);
+    SET_VECTOR_ELT(tmpl, STRAND_IDX, _tmpl_strand());
     SET_VECTOR_ELT(tmpl, POS_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, QWIDTH_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, MAPQ_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, CIGAR_IDX, NEW_CHARACTER(0));
-    SET_VECTOR_ELT(tmpl, MRNM_IDX, NEW_INTEGER(0));
+    SET_VECTOR_ELT(tmpl, MRNM_IDX, rname);
     SET_VECTOR_ELT(tmpl, MPOS_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, ISIZE_IDX, NEW_INTEGER(0));
     SET_VECTOR_ELT(tmpl, SEQ_IDX, _tmpl_DNAStringSet());
@@ -226,7 +234,7 @@ int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
     int yield = 0;
     bam_mates_t *bam_mates = bam_mates_new();
 
-    while (samread_mate(bfile->file->x.bam, bfile->index, bfile->pos0,
+    while (samread_mate(bfile->file->x.bam, bfile->index,
                         &bfile->iter, bam_mates) > 0) {
 
         if (NA_INTEGER != yieldSize && yield  >= yieldSize)
@@ -283,10 +291,9 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
     BAM_FILE bfile = _bam_file_BAM_DATA(bd);
     samfile_t *sfile = bfile->file;
     bam_index_t *bindex = bfile->index;
-    int initial = bd->iparsed;
-    int asMates = bd->asMates;
+    const int initial = bd->iparsed;
 
-    for (int irange = 0; irange < LENGTH(space); ++irange) {
+    for (int irange = bfile->irange0; irange < LENGTH(space); ++irange) {
         const char *spc = translateChar(STRING_ELT(space, irange));
         const int starti =
             start[irange] > 0 ? start[irange] - 1 : start[irange];
@@ -296,20 +303,25 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
         }
         if (tid == sfile->header->n_targets) {
             Rf_warning("space '%s' not in BAM header", spc);
+            bd->irange += 1;
             return -1;
         }
-        if (asMates)
+        if (bd->asMates)
             bam_fetch_mate(sfile->x.bam, bindex, tid, starti, end[irange],
-                           bd, parse1_mate);
+                            bd, parse1_mate);
         else
             bam_fetch(sfile->x.bam, bindex, tid, starti, end[irange],
-                      bd, parse1);
+                       bd, parse1);
 
         if (NULL != finish1)
             (*finish1) (bd);
         bd->irange += 1;
+        if ((NA_INTEGER != bd->yieldSize) &&
+            (bd->iparsed - initial >= bd->yieldSize))
+            break;
     }
-
+    bfile->irange0 = bd->irange;
+        
     return bd->iparsed - initial;
 }
 
@@ -375,7 +387,8 @@ static int _filter_and_parse1_mate(const bam_mates_t *mates, void *data)
     return yield;
 }
 
-SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space)
+SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space,
+                           BAM_FILE bfile)
 {
     const int nrange =
         R_NilValue == space ? 1 : Rf_length(VECTOR_ELT(space, 0));
@@ -387,14 +400,18 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space)
        range2: tmpl1, tmpl2...
        ...
     */
+    bam_header_t *header = bfile->file->header;
+    SEXP rname = PROTECT(NEW_INTEGER(0));
+    _as_factor(rname, (const char **) header->target_name, header->n_targets);
+    
     for (int irange = 0; irange < nrange; ++irange) {
         SEXP tag = VECTOR_ELT(template_list, TAG_IDX);
         SEXP tmpl;
         if (R_NilValue == tag)
-            tmpl = PROTECT(scan_bam_template(R_NilValue));
+            tmpl = PROTECT(scan_bam_template(rname, R_NilValue));
         else {
             SEXP nms = getAttrib(tag, R_NamesSymbol);
-            tmpl = PROTECT(scan_bam_template(nms));
+            tmpl = PROTECT(scan_bam_template(rname, nms));
         }
         for (i = 0; i < LENGTH(names); ++i) {
             if (TAG_IDX == i)
@@ -405,7 +422,7 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space)
         SET_VECTOR_ELT(result, irange, tmpl);
         UNPROTECT(1);
     }
-    UNPROTECT(1);
+    UNPROTECT(2);
     return result;
 }
 
@@ -414,8 +431,8 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP obeyQname, SEXP asMates)
 {
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
-    SEXP result =
-        PROTECT(_scan_bam_result_init(template_list, names, space));
+    SEXP result = PROTECT(_scan_bam_result_init(template_list, names, space,
+                                                BAMFILE(bfile)));
     SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
@@ -527,7 +544,6 @@ _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                                  0, INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
                                  LOGICAL(asMates)[0], BAMBUFFER(ext));
-
     int status =
         _do_scan_bam(bd, space, _prefilter1, _prefilter1_mate, NULL);
     if (status < 0) {

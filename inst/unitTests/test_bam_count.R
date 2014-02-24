@@ -39,5 +39,7 @@ test_countBam_index <- function()
     idx <- system.file("extdata", "ex1.bam", package="Rsamtools")
     checkIdentical(exp, countBam(fl, idx, param=p1))
 
-    checkException(countBam(fl, tempfile(), param=p1), silent=TRUE)
+    checkException({
+        suppressWarnings(countBam(fl, tempfile(), param=p1))
+    }, silent=TRUE)
 }

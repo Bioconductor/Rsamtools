@@ -75,6 +75,7 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
             Rf_error("'filename' is not a BAM file\n  file: %s", cfile);
         }
         bfile->pos0 = bam_tell(bfile->file->x.bam);
+        bfile->irange0 = 0;
     }
 
     bfile->index = NULL;
@@ -107,6 +108,7 @@ static BAM_FILE _bamfile_open_w(SEXP file0, SEXP file1)
     bfile = (BAM_FILE) Calloc(1, _BAM_FILE);
     bfile->file = outfile;
     bfile->pos0 = bam_tell(bfile->file->x.bam);
+    bfile->irange0 = 0;
 
     return bfile;
 }

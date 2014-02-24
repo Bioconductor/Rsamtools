@@ -1,13 +1,13 @@
 .scanBamTemplate <-
-    function(tag=character(0))
+    function(seqlevels=factor(), tag=character(0))
 {
-    .Call(.scan_bam_template, tag)
+    .Call(.scan_bam_template, seqlevels, tag)
 }
 
 .scanBam_template <-
-    function(param)
+    function(file, param)
 {
-    tmpl <- .scanBamTemplate(bamTag(param))
+    tmpl <- .scanBamTemplate(factor(levels=seqlevels(file)), bamTag(param))
     tmpl[!names(tmpl) %in% c(bamWhat(param), "tag")] <- list(NULL)
     if (0L == length(tmpl[["tag"]]))
         tmpl["tag"] <- list(NULL)
