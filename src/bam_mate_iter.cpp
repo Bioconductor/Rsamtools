@@ -67,13 +67,13 @@ bam_mate_iter_t bam_mate_range_iter_new(const bam_index_t *bindex,
     return iter;
 }
 
-int bam_fetch_mate(bamFile fb, const bam_index_t *idx, int tid, int beg, 
+int bam_fetch_mate(bamFile bf, const bam_index_t *idx, int tid, int beg, 
                    int end, void *data, bam_fetch_mate_f func)
 {
     int n_rec;
     bam_mates_t *mates = bam_mates_new();
     bam_mate_iter_t iter = bam_mate_range_iter_new(idx, tid, beg, end);
-    while ((n_rec = bam_mate_read(fb, iter, mates) > 0))
+    while ((n_rec = bam_mate_read(bf, iter, mates) > 0))
         func(mates, data);
     bam_mate_iter_destroy(iter);
     bam_mates_destroy(mates);
@@ -81,19 +81,19 @@ int bam_fetch_mate(bamFile fb, const bam_index_t *idx, int tid, int beg,
 }
 
 // BamFileIterator methods
-bam_mate_iter_t bam_mate_file_iter_new(uint64_t pos0, const bam_index_t *bindex)
+bam_mate_iter_t bam_mate_file_iter_new(const bam_index_t *bindex)
 {
     bam_mate_iter_t iter = Calloc(1, struct _bam_mate_iter_t);
-    iter->b_iter = new BamFileIterator(pos0, bindex);
+    iter->b_iter = new BamFileIterator(bindex);
     return iter;
 }
 
-int samread_mate(bamFile fb, const bam_index_t *bindex, uint64_t pos0,
+int samread_mate(bamFile fb, const bam_index_t *bindex,
                  bam_mate_iter_t *iter_p, bam_mates_t *mates)
 {
     bam_mate_iter_t iter;
     if (NULL == *iter_p)
-        *iter_p = bam_mate_file_iter_new(pos0, bindex);
+        *iter_p = bam_mate_file_iter_new(bindex);
     iter = *iter_p;
     iter->b_iter->iter_done = false;
     // single yield

@@ -22,7 +22,7 @@ void bam_mates_destroy(bam_mates_t *mates);
 
 int bam_fetch_mate(bamFile fb, const bam_index_t *idx, int tid, int beg, 
                    int end, void *data, bam_fetch_mate_f func);
-int samread_mate(bamFile fb, const bam_index_t *bindex, uint64_t pos0, 
+int samread_mate(bamFile fb, const bam_index_t *bindex,
                  bam_mate_iter_t *iter_p, bam_mates_t *mates);
 void bam_mate_iter_destroy(bam_mate_iter_t iter);
 

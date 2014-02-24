@@ -9,8 +9,6 @@
 
 class BamFileIterator : public BamIterator {
 
-    uint64_t pos0;
-
     bool file_done;
 
     void iterate_inprogress(bamFile bfile) {
@@ -42,12 +40,8 @@ class BamFileIterator : public BamIterator {
 public:
 
     // constructor / destructor
-    BamFileIterator(uint64_t pos0, const bam_index_t *bindex) :
-        BamIterator(bindex) 
-    {
-        pos0 = pos0;
-        file_done = false;
-    }
+    BamFileIterator(const bam_index_t *bindex) :
+        BamIterator(bindex), file_done(false) {}
 
 };
 
