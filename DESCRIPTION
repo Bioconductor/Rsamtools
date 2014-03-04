@@ -1,24 +1,24 @@
 Package: Rsamtools
 Type: Package
 Title: Binary alignment (BAM), variant call (BCF), or tabix file import
-Version: 1.15.30
+Version: 1.15.31
 Author: Martin Morgan, Herv\'e Pag\`es, Valerie Obenchain
-Maintainer: Bioconductor Package Maintainer <maintainer@bioconductor.org>
+Maintainer: Bioconductor Package Maintainer
+        <maintainer@bioconductor.org>
 Description: This package provides an interface to the 'samtools',
-  'bcftools', and 'tabix' utilities (see 'LICENCE') for manipulating
-  SAM (Sequence Alignment / Map), binary variant call (BCF) and
-  compressed indexed tab-delimited (tabix) files. 
+        'bcftools', and 'tabix' utilities (see 'LICENCE') for
+        manipulating SAM (Sequence Alignment / Map), binary variant
+        call (BCF) and compressed indexed tab-delimited (tabix) files.
 URL: http://bioconductor.org/packages/release/bioc/html/Rsamtools.html
 License: Artistic-2.0 | file LICENSE
 LazyLoad: yes
 Depends: methods, IRanges (>= 1.21.10), GenomicRanges (>= 1.15.11),
-         XVector (>= 0.3.2), Biostrings (>= 2.31.3), GenomeInfoDb(>= 0.99.17)
+        XVector (>= 0.3.2), Biostrings (>= 2.31.3), GenomeInfoDb(>=
+        0.99.17)
 Imports: utils, BiocGenerics (>= 0.1.3), zlibbioc, bitops
 Suggests: GenomicAlignments, ShortRead (>= 1.19.10), GenomicFeatures,
-          TxDb.Dmelanogaster.UCSC.dm3.ensGene, KEGG.db,
-          TxDb.Hsapiens.UCSC.hg18.knownGene,
-          RNAseqData.HNRNPC.bam.chr14,
-          BSgenome.Hsapiens.UCSC.hg19,
-          pasillaBamSubset, RUnit, BiocStyle
+        TxDb.Dmelanogaster.UCSC.dm3.ensGene, KEGG.db,
+        TxDb.Hsapiens.UCSC.hg18.knownGene, RNAseqData.HNRNPC.bam.chr14,
+        BSgenome.Hsapiens.UCSC.hg19, pasillaBamSubset, RUnit, BiocStyle
 LinkingTo: IRanges, XVector, Biostrings
-biocViews: DataImport, Sequencing, HighThroughputSequencing
+biocViews: DataImport, Sequencing, Sequencing
