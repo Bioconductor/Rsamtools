@@ -77,7 +77,7 @@ setMethod(seqinfo, "BamFile",
           function(x)
 {
     h <- scanBamHeader(x)[["targets"]]
-    o <- order(makeSeqnameIds(names(h)))
+    o <- order(rankSeqlevels(names(h)))
     Seqinfo(names(h)[o], unname(h)[o])
 })
 
