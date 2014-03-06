@@ -10,6 +10,17 @@ setMethod(ScanBamParam, c(which="missing"),
         which=which)
 })
 
+setMethod(ScanBamParam, c(which="ANY"),
+          function(flag=scanBamFlag(), simpleCigar=FALSE,
+                   reverseComplement=FALSE, tag=character(0),
+                   what=character(0), which)
+{
+    which <- as(which, "RangesList")
+    new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
+        reverseComplement=reverseComplement, tag=tag, what=what,
+        which=which)
+})
+
 setMethod(ScanBamParam, c(which="RangesList"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),

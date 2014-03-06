@@ -4,6 +4,7 @@
 \alias{ScanBamParam-class}
 \alias{ScanBamParam}
 \alias{ScanBamParam,missing-method}
+\alias{ScanBamParam,ANY-method}
 \alias{ScanBamParam,RangesList-method}
 \alias{ScanBamParam,RangedData-method}
 \alias{ScanBamParam,GRanges-method}
@@ -118,7 +119,8 @@ bamFlagTest(flag, value)
     Fields are described on the \code{\link{scanBam}} help page.}
 
   \item{which}{A \code{\linkS4class{GRanges}},
-    \code{\linkS4class{RangesList}}, \code{\linkS4class{RangedData}}, or
+    \code{\linkS4class{RangesList}}, \code{\linkS4class{RangedData}},
+    any object that can be coerced to a \code{RangesList}, or
     missing object, from which a \code{IRangesList} instance will be
     constructed. Names of the \code{IRangesList} correspond to reference
     sequences, and ranges to the regions on that reference sequence for
