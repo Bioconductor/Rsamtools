@@ -40,15 +40,23 @@ public:
             if (templates[*it].empty())
                 templates.erase(*it);
         }
+    }
+
+    void clear_mate_touched_templates() {
         touched_templates.clear();
     }
 
     // process
     void process(const bam1_t *bam) {
-        // FIXME: combination of RG and qname?
         const string s = bam1_qname(bam);
-        if (templates[s].add_segment(bam))
+        int add_status = templates[s].add_segment(bam);
+        // valid record added to template (new or existing) 
+        if (add_status > 0) {
             touched_templates.insert(s);
+            // if added to existing, try to mate
+            if (add_status == 2)
+                mate_touched_templates();
+        }
     }
 
     // yield

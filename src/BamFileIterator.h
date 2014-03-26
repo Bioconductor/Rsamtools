@@ -34,7 +34,7 @@ class BamFileIterator : public BamIterator {
                 done = (bam->core.tid != tid) || (bam->core.pos != pos);
             } 
         } while (!done);
-        mate_touched_templates();
+        clear_mate_touched_templates();
     }
 
 public:

@@ -111,23 +111,29 @@ public:
         complete.push(tmp);
     }
 
-    // Returns true if segment added was a mate
-    bool add_segment(const bam1_t *bam1) {
+    // Returns 1 if invalid
+    //         2 if added to new template
+    //         3 if added to existing template
+    int add_segment(const bam1_t *bam1) {
         bam1_t *bam = bam_dup1(bam1);
+        // invalid 
         if (!is_valid(bam)) {
             invalid.push_back(bam);
-            return false;
+            return 0;
         }
-
         // new template
         if (inprogress.empty()) {
             qname = bam1_qname(bam);
             uint8_t *aux = bam_aux_get(bam, "RG");
             if (aux != 0)
                 rg = bam_aux2Z(aux);
+            inprogress.push_back(bam);
+            return 1;
+        } else {
+            // existing template
+            inprogress.push_back(bam);
+            return 2;
         }
-        inprogress.push_back(bam);
-        return true;
     }
 
     void mate(queue<Segments> &complete) {
@@ -202,7 +208,7 @@ public:
                 if (beg == -1)
                     break;
                 if (is_valid(bam) && is_template(bam) && is_mate(curr, bam))
-                    touched = touched || add_segment(bam);
+                    touched = touched || (add_segment(bam) > 0);
             }
             bam_iter_destroy(iter);
 
