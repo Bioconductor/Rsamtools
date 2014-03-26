@@ -28,13 +28,15 @@ class BamFileIterator : public BamIterator {
             int tid = bam->core.tid;
             int pos = bam->core.pos;
             if (bam_read1(bfile, bam) < 0) {
+                mate_touched_templates();
                 iter_done = file_done = done = true;
-            } else if (!complete.empty()) {
-                // stop if something to yield AND finished position
-                done = (bam->core.tid != tid) || (bam->core.pos != pos);
+            } else {
+                if ((bam->core.tid != tid) || (bam->core.pos != pos)) {
+                    mate_touched_templates();
+                    done = !complete.empty();
+                } 
             } 
         } while (!done);
-        clear_mate_touched_templates();
     }
 
 public:
