@@ -179,6 +179,18 @@ test_BamFile_asMates_all <- function()
     checkTrue(all(scnm1$qname %in% scnm2$qname))
     checkTrue(all(scnm1$mate_status == scnm2$mate_status))
     checkTrue(all(scnm1$groupid == scnm2$groupid))
+
+    ## yieldSize and which
+    bf <- open(BamFile(fl, yieldSize=500))
+    which <- GenomicRanges::tileGenome(seqlengths(bf), tilewidth=500,
+                                       cut.last.tile.in.chrom=TRUE)
+    param <- ScanBamParam(what="rname", which=which)
+    it <- integer()
+    while(res <- sum(unlist(scanBam(bf, param=param), use.names=FALSE)))
+        it <- append(it, res)
+    close(bf)
+    expected <- c(964L, 570L, 1206L, 1418L, 1194L, 120L)
+    checkIdentical(expected, it)
 }
 
 test_BamFile_asMates_range <- function()
