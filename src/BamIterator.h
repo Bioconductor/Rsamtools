@@ -7,7 +7,7 @@
 
 #include <set>
 #include "Template.h"
-
+#include <tr1/unordered_map>
 
 class BamIterator {
 
@@ -17,7 +17,7 @@ public:
     bam1_t *bam;
     bool iter_done;
 
-    typedef map<string, Template> Templates;
+    typedef std::tr1::unordered_map<string, Template> Templates;
     Templates templates;
     queue<list<const bam1_t *> > complete;
     queue<list<const bam1_t *> > ambiguous;
