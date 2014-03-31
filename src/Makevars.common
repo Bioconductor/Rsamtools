@@ -47,4 +47,4 @@ libs: libs0
 	cp libbam.a libbcf.a libtabix.a "${R_PACKAGE_DIR}/usrlib${R_ARCH}"
 
 clean:
-	rm $(BAMOBJ) $(BCFOBJ) $(TABIXOBJ) *.a *.o *.so *.dll
+	rm -f $(BAMOBJ) $(BCFOBJ) $(TABIXOBJ) *.a *.o *.so *.dll
