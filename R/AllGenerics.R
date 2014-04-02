@@ -58,7 +58,10 @@ setGeneric("countFa",
            function(file, ...) standardGeneric("countFa"))
 
 setGeneric("scanFa",
-           function(file, param, ...) standardGeneric("scanFa"))
+           function(file, param, ...,
+                    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
+           standardGeneric("scanFa"),
+           signature=c("file", "param"))
 
 setGeneric("readPileup",
            function(file, ...) standardGeneric("readPileup"))

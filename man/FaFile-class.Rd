@@ -63,10 +63,14 @@ FaFileList(...)
 
 \S4method{countFa}{FaFile}(file, ...)
 
-\S4method{scanFa}{FaFile,GRanges}(file, param, ...)
-\S4method{scanFa}{FaFile,RangesList}(file, param, ...)
-\S4method{scanFa}{FaFile,RangedData}(file, param, ...)
-\S4method{scanFa}{FaFile,missing}(file, param, ...)
+\S4method{scanFa}{FaFile,GRanges}(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
+\S4method{scanFa}{FaFile,RangesList}(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
+\S4method{scanFa}{FaFile,RangedData}(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
+\S4method{scanFa}{FaFile,missing}(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 
 \S4method{getSeq}{FaFile}(x, param, ...)
 \S4method{getSeq}{FaFileList}(x, param, ...)
@@ -86,15 +90,32 @@ FaFileList(...)
     instance to select reads (and sub-sequences) for input. See Methods,
     below.}
 
-  \item{...}{Additional arguments. For \code{FaFileList}, this can
-    either be a single character vector of paths to BAM files, or
-    several instances of \code{FaFile} objects.}
+  \item{...}{Additional arguments. \itemize{
+
+      \item For \code{FaFileList}, this can either be a single character
+      vector of paths to BAM files, or several instances of
+      \code{FaFile} objects.
+
+      \item For \code{scanFa,FaFile,missing-method} this can include
+      arguemnts to \code{readDNAStringSet} / \code{readRNAStringSet} /
+      \code{readAAStringSet} when \code{param} is \sQuote{missing}.
+
+    }
+  }
 
   \item{rw}{Mode of file; ignored.}
 
-  \item{as}{character(1) specifying the return type, selected from
-  specified options. When \code{GRangesList}, index information from
-  each file is returned as an element of the list. When
+  \item{as}{A character(1) vector indicating the type of object to
+    return. \itemize{
+
+      \item For \code{scanFaIndex}, default \code{GRangesList}, with
+      index information from each file is returned as an element of the
+      list.
+
+      \item For \code{scanFa}, default \code{DNAStringSet}.
+
+    }
+
   \code{GRangesList}, index information is collapsed across files into
   the unique index elements.}
 

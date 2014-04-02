@@ -18,6 +18,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
       ranges are input until the total number of records first equals
       or exceeds yieldSize..
 
+    o scanFa supports DNA, RNA, and AAStringSet return objects
+
 BUG FIXES
 
     o scanFa returns correct sequence at the very end of files

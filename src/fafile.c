@@ -129,7 +129,7 @@ static int translate(Chars_holder *seq_data, const int *lkup, int lkup_length)
     return nbinvalid;
 }
 
-SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
+SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP type, SEXP lkup)
 {
     _checkext(ext, FAFILE_TAG, "isOpen");
     if (!IS_CHARACTER(seq))
@@ -150,7 +150,10 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
         *widthp = INTEGER(width);
     for (int i = 0; i < n; ++i)
         widthp[i] = endp[i] - startp[i] + 1;
-    SEXP ans = PROTECT(alloc_XRawList("DNAStringSet", "DNAString", width));
+    const char *baseclass = CHAR(STRING_ELT(type, 0));
+    char classname[13];
+    snprintf(classname, sizeof(classname), "%sSet", baseclass);
+    SEXP ans = PROTECT(alloc_XRawList(classname, baseclass, width));
     XVectorList_holder ans_holder = hold_XVectorList(ans);
 
     for (int i = 0; i < n; ++i) {
@@ -165,7 +168,8 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup)
         if (len < widthp[i])
             Rf_error(" record %d (%s:%d-%d) was truncated", i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);
-        if (translate(&ans_elt_holder, INTEGER(lkup), LENGTH(lkup)) != 0)
+        if (lkup != R_NilValue &&
+            translate(&ans_elt_holder, INTEGER(lkup), LENGTH(lkup)) != 0)
             Rf_error(" record %d (%s:%d-%d) contains invalid DNA letters",
                      i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);

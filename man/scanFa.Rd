@@ -34,11 +34,16 @@ scanFaIndex(file, ...)
 countFa(file, ...)
 \S4method{countFa}{character}(file, ...)
 
-scanFa(file, param, ...)
-\S4method{scanFa}{character,GRanges}(file, param, ...)
-\S4method{scanFa}{character,RangesList}(file, param, ...)
-\S4method{scanFa}{character,RangedData}(file, param, ...)
-\S4method{scanFa}{character,missing}(file, param, ...)
+scanFa(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
+\S4method{scanFa}{character,GRanges}(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
+\S4method{scanFa}{character,RangesList}(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
+\S4method{scanFa}{character,RangedData}(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
+\S4method{scanFa}{character,missing}(file, param, ...,
+    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 
 }
 
@@ -50,7 +55,12 @@ scanFa(file, param, ...)
     \code{\linkS4class{RangesList}}, or \code{\linkS4class{RangedData}}
     instance to select reads (and sub-sequences) for input.}
 
-  \item{...}{Additional arguments, currently unused.}
+  \item{as}{A character(1) vector indicating the type of object to
+    return; default \code{DNAStringSet}.}
+
+  \item{...}{Additional arguments, passed to \code{readDNAStringSet} /
+    \code{readRNAStringSet} / \code{readAAStringSet} when \code{param}
+    is \sQuote{missing}.}
 
 }
 
@@ -66,7 +76,8 @@ scanFa(file, param, ...)
   \code{countFa} returns the number of records in the fasta file.
 
   \code{scanFa} return the sequences indicated by \code{param} as a
-  \code{\linkS4class{DNAStringSet}} instance. \code{seqnames(param)}
+  \code{\linkS4class{DNAStringSet}}, \code{\linkS4class{RNAStringSet}},
+  \code{\linkS4class{AAStringSet}} instance. \code{seqnames(param)}
   selects the sequences to return; \code{start(param)} and
   \code{end{param}} define the (1-based) region of the sequence to
   return. Values of \code{end(param)} greater than the width of the

@@ -18,6 +18,6 @@ SEXP fafile_isopen(SEXP ext);
 
 SEXP index_fa(SEXP filename);
 SEXP n_fa(SEXP ext);
-SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP lkup);
+SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP as, SEXP lkup);
 
 #endif

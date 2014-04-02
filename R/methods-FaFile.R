@@ -83,18 +83,22 @@ setMethod(countFa, "FaFile",
 })
 
 .scanFa <-
-    function(file, param, ...)
+    function(file, param, ...,
+        as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 {
     if (!isOpen(file)) {
         open(file)
         on.exit(close(file))
     }
 
-    lkup <- Biostrings::get_seqtype_conversion_lookup("B", "DNA")
+    as <- match.arg(as)
+    type <- sub("StringSet", "", as)
+    base <- sub("Set", "", as)
+    lkup <- Biostrings::get_seqtype_conversion_lookup("B", type)
     tryCatch({
         spc <- .asSpace(param)
         dna <- .Call(.scan_fa, .extptr(file), spc[[1]], spc[[2]],
-                     spc[[3]], lkup)
+                     spc[[3]], base, lkup)
         setNames(dna, spc[[1]])
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(file))
@@ -108,9 +112,14 @@ setMethod(scanFa, c("FaFile", "RangesList"), .scanFa)
 setMethod(scanFa, c("FaFile", "RangedData"), .scanFa)
 
 setMethod(scanFa, c("FaFile", "missing"),
-    function(file, param, ...)
+    function(file, param, ...,
+        as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 {
-    readDNAStringSet(path(file))
+    as <- match.arg(as)
+    switch(as,
+           DNAStringSet=readDNAStringSet(path(file), ...),
+           RNAStringSet=readRNAStringSet(path(file), ...),
+           AAStringSet=readAAStringSet(path(file), ...))
 })
 
 setMethod(seqinfo, "FaFile",
@@ -162,25 +171,33 @@ setMethod(countFa, "character",
     function(file, ...) countFa(open(FaFile(file))))
 
 setMethod(scanFa, c("character", "GRanges"),
-    function(file, param, ...)
+    function(file, param, ...,
+        as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 {
-    scanFa(FaFile(file), param, ...)
+    as <- match.arg(as)
+    scanFa(FaFile(file), param, ..., as=as)
 })
 
 setMethod(scanFa, c("character", "RangesList"),
-    function(file, param, ...)
+    function(file, param, ...,
+        as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 {
-    scanFa(FaFile(file), param, ...)
+    as <- match.arg(as)
+    scanFa(FaFile(file), param, ..., as=as)
 })
 
 setMethod(scanFa, c("character", "RangedData"),
-    function(file, param, ...)
+    function(file, param, ...,
+        as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 {
-    scanFa(FaFile(file), param, ...)
+    as <- match.arg(as)
+    scanFa(FaFile(file), param, ..., as=as)
 })
 
 setMethod(scanFa, c("character", "missing"),
-    function(file, param, ...)
+    function(file, param, ...,
+        as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 {
-    scanFa(FaFile(file), ...)
+    as <- match.arg(as)
+    scanFa(FaFile(file), ..., as=as)
 })

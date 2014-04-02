@@ -56,7 +56,7 @@ static const R_CallMethodDef callMethods[] = {
     {".fafile_isopen", (DL_FUNC) & fafile_isopen, 1},
     {".index_fa", (DL_FUNC) & index_fa, 1},
     {".n_fa", (DL_FUNC) & n_fa, 1},
-    {".scan_fa", (DL_FUNC) & scan_fa, 5},
+    {".scan_fa", (DL_FUNC) & scan_fa, 6},
     /* tabixfile */
     {".tabixfile_init", (DL_FUNC) & tabixfile_init, 0},
     {".tabixfile_open", (DL_FUNC) & tabixfile_open, 2},
