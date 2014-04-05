@@ -133,12 +133,12 @@ mergeBam(files, destination, ...)
   of the file, e.g., more targets may be present that are represented by
   reads in the file.
 
-  \code{asBam} converts 'SAM' files to 'BAM' files, equivalent to the
+  \code{asBam} converts 'SAM' files to 'BAM' files, equivalent to
   \code{samtools view -Sb file > destination}. The 'BAM' file is sorted
   and an index created on the destination (with extension '.bai') when
   \code{indexDestination=TRUE}.
 
-  \code{asSam} converts 'BAM' files to 'SAM' files, equivalent to the
+  \code{asSam} converts 'BAM' files to 'SAM' files, equivalent to
   \code{samtools view file > destination}.
 
   \code{filterBam} parses records in \code{file}. Records satisfying the
