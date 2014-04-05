@@ -7,6 +7,9 @@ NEW FEATURES
 
     o razip, bgzip re-compress directly from .gz files
 
+    o yieldReduce through a BAM or other file, applying a MAP function
+      to each chunk and reducing the result to it's final representation
+
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o bgzip default extension changed to '.bgz'
