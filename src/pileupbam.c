@@ -660,14 +660,20 @@ SEXP apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
 
     p.n_files = Rf_length(files);
     p.names = names;
-    for (i = 0; i < p.n_files; ++i)
-        _check_isbamfile(VECTOR_ELT(files, i), "pileup");
+    for (i = 0; i < p.n_files; ++i) {
+        SEXP elt = VECTOR_ELT(files, i);
+        _check_isbamfile(elt, "pileup");
+        if (NULL == BAMFILE(elt)->index)
+            Rf_error("no index found for file '%s'",
+                     CHAR(STRING_ELT(names, i)));
+    }
     if (R_NilValue == space)
         Rf_error("'NULL' space not (yet) supported");
     _checkparams(space, R_NilValue, R_NilValue);
     if (!Rf_isFunction(callback) || 1L != Rf_length(FORMALS(callback)))
-        Rf_error("'callback' mst be a function of 1 argument");
+        Rf_error("'callback' must be a function of 1 argument");
     call = PROTECT(Rf_lang2(callback, R_NilValue));
+
 
     /* param */
     spc_iter = _space_iter_init(space);

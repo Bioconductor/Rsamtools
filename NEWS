@@ -26,6 +26,8 @@ BUG FIXES
 
     o razip compresses small files
 
+    o applyPileups no longer crashes in the absence of an index file
+
 CHANGES IN VERSION 1.14.0
 -------------------------
 
