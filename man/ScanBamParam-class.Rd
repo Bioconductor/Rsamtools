@@ -57,8 +57,7 @@ ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
     hasUnmappedMate = NA, isMinusStrand = NA, isMateMinusStrand = NA,
     isFirstMateRead = NA, isSecondMateRead = NA, isNotPrimaryRead = NA,
-    isNotPassingQualityControls = NA, isDuplicate = NA,
-    isValidVendorRead = NA)
+    isNotPassingQualityControls = NA, isDuplicate = NA)
 
 scanBamWhat()
 
@@ -174,9 +173,6 @@ bamFlagTest(flag, value)
   \item{isNotPassingQualityControls}{A logical(1) indicating whether
     reads passing quality controls (FALSE), reads not passing quality
     controls (TRUE), or any (NA) read should be returned.}
-
-  \item{isValidVendorRead}{Deprecated; use
-    \code{isNotPassingQualityControls}.}
 
   \item{isDuplicate}{A logical(1) indicating that un-duplicated (FALSE),
     duplicated (TRUE), or any (NA) reads should be
@@ -314,9 +310,13 @@ str(bam4[[1]][["tag"]])
 
 ## flag utils
 flag <- scanBamFlag(isUnmappedQuery=FALSE, isMinusStrand=TRUE)
+
+p5 <- ScanBamParam(what="flag")
+bam5 <- scanBam(fl, param=p5)
+flag5 <- bam5[[1]][["flag"]]
+head(bamFlagAsBitMatrix(flag5[1:9]))
+colSums(bamFlagAsBitMatrix(flag5))
 flag
 bamFlagAsBitMatrix(flag)
-flag4 <- bam4[[1]][["flag"]]
-bamFlagAsBitMatrix(flag4[1:9], bitnames=c("isUnmappedQuery", "isMinusStrand"))
 }
 \keyword{classes}

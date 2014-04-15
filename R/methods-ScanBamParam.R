@@ -183,7 +183,7 @@ scanBamFlag <-
              isMateMinusStrand=NA, isFirstMateRead=NA,
              isSecondMateRead=NA, # redundant
              isNotPrimaryRead=NA, isNotPassingQualityControls=NA,
-             isDuplicate=NA, isValidVendorRead=NA)
+             isDuplicate=NA)
 
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
 {
@@ -194,23 +194,6 @@ scanBamFlag <-
         stop("all arguments must be logical(1)")
     if (length(args) > 0)
     {
-        ## deprecate isValidVendorRead
-        if ("isValidVendorRead" %in% names(args))
-        {
-            .Deprecated("isNotPassingQualityControls",
-                        old="isValidVendorRead")
-            old <- !args[["isValidVendorRead"]]
-            args[["isValidVendorRead"]] <- NULL
-            if (("isNotPassingQualityControls" %in% names(args)) &&
-                !identical(args[["isNotPassingQualityControls"]], old))
-            {
-                msg <- sprintf("'%s' inconsistent with '%s', using '%s'",
-                    "isValidVendorRead", "isNotPassingQualityControls",
-                     "isNotPassingQualityControls")
-                warning(paste(strwrap(msg, exdent=2), collapse="\n"))
-            }
-            args[["isNotPassingQualityControls"]] <- old
-        }
         ## keep0: NA | FALSE --> drop !NA & TRUE
         idx <- names(args[sapply(args, function(x) !is.na(x) && x)])
         keep0 <- Reduce("+", flag[ !names(flag) %in% idx ], 0L)
