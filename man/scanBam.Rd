@@ -316,8 +316,10 @@ names(res1[[2]])
 p2 <- ScanBamParam(what=c("rname", "strand", "pos", "qwidth"))
 res2 <- scanBam(fl, param=p2)
                 
-p3 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))
-length(scanBam(fl, param=p3)[[1]])
+p3 <- ScanBamParam(
+    what="flag",           # information to query from BAM file 
+    flag=scanBamFlag(isMinusStrand=FALSE))
+length(scanBam(fl, param=p3)[[1]]$flag)
 
 ##
 ## filterBam
@@ -340,12 +342,15 @@ table(width(res3$seq))
 
 sorted <- sortBam(fl, tempfile())
 
-## map mcols(gwhich) to output, e.g., of countBam
-gwhich <- as(which, "GRanges")[c(2, 1, 3)]
-mcols(gwhich)[["OriginalOrder"]] <- 1:3
+##
+## scanBamParam re-orders 'which'; recover original order
+##
+
+gwhich <- as(which, "GRanges")[c(2, 1, 3)]    # example data
 cnt <- countBam(fl, param=ScanBamParam(which=gwhich))
-cntVals <- unlist(split(mcols(gwhich), seqnames(gwhich)))
-cbind(cnt, as.data.frame(cntVals))
+reorderIdx <- unlist(split(seq_along(gwhich), seqnames(gwhich)))
+cnt
+cnt[reorderIdx,]
 
 }
 

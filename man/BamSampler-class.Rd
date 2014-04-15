@@ -74,12 +74,12 @@ BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE, asMates = FALS
 \author{Martin Morgan}
 
 \examples{
-library(GenomicAlignments)  # for readGAlignmentsFromBam()
+library(GenomicAlignments)  # for readGAlignments()
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 samp <- BamSampler(fl, yieldSize=1000)
 ## two independent samples
-head(readGAlignmentsFromBam(samp))
-head(readGAlignmentsFromBam(samp))
+head(readGAlignments(samp))
+head(readGAlignments(samp))
 
 }
 

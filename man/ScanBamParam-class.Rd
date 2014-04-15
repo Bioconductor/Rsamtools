@@ -292,10 +292,11 @@ p0 <- ScanBamParam()
 ## subset of reads based on genomic coordinates
 which <- RangesList(seq1=IRanges(1000, 2000),
                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
-p1 <- ScanBamParam(which=which)
+p1 <- ScanBamParam(what=scanBamWhat(), which=which)
 
 ## subset of reads based on 'flag' value
-p2 <- ScanBamParam(flag=scanBamFlag(isMinusStrand=FALSE))
+p2 <- ScanBamParam(what=scanBamWhat(),
+                   flag=scanBamFlag(isMinusStrand=FALSE))
 
 ## subset of fields
 p3 <- ScanBamParam(what=c("rname", "strand", "pos", "qwidth"))

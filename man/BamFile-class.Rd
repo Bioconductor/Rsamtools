@@ -206,7 +206,7 @@ asMates(object, ...) <- value
       \item{obeyQname: }{A logical(0) indicating if the file was sorted by 
         qname. In Bioconductor > 2.12 paired-end files do not need to be 
         sorted by \code{qname}. Instead set \code{asMates=TRUE} in the
-        \code{BamFile} when using the \code{readGAlignmentsListFromBam}
+        \code{BamFile} when using the \code{readGAlignmentsList}
         function from the \pkg{GenomicAlignments} package.
       }
   }
@@ -300,9 +300,9 @@ asMates(object, ...) <- value
 
 \seealso{
   \itemize{
-    \item The \code{\link[GenomicAlignments]{readGAlignmentsFromBam}},
-          \code{\link[GenomicAlignments]{readGAlignmentPairsFromBam}},
-          and \code{\link[GenomicAlignments]{readGAlignmentsListFromBam}}
+    \item The \code{\link[GenomicAlignments]{readGAlignments}},
+          \code{\link[GenomicAlignments]{readGAlignmentPairs}},
+          and \code{\link[GenomicAlignments]{readGAlignmentsList}}
           functions defined in the \pkg{GenomicAlignments} package.
 
     \item \code{\link[GenomicAlignments]{summarizeOverlaps}} and
