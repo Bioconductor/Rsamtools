@@ -13,7 +13,7 @@
 \alias{plpFiles}
 \alias{plpParam}
 % methods
-\alias{applyPileups,PileupFiles,PileupParam-method}
+\alias{applyPileups,PileupFiles,ApplyPileupsParam-method}
 \alias{applyPileups,PileupFiles,missing-method}
 \alias{show,PileupFiles-method}
 
@@ -29,9 +29,9 @@
 \usage{
 
 ## Constructors
-PileupFiles(files, ..., param=PileupParam())
-\S4method{PileupFiles}{character}(files, ..., param=PileupParam())
-\S4method{PileupFiles}{list}(files, ..., param=PileupParam())
+PileupFiles(files, ..., param=ApplyPileupsParam())
+\S4method{PileupFiles}{character}(files, ..., param=ApplyPileupsParam())
+\S4method{PileupFiles}{list}(files, ..., param=ApplyPileupsParam())
 
 ## opening / closing
 \S3method{open}{PileupFiles}(con, ...)
@@ -44,7 +44,7 @@ plpParam(object)
 
 ## actions
 \S4method{applyPileups}{PileupFiles,missing}(files, FUN, ..., param)
-\S4method{applyPileups}{PileupFiles,PileupParam}(files, FUN, ..., param)
+\S4method{applyPileups}{PileupFiles,ApplyPileupsParam}(files, FUN, ..., param)
 
 ## display
 \S4method{show}{PileupFiles}(object)
@@ -68,7 +68,7 @@ plpParam(object)
 
   \item{FUN}{A function of one argument; see \code{\link{applyPileups}}.}
 
-  \item{param}{An instance of \code{\link{PileupParam}}, 
+  \item{param}{An instance of \code{\link{ApplyPileupsParam}}, 
     to select which records to include in the pileup, and which summary
     information to return.}
 
@@ -92,7 +92,7 @@ plpParam(object)
 
     \item{files}{A list of \code{\link{BamFile}} instances.}
 
-    \item{param}{An instance of \code{\link{PileupParam}}.}
+    \item{param}{An instance of \code{\link{ApplyPileupsParam}}.}
 
   }
 }
@@ -119,7 +119,7 @@ plpParam(object)
     \item{plpFiles}{Returns the \code{list} of the files in the
       \code{PileupFiles} instance.}
 
-    \item{plpParam}{Returns the \code{\link{PileupParam}} content of the
+    \item{plpParam}{Returns the \code{\link{ApplyPileupsParam}} content of the
       \code{PileupFiles} instance.}
 
   }

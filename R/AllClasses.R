@@ -35,7 +35,7 @@ setClass("ScanBVcfParam",
 
 setClass("ScanBcfParam", contains="ScanBVcfParam")
 
-setClass("PileupParam",
+setClass("ApplyPileupsParam",
     representation=representation(
       flag="integer",
       minBaseQuality="integer",
@@ -79,4 +79,4 @@ setClass("FaFileList", contains="RsamtoolsFileList",
          prototype=prototype(elementType="FaFile"))
 
 setClass("PileupFiles", contains="BamFileList",
-         representation=representation(param="PileupParam"))
+         representation=representation(param="ApplyPileupsParam"))

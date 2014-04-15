@@ -63,7 +63,7 @@ applyPileups(files, FUN, ..., param)
   \item{\dots}{Additional arguments, passed to methods.}
 
   \item{param}{An instance of the object returned by
-    \code{PileupParam}.}
+    \code{ApplyPileupsParam}.}
 
 }
 
@@ -82,7 +82,7 @@ applyPileups(files, FUN, ..., param)
   number of times \code{FUN} has been called, with each element
   containing the result of \code{FUN}.
 
-  \code{PileupParam} returns an object describing the parameters.
+  \code{ApplyPileupsParam} returns an object describing the parameters.
 
 }
 
@@ -90,7 +90,7 @@ applyPileups(files, FUN, ..., param)
 
 \author{Martin Morgan}
 
-\seealso{\code{\link{PileupParam}}.}
+\seealso{\code{\link{ApplyPileupsParam}}.}
 
 \examples{
 
@@ -114,7 +114,7 @@ calcInfo <-
     list(seqnames=x[["seqnames"]], pos=x[["pos"]], info=info)
 }
 which <- GRanges(c("seq1", "seq2"), IRanges(c(1000, 1000), 2000))
-param <- PileupParam(which=which, what="seq")
+param <- ApplyPileupsParam(which=which, what="seq")
 res <- applyPileups(fls, calcInfo, param=param)
 str(res)
 head(res[[1]][["pos"]])		# positions matching param
@@ -126,8 +126,8 @@ res1 <- applyPileups(fls1, calcInfo)
 identical(res, res1)
 
 ## yield by position, across ranges
-param <- PileupParam(which=which, yieldSize=500L, yieldBy="position",
-                     what="seq")
+param <- ApplyPileupsParam(which=which, yieldSize=500L,
+                           yieldBy="position", what="seq")
 res <- applyPileups(fls, calcInfo, param=param)
 sapply(res, "[[", "seqnames")
 

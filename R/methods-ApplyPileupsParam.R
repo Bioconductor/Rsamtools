@@ -1,4 +1,4 @@
-setMethod(.validity, "PileupParam", function(object) {
+setMethod(.validity, "ApplyPileupsParam", function(object) {
     msg <- NULL
     flag <- object@flag
     if (2L != length(flag) ||
@@ -13,7 +13,7 @@ setMethod(.validity, "PileupParam", function(object) {
         msg <- c(msg,
                  sprintf("'%s' must be length 1",
                          paste(len1elts[!ok], collapse="' '")))
-    what <- eval(formals(PileupParam)[["what"]])
+    what <- eval(formals(ApplyPileupsParam)[["what"]])
     ok <- object@what %in% what
     if (!all(ok))
         msg <- c(msg, sprintf("'what' must be in '%s'",
@@ -21,7 +21,7 @@ setMethod(.validity, "PileupParam", function(object) {
     if (is.null(msg)) TRUE else msg
 })
 
-PileupParam <-
+ApplyPileupsParam <-
     function(flag=scanBamFlag(),
              minBaseQuality=13L,
              minMapQuality=0L,
@@ -36,7 +36,7 @@ PileupParam <-
     yieldBy <- match.arg(yieldBy)
     if ("range" == yieldBy && yieldSize != 1)
         stop("'yieldSize' must equal 1 when 'yieldBy=\"range\"'")
-    new("PileupParam", flag=flag,
+    new("ApplyPileupsParam", flag=flag,
         minBaseQuality=as.integer(minBaseQuality),
         minMapQuality=as.integer(minMapQuality),
         minDepth=as.integer(minDepth),
@@ -47,7 +47,7 @@ PileupParam <-
         which=which, what=what)
 }
 
-setAs("PileupParam", "list", function(from) {
+setAs("ApplyPileupsParam", "list", function(from) {
     nms <- slotNames(class(from))
     res <- lapply(nms, slot, object=from)
     names(res) <- nms
@@ -135,7 +135,7 @@ plpWhat <- function(object) slot(object, "what")
     object
 }
     
-setMethod(show, "PileupParam", function(object) {
+setMethod(show, "ApplyPileupsParam", function(object) {
     cat("class:", class(object), "\n")
     cat("plpFlag:",
         sprintf("%s=%s", names(object@flag), object@flag),

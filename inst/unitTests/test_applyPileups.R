@@ -6,7 +6,7 @@ test_applyPileups_byRange <- function()
     fls <- PileupFiles(c(fl, fl))
     fun <- function(x) x[["seqnames"]]
     which <- GRanges(c("seq1", "seq2"), IRanges(c(1000, 1000), 2000))
-    param <- PileupParam(which=which)
+    param <- ApplyPileupsParam(which=which)
     res <- applyPileups(fls, fun, param=param)
     exp <- list(structure(570L, .Names = "seq1"),
                 structure(568L, .Names = "seq2"))
@@ -22,7 +22,7 @@ test_applyPileups_byRange_yieldAll <- function()
     fls <- PileupFiles(c(fl, fl))
     which <- GRanges(c("seq1", "seq2"),
                      IRanges(c(1000, 1000), c(2000, 1500)))
-    param <- PileupParam(which=which, yieldAll=TRUE)
+    param <- ApplyPileupsParam(which=which, yieldAll=TRUE)
     res <- applyPileups(fls, function(x) x$seqnames, param=param)
     exp <- list(structure(1001L, .Names = "seq1"),
                 structure(501L, .Names = "seq2"))
@@ -37,7 +37,7 @@ test_applyPileups_byPosition <- function()
     fun <- function(x) x[["seqnames"]]
     which <- GRanges(c("seq1", "seq2"), IRanges(c(1000, 1000), 2000))
     param <-
-        PileupParam(which=which, yieldSize=2000L, yieldBy="position")
+        ApplyPileupsParam(which=which, yieldSize=2000L, yieldBy="position")
     res <- applyPileups(fls, fun, param=param)
     exp <- list(structure(c(570L, 568L), .Names = c("seq1", "seq2")))
     checkIdentical(exp, res)
@@ -46,7 +46,7 @@ test_applyPileups_byPosition <- function()
     checkIdentical(list(41165L), res)
 
     param <-
-        PileupParam(which=which, yieldSize=500L, yieldBy="position")
+        ApplyPileupsParam(which=which, yieldSize=500L, yieldBy="position")
     res <- applyPileups(fls, fun, param=param)
     exp <- list(structure(500L, .Names = "seq1"),
                 structure(c(70L, 430L), .Names = c("seq1", "seq2")),
@@ -62,38 +62,38 @@ test_applyPileups_byPosition_yieldAll <- function() {
     fun <- function(x) colSums(x$seq[,1,,drop=FALSE])
     which <- GRanges("seq1", IRanges(1000, 1100))
 
-    param <- PileupParam(which=which, yieldSize=10L,
-                         yieldBy="position", yieldAll=TRUE)
+    param <- ApplyPileupsParam(which=which, yieldSize=10L,
+                               yieldBy="position", yieldAll=TRUE)
     res0 <- applyPileups(fls, fun, param=param)
     checkIdentical(11L, length(res0))
 
-    param <- PileupParam(which=which, yieldSize=50L,
-                         yieldBy="position", yieldAll=TRUE)
+    param <- ApplyPileupsParam(which=which, yieldSize=50L,
+                               yieldBy="position", yieldAll=TRUE)
     res <- applyPileups(fls, fun, param=param)
     checkIdentical(3L, length(res))
     checkIdentical(unlist(res0), unlist(res))
 
-    param <- PileupParam(which=which, yieldSize=100L,
-                         yieldBy="position", yieldAll=TRUE)
+    param <- ApplyPileupsParam(which=which, yieldSize=100L,
+                               yieldBy="position", yieldAll=TRUE)
     res <- applyPileups(fls, fun, param=param)
     checkIdentical(2L, length(res))
     checkIdentical(unlist(res0), unlist(res))
 
-    param <- PileupParam(which=which, yieldSize=101L,
-                         yieldBy="position", yieldAll=TRUE)
+    param <- ApplyPileupsParam(which=which, yieldSize=101L,
+                               yieldBy="position", yieldAll=TRUE)
     res <- applyPileups(fls, fun, param=param)
     checkIdentical(unlist(res0), unlist(res))
     checkIdentical(1L, length(res))
 
-    param <- PileupParam(which=which, yieldSize=200L,
-                         yieldBy="position", yieldAll=TRUE)
+    param <- ApplyPileupsParam(which=which, yieldSize=200L,
+                               yieldBy="position", yieldAll=TRUE)
     res <- applyPileups(fls, fun, param=param)
     checkIdentical(1L, length(res))
     checkIdentical(unlist(res0), unlist(res))
 
-    param <- PileupParam(which=GRanges("seq1",
-                           IRanges(seq(10, 110, by=10), width=1), "+"),
-                         yieldBy="position", yieldAll=TRUE, yieldSize=5)
+    param <- ApplyPileupsParam(which=GRanges("seq1",
+                               IRanges(seq(10, 110, by=10), width=1), "+"),
+                               yieldBy="position", yieldAll=TRUE, yieldSize=5)
     seqnames <- applyPileups(fls, function(x) x$seqnames, param=param)
     exp <- list(structure(5L, .Names = "seq1"),
                 structure(5L, .Names = "seq1"),
@@ -111,21 +111,21 @@ test_applyPileups_what <- function() {
     fls <- PileupFiles(c(fl, fl))
     which <- GRanges("seq1", IRanges(1000, 1999))
 
-    param <- PileupParam(which=which, yieldAll=TRUE)
+    param <- ApplyPileupsParam(which=which, yieldAll=TRUE)
     obs <- applyPileups(fls, function(x) sapply(x, length), param=param)[[1]]
     exp <- c(seqnames=1L, pos=1000L, seq=2L * 5L * 1000L,
              qual=2L * 94L * 1000L)
     checkIdentical(obs, exp)
 
-    param <- PileupParam(which=which, yieldAll=TRUE, what=character())
+    param <- ApplyPileupsParam(which=which, yieldAll=TRUE, what=character())
     obs <- applyPileups(fls, function(x) x$pos, param=param)[[1]]
     checkIdentical(999L + 1:1000, obs)
 
-    param <- PileupParam(which=which, yieldAll=TRUE, what="seq")
+    param <- ApplyPileupsParam(which=which, yieldAll=TRUE, what="seq")
     obs <- applyPileups(fls, function(x) sapply(x, length), param=param)[[1]]
     checkIdentical(obs, exp[1:3])
 
-    param <- PileupParam(which=which, yieldAll=TRUE, what="qual")
+    param <- ApplyPileupsParam(which=which, yieldAll=TRUE, what="qual")
     obs <- applyPileups(fls, function(x) sapply(x, length), param=param)[[1]]
     checkIdentical(obs, exp[c(1:2, 4)])
 }
@@ -136,8 +136,8 @@ test_applyPileups_memoryleak_warning <- function() {
     opts <- options(warn=2)
     on.exit(options(opts))
     fls <- PileupFiles(c(fl, fl))
-    param <- PileupParam(which=GRanges("seq1", IRanges(1000, 1499)),
-                         yieldAll=TRUE)
+    param <- ApplyPileupsParam(which=GRanges("seq1", IRanges(1000, 1499)),
+                               yieldAll=TRUE)
     obs <- applyPileups(fls, function(x) NULL, param=param)
     checkIdentical(list(NULL), obs)
 }
@@ -150,8 +150,8 @@ test_applyPileups_NULL_space <- function() {
 test_applyPileups_skip_inserts <- function() {
     fl <- system.file("unitTests", "cases", "plp_refskip.bam", 
                       package="Rsamtools")
-    param <- PileupParam(which=GRanges("seq1", IRanges(1, 1000000)),
-                         what="seq")
+    param <- ApplyPileupsParam(which=GRanges("seq1", IRanges(1, 1000000)),
+                               what="seq")
     res <-
         applyPileups(PileupFiles(fl), function(x) rowSums(x$seq[,1,]),
                      param=param)
@@ -166,8 +166,8 @@ test_applyPileups_skip_inserts <- function() {
     checkIdentical(75L, res[[1]])
 
     ## yieldAll=TRUE
-    param <- PileupParam(which=GRanges("seq1", IRanges(1, 1000000)),
-                         yieldAll=TRUE, what="seq")
+    param <- ApplyPileupsParam(which=GRanges("seq1", IRanges(1, 1000000)),
+                               yieldAll=TRUE, what="seq")
     obs <- structure(c(19, 12, 18, 26, 0),
                      .Names = c("A", "C", "G", "T", "N"))
     res <-

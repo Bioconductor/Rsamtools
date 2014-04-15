@@ -1,8 +1,8 @@
-\name{PileupParam}
+\name{ApplyPileupsParam}
 \Rdversion{1.1}
 \docType{class}
-\alias{PileupParam-class}
-\alias{PileupParam}
+\alias{ApplyPileupsParam-class}
+\alias{ApplyPileupsParam}
 % accessors
 \alias{plpFlag<-}
 \alias{plpFlag}
@@ -25,12 +25,12 @@
 \alias{plpYieldSize<-}
 \alias{plpYieldSize}
 % methods
-\alias{show,PileupParam-method}
+\alias{show,ApplyPileupsParam-method}
 
 \title{Parameters for creating pileups from BAM files}
 \description{
 
-  Use \code{PileupParam()} to create a parameter object influencing
+  Use \code{ApplyPileupsParam()} to create a parameter object influencing
   what fields and which records  are used to calculate pile-ups, and to
   influence the values returned.
 
@@ -39,7 +39,7 @@
 \usage{
 
 # Constructor
-PileupParam(flag = scanBamFlag(),
+ApplyPileupsParam(flag = scanBamFlag(),
     minBaseQuality = 13L, minMapQuality = 0L,
     minDepth = 0L, maxDepth = 250L,
     yieldSize = 1L, yieldBy = c("range", "position"), yieldAll = FALSE,
@@ -67,7 +67,7 @@ plpYieldBy(object) <- value
 plpYieldSize(object)
 plpYieldSize(object) <- value
 
-\S4method{show}{PileupParam}(object)
+\S4method{show}{ApplyPileupsParam}(object)
 
 }
 
@@ -111,16 +111,16 @@ plpYieldSize(object) <- value
   \item{what}{A \code{character()} instance indicating what values are
     to be returned. One or more of \code{c("seq", "qual")}.}
 
-  \item{object}{An instace of class \code{PileupParam}.}
+  \item{object}{An instace of class \code{ApplyPileupsParam}.}
 
   \item{value}{An instance to be assigned to the corresponding slot of
-    the \code{PileupParam} instance.}
+    the \code{ApplyPileupsParam} instance.}
 
 }
 
 \section{Objects from the Class}{
 
-  Objects are created by calls of the form \code{PileupParam()}.
+  Objects are created by calls of the form \code{ApplyPileupsParam()}.
 
 }
 \section{Slots}{
@@ -161,7 +161,7 @@ plpYieldSize(object) <- value
   Constructor:
   \describe{
 
-    \item{PileupParam:}{Returns a \code{PileupParam} object.}
+    \item{ApplyPileupsParam:}{Returns a \code{ApplyPileupsParam} object.}
 
   }
 

@@ -1,5 +1,5 @@
 PileupFiles <-
-    function(files, ..., param=PileupParam())
+    function(files, ..., param=ApplyPileupsParam())
 {
     bfl <- BamFileList(files, ...)
     new("PileupFiles", bfl, param=param)
@@ -9,7 +9,7 @@ plpFiles <- function(object) as(object, "BamFileList")
 
 plpParam <- function(object) object@param
 
-setMethod(applyPileups, c("PileupFiles", "PileupParam"),
+setMethod(applyPileups, c("PileupFiles", "ApplyPileupsParam"),
     function(files, FUN, ..., param)
 {
     FUN <- match.fun(FUN)
