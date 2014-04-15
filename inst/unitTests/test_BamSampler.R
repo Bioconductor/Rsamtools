@@ -14,12 +14,16 @@ test_BamSampler <- function()
     checkTrue(!identical(obs1, obs2))
 
     bf <- BamSampler(fl, yieldSize=10000)
-    checkIdentical(scanBam(fl), scanBam(bf))
+    obs <- scanBam(bf)
+    exp <- list(BamSamplerStatistics=c(yieldSize=10000L,
+                  totalRead=3307L, yield=3307L))
+    checkIdentical(exp, attributes(obs))
+    attributes(obs) <- NULL
+    checkIdentical(scanBam(fl), obs)
 }
 
 test_BamSampler_param <- function()
 {
-
     bf <- BamSampler(fl, yieldSize=1000)
     param <- ScanBamParam(what="strand", flag=scanBamFlag(
                                            isUnmappedQuery=FALSE,

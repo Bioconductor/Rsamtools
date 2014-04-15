@@ -3,6 +3,9 @@ CHANGES IN VERSION 1.17.0
 
 NEW FEATURES
 
+    o scanBam,BamSampler-method returns requested and actual
+      yieldSize, and total reads
+
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o rename PileupParam class and constructor -> ApplyPileupsParam

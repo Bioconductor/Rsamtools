@@ -69,6 +69,11 @@ BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE, asMates = FALS
   \code{BamSampler} inherits methods from \code{\link{BamFile}} and can
   be used in place of \code{BamFile} in many functions.
 
+  The return value of \code{scanBam} contains an attribute
+  \code{BamSamplerStatistics}, a vector of the requests
+  \code{yieldSize}, the \code{totalRead} count, and the actual
+  \code{yield}.
+
 }
 
 \author{Martin Morgan}
@@ -80,6 +85,11 @@ samp <- BamSampler(fl, yieldSize=1000)
 ## two independent samples
 head(readGAlignments(samp))
 head(readGAlignments(samp))
+
+## scanBam returns an attribute indicating the total number
+## of reads from which the sample was drawn
+result <- scanBam(samp)
+attr(result, "BamSamplerStatistics")
 
 }
 

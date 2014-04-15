@@ -12,7 +12,13 @@ setMethod("scanBam", "BamSampler",
     function(file, index=file, ...,
              param=ScanBamParam(what=scanBamWhat()))
 {
-    tot <- sampleSize <- yieldSize(file)
+    if (0L == length(bamWhat(param)) && 0L == length(bamTag(param))) {
+        txt <- "no BAM fields selected for input (niether 'bamWhat(param)'
+                nor 'bamTag(param)' defined)"
+        stop(paste(strwrap(txt), collapse="\n  "))
+    }
+
+    sampleSize <- yieldSize(file)
     if (is.na(yieldSize(file)))
         stop("'yieldSize' must not be NA")
 
@@ -21,13 +27,14 @@ setMethod("scanBam", "BamSampler",
     on.exit(close(bfile))
 
     smpl <- .quickUnlist(scanBam(bfile, param=param))
+    tot <- length(smpl[[1]])
     repeat {
         yld <- .quickUnlist(scanBam(bfile, param=param))
         yld_n <- length(yld[[1]])
         if (length(yld[[1]]) == 0L)
             break
         tot <- tot + yld_n
-        keep <- rbinom(1L, yld_n, yld_n/ tot)
+        keep <- rbinom(1L, yld_n, yld_n / tot)
         if (keep == 0L)
             next
 
@@ -38,7 +45,10 @@ setMethod("scanBam", "BamSampler",
             x
         }, smpl, yld, MoreArgs=list(i=i, j=j))
     }
-    list(smpl)
+    lst <- list(smpl)
+    attr(lst, "BamSamplerStatistics") <-
+        c(yieldSize=sampleSize, totalRead=tot, yield=length(smpl[[1]]))
+    lst
 })
 
 setMethod(show, "BamSampler", function(object) {
