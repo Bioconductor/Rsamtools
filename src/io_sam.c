@@ -6,7 +6,7 @@
 #include "bamfile.h"
 #include "encode.h"
 #include "utilities.h"
-#include "IRanges_interface.h"
+#include "S4Vectors_interface.h"
 #include "XVector_interface.h"
 #include "Biostrings_interface.h"
 #include "bam_mate_iter.h"

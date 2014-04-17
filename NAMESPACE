@@ -4,8 +4,6 @@ import(methods)
 
 import(zlibbioc)
 
-import(XVector)
-
 importFrom(bitops, bitAnd)
 
 importFrom(utils, read.table)           # normalizePath --> base in R-2.13
@@ -14,7 +12,11 @@ importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
            order, paste, rbind, Reduce, rep.int, sapply, setdiff,
            tapply, union, unique)
 
+import(S4Vectors)
+
 import(IRanges)
+
+import(XVector)
 
 importFrom(GenomicRanges, GRanges,  Seqinfo, seqinfo,
            seqlevels)
