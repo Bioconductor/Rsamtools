@@ -187,7 +187,7 @@ scanBamFlag <-
 
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
 {
-    flag <- IRanges:::makePowersOfTwo(length(FLAG_BITNAMES))
+    flag <- S4Vectors:::makePowersOfTwo(length(FLAG_BITNAMES))
     names(flag) <- FLAG_BITNAMES
     args <- lapply(as.list(match.call())[-1], eval, parent.frame())
     if (any(sapply(args, length) > 1L))
@@ -234,7 +234,7 @@ setMethod(show, "ScanBamParam",
 bamFlagAsBitMatrix <- function(flag, bitnames=FLAG_BITNAMES)
 {
     bitpos <- match(bitnames, FLAG_BITNAMES)
-    ans <- IRanges:::explodeIntBits(flag, bitpos=bitpos)
+    ans <- S4Vectors:::explodeIntBits(flag, bitpos=bitpos)
     dimnames(ans) <- list(names(flag), bitnames)
     ans
 }
@@ -244,7 +244,7 @@ bamFlagAND <- function(flag1, flag2)
 {
     bits1 <- bamFlagAsBitMatrix(flag1)
     bits2 <- bamFlagAsBitMatrix(flag2)
-    ans <- IRanges:::implodeIntBits(bits1 & bits2)
+    ans <- S4Vectors:::implodeIntBits(bits1 & bits2)
     names(ans) <- names(flag1)
     ans
 }
