@@ -12,6 +12,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
 BUG FIXES
 
+    o scanBam(BamSampler(), param=param) with a 'which' argument no
+    longer mangles element names, and respects yield size
 
 CHANGES IN VERSION 1.15.0
 -------------------------

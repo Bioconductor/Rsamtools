@@ -26,8 +26,12 @@ setMethod("scanBam", "BamSampler",
     open(bfile, "rb")
     on.exit(close(bfile))
 
-    smpl <- .quickUnlist(scanBam(bfile, param=param))
+    smpl <- .quickUnlist(unname(scanBam(bfile, param=param)))
     tot <- length(smpl[[1]])
+    if (tot > sampleSize) {             # e.g., ranges
+        idx <- sample(tot, sampleSize)
+        smpl <- lapply(smpl, `[`, idx)
+    }
     repeat {
         yld <- .quickUnlist(scanBam(bfile, param=param))
         yld_n <- length(yld[[1]])
