@@ -1,14 +1,15 @@
 Package: Rsamtools
 Type: Package
-Title: Binary alignment (BAM), variant call (BCF), or tabix file import
+Title: Binary alignment (BAM), FASTA, variant call (BCF), and tabix file import
 Version: 1.17.7
 Author: Martin Morgan, Herv\'e Pag\`es, Valerie Obenchain
 Maintainer: Bioconductor Package Maintainer
         <maintainer@bioconductor.org>
 Description: This package provides an interface to the 'samtools',
         'bcftools', and 'tabix' utilities (see 'LICENCE') for
-        manipulating SAM (Sequence Alignment / Map), binary variant
-        call (BCF) and compressed indexed tab-delimited (tabix) files.
+        manipulating SAM (Sequence Alignment / Map), FASTA, binary
+        variant call (BCF) and compressed indexed tab-delimited
+        (tabix) files.
 URL: http://bioconductor.org/packages/release/bioc/html/Rsamtools.html
 License: Artistic-2.0 | file LICENSE
 LazyLoad: yes
