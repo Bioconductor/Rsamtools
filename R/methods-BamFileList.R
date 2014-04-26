@@ -32,3 +32,9 @@ setReplaceMethod("asMates", "BamFileList",
 {
     endoapply(object, `asMates<-`, value=value)
 })
+
+setMethod(seqinfo, "BamFileList",
+    function(x)
+{
+    Reduce(merge, lapply(x, seqinfo))
+})

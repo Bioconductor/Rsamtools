@@ -14,6 +14,7 @@
 % methods
 \alias{scanBamHeader,BamFile-method}
 \alias{seqinfo,BamFile-method}
+\alias{seqinfo,BamFileList-method}
 \alias{obeyQname}
 \alias{obeyQname<-}
 \alias{obeyQname,BamFile-method}
@@ -79,6 +80,7 @@ asMates(object, ...) <- value
 
 \S4method{scanBamHeader}{BamFile}(files, ...)
 \S4method{seqinfo}{BamFile}(x)
+\S4method{seqinfo}{BamFileList}(x)
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
     filter=FilterRules(), indexDestination=TRUE,
     param=ScanBamParam(what=scanBamWhat()))
@@ -214,7 +216,7 @@ asMates(object, ...) <- value
 
 \section{Functions and methods}{
 
-  \code{BamFileList} inherits methods from
+  \code{BamFileList} inherits additional methods from
   \code{\link{RsamtoolsFileList}} and \code{\link{SimpleList}}.
 
   Opening / closing:
@@ -265,7 +267,9 @@ asMates(object, ...) <- value
       \code{path(file)}, returning a \code{\linkS4class{Seqinfo}},
       character, or named integer vector containing information on the
       anmes and / or lengths of each sequence. Seqnames are ordered
-      \sQuote{naturally} as, e.g., \sQuote{chr1}, \sQuote{chr2}, \ldots}
+      \sQuote{naturally} as, e.g., \sQuote{chr1}, \sQuote{chr2}, \ldots.
+      The \code{BamFileList} method \code{merge}s information across
+      list members.}
 
     \item{scanBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanBam}} applied to the specified path.}
@@ -338,6 +342,20 @@ yieldSize(bf) <- 500
 
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
                   mustWork=TRUE)
+(bf <- BamFile(fl))
+head(seqlengths(bf))                    # sequences and lengths in BAM file
+
+if (require(RNAseqData.HNRNPC.bam.chr14)) {
+    bfl <- BamFileList(RNAseqData.HNRNPC.bam.chr14_BAMFILES)
+    bfl
+    bfl[1:2]                            # subset
+    bfl[[1]]                            # select first element -- BamFile
+    ## merged across BAM files
+    seqinfo(bfl)
+    head(seqlengths(bfl))
+}
+
+
 length(scanBam(fl)[[1]][[1]])  # all records
 
 bf <- open(BamFile(fl))        # implicit index
@@ -360,6 +378,7 @@ sapply(seq_len(length(rng)), function(i, bamFile, rng) {
     alphabetFrequency(bam[["seq"]], baseOnly=TRUE, collapse=TRUE)
 }, bf, rng)
 close(bf)
+
 }
 
 \keyword{classes}
