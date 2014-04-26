@@ -6,6 +6,9 @@ NEW FEATURES
     o scanBam,BamSampler-method returns requested and actual
       yieldSize, and total reads
 
+    o seqinfo,BamFileList-method returns the merged seqinfo of each
+      BamFile; seqlevels and seqlengths behave similarly.
+
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o rename PileupParam class and constructor -> ApplyPileupsParam
@@ -13,7 +16,9 @@ SIGNIFICANT USER-VISIBLE CHANGES
 BUG FIXES
 
     o scanBam(BamSampler(), param=param) with a 'which' argument no
-    longer mangles element names, and respects yield size
+      longer mangles element names, and respects yield size
+
+    o applyPileups checks that seqlevels are identical across files
 
 CHANGES IN VERSION 1.15.0
 -------------------------
