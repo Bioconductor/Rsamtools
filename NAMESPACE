@@ -8,6 +8,8 @@ importFrom(bitops, bitAnd)
 
 importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
+importClassesFrom(BiocGenerics, url, gzfile, unz, pipe)
+
 importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
            order, paste, rbind, Reduce, rep.int, sapply, setdiff,
            tapply, union, unique)
@@ -16,20 +18,19 @@ import(S4Vectors)
 
 import(IRanges)
 
-import(XVector)
+importClassesFrom(GenomeInfoDb, Seqinfo)
 
-importFrom(GenomicRanges, GRanges,  Seqinfo, seqinfo,
-           seqlevels)
+importFrom(GenomeInfoDb, rankSeqlevels, Seqinfo, seqinfo, seqlevels)
 
-importFrom(GenomeInfoDb, rankSeqlevels)
+importClassesFrom(GenomicRanges, GRanges)
+
+importFrom(GenomicRanges, GRanges)
 
 importMethodsFrom(GenomicRanges, seqnames, strand)
 
-importClassesFrom(GenomicRanges, GRanges, Seqinfo)
+import(XVector)
 
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
-
-importClassesFrom(BiocGenerics, url, gzfile, unz, pipe)
 
 importFrom(Biostrings, DNA_ALPHABET, readDNAStringSet,
            DNAStringSet, BStringSet, PhredQuality,
