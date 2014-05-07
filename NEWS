@@ -3,6 +3,11 @@ CHANGES IN VERSION 1.17.0
 
 NEW FEATURES
 
+    o pileup uses PileupParam and ScanBamParam instances to calculate
+      pileup statistics for a BAM file; returns a data.frame with
+      columns summarizing information extracted from alignments
+      overlapping each genomic position
+
     o scanBam,BamSampler-method returns requested and actual
       yieldSize, and total reads
 
