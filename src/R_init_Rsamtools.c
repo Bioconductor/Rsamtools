@@ -8,6 +8,7 @@
 #include "io_sam.h"
 #include "as_bam.h"
 #include "pileupbam.h"
+#include "pileup.h"
 
 #ifdef _WIN32
 #include "samtools/knetfile.h"
@@ -67,7 +68,7 @@ static const R_CallMethodDef callMethods[] = {
     {".scan_tabix", (DL_FUNC) & scan_tabix, 5},
     {".tabix_as_character", (DL_FUNC) & tabix_as_character, 4},
     {".tabix_count", (DL_FUNC) & tabix_count, 4},
-    /* pileup */
+    /* pileupbam */
     {".apply_pileups", (DL_FUNC) & apply_pileups, 5},
     /* bambuffer */
     {".bambuffer_init", (DL_FUNC) & bambuffer_init, 0},
@@ -75,6 +76,8 @@ static const R_CallMethodDef callMethods[] = {
     {".bambuffer_length", (DL_FUNC) & bambuffer_length, 1},
     {".bambuffer_parse", (DL_FUNC) & bambuffer_parse, 7},
     {".bambuffer_write", (DL_FUNC) & bambuffer_write, 3},
+    /* pileup */
+    {".c_Pileup", (DL_FUNC) & c_Pileup, 10},
     {NULL, NULL, 0}
 };
 

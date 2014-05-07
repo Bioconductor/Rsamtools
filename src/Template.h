@@ -20,7 +20,7 @@ class Template {
     Segments inprogress, ambiguous, invalid; 
 
     // FIXME: check RG retrieval
-    const int readgroup_q(const bam1_t *mate) const {
+    int readgroup_q(const bam1_t *mate) const {
     uint8_t *aux = bam_aux_get(mate, "RG");
     char *rg0 = NULL;
     if (aux != 0)
@@ -32,7 +32,7 @@ class Template {
             return strcmp(rg, rg0);
     }
 
-    const int qname_q(const bam1_t *mate) const {
+    int qname_q(const bam1_t *mate) const {
         return strcmp(qname, bam1_qname(mate));
     }
 

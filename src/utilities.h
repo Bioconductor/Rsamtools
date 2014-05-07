@@ -1,12 +1,18 @@
 #ifndef _UTILITIES_H_
 #define _UTILITIES_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 SEXP _get_namespace(const char *pkg);
 SEXP _get_encoding_lookup(const char *from, const char *to);
 SEXP _get_lkup(const char *baseclass);
 void _as_factor_SEXP(SEXP vec, SEXP lvls);
 void _as_factor(SEXP vec, const char **lvls, const int n_lvls);
 void _as_strand(SEXP vec);
+void _as_nucleotide(SEXP vec);
+void _as_seqlevels(SEXP vec, SEXP lvls);
 SEXP _as_XStringSet(const char **key, int len, const char *baseclass);
 SEXP _as_PhredQuality(const char **key, int len);
 void _reverse(char *buf, int len);
@@ -44,5 +50,9 @@ SEXP find_mate_within_groups(SEXP group_sizes,
 #define CEVAL_TO(S, ENV, GETS)                  \
     GETS = eval(S, ENV);                        \
     UNPROTECT(1)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif                          /* _UTILITIES_H_ */

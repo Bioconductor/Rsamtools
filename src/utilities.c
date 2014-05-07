@@ -23,6 +23,14 @@ void _as_strand(SEXP vec)
     UNPROTECT(2);
 }
 
+void _as_nucleotide(SEXP vec)
+{
+    SEXP nmspc = PROTECT(_get_namespace("Rsamtools"));
+    SEXP lvls = PROTECT(eval(findVar(install(".PILEUP_NUCLEOTIDE_LEVELS"), nmspc), nmspc));
+    _as_factor_SEXP(vec, lvls);
+    UNPROTECT(2);
+}
+
 SEXP _get_encoding_lookup(const char *from, const char *to)
 {
     SEXP nmspc, fun, f, t, call, ans;
@@ -50,6 +58,11 @@ SEXP _get_lkup(const char *baseclass)
         break;
     }
     return lkup;
+}
+
+void _as_seqlevels(SEXP vec, SEXP lvls)
+{
+    _as_factor_SEXP(vec, lvls);
 }
 
 void _as_factor_SEXP(SEXP vec, SEXP lvls)

@@ -4,6 +4,10 @@
 #include "Rdefines.h"
 #include "bamfile.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     int BLOCKSIZE;              /* size to grow vectors */
     char *CIGAR_BUF;            /* string representation of CIGAR */
@@ -35,5 +39,9 @@ int _filter_and_parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd);
 int _filter1_BAM_DATA(const bam1_t *bam, BAM_DATA bd);
 int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd);
 void _finish1range_BAM_DATA(BAM_DATA  bd);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

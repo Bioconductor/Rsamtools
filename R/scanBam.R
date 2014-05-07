@@ -14,6 +14,16 @@
     tmpl
 }
 
+## return rname:start-end values for outer list elements
+.scanBam_extract_which_labels <- function(param) {
+    which <- bamWhich(param)
+    if( 0L != length(space(which)))
+        paste0(space(which), ":", .uunlist(start(which)), "-",
+               .uunlist(end(which)))
+    else
+        NULL
+}
+
 .scanBam_postprocess <-
     function(x, param)
 {

@@ -17,8 +17,6 @@ void bam_sort_core(int is_by_qname, const char *fn, const char *prefix,
 
 #define SEQUENCE_BUFFER_ALLOCATION_ERROR 1
 
-typedef void (_FINISH1_FUNC) (BAM_DATA);
-
 static const char *TMPL_ELT_NMS[] = {
     "qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "cigar",
     "mrnm", "mpos", "isize", "seq", "qual", "tag", "groupid", "mate_status"
@@ -325,8 +323,8 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
     return bd->iparsed - initial;
 }
 
-static int _do_scan_bam(BAM_DATA bd, SEXP space, bam_fetch_f parse1,
-                        bam_fetch_mate_f parse1_mate, _FINISH1_FUNC finish1)
+int _do_scan_bam(BAM_DATA bd, SEXP space, bam_fetch_f parse1,
+                 bam_fetch_mate_f parse1_mate, _FINISH1_FUNC finish1)
 {
     int status;
 

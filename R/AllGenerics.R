@@ -123,6 +123,12 @@ setGeneric("yieldTabix", function(file, ..., yieldSize=1000000L)
 
 ## pileup
 
+setGeneric("pileup",
+    function(file, index=file, ..., scanBamParam=ScanBamParam(),
+             pileupParam=PileupParam())
+        standardGeneric("pileup"),
+    signature=signature("file"))
+
 setGeneric(".asSpace", function(x) standardGeneric(".asSpace"))
 
 setGeneric("applyPileups", function(files, FUN, ..., param)

@@ -5,7 +5,8 @@
 
 \title{
 
-  Create summary pile-up statistics across multiple BAM files.
+  Apply a user-provided function to calculate pile-up statistics across
+  multiple BAM files.
 
 }
 \description{

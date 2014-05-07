@@ -1,0 +1,45 @@
+BUGS
+
+HP-4/28-a [with Rsamtools-pilup2 r89585]
+
+  When no 'which' is supplied (or when no ScanBamParam object is
+  supplied), pileup() should scan the entire file (like scanBam() does) and
+  not behave like if the user had specified a set of 0 region and thus return
+  a data frame with 0 rows. More precisely, the returned data frame should
+  have 1 row per genomic position where there is something to report (i.e.
+  nucleotide count is != 0):
+
+    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+    res1p <- pileup(fl)
+
+    > dim(res1p)
+    [1] 0 6
+
+    sbp2 <- ScanBamParam(what=c("qname", "pos"))
+    res2s <- scanBam(fl, param=sbp2)
+
+    > sapply(res2s[[1]], length)
+    qname   pos 
+     3307  3307 
+
+    res2p <- pileup(fl, scanBamParam=sbp2)
+    > dim(res2p)
+    [1] 0 6
+
+o The "seqnames" col (like the "pos" col) needs to be extracted from the BAM
+  file (from the RNAME field to be precise) and not inferred from the supplied
+  'which' (the user should be able to use pileup() without specifying 'which').
+  Like "pos", "seqnames" should always be returned, even when the user does
+  not specify 'which' (a genomic position is represented by seqname + pos,
+  pos alone is meaningless). OTOH, the "which_label" col only needs to be
+  returned when the user specifies regions of interest thru the 'which'
+  argument.
+  IMO the "no supplied which" use case is as important as the "supplied which"
+  because people that work with small genomes (e.g. bacteria) or people that
+  just want to try pileup() on a toy file don't necessarily feel the need to
+  specify regions of interest. A very reasonable expectation is that the
+  minimal call to pileup() (i.e. just 'pileup(bf)', with no additional args)
+  will scan the entire BAM file (like scanBam() does) and return a data frame
+  that contains the pileup information for the full genome.
+
+  STATUS:
