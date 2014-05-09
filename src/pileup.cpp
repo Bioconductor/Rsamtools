@@ -1,6 +1,7 @@
 #include "io_sam.h"
 #include "utilities.h"
 #include "PileupBufferShim.h"
+#include "pileup.h"
 
 static int _filter_and_parse1_pileup(const bam1_t *bam, void *data)
 {

@@ -5,11 +5,9 @@
 #include <vector>
 #include <utility>
 #include <stdio.h>
-#include <iostream>
 #include <cassert>
 #include <Rinternals.h>
 #include "PosCache.h"
-using std::ostream;
 typedef std::vector<int>::const_iterator int_const_it;
 typedef std::vector<char>::const_iterator char_const_it;
 
