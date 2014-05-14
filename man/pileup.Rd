@@ -233,8 +233,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
 \examples{
 
 ## pileup for all of chr14 with default Pileup parameters
-require("RNAseqData.HNRNPC.bam.chr14") ||
-  stop("'RNAseqData.HNRNPC.bam.chr14' required for this example")
+library("RNAseqData.HNRNPC.bam.chr14")
 
 fl <- RNAseqData.HNRNPC.bam.chr14_BAMFILES[1]
 sbp <- ScanBamParam(which=GRanges("chr14", IRanges(1, 107349540)))
