@@ -170,6 +170,8 @@ SEXP bamfile_isincomplete(SEXP ext)
 SEXP read_bamfile_header(SEXP ext)
 {
     _checkext(ext, BAMFILE_TAG, "scanBamHeader");
+    if (!LOGICAL(bamfile_isopen(ext))[0])
+        Rf_error("open() BamFile before reading header");
     return _read_bam_header(ext);
 }
 
