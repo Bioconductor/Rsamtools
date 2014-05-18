@@ -132,36 +132,72 @@ SEXP scan_bam_template(SEXP rname, SEXP tag)
 
 /* header */
 
-SEXP _read_bam_header(SEXP ext)
+SEXP _read_bam_header(SEXP ext, SEXP what)
 {
     samfile_t *sfile = BAMFILE(ext)->file;
     bam_header_t *header = sfile->header;
-    int n_elts = header->n_targets;
 
     SEXP ans = PROTECT(NEW_LIST(2));
-
-    /* target length / name */
-    SET_VECTOR_ELT(ans, 0, NEW_INTEGER(n_elts));
-    SEXP tlen = VECTOR_ELT(ans, 0); /* target length */
-    SEXP tnm = PROTECT(NEW_CHARACTER(n_elts));  /* target name */
-    setAttrib(tlen, R_NamesSymbol, tnm);
-    UNPROTECT(1);
-    for (int j = 0; j < n_elts; ++j) {
-        INTEGER(tlen)[j] = header->target_len[j];
-        SET_STRING_ELT(tnm, j, mkChar(header->target_name[j]));
-    }
-
-    /* 'aux' character string */
-    char *txt = (char *) R_alloc(header->l_text + 1, sizeof(char));
-    strncpy(txt, header->text, header->l_text);
-    txt[header->l_text] = '\0';
-    SET_VECTOR_ELT(ans, 1, mkString(txt));
-
-    SEXP nms = PROTECT(NEW_CHARACTER(2));
+    SEXP nms = NEW_CHARACTER(2);
+    setAttrib(ans, R_NamesSymbol, nms);
     SET_STRING_ELT(nms, 0, mkChar("targets"));
     SET_STRING_ELT(nms, 1, mkChar("text"));
-    setAttrib(ans, R_NamesSymbol, nms);
-    UNPROTECT(2);
+
+    if (LOGICAL(what)[0] == TRUE) { /* 'targets' */
+        int n_elts = header->n_targets;
+        SET_VECTOR_ELT(ans, 0, NEW_INTEGER(n_elts));
+        SEXP tlen = VECTOR_ELT(ans, 0);   /* target length */
+        SEXP tnm = NEW_CHARACTER(n_elts); /* target name */
+        setAttrib(tlen, R_NamesSymbol, tnm);
+        for (int j = 0; j < n_elts; ++j) {
+            INTEGER(tlen)[j] = header->target_len[j];
+            SET_STRING_ELT(tnm, j, mkChar(header->target_name[j]));
+        }
+    }
+
+    if (LOGICAL(what)[1] == TRUE) { /* 'text' */
+        int n_text_elts = 0;
+        for (int i = 0; i < header->l_text; ++i)
+            if (header->text[i] == '\n')
+                n_text_elts += 1;
+        SET_VECTOR_ELT(ans, 1, NEW_LIST(n_text_elts));
+        SEXP text = VECTOR_ELT(ans, 1);
+        SEXP tag = NEW_CHARACTER(n_text_elts);
+        setAttrib(text, R_NamesSymbol, tag);
+
+        int start = 0, end;
+        for (int i = 0; i < n_text_elts; ++i) {
+            int n_elts = header->text[start] == '\n' ? 0 : 1;
+            end = start;
+            while (header->text[end] != '\n') {
+                if (header->text[end] == '\t')
+                    ++n_elts;
+                ++end;
+            }
+            if (n_elts == 0) {
+                SET_VECTOR_ELT(text, i, NEW_CHARACTER(0));
+                /* SET_STRING_ELT(tag, i, mkChar("")); */
+                start = end + 1;
+                continue;
+            }
+            SET_VECTOR_ELT(text, i, NEW_CHARACTER(n_elts - 1));
+            SEXP elts = VECTOR_ELT(text, i);
+
+            for (int j = 0; j < n_elts; ++j) {
+                end = start;
+                while (header->text[end] != '\t' && header->text[end] != '\n')
+                    ++end;
+                SEXP elt = mkCharLen(&header->text[start], end - start);
+                if (j == 0)   /* tag */
+                    SET_STRING_ELT(tag, i, elt);
+                else
+                    SET_STRING_ELT(elts, j - 1, elt);
+                start = end + 1;
+            }
+        }
+    }
+
+    UNPROTECT(1);
     return ans;
 }
 

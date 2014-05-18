@@ -8,7 +8,6 @@
 extern "C" {
 #endif
 
-SEXP read_bam_header(SEXP fname, SEXP mode);
 SEXP scan_bam_template(SEXP rname, SEXP tags);
 SEXP sort_bam(SEXP fname, SEXP destinationPrefix, SEXP isByQname,
               SEXP maxMemory);
@@ -19,7 +18,7 @@ SEXP index_bam(SEXP indexname);
 void scan_bam_cleanup();        /* error handling only */
 
 void _bam_check_template_list(SEXP template_list);
-SEXP _read_bam_header(SEXP ext);
+SEXP _read_bam_header(SEXP ext, SEXP what);
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags,
                SEXP isSimpleCigar, SEXP reverseComplement,
                SEXP yieldSize, SEXP template_list, SEXP obeyQname,

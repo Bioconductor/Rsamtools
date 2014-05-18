@@ -26,7 +26,7 @@ SEXP bamfile_close(SEXP ext);
 SEXP bamfile_isopen(SEXP ext);
 SEXP bamfile_isincomplete(SEXP ext);
 
-SEXP read_bamfile_header(SEXP ext);
+SEXP read_bamfile_header(SEXP ext, SEXP what);
 SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
                   SEXP simpleCigar, SEXP reverseComplement,
                   SEXP yieldSize, SEXP tmpl, SEXP obeyQname, SEXP asMates);

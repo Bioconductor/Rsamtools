@@ -58,26 +58,20 @@ close.BamFile <-
 ## scanBam, filterBam, countBam
 
 setMethod(scanBamHeader, "BamFile",
-          function(files, ...)
+          function(files, ..., what=c("targets", "text"))
 {
     if (!isOpen(files)) {
         open(files)
         on.exit(close(files))
     }
-    header <- .Call(.read_bamfile_header, .extptr(files))
-    text <- strsplit(header[["text"]], "\n")[[1]]
-    tag <- sub("^(@[A-Z]{2}).*", "\\1", text)
-    text <- strsplit(sub("^@[A-Z]{2}\t(.*)", "\\1", text), "\t")
-    names(text) <- tag
-    header[["text"]] <- text
-    header
+    .Call(.read_bamfile_header, .extptr(files), c("targets", "text") %in% what)
 })
 
 setMethod(seqinfo, "BamFile",
           function(x)
 {
-    h <- scanBamHeader(x)[["targets"]]
-    o <- order(rankSeqlevels(names(h)))
+    h <- scanBamHeader(x, what="targets")[["targets"]]
+    o <- orderSeqlevels(names(h))
     Seqinfo(names(h)[o], unname(h)[o])
 })
 

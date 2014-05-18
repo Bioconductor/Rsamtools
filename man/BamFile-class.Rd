@@ -78,7 +78,7 @@ asMates(object, ...) <- value
 
 ## actions
 
-\S4method{scanBamHeader}{BamFile}(files, ...)
+\S4method{scanBamHeader}{BamFile}(files, ..., what=c("targets", "text"))
 \S4method{seqinfo}{BamFile}(x)
 \S4method{seqinfo}{BamFileList}(x)
 \S4method{filterBam}{BamFile}(file, destination, index=file, ...,
@@ -136,6 +136,11 @@ asMates(object, ...) <- value
 
     \item{value}{Logical value for setting \code{asMates} and
       \code{obeyQname} in a BamFile instance.}
+
+    \item{what}{For \code{scanBamHeader}, a character vector specifying
+      that either or both of \code{c("targets", "text")} are to be
+      extracted from the header; see \code{\link{scanBam}} for
+      additional detail.}
 
     \item{filter}{A \code{\link{FilterRules}} instance. Functions in the
       \code{FilterRules} instance should expect a single \code{DataFrame}

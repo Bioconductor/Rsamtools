@@ -167,12 +167,14 @@ SEXP bamfile_isincomplete(SEXP ext)
 
 /* implementation */
 
-SEXP read_bamfile_header(SEXP ext)
+SEXP read_bamfile_header(SEXP ext, SEXP what)
 {
     _checkext(ext, BAMFILE_TAG, "scanBamHeader");
+    if (!(IS_LOGICAL(what) && (2L == LENGTH(what))))
+        Rf_error("'what' must be logical(2)");
     if (!LOGICAL(bamfile_isopen(ext))[0])
         Rf_error("open() BamFile before reading header");
-    return _read_bam_header(ext);
+    return _read_bam_header(ext, what);
 }
 
 SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,

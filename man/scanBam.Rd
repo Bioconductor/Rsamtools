@@ -131,7 +131,9 @@ mergeBam(files, destination, ...)
   \code{text}, as described below. The SAM / BAM specification does not
   require that the content of the header be consistent with the content
   of the file, e.g., more targets may be present that are represented by
-  reads in the file.
+  reads in the file. An optional character vector argument containing
+  one or two elements of \code{what=c("targets", "text")} can be used to
+  specify which elements of the header are returned.
 
   \code{asBam} converts 'SAM' files to 'BAM' files, equivalent to
   \code{samtools view -Sb file > destination}. The 'BAM' file is sorted

@@ -14,6 +14,10 @@ NEW FEATURES
     o seqinfo,BamFileList-method returns the merged seqinfo of each
       BamFile; seqlevels and seqlengths behave similarly.
 
+    o scanBamHeader accepts a 'what' argument to control input of the
+      targets and / or text portion of the header, and is much faster
+      for BAM files with many rnames.
+
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o rename PileupParam class and constructor -> ApplyPileupsParam
