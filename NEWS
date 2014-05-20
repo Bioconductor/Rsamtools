@@ -22,6 +22,10 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
     o rename PileupParam class and constructor -> ApplyPileupsParam
 
+    o seqinfo,BamFile-method orders levels as they occur in the file,
+      reverting a change introduced in Rsamtools version 1.15.28
+      (version 1.17.16).
+
 BUG FIXES
 
     o scanBam(BamSampler(), param=param) with a 'which' argument no

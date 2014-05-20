@@ -20,7 +20,7 @@ import(IRanges)
 
 importClassesFrom(GenomeInfoDb, Seqinfo)
 
-importFrom(GenomeInfoDb, rankSeqlevels, Seqinfo, seqinfo, seqlevels)
+importFrom(GenomeInfoDb, Seqinfo, seqinfo, seqlevels)
 
 importClassesFrom(GenomicRanges, GRanges)
 

@@ -272,9 +272,7 @@ asMates(object, ...) <- value
       \code{path(file)}, returning a \code{\linkS4class{Seqinfo}},
       character, or named integer vector containing information on the
       anmes and / or lengths of each sequence. Seqnames are ordered
-      \sQuote{naturally} as, e.g., \sQuote{chr1}, \sQuote{chr2}, \ldots.
-      The \code{BamFileList} method \code{merge}s information across
-      list members.}
+      as they appear in the file.}
 
     \item{scanBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{scanBam}} applied to the specified path.}
