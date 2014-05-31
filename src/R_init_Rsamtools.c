@@ -28,9 +28,9 @@ static const R_CallMethodDef callMethods[] = {
     {".bamfile_isopen", (DL_FUNC) & bamfile_isopen, 1},
     {".bamfile_isincomplete", (DL_FUNC) & bamfile_isincomplete, 1},
     {".read_bamfile_header", (DL_FUNC) & read_bamfile_header, 2},
-    {".scan_bamfile", (DL_FUNC) & scan_bamfile, 9},
+    {".scan_bamfile", (DL_FUNC) & scan_bamfile, 11},
     {".count_bamfile", (DL_FUNC) & count_bamfile, 4},
-    {".prefilter_bamfile", (DL_FUNC) & prefilter_bamfile, 7},
+    {".prefilter_bamfile", (DL_FUNC) & prefilter_bamfile, 9},
     {".filter_bamfile", (DL_FUNC) & filter_bamfile, 6},
     /* as_bam.c */
     {".as_bam", (DL_FUNC) & as_bam, 3},
@@ -77,7 +77,7 @@ static const R_CallMethodDef callMethods[] = {
     {".bambuffer_parse", (DL_FUNC) & bambuffer_parse, 7},
     {".bambuffer_write", (DL_FUNC) & bambuffer_write, 3},
     /* pileup */
-    {".c_Pileup", (DL_FUNC) & c_Pileup, 10},
+    {".c_Pileup", (DL_FUNC) & c_Pileup, 13},
     {NULL, NULL, 0}
 };
 

@@ -225,6 +225,46 @@ int check_qname(char *last_qname, int bufsize, bam1_t *bam, int max)
     }
 }
 
+/* no qname trimming */
+char * bam1_qname_no_trim(const bam1_t *bam, char qname_prefix, 
+                                char qname_suffix)
+{
+    return bam1_qname(bam);
+}
+
+/* trim qname prefix and / or suffix */
+char * bam1_qname_trim(const bam1_t *bam, char qname_prefix, 
+                             char qname_suffix)
+{
+    char *s = bam1_qname(bam);
+    /* left trim */
+    char *start = s;
+    if (qname_prefix != '\0') {
+        for (; *start != '\0'; start++) {
+            if (*start == qname_prefix) {
+                start++;
+                break;
+            }
+        }
+        if (*start == '\0')
+            start = s;
+    }
+    /* right trim */
+    size_t len = strlen(start);
+    char *end = start + len;
+    for (; end != start; end--) {
+        if (*end == qname_suffix) {
+            len = end - start;
+            *end = '\0';
+            break;
+        }
+    }
+
+    memmove(s, start, len + 1);
+
+    return s; 
+} 
+
 int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
              bam_fetch_f parse1)
 {
@@ -263,13 +303,14 @@ int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
 }
 
 int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
-                  bam_fetch_mate_f parse1_mate)
+                  bam_fetch_mate_f parse1_mate, bam_qname_f qname_trim)
 {
     int yield = 0;
     bam_mates_t *bam_mates = bam_mates_new();
 
     while (samread_mate(bfile->file->x.bam, bfile->index,
-                        &bfile->iter, bam_mates) > 0) {
+                        &bfile->iter, bam_mates, bd->qnamePrefixEnd,
+                        bd->qnameSuffixStart, qname_trim) > 0) {
 
         if (NA_INTEGER != yieldSize && yield  >= yieldSize)
             break;
@@ -302,10 +343,16 @@ static int _scan_bam_all(BAM_DATA bd, bam_fetch_f parse1,
     int yield = 0;
 
     bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
-    if (bd->asMates) 
-        yield = _samread_mate(bfile, bd, yieldSize, parse1_mate);
-    else
+    if (bd->asMates) {
+        if (bd->qnamePrefixEnd != '\0' || bd->qnameSuffixStart != '\0')
+            yield = _samread_mate(bfile, bd, yieldSize, parse1_mate, 
+                                  bam1_qname_trim);
+        else
+            yield = _samread_mate(bfile, bd, yieldSize, parse1_mate,
+                                  bam1_qname_no_trim);
+    } else {
         yield = _samread(bfile, bd, yieldSize, parse1);
+    }
 
     /* end-of-file */
     if ((NA_INTEGER == yieldSize) || (yield < yieldSize))
@@ -340,12 +387,17 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             bd->irange += 1;
             return -1;
         }
-        if (bd->asMates)
-            bam_fetch_mate(sfile->x.bam, bindex, tid, starti, end[irange],
-                            bd, parse1_mate);
-        else
+        if (bd->asMates) {
+            if (bd->qnamePrefixEnd != '\0' || bd->qnameSuffixStart != '\0')
+                bam_fetch_mate(sfile->x.bam, bindex, tid, starti, end[irange], 
+                               bd, parse1_mate, bam1_qname_trim);
+            else
+                bam_fetch_mate(sfile->x.bam, bindex, tid, starti, end[irange], 
+                               bd, parse1_mate, bam1_qname_no_trim);
+        } else {
             bam_fetch(sfile->x.bam, bindex, tid, starti, end[irange],
                        bd, parse1);
+        }
 
         if (NULL != finish1)
             (*finish1) (bd);
@@ -367,7 +419,8 @@ int _do_scan_bam(BAM_DATA bd, SEXP space, bam_fetch_f parse1,
     if (R_NilValue == space)
         /* everything */
         status = _scan_bam_all(bd, parse1, parse1_mate, finish1);
-    else {                      /* fetch */
+    else {                      
+        /* fetch */
         BAM_FILE bfile = _bam_file_BAM_DATA(bd);
         if (NULL == bfile->index)
             Rf_error("valid 'index' file required");
@@ -462,17 +515,30 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space,
 
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP reverseComplement, SEXP yieldSize, SEXP template_list,
-               SEXP obeyQname, SEXP asMates)
+               SEXP obeyQname, SEXP asMates, SEXP qnamePrefixEnd, 
+               SEXP qnameSuffixStart)
 {
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
     SEXP result = PROTECT(_scan_bam_result_init(template_list, names, space,
                                                 BAMFILE(bfile)));
     SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
+
+    char qname_prefix = '\0';
+    SEXP prefix_elt = STRING_ELT(qnamePrefixEnd, 0);
+    if (prefix_elt != NA_STRING);
+        qname_prefix = CHAR(prefix_elt)[0];
+    char qname_suffix = '\0';
+    SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
+    if (suffix_elt != NA_STRING);
+        qname_suffix = CHAR(suffix_elt)[0];
+
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
-                                 LOGICAL(asMates)[0], (void *) sbd);
+                                 LOGICAL(asMates)[0], 
+                                 qname_prefix, qname_suffix, 
+                                 (void *) sbd);
 
     int status = _do_scan_bam(bd, space, _filter_and_parse1,
                               _filter_and_parse1_mate, _finish1range_BAM_DATA);
@@ -503,7 +569,7 @@ SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
     SEXP result = PROTECT(NEW_LIST(2));
     BAM_DATA bd =
         _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, 0,
-                       NA_INTEGER, 0, 0, result);
+                       NA_INTEGER, 0, 0, '\0', '\0', result);
 
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(bd->nrange));
     SET_VECTOR_ELT(result, 1, NEW_NUMERIC(bd->nrange));
@@ -570,14 +636,25 @@ static int _prefilter1_mate(const bam_mates_t *mates, void *data)
 
 SEXP
 _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-               SEXP yieldSize, SEXP obeyQname, SEXP asMates)
+               SEXP yieldSize, SEXP obeyQname, SEXP asMates, 
+               SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
 {
     SEXP ext = PROTECT(bambuffer(INTEGER(yieldSize)[0],
                                  LOGICAL(asMates)[0]));
+    char qname_prefix = '\0';
+    SEXP prefix_elt = STRING_ELT(qnamePrefixEnd, 0);
+    if (prefix_elt != NA_STRING);
+        qname_prefix = CHAR(prefix_elt)[0];
+    char qname_suffix = '\0';
+    SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
+    if (suffix_elt != NA_STRING);
+        qname_suffix = CHAR(suffix_elt)[0];
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  0, INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
-                                 LOGICAL(asMates)[0], BAMBUFFER(ext));
+                                 LOGICAL(asMates)[0], 
+                                 qname_prefix, qname_suffix,
+                                 BAMBUFFER(ext));
     int status =
         _do_scan_bam(bd, space, _prefilter1, _prefilter1_mate, NULL);
     if (status < 0) {
@@ -612,7 +689,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
     /* open destination */
     BAM_DATA bd =
         _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, 0,
-                       NA_INTEGER, 0, 0, NULL);
+                       NA_INTEGER, 0, 0, '\0', '\0', NULL);
     /* FIXME: this just copies the header... */
     bam_header_t *header = BAMFILE(bfile)->file->header;
     samfile_t *f_out = _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),

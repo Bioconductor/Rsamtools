@@ -29,11 +29,12 @@ SEXP bamfile_isincomplete(SEXP ext);
 SEXP read_bamfile_header(SEXP ext, SEXP what);
 SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
                   SEXP simpleCigar, SEXP reverseComplement,
-                  SEXP yieldSize, SEXP tmpl, SEXP obeyQname, SEXP asMates);
+                  SEXP yieldSize, SEXP tmpl, SEXP obeyQname, 
+                  SEXP asMates, SEXP qnamePrefix, SEXP qnameSuffix);
 SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
 SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
 		       SEXP isSimpleCigar, SEXP yieldSize, SEXP obeyQname,
-                       SEXP asMates);
+                       SEXP asMates, SEXP qnamePrefix, SEXP qnameSuffix);
 SEXP filter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
                     SEXP isSimpleCigar, SEXP fout_name, SEXP fout_mode);
 

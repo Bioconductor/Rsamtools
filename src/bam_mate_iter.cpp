@@ -36,10 +36,11 @@ void bam_mates_realloc(bam_mates_t *result, int n, int mated)
 
     // Realloc(p, 0, *) fails inappropriately
     if (n == 0) {
-	Free(result->bams);
-	result->bams = NULL;
-    } else
-	result->bams = Realloc(result->bams, n, const bam1_t *);
+        Free(result->bams);
+        result->bams = NULL;
+    } else {
+        result->bams = Realloc(result->bams, n, const bam1_t *);
+    }
     result->n = n;
     result->mated = mated;
 }
@@ -47,7 +48,7 @@ void bam_mates_realloc(bam_mates_t *result, int n, int mated)
 void bam_mates_destroy(bam_mates_t *mates)
 {
     for (int i = 0; i < mates->n; ++i)
-	bam_destroy1((bam1_t *) mates->bams[i]);
+        bam_destroy1((bam1_t *) mates->bams[i]);
     Free(mates->bams);
     Free(mates);
 }
@@ -59,20 +60,28 @@ int bam_mate_read(bamFile fb, bam_mate_iter_t iter, bam_mates_t *mates)
 }
 
 // BamRangeIterator methods
-bam_mate_iter_t bam_mate_range_iter_new(const bam_index_t *bindex,
-                                        int tid, int beg, int end)
+bam_mate_iter_t bam_mate_range_iter_new(const bam_index_t *bindex, int tid,
+                                        int beg, int end, char qname_prefix, 
+                                        char qname_suffix, 
+                                        bam_qname_f qname_trim)
 {
     bam_mate_iter_t iter = Calloc(1, struct _bam_mate_iter_t);
-    iter->b_iter = new BamRangeIterator(bindex, tid, beg, end);
+    iter->b_iter = new BamRangeIterator(bindex, tid, beg, end, qname_prefix,
+                                        qname_suffix, qname_trim);
     return iter;
 }
 
 int bam_fetch_mate(bamFile bf, const bam_index_t *idx, int tid, int beg, 
-                   int end, void *data, bam_fetch_mate_f func)
+                   int end, void *data, bam_fetch_mate_f func,
+                   bam_qname_f qname_trim)
 {
+    BAM_DATA bd = (BAM_DATA) data;
     int n_rec;
     bam_mates_t *mates = bam_mates_new();
-    bam_mate_iter_t iter = bam_mate_range_iter_new(idx, tid, beg, end);
+    bam_mate_iter_t iter = bam_mate_range_iter_new(idx, tid, beg, end,
+                                                   bd->qnamePrefixEnd, 
+                                                   bd->qnameSuffixStart, 
+                                                   qname_trim);
     while ((n_rec = bam_mate_read(bf, iter, mates) > 0))
         func(mates, data);
     bam_mate_iter_destroy(iter);
@@ -81,19 +90,26 @@ int bam_fetch_mate(bamFile bf, const bam_index_t *idx, int tid, int beg,
 }
 
 // BamFileIterator methods
-bam_mate_iter_t bam_mate_file_iter_new(const bam_index_t *bindex)
+bam_mate_iter_t bam_mate_file_iter_new(const bam_index_t *bindex,
+                                       char qname_prefix,
+                                       char qname_suffix,
+                                       bam_qname_f qname_trim)
 {
     bam_mate_iter_t iter = Calloc(1, struct _bam_mate_iter_t);
-    iter->b_iter = new BamFileIterator(bindex);
+    iter->b_iter = new BamFileIterator(bindex, qname_prefix, 
+                                       qname_suffix, qname_trim);
     return iter;
 }
 
 int samread_mate(bamFile fb, const bam_index_t *bindex,
-                 bam_mate_iter_t *iter_p, bam_mates_t *mates)
+                 bam_mate_iter_t *iter_p, bam_mates_t *mates,
+                 char qname_prefix, char qname_suffix,
+                 bam_qname_f qname_trim)
 {
     bam_mate_iter_t iter;
     if (NULL == *iter_p)
-        *iter_p = bam_mate_file_iter_new(bindex);
+        *iter_p = bam_mate_file_iter_new(bindex, qname_prefix, 
+                                         qname_suffix, qname_trim);
     iter = *iter_p;
     iter->b_iter->iter_done = false;
     // single yield

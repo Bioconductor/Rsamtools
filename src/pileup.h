@@ -7,6 +7,7 @@ extern "C" {
     SEXP c_Pileup(SEXP ext, SEXP space, SEXP keepFlags,
                   SEXP isSimpleCigar, SEXP reverseComplement,
                   SEXP yieldSize, SEXP obeyQname, SEXP asMates,
+                  SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
                   SEXP schema, SEXP pileupParams, SEXP seqnamesLevels);
 #ifdef __cplusplus
 }

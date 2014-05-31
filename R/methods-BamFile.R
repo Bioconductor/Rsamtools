@@ -12,9 +12,22 @@ setMethod(isIncomplete, "BamFile",
     .Call(.bamfile_isincomplete, .extptr(con))
 })
 
+.check_qname_arg <- function(arg, name)
+{
+    if (is.na(arg) || arg == "")
+        return(NA_character_)
+    if (length(arg) == 0L || !is(arg, "character"))
+        stop(name, " must be a single character")
+    if (nchar(arg) > 1L)
+        stop("'nchar(", name, ")' must be < 1")
+
+    arg
+}
+
 BamFile <-
     function(file, index=file, ..., yieldSize=NA_integer_, 
-             obeyQname=FALSE, asMates=FALSE)
+             obeyQname=FALSE, asMates=FALSE, 
+             qnamePrefixEnd=NA, qnameSuffixStart=NA)
 {
     if (missing(file) || !isSingleString(file))
         stop("'file' must be character(1) and not NA")
@@ -28,9 +41,13 @@ BamFile <-
             with nchar(index) > 0 and not NA"
         stop(paste(strwrap(txt), collapse="\n  "))
     }
+    qnamePrefixEnd <- .check_qname_arg(qnamePrefixEnd, "qnamePrefixEnd")
+    qnameSuffixStart <- .check_qname_arg(qnameSuffixStart, "qnameSuffixStart")
     .RsamtoolsFile(.BamFile, .normalizePath(file),
                    .normalizePath(index), yieldSize=yieldSize,
-                   obeyQname=obeyQname, asMates=asMates, ...)
+                   obeyQname=obeyQname, asMates=asMates, 
+                   qnamePrefixEnd=qnamePrefixEnd, 
+                   qnameSuffixStart=qnameSuffixStart, ...)
 }
 
 open.BamFile <-
@@ -98,9 +115,45 @@ setMethod(asMates, "BamFile",
 setReplaceMethod("asMates", "BamFile", 
     function(object, ..., value)
 {
-    if (1L != length(value))
-        stop("'value' must be length 1")
+    if (!isTRUEorFALSE(value))
+        stop("'value' must be TRUE or FALSE")
     object$asMates <- value
+    object
+})
+
+setMethod(qnamePrefixEnd, "BamFile",
+    function(object, ...)
+{
+    object$qnamePrefixEnd
+})
+
+setReplaceMethod("qnamePrefixEnd", "BamFile", 
+    function(object, ..., value)
+{
+    if (!is(value, "character"))
+        stop("'value' must be a single character")
+    if (length(value))
+        if (nchar(value) > 1L)
+            stop("nchar(value) must be <= 1")
+    object$qnamePrefixEnd <- value
+    object
+})
+
+setMethod(qnameSuffixStart, "BamFile",
+    function(object, ...)
+{
+    object$qnameSuffixStart
+})
+
+setReplaceMethod("qnameSuffixStart", "BamFile", 
+    function(object, ..., value)
+{
+    if (!is(value, "character"))
+        stop("'value' must be a single character")
+    if (length(value))
+        if (nchar(value) > 1L)
+            stop("nchar(value) must be <= 1")
+    object$qnameSuffixStart <- value
     object
 })
 
@@ -129,10 +182,15 @@ setMethod(scanBam, "BamFile",
     if (!asMates(file))
         bamWhat(param) <- setdiff(bamWhat(param), c("groupid", "mate_status")) 
     reverseComplement <- bamReverseComplement(param)
+    if (is.na(qnamePrefix <- qnamePrefixEnd(file)))
+        qnamePrefix <- ""
+    if (is.na(qnameSuffix <- qnameSuffixStart(file)))
+        qnameSuffix <- ""
     tmpl <- .scanBam_template(file, param)
     x <- .io_bam(.scan_bamfile, file, reverseComplement,
                  yieldSize(file), tmpl, obeyQname(file), 
-                 asMates(file), param=param)
+                 asMates(file), qnamePrefix, qnameSuffix, 
+                 param=param)
     .scanBam_postprocess(x, param)
 })
 
@@ -235,6 +293,10 @@ setMethod(countBam, "BamFile",
 
     tmpl <- .scanBam_template(file, param)
     reverseComplement <- bamReverseComplement(param)
+    if (is.na(qnamePrefix <- qnamePrefixEnd(file)))
+        qnamePrefix <- ""
+    if (is.na(qnameSuffix <- qnameSuffixStart(file)))
+        qnameSuffix <- ""
 
     dest <- .Call(.bamfile_open, destination, path(file), "wb")
     on.exit(.Call(.bamfile_close, dest))
@@ -242,7 +304,8 @@ setMethod(countBam, "BamFile",
     n_tot <- 0L
     repeat {
         buf <- .io_bam(.prefilter_bamfile, file, param=param,
-                       yieldSize, obeyQname(file), asMates(file))
+                       yieldSize, obeyQname(file), asMates(file),
+                       qnamePrefix, qnameSuffix)
         if (0L == .Call(.bambuffer_length, buf))
             break
 
@@ -334,4 +397,6 @@ setMethod(show, "BamFile", function(object) {
     callNextMethod()
     cat("obeyQname:", obeyQname(object), "\n")
     cat("asMates:", asMates(object), "\n")
+    cat("qnamePrefixEnd:", qnamePrefixEnd(object), "\n")
+    cat("qnameSuffixStart:", qnameSuffixStart(object), "\n")
 })

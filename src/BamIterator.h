@@ -16,6 +16,8 @@ public:
     const bam_index_t *bindex;
     bam1_t *bam;
     bool iter_done;
+    char qname_prefix, qname_suffix;
+    bam_qname_f qname_trim;
 
     typedef map<string, Template> Templates;
     Templates templates;
@@ -25,8 +27,11 @@ public:
     set<string> touched_templates;
 
     // constructor / destructor
-    BamIterator(const bam_index_t *bindex) :
-        bindex(bindex), bam(NULL), iter_done(false) {}
+    BamIterator(const bam_index_t *bindex, char qname_prefix, 
+        char qname_suffix, bam_qname_f qname_trim) :
+        bindex(bindex), bam(NULL), iter_done(false), 
+        qname_prefix(qname_prefix), qname_suffix(qname_suffix),
+        qname_trim(qname_trim) {}
 
     virtual ~BamIterator() {
         if (NULL != bam)
@@ -45,7 +50,7 @@ public:
 
     // process
     void process(const bam1_t *bam) {
-        const string s = bam1_qname(bam);
+        char *s = qname_trim(bam, qname_prefix, qname_suffix);
         if (templates[s].add_segment(bam))
             touched_templates.insert(s);
     }
@@ -83,8 +88,9 @@ public:
 
     virtual void finalize_inprogress(bamFile bfile) {
         Templates::iterator it;
-        // push 'Template::ambiguous' to 'ambiguous',
-        // 'Template::inprogress' and 'Template::invalid' to 'unmated'
+        // transfer Template::ambiguous to BamIterator::ambiguous
+        // transfer Template::inprogress and Template::invalid to 
+        // BamIterator::unmated
         for (it = templates.begin(); it != templates.end(); ++it)
             it->second.cleanup(ambiguous, unmated);
         templates.clear();

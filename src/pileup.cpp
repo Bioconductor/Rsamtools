@@ -40,7 +40,8 @@ static SEXP _pileup_bam_result_init(SEXP space)
 
 static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
     SEXP reverseComplement, SEXP isSimpleCigar, SEXP yieldSize,
-    SEXP obeyQname, SEXP asMates, PileupBuffer& buffer)
+    SEXP obeyQname, SEXP asMates, SEXP qnamePrefixEnd,
+    SEXP qnameSuffixStart, PileupBuffer& buffer)
 {
     _check_isbamfile(ext, "pileup");
     _checkparams(space, keepFlags, isSimpleCigar);
@@ -53,11 +54,20 @@ static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
 
     SEXP result = PROTECT(_pileup_bam_result_init(space));
     PileupBufferShim shim(space, result, buffer);
+    char qname_prefix = '\0';
+    SEXP prefix_elt = STRING_ELT(qnamePrefixEnd, 0);
+    if (prefix_elt != NA_STRING);
+        qname_prefix = CHAR(prefix_elt)[0];
+    char qname_suffix = '\0';
+    SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
+    if (suffix_elt != NA_STRING);
+        qname_suffix = CHAR(suffix_elt)[0];
     BAM_DATA bd = _init_BAM_DATA(ext, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
                                  LOGICAL(asMates)[0],
+                                 qname_prefix, qname_suffix,
                                  (void *) &shim);
     int status = 0;
     if (bd->irange < bd->nrange) {
@@ -88,6 +98,7 @@ extern "C" {
     SEXP c_Pileup(SEXP ext, SEXP space, SEXP keepFlags,
                   SEXP isSimpleCigar, SEXP reverseComplement,
                   SEXP yieldSize, SEXP obeyQname, SEXP asMates,
+                  SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
                   SEXP schema, SEXP pileupParams, SEXP seqnamesLevels)
     {
         if (!IS_LIST(schema))
@@ -98,6 +109,6 @@ extern "C" {
         Pileup buffer = Pileup(schema, pileupParams, seqnamesLevels);
         return _pileup_bam(ext, space, keepFlags,
             reverseComplement, isSimpleCigar, yieldSize, obeyQname,
-            asMates, buffer);
+            asMates, qnamePrefixEnd, qnameSuffixStart, buffer);
     }
 }

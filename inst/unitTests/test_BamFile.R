@@ -67,7 +67,7 @@ test_BamFileList_constructor <- function()
     checkTrue(validObject(res <- BamFileList(fl)))
     checkIdentical(fl, path(res[[1]]))
     checkIdentical(sprintf("%s.bai", fl), index(res[[1]]))
-    
+
     checkTrue(validObject(res <- BamFileList(fl, fl)))
     checkIdentical(fl, path(res[[1]]))
     checkIdentical(fl, index(res[[1]]))
@@ -138,38 +138,28 @@ test_BamFile_obeyQname <- function()
 
 test_BamFile_asMates_all <- function()
 {
+    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
     scn <- scanBam(fl)[[1]]
     scnm <- scanBam(BamFile(fl, asMates=TRUE))[[1]]
-    library(GenomicAlignments)
-    param <- ScanBamParam()
-    galp <- readGAlignmentPairsFromBam(fl, use.names=TRUE)
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
     matenames <- scnm$qname[scnm$mate_status == "mated"] 
-    checkTrue(all(names(galp) %in% matenames))
 
     ## non-mates off last
     max1 <- max(which(scnm$mate_status == "mated"))
     min0 <- min(which(scnm$mate_status != "mated"))
     checkTrue(max1 < min0)
 
-    ## match GAlignmentPairs
-    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE,
-                        isUnmappedQuery=FALSE)
-    param <- ScanBamParam(flag=flag, what=scanBamWhat())
-    scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
-    checkTrue(all(scnm$qname %in% names(galp)))
-    checkTrue(all(names(galp) %in% scnm$qname))
-
     ## yieldSize - subset
-    ## asMates=TRUE returns first 5 mates found
-    ## asMates=FALSE returns first 5 records
-    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE,
+    flag <- scanBamFlag(isPaired=TRUE, 
+                        hasUnmappedMate=FALSE,
                         isUnmappedQuery=FALSE)
-    param=ScanBamParam(flag=flag, what=scanBamWhat())
-    scn <- scanBam(BamFile(fl, yieldSize=5), param=param)[[1]]
-    scnm <- scanBam(BamFile(fl, asMates=TRUE, yieldSize=5), param=param)[[1]]
+    param=ScanBamParam(flag=flag, what="qname")
+    bf <- BamFile(fl, asMates=FALSE, yieldSize=5)
+    bfm <- BamFile(fl, asMates=TRUE, yieldSize=5)
+    scn <- scanBam(bf, param=param)[[1]]   ## first 5 records
+    scnm <- scanBam(bfm, param=param)[[1]] ## first 5 mates
     checkTrue(length(scn$qname) == 5)
     checkTrue(length(scnm$qname) == 10)
 
@@ -195,18 +185,15 @@ test_BamFile_asMates_all <- function()
 
 test_BamFile_asMates_range <- function()
 {
+    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
     which <- GRanges("seq1", IRanges(100, width=5))
     param <- ScanBamParam(which=which, what=scanBamWhat())
     scn <- scanBam(fl, param=param)[[1]]
     scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
-    library(GenomicAlignments)
-    param <- ScanBamParam(which=which)
-    galp <- readGAlignmentPairsFromBam(fl, param=param, use.names=TRUE)
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
     matenames <- scnm$qname[scnm$mate_status == "mated"] 
-    checkTrue(all(names(galp) %in% matenames))
     checkTrue(length(scnm$qname) == length(scnm$groupid))
 
     ## non-mates off last
@@ -215,22 +202,23 @@ test_BamFile_asMates_range <- function()
     checkTrue(max1 < min0)
 
     ## range - subset
-    ## asMates=FALSE returns records in range
-    ## asMates=TRUE mates all records in range 
-    flag <- scanBamFlag(isPaired=TRUE, hasUnmappedMate=FALSE,
+    flag <- scanBamFlag(isPaired=TRUE, 
+                        hasUnmappedMate=FALSE,
                         isUnmappedQuery=FALSE)
-    param <- ScanBamParam(which=which, flag=flag, what=scanBamWhat())
-    scn <- scanBam(fl, param=param)[[1]]
-    scnm <- scanBam(BamFile(fl, asMates=TRUE), param=param)[[1]]
+    param=ScanBamParam(which=which, flag=flag, what=scanBamWhat())
+    bf <- BamFile(fl, asMates=FALSE)
+    bfm <- BamFile(fl, asMates=TRUE)
+    scn <- scanBam(bf, param=param)[[1]]   ## all records in range
+    scnm <- scanBam(bfm, param=param)[[1]] ## mates all records in range
     checkTrue(length(scn$qname) == 8)
     checkTrue(length(scnm$qname) == 16)
     checkTrue(sum(scnm$mate_status == "mated") == 16)
 
     ## range - all records
-    which <- GRanges(c("seq1", "seq2"), IRanges(start=c(0, 0), end=c(3000, 3000)))
+    which <- GRanges(c("seq1", "seq2"), IRanges(c(0, 0), c(3000, 3000)))
     param <- ScanBamParam(which=which, what=scanBamWhat())
-    scnm1 <- scanBam(BamFile(fl, asMates=TRUE))[[1]] ## get all w/ no param
-    scnm2<- scanBam(BamFile(fl, asMates=TRUE), param=param) ## get all w/ param
+    scnm1 <- scanBam(bfm)[[1]]        ## all records no param 
+    scnm2<- scanBam(bfm, param=param) ## all records w/ param 
     range2A <- scnm2[[1]]
     range2B <- scnm2[[2]]
 
@@ -243,3 +231,45 @@ test_BamFile_asMates_range <- function()
     checkTrue(mates_partition == length(scnm1$.partition))
 }
 
+test_BamFile_qname_prefix_suffix <- function()
+{
+    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+
+    checkException(BamFile(fl, qnamePrefixEnd="/:"), silent=TRUE)
+    checkException(BamFile(fl, qnameSuffixStart="/:"), silent=TRUE)
+
+    ## all
+    bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="_")
+    scn <- scanBam(bfm, param=ScanBamParam(what="qname"))
+    qnames <- scn[[1]]$qname[1:2]
+    target <- c("61:4:143:69:578", "61:4:143:69:578")
+    checkIdentical(qnames, target) 
+
+    bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart=":")
+    scn <- scanBam(bfm, param=ScanBamParam(what="qname"))
+    qnames <- scn[[1]]$qname[1:2]
+    target <- c("EAS54_61:4:143:69", "EAS54_61:4:143:69")
+    checkIdentical(qnames, target)
+
+    ## ranges 
+    bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="_")
+    which <- GRanges("seq1", IRanges(100, 110))
+    param <- ScanBamParam(which=which, what="qname")
+    qnames <- scanBam(bfm, param=param)[[1]]$qname[1:4]
+    target <- c("1:2:29:1486:672", "1:2:29:1486:672", 
+                "1:2:90:986:1224", "1:2:90:986:1224") 
+    checkIdentical(qnames, target)
+
+    bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart="_")
+    param <- ScanBamParam(which=which, what="qname")
+    qnames <- scanBam(bfm, param=param)[[1]]$qname[1:4]
+    target <- c("EAS1", "EAS1", "EAS112", "EAS112") 
+    checkIdentical(qnames, target)
+
+    bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart="*")
+    param <- ScanBamParam(which=which, what="qname")
+    qnames1 <- scanBam(bfm, param=param)[[1]]$qname
+    bfm <- BamFile(fl, asMates=TRUE)
+    qnames2 <- scanBam(bfm, param=param)[[1]]$qname
+    checkIdentical(qnames1, qnames2)
+}

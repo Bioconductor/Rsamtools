@@ -1,11 +1,16 @@
 BamFileList <-
-    function(..., yieldSize=NA_integer_, obeyQname=FALSE, asMates=FALSE)
+    function(..., yieldSize=NA_integer_, obeyQname=FALSE, asMates=FALSE,
+             qnamePrefixEnd=NA_character_, qnameSuffixStart=NA_character_)
 {
     fls <- .RsamtoolsFileList(..., yieldSize=yieldSize, class="BamFile")
     if (!missing(obeyQname))
         obeyQname(fls) <- obeyQname
     if (!missing(asMates))
         asMates(fls) <- asMates 
+    if (!missing(qnamePrefixEnd))
+        qnamePrefixEnd(fls) <- qnamePrefixEnd 
+    if (!missing(qnameSuffixStart))
+        qnameSuffixStart(fls) <- qnameSuffixStart
     fls
 }
 
@@ -31,6 +36,30 @@ setReplaceMethod("asMates", "BamFileList",
     function(object, ..., value)
 {
     endoapply(object, `asMates<-`, value=value)
+})
+
+setMethod(qnamePrefixEnd, "BamFileList",
+    function(object, ...)
+{
+    sapply(object, qnamePrefixEnd)
+})
+
+setReplaceMethod("qnamePrefixEnd", "BamFileList", 
+    function(object, ..., value)
+{
+    endoapply(object, `qnamePrefixEnd<-`, value=value)
+})
+
+setMethod(qnameSuffixStart, "BamFileList",
+    function(object, ...)
+{
+    sapply(object, qnameSuffixStart)
+})
+
+setReplaceMethod("qnameSuffixStart", "BamFileList", 
+    function(object, ..., value)
+{
+    endoapply(object, `qnameSuffixStart<-`, value=value)
 })
 
 setMethod(seqinfo, "BamFileList",

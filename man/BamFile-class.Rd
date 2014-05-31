@@ -27,6 +27,18 @@
 \alias{asMates<-,BamFile-method}
 \alias{asMates,BamFileList-method}
 \alias{asMates<-,BamFileList-method}
+\alias{qnamePrefixEnd}
+\alias{qnamePrefixEnd<-}
+\alias{qnamePrefixEnd,BamFile-method}
+\alias{qnamePrefixEnd<-,BamFile-method}
+\alias{qnamePrefixEnd,BamFileList-method}
+\alias{qnamePrefixEnd<-,BamFileList-method}
+\alias{qnameSuffixStart}
+\alias{qnameSuffixStart<-}
+\alias{qnameSuffixStart,BamFile-method}
+\alias{qnameSuffixStart<-,BamFile-method}
+\alias{qnameSuffixStart,BamFileList-method}
+\alias{qnameSuffixStart<-,BamFileList-method}
 \alias{scanBam,BamFile-method}
 \alias{countBam,BamFile-method}
 \alias{countBam,BamFileList-method}
@@ -59,8 +71,9 @@
 ## Constructors
 
 BamFile(file, index=file, ..., yieldSize=NA_integer_, obeyQname=FALSE,
-        asMates=FALSE)
-BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE, asMates=FALSE)
+        asMates=FALSE, qnamePrefixEnd=NA, qnameSuffixStart=NA)
+BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE, asMates=FALSE,
+            qnamePrefixEnd=NA, qnameSuffixStart=NA)
 
 ## Opening / closing
 
@@ -75,6 +88,10 @@ BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE, asMates=FALSE)
 obeyQname(object, ...) <- value
 \S4method{asMates}{BamFile}(object, ...)
 asMates(object, ...) <- value
+\S4method{qnamePrefixEnd}{BamFile}(object, ...)
+qnamePrefixEnd(object, ...) <- value
+\S4method{qnameSuffixStart}{BamFile}(object, ...)
+qnameSuffixStart(object, ...) <- value
 
 ## actions
 
@@ -127,6 +144,18 @@ asMates(object, ...) <- value
 
     \item{asMates}{Logical indicating if records should be paired
       as mates. See \sQuote{Fields} section for details.}
+
+    \item{qnamePrefixEnd}{Single character (or NA) marking the 
+      end of the qname prefix. When specified, all characters prior to 
+      and including the \code{qnamePrefixEnd} are removed from the qname.
+      Currently only implemented for mate-pairing (i.e., when
+      \code{asMates=TRUE} in a BamFile.}
+
+    \item{qnameSuffixStart}{Single character (or NA) marking the 
+      start of the qname suffix. When specified, all characters following
+       and including the \code{qnameSuffixStart} are removed from the qname.
+      Currently only implemented for mate-pairing (i.e., when
+      \code{asMates=TRUE} in a BamFile.}
 
     \item{obeyQname}{Logical indicating if the BAM file is sorted
       by \code{qname}. In Bioconductor > 2.12 paired-end files do
@@ -338,6 +367,14 @@ asMates(bf) <- TRUE
 ## through the file in chunks.
 yieldSize(bf) <- 500 
 
+## Some applications append a filename (e.g., NCBI Sequence Read 
+## Archive (SRA) toolkit) or allele identifier to the sequence qname.
+## This may result in a unique qname for each record which presents a
+## problem when mating paired-end reads (identical qnames is one
+## criteria for paired-end mating). 'qnamePrefixEnd' and 
+## 'qnameSuffixStart' can be used to trim an unwanted prefix or suffix.
+qnamePrefixEnd(bf) <- "/"
+qnameSuffixStart(bf) <- "." 
 
 ##
 ## Reading Bam files.

@@ -158,5 +158,17 @@ setGeneric("asMates",
 setGeneric("asMates<-",
            function(object, ..., value) standardGeneric("asMates<-"))
 
+setGeneric("qnamePrefixEnd",
+           function(object, ...) standardGeneric("qnamePrefixEnd"))
+
+setGeneric("qnamePrefixEnd<-",
+           function(object, ..., value) standardGeneric("qnamePrefixEnd<-"))
+
+setGeneric("qnameSuffixStart",
+           function(object, ...) standardGeneric("qnameSuffixStart"))
+
+setGeneric("qnameSuffixStart<-",
+           function(object, ..., value) standardGeneric("qnameSuffixStart<-"))
+
 setGeneric("isOpen")
 

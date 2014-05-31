@@ -2,10 +2,13 @@
 
 BamSampler <-
     function (file, index = file, ..., yieldSize, obeyQname = FALSE,
-              asMates = FALSE) 
+              asMates = FALSE, qnamePrefixEnd = NA_character_,
+              qnameSuffixStart = NA_character_) 
 {
     .RsamtoolsFile(.BamSampler, .normalizePath(file), .normalizePath(index), 
-        yieldSize = yieldSize, obeyQname = obeyQname, asMates = asMates, ...)
+        yieldSize = yieldSize, obeyQname = obeyQname, asMates = asMates, 
+        qnamePrefixEnd = qnamePrefixEnd, qnameSuffixStart = qnameSuffixStart, 
+        ...)
 }
 
 setMethod("scanBam", "BamSampler",

@@ -86,7 +86,8 @@ PileupParam <-
             ## remainder (...) passed to C
             bamReverseComplement(scanBamParam),
             yieldSize(file), obeyQname(file), asMates(file),
-            schema, .as.list_PileupParam(pileupParam), seqnamesLevels,
+            qnamePrefixEnd(file), qnameSuffixStart(file), schema, 
+            .as.list_PileupParam(pileupParam), seqnamesLevels,
             param=scanBamParam)
 
     which_labels <- .scanBam_extract_which_labels(scanBamParam)

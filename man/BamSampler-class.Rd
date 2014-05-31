@@ -22,7 +22,8 @@
 
 ## Constructors
 
-BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE, asMates = FALSE) 
+BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE, 
+           asMates = FALSE, qnamePrefixEnd = NA, qnameSuffixStart = NA) 
 
 \S4method{scanBam}{BamSampler}(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
 }
@@ -39,6 +40,18 @@ BamSampler(file, index = file, ..., yieldSize, obeyQname = FALSE, asMates = FALS
 
   \item{yieldSize}{integer(1); number of records to yield each time the
     file is read from using \code{scanBam}.}
+
+  \item{qnamePrefixEnd}{Single character (or NA) marking the 
+    end of the qname prefix. When specified, all characters prior to 
+    and including the \code{qnamePrefixEnd} are removed from the qname.
+    Currently only implemented for mate-pairing (i.e., when
+    \code{asMates=TRUE} in a BamFile.}
+
+  \item{qnameSuffixStart}{Single character (or NA) marking the 
+    start of the qname suffix. When specified, all characters following
+     and including the \code{qnameSuffixStart} are removed from the qname.
+    Currently only implemented for mate-pairing (i.e., when
+    \code{asMates=TRUE} in a BamFile.}
 
   \item{obeyQname}{logical(1); indicating whether the file is sorted by
     \code{qname} and if so, that qnames are not split between yields.}

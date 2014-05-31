@@ -19,21 +19,21 @@ class Template {
     char *rg, *qname;
     Segments inprogress, ambiguous, invalid; 
 
-    // FIXME: check RG retrieval
-    int readgroup_q(const bam1_t *mate) const {
-    uint8_t *aux = bam_aux_get(mate, "RG");
-    char *rg0 = NULL;
-    if (aux != 0)
-        rg0 = bam_aux2Z(aux);
-
-        if (rg == NULL && rg0 == NULL) /* both null ok */
-            return 0;
+    // check readgroup and qname
+    bool is_template(const bam1_t *mate, char *mate_qname) const {
+        int readgroup_ok, qname_ok;
+        uint8_t *aux = bam_aux_get(mate, "RG");
+        char *rg0 = NULL;
+        if (aux != 0)
+            rg0 = bam_aux2Z(aux);
+        if (rg == NULL && rg0 == NULL) // both null ok
+            readgroup_ok = 0;
         else
-            return strcmp(rg, rg0);
-    }
+            readgroup_ok = strcmp(rg, rg0);
 
-    int qname_q(const bam1_t *mate) const {
-        return strcmp(qname, bam1_qname(mate));
+        qname_ok = strcmp(qname, mate_qname);
+
+        return (readgroup_ok == 0) && (qname_ok == 0);
     }
 
 public:
@@ -41,8 +41,9 @@ public:
     Template() : rg(NULL) {}
 
     bool empty() const {
-        return inprogress.empty() && invalid.empty() &&
-            ambiguous.empty();
+        return inprogress.empty() && 
+               invalid.empty() &&
+               ambiguous.empty();
     }
 
     // is_valid checks the following bit flags:
@@ -57,10 +58,6 @@ public:
 
         return  multi_seg && !seg_unmapped && 
                 !mate_unmapped && (bam->core.mpos != -1);
-    }
-
-    bool is_template(const bam1_t *mate) const {
-        return (readgroup_q(mate) == 0) && (qname_q(mate) == 0);
     }
 
     // is_mate checks the following bit flags:
@@ -184,7 +181,9 @@ public:
 
     // (BamRangeIterator only)
     void mate_inprogress_segments(bamFile bfile, const bam_index_t * bindex,
-                                  queue<Segments> &complete) {
+                                  queue<Segments> &complete,
+                                  char qname_prefix, char qname_suffix,
+                                  bam_qname_f qname_trim) {
         Segments found(inprogress);
         bam1_t *bam = bam_init1();
 
@@ -199,10 +198,14 @@ public:
             // search all records that overlap the iterator
             bam_iter_t iter = bam_iter_query(bindex, tid, beg, beg + 1);
             while (bam_iter_read(bfile, iter, bam) >= 0) {
+                char *mate_qname = qname_trim(bam, qname_prefix, qname_suffix);
                 if (beg == -1)
                     break;
-                if (is_valid(bam) && is_template(bam) && is_mate(curr, bam))
+                if (is_valid(bam) && 
+                    is_template(bam, mate_qname) &&
+                    is_mate(curr, bam)) {
                     touched = touched || add_segment(bam);
+                }
             }
             bam_iter_destroy(iter);
 
@@ -215,8 +218,8 @@ public:
         bam_destroy1(bam);
     }
 
-    // cleanup: move 'ambiguous' to ambiguous_queue; move 'inprogress'
-    // and 'invalid' to 'invalid_queue'
+    // move 'ambiguous' to ambiguous_queue 
+    // move 'inprogress' and 'invalid' to 'invalid_queue'
     void cleanup(queue<Segments> &ambiguous_queue,
                  queue<Segments> &invalid_queue) {
         if (!ambiguous.empty())
