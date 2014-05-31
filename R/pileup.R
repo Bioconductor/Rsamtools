@@ -14,7 +14,7 @@
         distinguish_nucleotides = "logical", # 6
         ignore_query_Ns = "logical", # 7
         include_deletions="logical", # 8
-        read_pos_breaks = "integer")) # 9
+        cycle_bins = "numeric")) # 9
 
 setMethod(show, "PileupParam", function(object) {
     cat("class: ", class(object), "\n")
@@ -34,7 +34,7 @@ PileupParam <-
              min_nucleotide_depth=1, min_minor_allele_depth=0,
              distinguish_strands=TRUE, distinguish_nucleotides=TRUE,
              ignore_query_Ns=TRUE, include_deletions=TRUE,
-             read_pos_breaks=integer())
+             cycle_bins=numeric())
 {
     ## argument checking
     stopifnot(isSingleNumber(max_depth))
@@ -47,12 +47,11 @@ PileupParam <-
     min_mapq <- as.integer(min_mapq)
     min_nucleotide_depth <- as.integer(min_nucleotide_depth)
     min_minor_allele_depth <- as.integer(min_minor_allele_depth)
+    cycle_bins <- .preprocess_cycle_bins(cycle_bins)
     stopifnot(isTRUEorFALSE(distinguish_strands))
     stopifnot(isTRUEorFALSE(distinguish_nucleotides))
     stopifnot(isTRUEorFALSE(ignore_query_Ns))
     stopifnot(isTRUEorFALSE(include_deletions))
-    if(any(is.na(read_pos_breaks)) || any(is.null(read_pos_breaks)))
-        stop("'read_pos_breaks' must not contain NAs or NULLs")
     
     ## creation
     .PileupParam(max_depth=max_depth, min_base_quality=min_base_quality,
@@ -62,7 +61,7 @@ PileupParam <-
                  distinguish_nucleotides=distinguish_nucleotides,
                  ignore_query_Ns=ignore_query_Ns,
                  include_deletions=include_deletions,
-                 read_pos_breaks=read_pos_breaks)
+                 cycle_bins=cycle_bins)
 }
 
 .pileup <-
@@ -95,9 +94,55 @@ PileupParam <-
     run_lens <- .metacols_run_lengths(result)
     which_label <-
         rep.int(factor(which_labels, levels=which_labels), run_lens)
-    
+
+    ## no-op if no bins
+    result <- .apply_cycle_bin_levels(result, pileupParam@cycle_bins)
+    ##print(result)
     result <- .as.data.frame_list_of_lists(result)
     result <- cbind(result, which_label) ## last col
+}
+
+.apply_cycle_bin_levels <- function(result, cycle_bins) {
+    ## no-op if user didn't ask for bins
+    if(length(cycle_bins) > 0L) {
+        bin_levels <- .cycle_bin_levels(cycle_bins)
+        for(i in seq_along(result))
+            result[[i]]$cycle_bin <- .as.factor_cycle_bin(result[[i]]$cycle_bin,
+                                                          bin_levels)
+    }
+    result
+}
+
+.as.factor_cycle_bin <- function(cycle_bin, cycle_bin_levels) {
+    structure(cycle_bin, levels=cycle_bin_levels, class="factor")
+    ## equivalent:
+    ## attributes(cycle_bin) <- list(levels=cycle_bin_levels, class="factor")
+    ## cycle_bin
+}
+
+.cycle_bin_levels <- function(bins) {
+    bins[bins == .Machine$integer.max] <- Inf
+    levels(cut(0, bins))
+}
+
+## return value: numeric vector of increasing values that contains
+## only integers and +Inf
+.preprocess_cycle_bins <- function(bins) {
+    if(length(bins) != 0L) {
+        if(any(is.na(bins)) || any(is.null(bins)) || any(is.nan(bins)))
+            stop("'cycle_bins' must not contain NAs, NULLs, or NaNs")
+        if(length(bins) == 1L)
+            stop("'cycle_bins' must have 0 or >1 elements")
+        if(any(bins < 0L))
+            stop("'cycle_bins' must not contain negative values")
+        ## invariant: only contains +integers and +Inf
+        bins[!is.finite(bins)] <- .Machine$integer.max ## Inf to max_int
+        bins <- as.integer(bins)
+        if(any(duplicated(bins)))
+           stop("'cycle_bins' must not contain duplicate values")
+        bins <- sort(bins)
+    }
+    bins
 }
 
 .make_unique <- function(group_names) {

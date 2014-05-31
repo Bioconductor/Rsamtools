@@ -1,81 +1,70 @@
 #ifndef POS_CACHE_H
 #define POS_CACHE_H
 
+#include <set>
 #include <map>
+#include <vector>
 #include <utility>
+#include <numeric>
 #include <stdio.h>
 using std::map;
 using std::pair;
 using std::make_pair;
 
-// technically could embed strand information in a nucleotide node,
-// but this would hurt readability (assuming only C++98 facilities)
-// since the resulting map would require keys of <nucleotide,strand>;
-// there's already enough pair.first, pair.second, and make_pair hanky
-// panky.
-struct StrandTree {
-    map<char, int> strandMap;
-    StrandTree() : strandMap() { }
-    void increment(char strand) {
-        // increment count at strand
-        strandMap.insert(make_pair(strand, 0)).first->second++;
-        //print();
+struct BamTuple { // for sending info from Pileup::insert to ResultMgr
+    char nuc, strand;
+    int bin;
+    BamTuple(char nuc_ = 'X', char strand_ = 'X', int bin_ = 0)
+        : nuc(nuc_), strand(strand_), bin(bin_) { }
+    bool operator<(const BamTuple& rhs) const {
+        return nuc < rhs.nuc || (nuc == rhs.nuc && strand < rhs.strand) ||
+            (nuc == rhs.nuc && strand == rhs.strand && bin < rhs.bin);
     }
-    int numStrands() const { return strandMap.size(); }
-    int count() const {
-        int count = 0;
-        for(map<char,int>::const_iterator it = strandMap.begin();
-            it != strandMap.end(); ++it) {
-            count += it->second;
-        }
-        return count;
-    }
-    // void print() const {
-    //     typedef map<char, int>::const_iterator iter;
-    //     for(iter it = strandMap.begin(); it != strandMap.end(); ++it) {
-    //         printf("strand %c count: %u - ", it->first, it->second);
-    //     } printf("\n");
-    // }
 };
 
 struct PosCache {
-    map<char, StrandTree> nucMap;
-    PosCache() : nucMap() { }
-    // void print() const {
-    //     typedef map<char, StrandTree>::const_iterator iter;
-    //     for(iter it = nucMap.begin(); it != nucMap.end(); ++it) {
-    //         printf("* nuc %c\n", it->first);
-    //         it->second.print();
-    //     }
-    // }
-    void increment(char strand, char nucleotide) {
-        pair<char, StrandTree> tempNode = make_pair(nucleotide, StrandTree());
-        // get tree for nucleotide
-        StrandTree &st = nucMap.insert(tempNode).first->second;
-        st.increment(strand);
-        //print(); printf("\n");
+    std::vector<BamTuple> tupleVec;
+    std::map<char,int> nucCounts;
+    typedef std::vector<BamTuple>::const_iterator tuple_iter;
+    typedef std::map<char,int>::const_iterator counts_iter;
+    PosCache() : tupleVec(), nucCounts() { }
+    void storeTuple(BamTuple& bt) {
+        tupleVec.push_back(bt);
+        nucCounts.insert(make_pair(bt.nuc,0)).first->second++;
     }
-    int numNucs() { return nucMap.size(); }
-    int count()  const {
-        int count = 0;
-        for(map<char,StrandTree>::const_iterator it = nucMap.begin();
-            it != nucMap.end(); ++it) {
-            count += it->second.count();
-        }
-        return count;
+    static int addSecond(int i, const pair<char,int>& thePair) {
+        return i + thePair.second;
     }
-    int primaryNucCount() const {
-        int max = 0;
-        for(map<char,StrandTree>::const_iterator it = nucMap.begin();
-            it != nucMap.end(); ++it) {
-            //printf("nuc %c count %d\n", it->first, it->second.count());
-            if(it->second.count() > max)
-                max = it->second.count();
+    int totalNucFreq() const {
+        return std::accumulate(nucCounts.begin(),nucCounts.end(),0,addSecond);
+    }
+    int primaryNucFreq() const {
+        int maxCount = 0;
+        typedef map<char,int>::const_iterator iter;
+        for(iter it = nucCounts.begin();
+            it != nucCounts.end(); ++it) {
+            if(it->second > maxCount)
+                maxCount = it->second;
         }
-        return max;
+        return maxCount;
+    }
+    std::set<char> passingNucs(int min) const {
+        std::set<char> nucs;
+        for(counts_iter it = nucCounts.begin(); it != nucCounts.end(); ++it) {
+            if(it->second >= min)
+                nucs.insert(it->first);
+        }
+        return nucs;
     }
     void clear() {
-        nucMap.clear();
+        tupleVec.clear();
+        nucCounts.clear();
+    }
+    void print() const {
+        printf("tupleVec contents:\n");
+        for(tuple_iter it = tupleVec.begin(); it != tupleVec.end(); ++it) {
+            printf("nuc %c str %c bin %u\n", it->nuc, it->strand, it->bin);
+        }
     }
 };
 

@@ -13,7 +13,7 @@
 \alias{distinguish_nucleotides}
 \alias{ignore_query_Ns}
 \alias{include_deletions}
-\alias{read_pos_breaks}
+\alias{cycle_bins}
 
 % pileup
 \alias{pileup}
@@ -31,8 +31,8 @@
   \code{pileup} uses \code{PileupParam} and \code{ScanBamParam} objects
   to calculate pileup statistics for a BAM file. The result is a
   \code{data.frame} with columns summarizing counts of reads overlapping
-  each genomic position, optionally differentiated on nucleotide and
-  strand.
+  each genomic position, optionally differentiated on nucleotide,
+  strand, and position within read.
 
 }
 \usage{
@@ -45,7 +45,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
     min_nucleotide_depth=1, min_minor_allele_depth=0,
     distinguish_strands=TRUE, distinguish_nucleotides=TRUE,
     ignore_query_Ns=TRUE, include_deletions=TRUE,
-    read_pos_breaks=integer())
+    cycle_bins=numeric())
 }
 
 \arguments{
@@ -97,10 +97,11 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   \item{include_deletions}{logical(1); \code{TRUE} to include deletions
     in pileup.}
 
-  \item{read_pos_breaks}{integer vector of positions within an alignment
-    to count separately. \code{read_pos_breaks} is currently not
-    implemented, but will allow users to differentiate pileup counts
-    based on aribtrarily defined regions within an alignment.}
+  \item{cycle_bins}{numeric; non-negative, unique positions within a
+    read to delimit bins. At least two values are required so at least
+    one range can be formed. numeric(0) (default) indicates no
+    binning. Sorted order is not required. Floating-point values are
+    coerced to \code{integer}.}
 
 % better wording?: 'if _____ should disqualify the read/alignment from
 % the pileup'
@@ -109,7 +110,8 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
 \details{
 
   \emph{NB}: Use of \code{pileup} assumes familiarity with
-  \code{\link{ScanBamParam}}.
+  \code{\link{ScanBamParam}}, and use of \code{cycle_bins} assumes
+  familiarity with \code{\link{cut}}.
 
   \code{pileup} visits each position in the BAM file, subject to
   constraints implied by \code{which} and \code{flag} of
@@ -181,14 +183,32 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   Insertion operations with respect to the reference genome (and
   therefore \sQuote{P} CIGAR operations) are ignored for \code{pileup}.
 
+  \code{cycle_bins} allows users to differentiate pileup counts based on
+  arbitrary regions within a read. \code{pileup} relies on
+  \code{\link{cut}} to derive bins, but limits input to non-negative
+  numeric values (coerced to \code{integer}s), including Inf. If
+  \code{cycle_bins} is set \code{pileup} automatically excludes bases
+  outside the implicit outer range. There are two important factors to
+  consider when specifying bins:
+  
+  \itemize{
+      \item{Because \code{\link{cut}} produces ranges in the form
+      (first,last], \sQuote{0} should be used to create a bin that
+      includes the first position.}
+
+      \item{In order to account for variable-length reads in BAM files,
+      \code{Inf} should be used to create a bin that extends to the end
+      of all reads.}
+  } %% end subsection cycle_bins gotchas
+
 }
 
 \value{
   
   \code{pileup} returns a \code{data.frame} with columns
   \code{seqnames}, \code{pos}, and \code{count} minimally, and optional
-  \code{strand} and \code{nulceotide} columns as dictated by arguments
-  to \code{PileupParam}.
+  \code{strand}, \code{nulceotide}, and \code{cycle_bin} columns as
+  dictated by arguments to \code{PileupParam}.
 
   If a \code{which} argument is specified for the scanBamParam, a
   \code{which_label} column (in the form \sQuote{rname:start-end}) is
@@ -279,4 +299,52 @@ p_param <- PileupParam(min_minor_allele_depth=5,
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 dim(res) ## reduced to our biologically interesting positions
 head(xtabs(count ~ pos + nucleotide, res))
+
+## cycle_bins
+
+\dontrun{
+## basic use: single pivot; count bases that appear in first 10
+## positions of a read separately from the rest
+p_param <- PileupParam(cycle_bins=c(0, 10, Inf))
+res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
+
+## basic use: simple range; only include bases in positions 6-10 within
+## read
+p_param <- PileupParam(cycle_bins=c(5, 10))
+res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
+}
+
+## typical use: beginning, middle, and end segments; because of the
+## nature of sequencing technology, it is common for bases in the
+## beginning and end segments of each read to be less reliable. pileup
+## makes it easy to count each segment separately.
+
+## Assume determined ahead of time that for the data 1-7 makes sense for
+## beginning, 8-12 middle, >=13 end (actual positions should be tailored
+## to data in actual BAM files).
+p_param <- PileupParam(cycle_bins=c(0, 7, 12, Inf)) ## note non-symmetric
+res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
+xt <- xtabs(count ~ nucleotide + cycle_bin, res)
+print(xt)
+t(t(xt) / colSums(xt)) ## cheap normalization for illustrative purposes
+
+## 'implicit outer range': in contrast to c(0, 7, 12, Inf), suppose we
+##  still want to have beginning, middle, and end segements, but know
+##  that the first three positions and any bases beyond the 16th
+##  position are irrelevant. Hence, the implicit outer range is (3,16];
+##  all bases outside of that are dropped.
+p_param <- PileupParam(cycle_bins=c(3, 7, 12, 16))
+res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
+xt <- xtabs(count ~ nucleotide + cycle_bin, res)
+print(xt)
+t(t(xt) / colSums(xt))
+
+\dontrun{
+## single-width bins: count each position within a read separately.
+p_param <- PileupParam(cycle_bins=seq(1,20))
+res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
+xt <- xtabs(count ~ nucleotide + cycle_bin, res)
+head(print(xt))
+head(t(t(xt) / colSums(xt)))
+}
 }

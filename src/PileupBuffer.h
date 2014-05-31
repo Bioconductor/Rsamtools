@@ -46,6 +46,7 @@ class Pileup : public PileupBuffer {
 private:
     const SEXP schema, pileupParams, seqnamesLevels;
     ResultMgrInterface *resultMgr;
+    std::vector<int32_t> binPoints;
     int max_depth() const {
         return INTEGER(VECTOR_ELT(pileupParams, 0))[0];
     }
@@ -73,8 +74,31 @@ private:
     bool include_deletions() const {
         return LOGICAL(VECTOR_ELT(pileupParams, 8))[0];
     }
-    // read_pos_breaks pileupParams[9]
-
+    // cycle_bins pileupParams[9]
+    int cycleBinsLength() const {
+        return Rf_length(VECTOR_ELT(pileupParams, 9));
+    }
+    bool hasBins() const {
+        return cycleBinsLength() > 0;
+    }
+    std::vector<int32_t> binPointsAsVec(SEXP cycleBins) const {
+        int numPoints = Rf_length(cycleBins);
+        std::vector<int32_t> points(numPoints);
+        for(int i = 0; i != numPoints; ++i) {
+            points.at(i) = INTEGER(cycleBins)[i];
+        }
+        return points;
+    }
+    int calcBin(int qpos) {
+        return std::lower_bound(binPoints.begin(), binPoints.end(), qpos) -
+            binPoints.begin();
+    }
+    int32_t maxBinPoint() const {
+        return *(binPoints.end() - 1);
+    }
+    int32_t minBinPoint() const {
+        return *binPoints.begin();
+    }
     int getSeqlevelValue(const char* theRname) const {
         int idx = 0;
         for(idx = 0; idx != Rf_length(seqnamesLevels); ++idx) {
@@ -89,11 +113,13 @@ private:
 public:
     Pileup(SEXP schema_, SEXP pileupParams_, SEXP seqnamesLevels_)
         : schema(schema_), pileupParams(pileupParams_),
-          seqnamesLevels(seqnamesLevels_), resultMgr(NULL)
+          seqnamesLevels(seqnamesLevels_), resultMgr(NULL),
+          binPoints()
         {
             resultMgr =
                 new ResultMgr(min_nucleotide_depth(), min_minor_allele_depth(),
-                              hasStrands(), hasNucleotides());
+                              hasStrands(), hasNucleotides(), hasBins());
+            binPoints = binPointsAsVec(VECTOR_ELT(pileupParams, 9));
         }
     ~Pileup() {
         delete resultMgr;
@@ -110,7 +136,9 @@ public:
     static int insert(uint32_t tid, uint32_t pos, int n,
                       const bam_pileup1_t *pl, void *data);
     SEXP yield();
-
+    static int strand_to_lvl(char strand) {
+        return strand == '+' ? 1 : 2;
+    }
     static int nuc_to_lvl(char nuc) {
         if(nuc == 'A')
             return 1;
@@ -132,6 +160,6 @@ public:
 };
 
 void extract(const ResultMgrInterface * const from, SEXP to, bool hasStrands,
-    bool hasNucleotides);
+             bool hasNucleotides, bool hasBins);
 
 #endif //PILEUPBUFFER_H

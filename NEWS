@@ -3,6 +3,10 @@ CHANGES IN VERSION 1.17.0
 
 NEW FEATURES
 
+    o pileup 'read_pos_breaks' parameter renamed to 'cycle_bins':
+      cycle_bins allows users to differentiate pileup counts based on
+      user-defined regions within a read.
+
     o pileup uses PileupParam and ScanBamParam instances to calculate
       pileup statistics for a BAM file; returns a data.frame with
       columns summarizing information extracted from alignments

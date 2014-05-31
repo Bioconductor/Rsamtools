@@ -12,13 +12,15 @@ suppressMessages({
 fl <- system.file(package="Rsamtools", "extdata", "tiny.bam")
 bf <- BamFile(fl)
 
+.reorder_data.frame <- function(df) {
+    df <- df[do.call(order,df),]
+    rownames(df) <- NULL
+    df
+}
+
 .unordered_check <- function(expected, xx) {
-    ##xx <- as.data.frame(xx) ## no longer need coercion
-    xx <- xx[do.call(order,xx),]
-    rownames(xx) <- NULL
-    ## expected <- as.data.frame(expected) ## no longer need coercion
-    expected <- expected[do.call(order,expected),]
-    rownames(expected) <- NULL
+    xx <- .reorder_data.frame(xx)
+    expected <- .reorder_data.frame(expected)
     checkIdentical(xx, expected)
 }
 
@@ -41,8 +43,9 @@ bf <- BamFile(fl)
 }
 
 ## target as data.frame
-.tadf <- function(pos=NULL, strand=NULL, nucleotide=NULL, count=NULL,
-                  which_label=NULL, seqnames=NULL, use_ex1.bam_levels=FALSE) {
+.tadf <- function(pos=NULL, strand=NULL, nucleotide=NULL, cycle_bin=NULL,
+                  count=NULL, which_label=NULL, seqnames=NULL,
+                  use_ex1.bam_levels=FALSE) {
     if(is.null(pos) || is.null(count) || is.null(seqnames))
         stop("'pos', 'count', and 'seqnames' must not be 'NULL'")
     target <- data.frame(pos=as.integer(pos), stringsAsFactors=FALSE)
@@ -56,6 +59,9 @@ bf <- BamFile(fl)
     if(!is.null(nucleotide))
         target <- cbind(target,
                         nucleotide=factor(nucleotide, levels=.n_levels()))
+    if(!is.null(cycle_bin))
+        target <- cbind(target,
+                        cycle_bin=cycle_bin)
     target <- cbind(target, count=as.integer(count))
     if(!is.null(which_label))
         target <- cbind(target, which_label=which_label)
@@ -129,6 +135,149 @@ bf <- BamFile(fl)
     ScanBamParam(which=GRanges("seqnames_from_tinysam_c", IRanges(1,2)))
 .all_nuc_levels <- function()
     ScanBamParam(which=GRanges("all_nuc_levels", IRanges(1, 7)))
+## test sequence with length 5
+.bins_5 <- function()
+    ScanBamParam(which=GRanges("bins_5", IRanges(1,5)))
+
+test_bins_5_unsorted <- function() {
+    sb_param <- .bins_5()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=FALSE,
+        cycle_bins=c(4,2))
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=seq(3L, 4L),
+                      cycle_bin=c("(2,4]","(2,4]"),
+                      count=rep(1L,2L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(xx); ##str(xx);
+    ##print(expected); ##str(expected)
+    checkIdentical(expected, xx)
+}
+
+test_bins_5_single_width_bins <- function() {
+    sb_param <- .bins_5()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=FALSE,
+        ##cycle_bins=c(2, 3, 4)) ## original
+        cycle_bins=seq(0L, 5L))
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=seq(1L, 5L),
+                      cycle_bin=c("(0,1]","(1,2]","(2,3]","(3,4]","(4,5]"),
+                      count=rep(1L,5L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(xx); ##str(xx);
+    ##print(expected); ##str(expected)
+    checkIdentical(expected, xx)
+}
+
+test_bins_5_fullrange_3bin <- function() {
+    sb_param <- .bins_5()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=FALSE,
+        cycle_bins=c(0, 2, 4, Inf))
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=seq(1L, 5L),
+                      cycle_bin=c("(0,2]","(0,2]","(2,4]","(2,4]","(4,Inf]"),
+                      count=rep(1L,5L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(xx); ##str(xx);
+    ##print(expected); ##str(expected)
+    checkIdentical(expected, xx)
+}
+
+test_bins_5_singleinteriorbin <- function() {
+    sb_param <- .bins_5()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=FALSE,
+        cycle_bins=c(1, 4))
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=seq(2L, 4L),
+                      cycle_bin=rep("(1,4]",3L),
+                      count=rep(1L,3L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(xx);## str(xx);
+    ##print(expected);## str(expected)
+    checkIdentical(expected, xx)
+}
+
+test_bins_5_trailingbin <- function() {
+    sb_param <- .bins_5()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=FALSE,
+        cycle_bins=c(3, Inf))
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=seq(4L, 5L),
+                      cycle_bin=rep("(3,Inf]",2),
+                      count=rep(1L,2L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(xx);## str(xx);
+    ##print(expected);## str(expected)
+    checkIdentical(expected, xx)
+}
+
+test_bins_5_leadingbin <- function() {
+    sb_param <- .bins_5()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=FALSE,
+        cycle_bins=c(0, 2))
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=seq(1L, 2L),
+                      cycle_bin=rep("(0,2]",2),
+                      count=rep(1L,2L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(xx);## str(xx);
+    ##print(expected);## str(expected)
+    checkIdentical(expected, xx)
+}
+
+test_bins_5_fullrangesinglebin <- function() {
+    sb_param <- .bins_5()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=FALSE,
+        cycle_bins=c(0, Inf))
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=seq(1L, 5L),
+                      cycle_bin=rep("(0,Inf]",5),
+                      count=rep(1L,5L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ## print(xx); str(xx);
+    ## print(expected); str(expected)
+    checkIdentical(expected, xx)
+}
+
+test_bins_levels <- function() {
+    sb_param <- .bins_5()
+    ## yes, decreasing order (testing preprocess func too)
+    cycle_bins <- c(Inf, 4, 2, 0)
+    p_param <- PileupParam(
+        cycle_bins=cycle_bins)
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    expected <- factor(levels=levels(cut(0, cycle_bins)))
+    checkIdentical(levels(expected), levels(xx$cycle_bin))
+}
+
+## END CYCLE_BINS    
 
 ## test all nuc levels represented
 test_all_nuc_levels <- function() {
@@ -243,10 +392,85 @@ test_distinguish_none <- function() {
     xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
     seqnames <- space(bamWhich(scanBamParam)) 
     expected <- .tadf(seqnames=seqnames,
-                     pos=     1L,
-                     count=   20L,
+                     pos=     seq(1L,6L),
+                     count=   c(30L, seq(18L, 2L, -4)),
                      which_label=.mwls(scanBamParam, length(seqnames)))
     ##print(xx);print(expected)
+    checkIdentical(expected, xx)
+}
+
+test_distinguish_all <- function() {
+    scanBamParam <- .dist_all()
+    pileupParam <- PileupParam(
+                              distinguish_strands=TRUE,
+                              distinguish_nucleotides=TRUE,
+                              cycle_bins=c(0,3,Inf))
+    xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
+    seqnames <- space(bamWhich(scanBamParam)) 
+    expected <- .tadf(seqnames=seqnames,
+                     pos=c(rep(1,8),2,2,3,3,4,4,4,4,5,5,6,6),
+                     nucleotide=c("A","A","C","C","G","G","T","T",rep("A",12)),
+                     strand=c(rep(c("+","-"),6),"+","+","-","-","+","-","+","-"),
+                     cycle_bin=c(rep("(0,3]",12),
+                       rep(c("(0,3]","(3,Inf]"),2), rep("(3,Inf]",4)),
+                     count=c(8,7,2,3,3,2,2,3,9,9,7,7,3,2,3,2,3,3,1,1),
+                     which_label=.mwls(scanBamParam, length(seqnames)))
+    ##print(xx);print(expected)
+    checkIdentical(expected,xx)
+}
+##test_distinguish_all()
+
+test_distinguish_strand_bin <- function() {
+    scanBamParam <- .dist_all()
+    pileupParam <- PileupParam(
+                              distinguish_strands=TRUE,
+                              distinguish_nucleotides=FALSE,
+                              cycle_bins=c(0,3,Inf))
+    xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
+    seqnames <- space(bamWhich(scanBamParam)) 
+    expected <- .tadf(seqnames=seqnames,
+                     pos=c(1,1,2,2,3,3,4,4,4,4,5,5,6,6),
+                     strand=c(rep(c("+","-"),3),"+","+","-","-",rep(c("+","-"),2)),
+                     cycle_bin=c(rep(c("(0,3]"),7),"(3,Inf]","(0,3]",rep(c("(3,Inf]"),5)),
+                     count=c(15,15,9,9,7,7,3,2,3,2,3,3,1,1),
+                     which_label=.mwls(scanBamParam, length(seqnames)))
+    ##print(xx);print(expected)
+    checkIdentical(expected,xx)
+}
+
+test_distinguish_nuc_bin <- function() {
+    scanBamParam <- .dist_all()
+    pileupParam <- PileupParam(
+                              distinguish_strands=FALSE,
+                              distinguish_nucleotides=TRUE,
+                              cycle_bins=c(0,3,Inf))
+    xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
+    seqnames <- space(bamWhich(scanBamParam)) 
+    expected <- .tadf(seqnames=seqnames,
+                     pos=   c(rep( 1L, 4L),2,3,4,4,5,6),
+                     nucleotide=c("A","C","G","T", rep("A",6)),
+                     cycle_bin=c(rep("(0,3]",7),rep("(3,Inf]",3)),
+                     count=c(15,5,5,5,18,14,6,4,6,2),
+                     which_label=.mwls(scanBamParam, length(seqnames)))
+    ##print(xx);print(expected)
+    checkIdentical(expected, xx)
+}
+
+test_distinguish_bins_only <- function() {
+    scanBamParam <- .dist_all()
+    pileupParam <- PileupParam(
+                              distinguish_strands=FALSE,
+                              distinguish_nucleotides=FALSE,
+                               cycle_bins=c(0,3,Inf))
+    xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
+    seqnames <- space(bamWhich(scanBamParam))
+    expected <- .tadf(seqnames=seqnames,
+                      pos = c(1L,2L,3L,4L,4L,5L,6L),
+                      cycle_bin=c(rep("(0,3]",4L),rep("(3,Inf]",3L)),
+                      count=c(30L,18L,14L,6L,4L,6L,2L),
+                      which_label=.mwls(scanBamParam, length(seqnames)))
+    ## print(xx)
+    ## print(expected)
     checkIdentical(expected, xx)
 }
 
@@ -258,13 +482,14 @@ test_distinguish_nuc_only <- function() {
     xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
     seqnames <- space(bamWhich(scanBamParam)) 
     expected <- .tadf(seqnames=seqnames,
-                     pos=     rep(1L, 4L),
-                     nucleotide=c("A", "C", "G", "T"),
-                     count=   rep(5L, 4L),
+                     pos=     c(rep(1L, 4L), seq(2L,6L)),
+                     nucleotide=c("A", "C", "G", "T", rep("A",5L)),
+                     count=   c(15L,5L,5L,5L,18L,14L,10L,6L,2L),
                      which_label=.mwls(scanBamParam, length(seqnames)))
-    ##print(xx);print(expected)
+    ##print(.reorder_data.frame(xx));print(.reorder_data.frame(expected))
     .unordered_check(expected, xx)
 }
+
 test_distinguish_strand_only <- function() {
     scanBamParam <- .dist_all()
     pileupParam <- PileupParam(
@@ -273,28 +498,30 @@ test_distinguish_strand_only <- function() {
     xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
     seqnames <- space(bamWhich(scanBamParam)) 
     expected <- .tadf(seqnames=seqnames,
-                     pos=   c(1L, 1L),
-                     strand=c("+", "-"),
-                     count= c(10L, 10L),
+                      pos=   unlist(lapply(1:6,rep,2)),
+                      strand=rep(c("+","-"),6),
+                      ##count= c(15,15,c(unlist(lapply(seq(9,1,-2),rep,2)))),
+                      count= c(15,15,9,9,7,7,5,5,3,3,1,1), ## clearer?
                       which_label=.mwls(scanBamParam, length(seqnames)))
-    ##print(xx);print(expected)
+    ## print(xx);
+    ## print(expected);
     checkIdentical(expected, xx)
 }
-test_distinguish_all <- function() {
-    ## For all the marbles
+
+test_distinguish_nuc_strand <- function() {
     scanBamParam <- .dist_all()
     pileupParam <- PileupParam(
                               distinguish_strands=TRUE,
-                              distinguish_nucleotides=TRUE,
-                              ignore_query_Ns=FALSE)
+                              distinguish_nucleotides=TRUE)
     xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
     seqnames <- space(bamWhich(scanBamParam)) 
     expected <- .tadf(seqnames=seqnames,
-                     pos=      rep( 1L,  8L),
-                     strand=     c("+", "-", "+", "-", "+", "-", "+", "-"),
-                     nucleotide= c("A", "C", "G", "T", "C", "G", "T", "A"),
-                     count=      c( 3L,  3L,  3L,  3L,  2L,  2L,  2L,  2L),
+                     pos=   c(rep( 1L, 8L),unlist(lapply(seq(2,6),rep,2))),
+                     strand=c(rep("+",4),rep("-",4),rep(c("+","-"),5)),
+                     nucleotide=c(rep(c("A","C","G","T"),2), rep("A",10)),
+                     count=c(8,2,3,2,7,3,2,3,unlist(lapply(seq(9,1,-2),rep,2))),
                       which_label=.mwls(scanBamParam, length(seqnames)))
+    ##print(.reorder_data.frame(xx));print(.reorder_data.frame(expected))
     .unordered_check(expected, xx)
 }
 

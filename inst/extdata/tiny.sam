@@ -21,6 +21,8 @@
 @SQ	SN:multi_range_single_rname	LN:15
 @SQ	SN:seqnames_from_tinysam_c	LN:15
 @SQ	SN:all_nuc_levels	LN:15
+@SQ	SN:bins_5	LN:5
+B7	0	bins_5	1	99	5M	*	0	0	ACGT=	=====
 B7	0	all_nuc_levels	1	99	2M1D4M	*	0	0	ACGTN=	======
 B7	0	seqnames_from_tinysam_c	1	99	1M	*	0	0	=	=
 B7	0	multi_range_single_rname	1	99	4M	*	0	0	ACGT	====
@@ -74,5 +76,25 @@ B7	0	dist_all	1	99	1M	*	0	0	A	=
 B7	16	dist_all	1	99	1M	*	0	0	C	=
 B7	0	dist_all	1	99	1M	*	0	0	G	=
 B7	16	dist_all	1	99	1M	*	0	0	T	=
+B7	0	dist_all	1	99	1M	*	0	0	A	=
+B7	0	dist_all	2	99	1M	*	0	0	A	=
+B7	0	dist_all	1	99	2M	*	0	0	AA	==
+B7	0	dist_all	2	99	2M	*	0	0	AA	==
+B7	0	dist_all	1	99	3M	*	0	0	AAA	===
+B7	0	dist_all	2	99	3M	*	0	0	AAA	===
+B7	0	dist_all	1	99	4M	*	0	0	AAAA	====
+B7	0	dist_all	2	99	4M	*	0	0	AAAA	====
+B7	0	dist_all	1	99	5M	*	0	0	AAAAA	=====
+B7	0	dist_all	2	99	5M	*	0	0	AAAAA	=====
+B7	16	dist_all	1	99	1M	*	0	0	A	=
+B7	16	dist_all	2	99	1M	*	0	0	A	=
+B7	16	dist_all	1	99	2M	*	0	0	AA	==
+B7	16	dist_all	2	99	2M	*	0	0	AA	==
+B7	16	dist_all	1	99	3M	*	0	0	AAA	===
+B7	16	dist_all	2	99	3M	*	0	0	AAA	===
+B7	16	dist_all	1	99	4M	*	0	0	AAAA	====
+B7	16	dist_all	2	99	4M	*	0	0	AAAA	====
+B7	16	dist_all	1	99	5M	*	0	0	AAAAA	=====
+B7	16	dist_all	2	99	5M	*	0	0	AAAAA	=====
 B7	0	full_seq_range	1	99	28M	*	0	0	ABCDEFGHIJKLMNOPQRSTUVWXYZ=.	============================
 B7	0	Biostrings_DNA_ALPHABET	1	99	18M	*	0	0	ACGTMRWSYKVHDBN-+.	==================
