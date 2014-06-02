@@ -9,8 +9,8 @@
 #include <cassert>
 #include "nate_utilities.h"
 #endif
-#include <Rinternals.h>
 #include "PosCache.h"
+#include <Rinternals.h>
 typedef std::vector<int>::const_iterator int_const_it;
 typedef std::vector<char>::const_iterator char_const_it;
 

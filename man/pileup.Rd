@@ -186,7 +186,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   \code{cycle_bins} allows users to differentiate pileup counts based on
   arbitrary regions within a read. \code{pileup} relies on
   \code{\link{cut}} to derive bins, but limits input to non-negative
-  numeric values (coerced to \code{integer}s), including Inf. If
+  numeric values (coerced to \code{integer}s), including \code{Inf}. If
   \code{cycle_bins} is set \code{pileup} automatically excludes bases
   outside the implicit outer range. There are two important factors to
   consider when specifying bins:
@@ -205,21 +205,48 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
 
 \value{
   
-  \code{pileup} returns a \code{data.frame} with columns
-  \code{seqnames}, \code{pos}, and \code{count} minimally, and optional
-  \code{strand}, \code{nulceotide}, and \code{cycle_bin} columns as
-  dictated by arguments to \code{PileupParam}.
+  For \code{pileup} a \code{data.frame} with 1 row per unique
+  combination of differentiating column values that satisfied filter
+  criteria, with frequency (\code{count}) of unique combination. Columns
+  \code{seqnames}, \code{pos}, and \code{count} always appear; optional
+  \code{strand}, \code{nulceotide}, and \code{cycle_bin} columns appear
+  as dictated by arguments to \code{PileupParam}.
 
-  If a \code{which} argument is specified for the scanBamParam, a
-  \code{which_label} column (in the form \sQuote{rname:start-end}) is
-  automatically included. The \code{which_label} column is used to
-  maintain grouping of results, such that two queries of the same
-  genomic region can be differentiated.
+  Column details:
+
+  \itemize{
+    
+    \item{\code{seqnames}: factor. SAM \sQuote{RNAME} field of
+    alignment.}
+
+    \item{\code{pos}: integer(1). Genomic position of base. Derived by
+    offset from SAM \sQuote{POS} field of alignment.}
+
+    \item{\code{strand}: factor. \sQuote{strand} to which read aligns.}
+
+    \item{\code{nucleotide}: factor. \sQuote{nucleotide} of base,
+      extracted from SAM \sQuote{SEQ} field of alignment.}
+
+    \item{\code{cycle_bin}: factor. Cycle bin in which base appears.}
+
+    \item{\code{count}: integer(1). Frequency of combination of
+    differentiating fields, as indicated by values of other columns.}
+    
+  }
+
+  See \code{\link{scanBam}} for more detailed explanation of SAM fields.
+
+  If a \code{which} argument is specified for the \code{scanBamParam}, a
+  \code{which_label} column (\code{factor} in the form
+  \sQuote{rname:start-end}) is automatically included. The
+  \code{which_label} column is used to maintain grouping of results,
+  such that two queries of the same genomic region can be
+  differentiated.
 
   Order of rows in \code{data.frame} is first by order of
   \code{seqnames} column based on the BAM index file, then
   non-decreasing order on columns \code{pos}, then \code{nucleotide},
-  then \code{strand}.
+  then \code{strand}, then \code{cycle_bin}.
 
   \code{PileupParam} returns an instance of PileupParam class.
 
@@ -229,6 +256,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   \itemize{
     \item{\link{Rsamtools}}
     \item{\link{ScanBamParam}}
+    \item{\link{scanBam}}
   }
 }
 
@@ -302,7 +330,7 @@ head(xtabs(count ~ pos + nucleotide, res))
 
 ## cycle_bins
 
-\dontrun{
+\donttest{
 ## basic use: single pivot; count bases that appear in first 10
 ## positions of a read separately from the rest
 p_param <- PileupParam(cycle_bins=c(0, 10, Inf))
@@ -339,7 +367,7 @@ xt <- xtabs(count ~ nucleotide + cycle_bin, res)
 print(xt)
 t(t(xt) / colSums(xt))
 
-\dontrun{
+\donttest{
 ## single-width bins: count each position within a read separately.
 p_param <- PileupParam(cycle_bins=seq(1,20))
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)

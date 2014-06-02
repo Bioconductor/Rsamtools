@@ -7,11 +7,11 @@
 #include <utility>
 #include <algorithm>
 #include <cassert>
-#include <Rinternals.h>
-#include <Rdefines.h>
 #include "samtools/bam.h"
 #include "ResultManager.h"
 #include "utilities.h"
+#include <Rinternals.h>
+#include <Rdefines.h>
 
 class PileupBuffer {
   protected:

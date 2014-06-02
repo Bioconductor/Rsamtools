@@ -1,6 +1,3 @@
-#include "io_sam.h"
-#include "utilities.h"
-#include "PileupBufferShim.h"
 #include "pileup.h"
 
 static int _filter_and_parse1_pileup(const bam1_t *bam, void *data)
@@ -45,11 +42,11 @@ static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
 {
     _check_isbamfile(ext, "pileup");
     _checkparams(space, keepFlags, isSimpleCigar);
-    if (!(IS_INTEGER(yieldSize) && (1L == LENGTH(yieldSize))))
+    if (!(Rf_isInteger(yieldSize) && (1L == Rf_length(yieldSize))))
         Rf_error("'yieldSize' must be integer(1)");
-    if (!(IS_LOGICAL(obeyQname) && (1L == LENGTH(obeyQname))))
+    if (!(Rf_isLogical(obeyQname) && (1L == Rf_length(obeyQname))))
         Rf_error("'obeyQname' must be logical(1)");
-    if (!(IS_LOGICAL(asMates) && (1L == LENGTH(asMates))))
+    if (!(Rf_isLogical(asMates) && (1L == Rf_length(asMates))))
         Rf_error("'asMates' must be logical(1)");
 
     SEXP result = PROTECT(_pileup_bam_result_init(space));
@@ -101,9 +98,9 @@ extern "C" {
                   SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
                   SEXP schema, SEXP pileupParams, SEXP seqnamesLevels)
     {
-        if (!IS_LIST(schema))
+        if (!Rf_isVector(schema))
             Rf_error("'schema' must be list()");
-        if (!IS_LIST(pileupParams))
+        if (!Rf_isVector(pileupParams))
             Rf_error("'pileupParams' must be list()");
 
         Pileup buffer = Pileup(schema, pileupParams, seqnamesLevels);

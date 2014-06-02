@@ -2,6 +2,14 @@
 #define PILEUP_H
 
 #ifdef __cplusplus
+#define R_NO_REMAP
+#include "io_sam.h"
+#include "utilities.h"
+#include "PileupBufferShim.h"
+#ifdef PILEUP_DEBUG
+#include "nate_utilities.h"
+#endif
+
 extern "C" {
 #endif
     SEXP c_Pileup(SEXP ext, SEXP space, SEXP keepFlags,
