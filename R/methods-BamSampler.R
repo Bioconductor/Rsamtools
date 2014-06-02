@@ -5,6 +5,8 @@ BamSampler <-
               asMates = FALSE, qnamePrefixEnd = NA,
               qnameSuffixStart = NA) 
 {
+    qnamePrefixEnd <- .check_qname_arg(qnamePrefixEnd, "qnamePrefixEnd")
+    qnameSuffixStart <- .check_qname_arg(qnameSuffixStart, "qnameSuffixStart")
     .RsamtoolsFile(.BamSampler, .normalizePath(file), .normalizePath(index), 
         yieldSize = yieldSize, obeyQname = obeyQname, asMates = asMates, 
         qnamePrefixEnd = qnamePrefixEnd, qnameSuffixStart = qnameSuffixStart, 
