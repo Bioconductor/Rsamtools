@@ -1,6 +1,6 @@
 BamFileList <-
     function(..., yieldSize=NA_integer_, obeyQname=FALSE, asMates=FALSE,
-             qnamePrefixEnd=NA_character_, qnameSuffixStart=NA_character_)
+             qnamePrefixEnd=NA, qnameSuffixStart=NA)
 {
     fls <- .RsamtoolsFileList(..., yieldSize=yieldSize, class="BamFile")
     if (!missing(obeyQname))
