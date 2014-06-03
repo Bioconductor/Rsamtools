@@ -107,7 +107,7 @@ SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
     BAM_DATA bd = _init_BAM_DATA(ext, R_NilValue, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
-                                 NA_INTEGER, 0, 0, '\0', '\0', 
+                                 NA_INTEGER, 0, 0, '\0', '\0', NULL,
                                  (void *) sbd);
     bd->irange = 0;             /* everything parsed to 'irange' 0 */
     BAM_BUFFER buf = BAMBUFFER(bufext);

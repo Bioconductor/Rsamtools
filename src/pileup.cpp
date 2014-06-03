@@ -51,20 +51,11 @@ static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
 
     SEXP result = PROTECT(_pileup_bam_result_init(space));
     PileupBufferShim shim(space, result, buffer);
-    char qname_prefix = '\0';
-    SEXP prefix_elt = STRING_ELT(qnamePrefixEnd, 0);
-    if (prefix_elt != NA_STRING);
-        qname_prefix = CHAR(prefix_elt)[0];
-    char qname_suffix = '\0';
-    SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
-    if (suffix_elt != NA_STRING);
-        qname_suffix = CHAR(suffix_elt)[0];
     BAM_DATA bd = _init_BAM_DATA(ext, space, keepFlags, isSimpleCigar,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
-                                 LOGICAL(asMates)[0],
-                                 qname_prefix, qname_suffix,
+                                 LOGICAL(asMates)[0], '\0', '\0', NULL,
                                  (void *) &shim);
     int status = 0;
     if (bd->irange < bd->nrange) {

@@ -61,27 +61,23 @@ int bam_mate_read(bamFile fb, bam_mate_iter_t iter, bam_mates_t *mates)
 
 // BamRangeIterator methods
 bam_mate_iter_t bam_mate_range_iter_new(const bam_index_t *bindex, int tid,
-                                        int beg, int end, char qname_prefix, 
-                                        char qname_suffix, 
-                                        bam_qname_f qname_trim)
+                                        int beg, int end, BAM_DATA bd)
 {
     bam_mate_iter_t iter = Calloc(1, struct _bam_mate_iter_t);
-    iter->b_iter = new BamRangeIterator(bindex, tid, beg, end, qname_prefix,
-                                        qname_suffix, qname_trim);
+    iter->b_iter = new BamRangeIterator(bindex, tid, beg, end,
+                                        bd->qnamePrefixEnd,
+                                        bd->qnameSuffixStart,
+                                        bd->qname_trim);
     return iter;
 }
 
 int bam_fetch_mate(bamFile bf, const bam_index_t *idx, int tid, int beg, 
-                   int end, void *data, bam_fetch_mate_f func,
-                   bam_qname_f qname_trim)
+                   int end, void *data, bam_fetch_mate_f func)
 {
     BAM_DATA bd = (BAM_DATA) data;
     int n_rec;
     bam_mates_t *mates = bam_mates_new();
-    bam_mate_iter_t iter = bam_mate_range_iter_new(idx, tid, beg, end,
-                                                   bd->qnamePrefixEnd, 
-                                                   bd->qnameSuffixStart, 
-                                                   qname_trim);
+    bam_mate_iter_t iter = bam_mate_range_iter_new(idx, tid, beg, end, bd);
     while ((n_rec = bam_mate_read(bf, iter, mates) > 0))
         func(mates, data);
     bam_mate_iter_destroy(iter);
@@ -103,13 +99,13 @@ bam_mate_iter_t bam_mate_file_iter_new(const bam_index_t *bindex,
 
 int samread_mate(bamFile fb, const bam_index_t *bindex,
                  bam_mate_iter_t *iter_p, bam_mates_t *mates,
-                 char qname_prefix, char qname_suffix,
-                 bam_qname_f qname_trim)
+                 void *data)
 {
+    BAM_DATA bd = (BAM_DATA) data;
     bam_mate_iter_t iter;
     if (NULL == *iter_p)
-        *iter_p = bam_mate_file_iter_new(bindex, qname_prefix, 
-                                         qname_suffix, qname_trim);
+        *iter_p = bam_mate_file_iter_new(bindex, bd->qnamePrefixEnd, 
+                                         bd->qnameSuffixStart, bd->qname_trim);
     iter = *iter_p;
     iter->b_iter->iter_done = false;
     // single yield

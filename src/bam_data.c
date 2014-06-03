@@ -27,7 +27,8 @@ BAM_DATA
 _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
 	       int reverseComplement, int yieldSize, int obeyQname,
 	       int asMates, char qnamePrefixEnd, 
-               char qnameSuffixStart, void *extra)
+               char qnameSuffixStart, bam_qname_f qname_trim,
+               void *extra)
 {
     int nrange = R_NilValue == space ? 1 : LENGTH(VECTOR_ELT(space, 0));
     BAM_DATA bd =
@@ -47,6 +48,7 @@ _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
     bd->asMates = asMates;
     bd->qnamePrefixEnd = qnamePrefixEnd;
     bd->qnameSuffixStart = qnameSuffixStart;
+    bd->qname_trim = qname_trim,
     bd->extra = extra;
     return bd;
 }
