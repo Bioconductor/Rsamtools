@@ -26,7 +26,8 @@ void _as_strand(SEXP vec)
 void _as_nucleotide(SEXP vec)
 {
     SEXP nmspc = PROTECT(_get_namespace("Rsamtools"));
-    SEXP lvls = PROTECT(eval(findVar(install(".PILEUP_NUCLEOTIDE_LEVELS"), nmspc), nmspc));
+    SEXP lvls = PROTECT(eval(findVar(install(".PILEUP_NUCLEOTIDE_LEVELS"),
+                                     nmspc), nmspc));
     _as_factor_SEXP(vec, lvls);
     UNPROTECT(2);
 }
