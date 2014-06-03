@@ -238,6 +238,21 @@ test_BamFile_qname_prefix_suffix <- function()
     checkException(BamFile(fl, qnamePrefixEnd="/:"), silent=TRUE)
     checkException(BamFile(fl, qnameSuffixStart="/:"), silent=TRUE)
 
+    ## no-op
+    target <- c("EAS54_61:4:143:69:578", "EAS54_61:4:143:69:578")
+    bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="*")
+    scn_noop_1 <- scanBam(bfm, param=ScanBamParam(what="qname"))
+    qnames_noop_1 <- scn_noop_1[[1]]$qname[1:2]
+    checkIdentical(qnames_noop_1, target) 
+    bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart="*")
+    scn_noop_2 <- scanBam(bfm, param=ScanBamParam(what="qname"))
+    qnames_noop_2 <- scn_noop_2[[1]]$qname[1:2]
+    checkIdentical(qnames_noop_2, target) 
+    qnamePrefixEnd(bfm) <- "*"
+    scn_noop_3 <- scanBam(bfm, param=ScanBamParam(what="qname"))
+    qnames_noop_3 <- scn_noop_3[[1]]$qname[1:2]
+    checkIdentical(qnames_noop_3, target) 
+
     ## all
     bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="_")
     scn <- scanBam(bfm, param=ScanBamParam(what="qname"))

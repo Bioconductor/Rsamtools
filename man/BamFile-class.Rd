@@ -148,12 +148,14 @@ qnameSuffixStart(object, ...) <- value
     \item{qnamePrefixEnd}{Single character (or NA) marking the 
       end of the qname prefix. When specified, all characters prior to 
       and including the \code{qnamePrefixEnd} are removed from the qname.
+      If the prefix is not found in the qname the qname is not trimmed.
       Currently only implemented for mate-pairing (i.e., when
       \code{asMates=TRUE} in a BamFile.}
 
     \item{qnameSuffixStart}{Single character (or NA) marking the 
       start of the qname suffix. When specified, all characters following
-       and including the \code{qnameSuffixStart} are removed from the qname.
+      and including the \code{qnameSuffixStart} are removed from the qname.
+      If the suffix is not found in the qname the qname is not trimmmed.
       Currently only implemented for mate-pairing (i.e., when
       \code{asMates=TRUE} in a BamFile.}
 
