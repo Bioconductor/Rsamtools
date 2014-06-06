@@ -31,6 +31,11 @@ BamFile <-
 {
     if (missing(file) || !isSingleString(file))
         stop("'file' must be character(1) and not NA")
+    if (!asMates) {
+        if (!is.na(qnamePrefixEnd) || !is.na(qnameSuffixStart))
+            warning(paste0("when 'asMates' is FALSE 'qnamePrefixEnd' ",
+                    "and 'qnameSuffixStart' are ignored"))
+    }
     if (missing(index) && file.exists(file)) {
         idx <- sprintf("%s.bai", file)
         index <- if (file.exists(idx))
@@ -121,6 +126,17 @@ setReplaceMethod("asMates", "BamFile",
     object
 })
 
+.checkPrefixSuffix <- function(object, value, name)
+{
+    if (!is(value, "character"))
+        stop("'value' must be a single character")
+    if (length(value))
+        if (nchar(value) > 1L)
+            stop("nchar(value) must be <= 1")
+    if (!asMates(object))
+        warning(paste0("when 'asMates' is TRUE '", name, "' is ignored"))
+}
+
 setMethod(qnamePrefixEnd, "BamFile",
     function(object, ...)
 {
@@ -130,11 +146,7 @@ setMethod(qnamePrefixEnd, "BamFile",
 setReplaceMethod("qnamePrefixEnd", "BamFile", 
     function(object, ..., value)
 {
-    if (!is(value, "character"))
-        stop("'value' must be a single character")
-    if (length(value))
-        if (nchar(value) > 1L)
-            stop("nchar(value) must be <= 1")
+    .checkPrefixSuffix(object, value, "qnamePrefixEnd")
     object$qnamePrefixEnd <- value
     object
 })
@@ -148,11 +160,7 @@ setMethod(qnameSuffixStart, "BamFile",
 setReplaceMethod("qnameSuffixStart", "BamFile", 
     function(object, ..., value)
 {
-    if (!is(value, "character"))
-        stop("'value' must be a single character")
-    if (length(value))
-        if (nchar(value) > 1L)
-            stop("nchar(value) must be <= 1")
+    .checkPrefixSuffix(object, value, "qnameSuffixStart")
     object$qnameSuffixStart <- value
     object
 })
