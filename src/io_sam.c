@@ -636,11 +636,11 @@ _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                                  LOGICAL(asMates)[0]));
     char qname_prefix = '\0';
     SEXP prefix_elt = STRING_ELT(qnamePrefixEnd, 0);
-    if (prefix_elt != NA_STRING);
+    if (prefix_elt != NA_STRING)
         qname_prefix = CHAR(prefix_elt)[0];
     char qname_suffix = '\0';
     SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
-    if (suffix_elt != NA_STRING);
+    if (suffix_elt != NA_STRING)
         qname_suffix = CHAR(suffix_elt)[0];
     bam_qname_f qname_trim = _bam1_qname_no_trim;
     if (qname_prefix != '\0' || qname_suffix != '\0')
