@@ -93,7 +93,7 @@ countTabix <-
 .tabix_scan <-
     function(file, ..., space, start, end,
              tbxsym=getNativeSymbolInfo(".tabix_as_character",
-               "Rsamtools"), tbxstate=NULL)
+               "Rsamtools"), tbxstate=NULL, row.names=NULL)
 {
     tryCatch({
         if (!isOpen(file)) {
@@ -111,7 +111,7 @@ countTabix <-
 
         result <- .Call(.scan_tabix, .extptr(file),
                         list(space, start, end), yieldSize(file),
-                        tbxsym$address, tbxstate)
+                        tbxsym$address, tbxstate, row.names)
         setNames(result, sprintf("%s:%d-%d", space, start, end))
     }, scanTabix_param=function(err) stop(err), error=function(err) {
         msg <- paste0("scanTabix: ", conditionMessage(err),

@@ -225,8 +225,8 @@ SEXP header_tabix(SEXP ext)
     return result;
 }
 
-SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
-                        const int size, SEXP state)
+SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter, const int size, 
+                        SEXP state, SEXP rownames)
 {
     const double SCALE = 1.6;
     const ti_conf_t *conf = ti_get_conf(tabix->idx);
@@ -242,6 +242,8 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
     SEXP record = NEW_CHARACTER(nrec);
     PROTECT_WITH_INDEX(record, &pidx);
 
+    if (R_NilValue != rownames)
+        Rf_error("[internal] expected 'NULL' rownames in tabix_as_character");
     if (R_NilValue != state)
         Rf_error("[internal] expected 'NULL' state in tabix_as_character");
 
@@ -278,12 +280,15 @@ SEXP tabix_as_character(tabix_t *tabix, ti_iter_t iter,
     return record;
 }
 
-SEXP tabix_count(tabix_t *tabix, ti_iter_t iter, const int size, SEXP state)
+SEXP tabix_count(tabix_t *tabix, ti_iter_t iter, const int size, 
+                 SEXP state, SEXP rownames)
 {
     const ti_conf_t *conf = ti_get_conf(tabix->idx);
     const char *line;
     int linelen, irec = 0;
 
+    if (R_NilValue != rownames)
+        Rf_error("[internal] expected 'NULL' rownames in tabix_count");
     if (R_NilValue != state)
         Rf_error("[internal] expected 'NULL' state in tabix_count");
 
@@ -297,7 +302,8 @@ SEXP tabix_count(tabix_t *tabix, ti_iter_t iter, const int size, SEXP state)
     return ScalarInteger(irec);
 }
 
-SEXP scan_tabix(SEXP ext, SEXP space, SEXP yield, SEXP fun, SEXP state)
+SEXP scan_tabix(SEXP ext, SEXP space, SEXP yield, SEXP fun, 
+                SEXP state, SEXP rownames)
 {
     _checkparams(space, R_NilValue, R_NilValue);
     if (!IS_INTEGER(yield) || 1L != Rf_length(yield))
@@ -319,7 +325,7 @@ SEXP scan_tabix(SEXP ext, SEXP space, SEXP yield, SEXP fun, SEXP state)
                 Rf_error("'scanTabix' failed to load index");
             iter = TABIXFILE(ext)->iter = ti_iter_first();
         }
-        elt = scan(tabix, iter, INTEGER(yield)[0], state);
+        elt = scan(tabix, iter, INTEGER(yield)[0], state, rownames);
         SET_VECTOR_ELT(result, 0, elt);
     } else {
         const int
@@ -341,7 +347,7 @@ SEXP scan_tabix(SEXP ext, SEXP space, SEXP yield, SEXP fun, SEXP state)
                 Rf_error("'%s' not present in tabix index", tid_name);
             iter = ti_queryi(tabix, tid, ibeg, iend);
 
-            elt = scan(tabix, iter, NA_INTEGER, state);
+            elt = scan(tabix, iter, NA_INTEGER, state, rownames);
             SET_VECTOR_ELT(result, ispc, elt);
 
             ti_iter_destroy(iter);

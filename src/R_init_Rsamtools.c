@@ -65,9 +65,9 @@ static const R_CallMethodDef callMethods[] = {
     {".tabixfile_isopen", (DL_FUNC) & tabixfile_isopen, 1},
     {".index_tabix", (DL_FUNC) & index_tabix, 8},
     {".header_tabix", (DL_FUNC) & header_tabix, 1},
-    {".scan_tabix", (DL_FUNC) & scan_tabix, 5},
+    {".scan_tabix", (DL_FUNC) & scan_tabix, 6},
     {".tabix_as_character", (DL_FUNC) & tabix_as_character, 4},
-    {".tabix_count", (DL_FUNC) & tabix_count, 4},
+    {".tabix_count", (DL_FUNC) & tabix_count, 5},
     /* pileupbam */
     {".apply_pileups", (DL_FUNC) & apply_pileups, 5},
     /* bambuffer */
