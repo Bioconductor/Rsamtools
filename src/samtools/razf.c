@@ -652,7 +652,7 @@ int razf_read(RAZF *rz, void *data, int size){
 		}
 		if(rz->buf_flush) continue;
 		rz->buf_len = _razf_read(rz, rz->outbuf, RZ_BUFFER_SIZE);
-		if(rz->z_eof && rz->buf_len == 0) break;
+		if((rz->z_eof && rz->buf_len == 0) || rz->z_err) break; /* MTM */
 	}
 	rz->out += ori_size - size;
 	return ori_size - size;
@@ -687,7 +687,7 @@ int razf_skip(RAZF* rz, int size){
 		}
 		if(rz->buf_flush) continue;
 		rz->buf_len = _razf_read(rz, rz->outbuf, RZ_BUFFER_SIZE);
-		if((rz->buf_len == 0  && rz->z_eof) || rz->z_err) break; /* MTM */
+		if((rz->z_eof && rz->buf_len == 0) || rz->z_err) break; /* MTM */
 	}
 	rz->out += ori_size - size;
 	return ori_size - size;
