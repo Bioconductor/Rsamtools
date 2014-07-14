@@ -18,8 +18,8 @@ test_BcfFile_openclose <- function()
     checkTrue(isOpen(bf1))
     checkTrue(identical(bf$.extptr, bf1$.extptr))
 
-    ## checkTrue(isOpen(bf))
-    ## checkIdentical(.normalizePath(fl), path(bf))
+    checkTrue(isOpen(bf))
+    checkIdentical(.normalizePath(fl), path(bf))
     ## checkIdentical(.normalizePath(fl), index(bf))
 }
 

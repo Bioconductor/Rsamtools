@@ -254,7 +254,8 @@ test_scanBam_index <- function()
     checkIdentical(exp,
                    sapply(res, function(x) unique(sapply(x, length))))
 
-    checkException(scanBam(fl, tempfile(), param=p1), silent=TRUE)
+    checkException(suppressWarnings(scanBam(fl, tempfile(), 
+                   param=p1), silent=TRUE))
 }
 
 test_scanBam_sam <- function()

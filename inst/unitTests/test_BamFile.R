@@ -234,9 +234,10 @@ test_BamFile_asMates_range <- function()
 test_BamFile_qname_prefix_suffix <- function()
 {
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-
-    checkException(BamFile(fl, qnamePrefixEnd="/:"), silent=TRUE)
-    checkException(BamFile(fl, qnameSuffixStart="/:"), silent=TRUE)
+    checkException(BamFile(fl, qnamePrefixEnd="/:", asMates=TRUE), 
+                   silent=TRUE)
+    checkException(BamFile(fl, qnameSuffixStart="/:", asMates=TRUE), 
+                   silent=TRUE)
 
     ## no-op
     target <- c("EAS54_61:4:143:69:578", "EAS54_61:4:143:69:578")
