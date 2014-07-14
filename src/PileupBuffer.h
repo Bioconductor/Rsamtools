@@ -13,12 +13,14 @@
 #include <Rinternals.h>
 #include <Rdefines.h>
 
+class PosCacheColl;
+
 class PileupBuffer {
-  protected:
+protected:
     bam_plbuf_t *plbuf;
     const char *rname;
     uint32_t start, end;
-  public:
+public:
     PileupBuffer() : plbuf(NULL) {}
     virtual ~PileupBuffer() {
         plbuf_destroy();
@@ -40,10 +42,15 @@ class PileupBuffer {
     }
     virtual void plbuf_init() = 0;
     virtual SEXP yield() = 0;
+    virtual void signalEOI() = 0;
 };
 
 class Pileup : public PileupBuffer {
 private:
+    // 'ranged' means the pileup query is for specific genomic ranges;
+    // 'buffered' is when intermediate results for genomic positions
+    // are store across calls to pileup
+    const bool isRanged, isBuffered;
     const SEXP schema, pileupParams, seqnamesLevels;
     ResultMgrInterface *resultMgr;
     std::vector<int32_t> binPoints;
@@ -111,18 +118,33 @@ private:
         return -1;
     }
 public:
-    Pileup(SEXP schema_, SEXP pileupParams_, SEXP seqnamesLevels_)
-        : schema(schema_), pileupParams(pileupParams_),
-          seqnamesLevels(seqnamesLevels_), resultMgr(NULL),
-          binPoints()
+    // void *posCacheColl is dumbly passed through to ResultMgr to
+    // give ResultMgr pointer to the struct _BAM_FILE pbuffer member;
+    // PileupBuffer doesn't know anything about PosCacheColl
+    Pileup(bool isRanged_, bool isBuffered_, SEXP schema_, SEXP pileupParams_,
+           SEXP seqnamesLevels_, PosCacheColl** posCacheColl_)
+        : isRanged(isRanged_), isBuffered(isBuffered_), schema(schema_),
+          pileupParams(pileupParams_), seqnamesLevels(seqnamesLevels_),
+          resultMgr(NULL), binPoints()
         {
+            if(isRanged && isBuffered) {
+                Rf_error("internal: Pileup cannot both query specific genomic ranges and store partial genomic position results");
+            }
             resultMgr =
                 new ResultMgr(min_nucleotide_depth(), min_minor_allele_depth(),
-                              hasStrands(), hasNucleotides(), hasBins());
+                              hasStrands(), hasNucleotides(), hasBins(),
+                              isRanged, isBuffered, posCacheColl_);
             binPoints = binPointsAsVec(VECTOR_ELT(pileupParams, 9));
         }
     ~Pileup() {
         delete resultMgr;
+    }
+    bool needMoreInput() const {
+        bool needMore = resultMgr->numYieldablePosCaches() == 0;
+        return needMore;
+    }
+    bool isBufferedPileup() const {
+        return isBuffered;
     }
     void plbuf_init() {
         plbuf = bam_plbuf_init(insert, this);
@@ -136,6 +158,7 @@ public:
     static int insert(uint32_t tid, uint32_t pos, int n,
                       const bam_pileup1_t *pl, void *data);
     SEXP yield();
+    void signalEOI();
     static int strand_to_lvl(char strand) {
         return strand == '+' ? 1 : 2;
     }

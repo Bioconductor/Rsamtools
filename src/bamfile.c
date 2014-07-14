@@ -40,6 +40,8 @@ static void _bamfile_close(SEXP ext)
         bam_index_destroy(bfile->index);
     if (NULL != bfile->iter)
         bam_mate_iter_destroy(bfile->iter);
+    if (NULL != bfile->pbuffer)
+        pileup_pbuffer_destroy(bfile->pbuffer);
     bfile->file = NULL;
     bfile->index = NULL;
     bfile->iter = NULL;
@@ -90,6 +92,7 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
     }
 
     bfile->iter = NULL;
+    bfile->pbuffer = NULL;
     return bfile;
 }
 

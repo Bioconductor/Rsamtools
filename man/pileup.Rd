@@ -118,6 +118,16 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   \code{scanBamParam}. For a given position, all reads overlapping the
   position that are consistent with constraints dictated by \code{flag}
   of \code{scanBamParam} and \code{pileupParam} are used for counting.
+
+  If no \code{which} argument is supplied to the \code{ScanBamParam},
+  behavior reflects that of \code{scanBam}: the entire file is visited
+  and counted.
+  
+  Use a \code{\link{yieldSize}} value when creating a \code{BamFile}
+  instance to manage memory consumption when using pileup with large BAM
+  files. There are some differences in how \code{pileup} behavior is
+  affected when the \code{yieldSize} value is set on the BAM file. See
+  more details below.
   
   Many of the parameters of the \code{pileupParam} interact. A simple
   illustration is \code{ignore_query_Ns} and
@@ -201,6 +211,44 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
       of all reads.}
   } %% end subsection cycle_bins gotchas
 
+  \code{pileup} obeys \code{\link{yieldSize}} on \code{BamFile} objects
+  with some differences from how \code{scanBam} responds to
+  \code{yieldSize}. Here are some points to keep in mind when using
+  \code{pileup} in conjunction with \code{yieldSize}:
+
+  \itemize{
+
+      \item{\code{BamFile}s with a \code{yieldSize} value set, once
+      opened and used with \code{pileup}, \emph{should not be used} with
+      other functions that accept a \code{BamFile} instance as
+      input. Create a new \code{BamFile} instance instead of trying to
+      reuse.}
+
+      \item{\code{pileup} only returns genomic positions for which all
+      input has been processed. \code{pileup} will hold in reserve
+      positions for which only partial data has been
+      processed. Positions held in reserve will be returned upon
+      subsequent calls to \code{pileup} when all the input for a given
+      position has been processed.}
+    
+      \item{The correspondence between yieldSize and the number of rows
+      in the \code{data.frame} returned from \code{pileup} is not
+      1-to-1. \code{yieldSize} only limits the number of
+      \emph{alignments processed} from the BAM file each time the file
+      is read. Only a handful of alignments can lead to many distinct
+      records in the result.}
+
+      \item{Like \code{scanBam}, \code{pileup} uses an empty return
+      object (a zero-row \code{data.frame}) to indicate end-of-input.}
+
+      \item{Sometimes reading \code{yieldSize} records from the BAM file
+      does not result in any completed positions. In order to avoid
+      returning a zero-row \code{data.frame} \code{pileup} will
+      repeatedly process \code{yieldSize} additional records until at
+      least one position can be returned to the user.}
+
+  }
+
 }
 
 \value{
@@ -255,8 +303,10 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
 \seealso{
   \itemize{
     \item{\link{Rsamtools}}
+    \item{\linkS4class{BamFile}}
     \item{\link{ScanBamParam}}
     \item{\link{scanBam}}
+    \item{\link{cut}}
   }
 }
 
@@ -280,10 +330,35 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
 
 \examples{
 
-## pileup for all of chr14 with default Pileup parameters
+## The examples below apply equally to pileup queries for specific
+## genomic ranges (specified by the 'which' parameter of 'ScanBamParam')
+## and queries across entire files; the entire-file examples are
+## included first to make them easy to find. The more detailed examples
+## of pileup use queries with a 'which' argument.
+
 library("RNAseqData.HNRNPC.bam.chr14")
 
 fl <- RNAseqData.HNRNPC.bam.chr14_BAMFILES[1]
+
+## no 'which' argument to ScanBamParam: process entire file at once
+res <- pileup(fl)
+head(res)
+table(res$strand, res$nucleotide)
+
+\donttest{
+## no 'which' argument to ScanBamParam with 'yieldSize' set on BamFile
+bf <- open(BamFile(fl, yieldSize=5e4))
+repeat {
+    res <- pileup(bf)
+    message(nrow(res), " rows in result data.frame")
+    if(nrow(res) == 0L)
+        break
+}
+close(bf)
+}
+
+## pileup for all of chr14 with default Pileup parameters
+## 'which' argument: process only specified genomic range(s)
 sbp <- ScanBamParam(which=GRanges("chr14", IRanges(1, 107349540)))
 res <- pileup(fl, scanBamParam=sbp)
 head(res)
@@ -372,7 +447,7 @@ t(t(xt) / colSums(xt))
 p_param <- PileupParam(cycle_bins=seq(1,20))
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 xt <- xtabs(count ~ nucleotide + cycle_bin, res)
-head(print(xt))
-head(t(t(xt) / colSums(xt)))
+print(xt[ , c(1:3, 18:19)]) ## fit on one screen
+print(t(t(xt) / colSums(xt))[ , c(1:3, 18:19)])
 }
 }

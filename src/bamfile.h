@@ -5,6 +5,7 @@
 #include "samtools/sam.h"
 #include "bambuffer.h"
 #include "bam_mate_iter.h"
+#include "pbuffer_wrapper.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +16,8 @@ typedef struct {
     bam_index_t *index;
     uint64_t pos0;
     int irange0;
-    bam_mate_iter_t iter; 
+    bam_mate_iter_t iter;
+    void *pbuffer; /* for buffered pileup */
 } _BAM_FILE, *BAM_FILE;
 
 #define BAMFILE(b) ((BAM_FILE) R_ExternalPtrAddr(b))

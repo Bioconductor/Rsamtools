@@ -7,6 +7,7 @@
 #include <utility>
 #include <numeric>
 #include <stdio.h>
+#include "GenomicPosition.h"
 using std::map;
 using std::pair;
 using std::make_pair;
@@ -23,15 +24,18 @@ struct BamTuple { // for sending info from Pileup::insert to ResultMgr
 };
 
 struct PosCache {
+    GenomicPosition genomicPosition;
     std::vector<BamTuple> tupleVec;
     std::map<char,int> nucCounts;
     typedef std::vector<BamTuple>::const_iterator tuple_iter;
     typedef std::map<char,int>::const_iterator counts_iter;
-    PosCache() : tupleVec(), nucCounts() { }
+    PosCache(GenomicPosition genomicPosition_)
+        : genomicPosition(genomicPosition_), tupleVec(), nucCounts() { }
     void storeTuple(BamTuple& bt) {
         tupleVec.push_back(bt);
         nucCounts.insert(make_pair(bt.nuc,0)).first->second++;
     }
+    // exposed so we can use std::accumulate on nucCounts map
     static int addSecond(int i, const pair<char,int>& thePair) {
         return i + thePair.second;
     }

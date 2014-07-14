@@ -35,6 +35,11 @@ static SEXP _pileup_bam_result_init(SEXP space)
     return Rf_allocVector(VECSXP, nrange);
 }
 
+static void _finish_buffered_yieldSize_chunk(BAM_DATA bd) {
+    PileupBufferShim *shim = static_cast<PileupBufferShim*>(bd->extra);
+    shim->process_yieldSize_chunk(); // run Pileup::insert loop
+}
+
 static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
     SEXP reverseComplement, SEXP isSimpleCigar, SEXP yieldSize,
     SEXP obeyQname, SEXP asMates, SEXP qnamePrefixEnd,
@@ -58,14 +63,37 @@ static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
                                  LOGICAL(asMates)[0], '\0', '\0', NULL,
                                  (void *) &shim);
     int status = 0;
-    if (bd->irange < bd->nrange) {
-        shim.start1(bd->irange);
-        // _do_scan_bam found in io_sam.c;
-        // mostly a wrapper for
-        // _scan_bam_fetch(BAM_DATA bd, SEXP space, int* start, int* end,
-        //                 bam_fetch_f , bam_fetch_mate_f , _FINISH_FUNC)
+    if(!(dynamic_cast<Pileup&>(buffer).isBufferedPileup())) {
+        if (bd->irange < bd->nrange) {
+            shim.start1(bd->irange);
+            // _do_scan_bam found in io_sam.c;
+            // mostly a wrapper for
+            // _scan_bam_fetch(BAM_DATA bd, SEXP space, int* start, int* end,
+            //                 bam_fetch_f , bam_fetch_mate_f , _FINISH_FUNC)
+            status = _do_scan_bam(bd, space, _filter_and_parse1_pileup,
+                                  NULL, _finish1range_pileup);
+        }
+    } else { // must do loop if buffered
+        shim.start1(0);
         status = _do_scan_bam(bd, space, _filter_and_parse1_pileup,
-                              NULL, _finish1range_pileup);
+                              NULL, _finish_buffered_yieldSize_chunk);
+        for(;;) {
+            if(!(dynamic_cast<Pileup&>(buffer).needMoreInput()) || status <= 0)
+                break;
+            status = _do_scan_bam(bd, space, _filter_and_parse1_pileup,
+                                  NULL, _finish_buffered_yieldSize_chunk);
+        }
+        shim.finish1(0);
+    }
+
+    // the decision to deallocate must happen in here before return
+    // the SEXP because Rf_error would lead to the dynamic memory
+    // being left behind
+    if(status <= 0) { // error or EOI; must deallocate dynamic memory
+        // rename 'deallocate and flush'? two separate functions (so
+        // that deallocate can be called without flushing?)
+        buffer.signalEOI();
+        shim.flush();
     }
     
     if (status < 0) {
@@ -82,21 +110,52 @@ static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
     return result;
 }
 
+static SEXP _bamheaderAsSeqnames(bam_header_t *header) {
+    if(header == NULL)
+        Rf_error("'header' must not be NULL");
+    int numSeqnames = header->n_targets;
+    SEXP seqnames = PROTECT(Rf_allocVector(STRSXP, numSeqnames));
+    for(int i = 0; i != numSeqnames; ++i) {
+        SET_STRING_ELT(seqnames, i, Rf_mkChar(header->target_name[i]));
+    }
+
+    UNPROTECT(1);
+    return seqnames;
+}
+
+class PosCacheColl;
+
 extern "C" {
     SEXP c_Pileup(SEXP ext, SEXP space, SEXP keepFlags,
                   SEXP isSimpleCigar, SEXP reverseComplement,
                   SEXP yieldSize, SEXP obeyQname, SEXP asMates,
                   SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
-                  SEXP schema, SEXP pileupParams, SEXP seqnamesLevels)
+                  SEXP schema, SEXP pileupParams)
     {
         if (!Rf_isVector(schema))
             Rf_error("'schema' must be list()");
         if (!Rf_isVector(pileupParams))
             Rf_error("'pileupParams' must be list()");
+        SEXP seqnamesLevels =
+            PROTECT(_bamheaderAsSeqnames(BAMFILE(ext)->file->header));
+        // 'ranged' means user asked for specific genomic range(s) by
+        // providing 'which' argument to 'ScanBamParam'
+        bool isRanged = space != R_NilValue;
 
-        Pileup buffer = Pileup(schema, pileupParams, seqnamesLevels);
-        return _pileup_bam(ext, space, keepFlags,
+        // This check has to happen at this level; can't use value of
+        // yieldSize further down in hierarchy
+        // 'buffered' means pileup will store pileup results for
+        // partially completed genomic positions across calls to
+        // pileup
+        bool isBuffered = !isRanged && INTEGER(yieldSize)[0] != NA_INTEGER;
+
+        Pileup buffer =
+            Pileup(isRanged, isBuffered, schema, pileupParams, seqnamesLevels,
+                   (PosCacheColl**)&(BAMFILE(ext)->pbuffer));
+        SEXP res = PROTECT(_pileup_bam(ext, space, keepFlags,
             reverseComplement, isSimpleCigar, yieldSize, obeyQname,
-            asMates, qnamePrefixEnd, qnameSuffixStart, buffer);
+            asMates, qnamePrefixEnd, qnameSuffixStart, buffer));
+        UNPROTECT(2);
+        return res;
     }
 }

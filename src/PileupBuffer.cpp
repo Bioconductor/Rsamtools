@@ -1,17 +1,22 @@
 #include "PileupBuffer.h"
 
-int Pileup::insert(uint32_t, uint32_t pos, int n,
+void Pileup::signalEOI() {
+    resultMgr->signalEOI();
+}
+
+int Pileup::insert(uint32_t tid, uint32_t pos, int n,
                         const bam_pileup1_t *pl, void *data)
 {
     //Rprintf("pos: %d\n", pos);
-    Pileup *pileup = (Pileup *) data;
-    pos = pos + 1;
+    Pileup *pileup = static_cast<Pileup*>(data);
+    pos = pos + 1; // 1-based indexing for R
     int bamBufOffset = 0;
-    if(pos >= pileup->start && pos <= pileup->end) {
-        pileup->resultMgr->signalPosStart(pos);
+    if(!pileup->isRanged || (pos >= pileup->start && pos <= pileup->end)) {
+        const GenomicPosition curGenomicPosition(tid, pos);
+        pileup->resultMgr->signalGenomicPosStart(curGenomicPosition);
+
         for(bamBufOffset = 0; bamBufOffset != n; ++bamBufOffset) {
             const bam_pileup1_t *curBam = pl + bamBufOffset;
-            // Rprintf("distance from end: %u\n", curBam->b->core.l_qseq - curBam->qpos);
 
             // whole-alignment disqualifiers/filters
             if(curBam->is_refskip) // never pileup a refskip ('N' op in cigar)
@@ -56,14 +61,17 @@ int Pileup::insert(uint32_t, uint32_t pos, int n,
 
             pileup->resultMgr->forwardTuple(BamTuple(nucleotide, strand, bin));
         }
+        const GenomicPosition maxLeftmostGenPOS(tid, pl[n-1].b->core.pos + 1);
+        pileup->resultMgr->forwardLastLeftmostGenPOS(maxLeftmostGenPOS);
+
         // extract tuples for pos
-        pileup->resultMgr->signalPosEnd();
+        pileup->resultMgr->signalGenomicPosEnd();
     }
     return 0;
 }
 
 void extract(const ResultMgrInterface * const from, SEXP to, bool hasStrands,
-             bool hasNucleotides, bool hasBins) {
+             bool hasNucleotides, bool hasBins, bool isRanged) {
     #ifdef PILEUP_DEBUG
     assert(IS_LIST(to));
     for(int i = 0; i != Rf_length(to); ++i) {
@@ -72,6 +80,10 @@ void extract(const ResultMgrInterface * const from, SEXP to, bool hasStrands,
         assert((unsigned int)Rf_length(elt) == from->size());
     }
     #endif
+    if(!isRanged) { // seqnms must be copied from seqnmsVec
+        std::copy(from->seqnmsBeg(), from->seqnmsEnd(),
+                  INTEGER(VECTOR_ELT(to, 0)));
+    }
     int curDim = 1; // 0 is seqnames; must start with pos
     std::copy(from->posBeg(), from->posEnd(),
               INTEGER(VECTOR_ELT(to, curDim++)));
@@ -106,12 +118,19 @@ SEXP Pileup::yield() {
     numDims += hasStrands() ? 1 : 0;
     numDims += hasNucleotides() ? 1 : 0;
     numDims += hasBins() ? 1 : 0;
+    if(isBuffered)
+        resultMgr->signalYieldStart();
     uint32_t numResults = resultMgr->size();
     SEXP result = PROTECT(Rf_allocVector(VECSXP, numDims));
     int curDim = 0;
     SET_VECTOR_ELT(result, curDim, Rf_allocVector(INTSXP, numResults));//seqns
     SEXP seqnames = VECTOR_ELT(result, curDim++);
-    std::fill_n(INTEGER(seqnames), numResults, getSeqlevelValue(rname));
+    _as_seqlevels(seqnames, seqnamesLevels);
+    // if ranged (i.e., 'which' argument passed to ScanBamParam),
+    // seqnames value will be same for entire buffer otherwise, values
+    // will be copied in extract function
+    if(isRanged) 
+        std::fill_n(INTEGER(seqnames), numResults, getSeqlevelValue(rname));
     SET_VECTOR_ELT(result, curDim++, Rf_allocVector(INTSXP, numResults)); // pos
     if(hasStrands())
         SET_VECTOR_ELT(result, curDim++, Rf_allocVector(INTSXP, numResults));
@@ -134,9 +153,9 @@ SEXP Pileup::yield() {
     SET_STRING_ELT(nms, curDim++, mkChar("count"));
     SET_ATTR(result, R_NamesSymbol, nms);
 
-    extract(resultMgr, result, hasStrands(), hasNucleotides(), hasBins());
+    extract(resultMgr, result, hasStrands(), hasNucleotides(), hasBins(),
+            isRanged);
     resultMgr->signalYieldEnd();
-    _as_seqlevels(VECTOR_ELT(result, 0), seqnamesLevels);
 
     UNPROTECT(2);
     return result;

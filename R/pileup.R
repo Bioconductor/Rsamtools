@@ -79,7 +79,6 @@ PileupParam <-
         bamReverseComplement(scanBamParam) <- FALSE
     }
     schema <- .schemaBuilder(pileupParam)
-    seqnamesLevels <- seqlevels(file)
     result <- .io_bam(cfun, file,
             ## space, keepFlags, isSimpleCigar extracted from 'scanBamParam'
             ## in .io_bam;
@@ -87,8 +86,7 @@ PileupParam <-
             bamReverseComplement(scanBamParam),
             yieldSize(file), obeyQname(file), asMates(file),
             qnamePrefixEnd(file), qnameSuffixStart(file), schema, 
-            .as.list_PileupParam(pileupParam), seqnamesLevels,
-            param=scanBamParam)
+            .as.list_PileupParam(pileupParam), param=scanBamParam)
 
     which_labels <- .scanBam_extract_which_labels(scanBamParam)
     which_labels <- .make_unique(which_labels)
@@ -100,7 +98,9 @@ PileupParam <-
     result <- .apply_cycle_bin_levels(result, pileupParam@cycle_bins)
     ##print(result)
     result <- .as.data.frame_list_of_lists(result)
-    result <- cbind(result, which_label) ## last col
+    if(length(bamWhich(scanBamParam)) != 0L) ## if no space arg
+        result <- cbind(result, which_label) ## last col
+    result
 }
 
 .apply_cycle_bin_levels <- function(result, cycle_bins) {

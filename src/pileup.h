@@ -16,7 +16,7 @@ extern "C" {
                   SEXP isSimpleCigar, SEXP reverseComplement,
                   SEXP yieldSize, SEXP obeyQname, SEXP asMates,
                   SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
-                  SEXP schema, SEXP pileupParams, SEXP seqnamesLevels);
+                  SEXP schema, SEXP pileupParams);
 #ifdef __cplusplus
 }
 #endif

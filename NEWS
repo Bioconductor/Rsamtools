@@ -3,6 +3,11 @@ CHANGES IN VERSION 1.17.0
 
 NEW FEATURES
 
+    o pileup visits entire file if no 'which' argument specified for
+      'scanBamParam' parameter of pileup. Buffered functionality with
+      'yieldSize' available to manage memory consumption when working
+      with large BAM files
+
     o pileup 'read_pos_breaks' parameter renamed to 'cycle_bins':
       cycle_bins allows users to differentiate pileup counts based on
       user-defined regions within a read.

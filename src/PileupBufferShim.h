@@ -15,9 +15,7 @@ public:
         {}
 
     void start1(const int irange) {
-        /* FIXME: separate initialize method when space == NULL */
         if (R_NilValue == space) {
-            Rf_error("missing 'which' not yet implemented");
             buffer.init(NULL, 0, 0);
         } else {
             buffer.init(
@@ -30,6 +28,21 @@ public:
         plbuf_push(0);
         SET_VECTOR_ELT(result, irange, buffer.yield());
         buffer.plbuf_destroy();
+    }
+    // The only way to trigger running the callback function
+    // (Pileup::insert in this case) is to push NULL to the buffer and
+    // destroy it. Therefore, must destroy and recreate plbuf each
+    // time yieldSize records are pushed.
+    void process_yieldSize_chunk() {
+        plbuf_push(0);
+        buffer.plbuf_destroy(); // trigger run of Pileup::insert
+        buffer.init(NULL, 0, 0);
+    }
+    // intended to be called from _pileup_bam after EOI message sent
+    // to PileupBuffer; same as finish1 but no plbuf is in use
+    void flush() {
+        //Rprintf("flushing\n");
+        SET_VECTOR_ELT(result, 0, buffer.yield());
     }
     void plbuf_push(const bam1_t *bam) {
         buffer.plbuf_push(bam);
