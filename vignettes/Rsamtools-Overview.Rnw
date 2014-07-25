@@ -270,10 +270,10 @@ kid <- revmap(KEGGPATHID2NAME)[["Caffeine metabolism"]]
 egid <- KEGGPATHID2EXTID[[sprintf("hsa%s", kid)]]
 @ 
 %% 
-Then we use the appropriate \Rpackage{TranscriptDb} package to
+Then we use the appropriate \Rpackage{TxDb} package to
 translate Entrez identifiers to obtain ranges of interest (one could
 also use \Rpackage{biomaRt} to retrieve coordinates for non-model
-organisms, perhaps making a \Robject{TranscriptDb} object as outlined
+organisms, perhaps making a \Robject{TxDb} object as outlined
 in the \Rpackage{GenomicFeatures} vignette). We'll find that the names
 used for chromosomes in the alignments differ from those used at
 Ensembl, so \Rcode{seqlevels<-} is used to map between naming schemes
