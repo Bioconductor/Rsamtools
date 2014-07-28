@@ -181,9 +181,9 @@ FaFileList(...)
       selects the sequences to return; \code{start(param)} and
       \code{end{param}} define the (1-based) region of the sequence to
       return. Values of \code{end(param)} greater than the width of the
-      sequence are set to the width of the sequence. When \code{param}
-      is missing, all records are selected. When \code{length(param)==0}
-      no records are selected.}
+      sequence cause an error; use \code{seqinfo} to discover sequence
+      widths. When \code{param} is missing, all records are
+      selected. When \code{length(param)==0} no records are selected.}
 
     \item{getSeq}{Returns the sequences indicated by \code{param} from
       the indexed fasta file(s) of \code{file}.

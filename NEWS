@@ -42,6 +42,10 @@ BUG FIXES
 
     o applyPileups checks that seqlevels are identical across files
 
+    o scanFa documentation incorrectly indicated that end coordinates
+      beyond the range of the sequence would be truncated; they are an
+      error.
+
 CHANGES IN VERSION 1.15.0
 -------------------------
 
