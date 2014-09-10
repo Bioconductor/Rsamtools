@@ -35,7 +35,7 @@ public:
                    (*it)->genomicPosition.pos);
         }
     }
-#endif PILEUP_DEBUG
+#endif // PILEUP_DEBUG
     void storePosCache(PosCache *cachePtr) {
         //printf("storePosCache size %d\n", posCaches.size());
         if(posCaches.find(cachePtr) != posCaches.end()) {
