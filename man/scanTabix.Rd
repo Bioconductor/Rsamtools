@@ -60,7 +60,10 @@ scanTabix(file, ..., param)
       tabix file. This might be because the file is corrupt, or of
       incorrect format (e.g., when \code{path} points to a plain text
       file but \code{index} is present, implying that \code{path} should
-      be a \code{bgzip}ed file.}
+      be a \code{bgzip}ed file. The error message may include an error
+      code representing the logical OR of these cryptic signals: 1,
+      BGZF_ERR_ZLIB; 2, BGZF_ERR_HEADER; 4, BGZF_ERR_IO; 8,
+      BGZF_ERR_MISUSE.}
 
   }
 }

@@ -129,7 +129,8 @@ const char *_tabix_read(tabix_t *t, ti_iter_t iter, int *len)
 {
     const char *line = ti_read(t, iter, len);
     if (t->fp->errcode)
-        Rf_error("read line failed; corrupt or invalid file?");
+        Rf_error("read line failed (error code %d); corrupt or invalid file?",
+                 t->fp->errcode);
     return line;
 }
 
