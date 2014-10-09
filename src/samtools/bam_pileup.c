@@ -83,7 +83,7 @@ static inline int resolve_cigar2(bam_pileup1_t *p, uint32_t pos, cstate_t *s)
 				int op = _cop(cigar[k]);
 				int l = _cln(cigar[k]);
 				if (op == BAM_CMATCH || op == BAM_CDEL || op == BAM_CEQUAL || op == BAM_CDIFF) break;
-				else if (op == BAM_CREF_SKIP) s->x += l;
+				else if (op == BAM_CREF_SKIP) { s->x += l; break; }
 				else if (op == BAM_CINS || op == BAM_CSOFT_CLIP) s->y += l;
 			}
 			assert(k < c->n_cigar);
@@ -91,7 +91,7 @@ static inline int resolve_cigar2(bam_pileup1_t *p, uint32_t pos, cstate_t *s)
 		}
 	} else { // the read has been processed before
 		int op, l = _cln(cigar[s->k]);
-		if (pos - s->x >= l) { // jump to the next operation
+		if ((pos >= s->x) && (pos - s->x >= l)) { // jump to the next operation
 			assert(s->k < c->n_cigar); // otherwise a bug: this function should not be called in this case
 			op = _cop(cigar[s->k+1]);
 			if (op == BAM_CMATCH || op == BAM_CDEL || op == BAM_CREF_SKIP || op == BAM_CEQUAL || op == BAM_CDIFF) { // jump to the next without a loop

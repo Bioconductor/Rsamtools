@@ -4,7 +4,7 @@ CHANGES IN VERSION 1.17.0
 NEW FEATURES
 
     o pileup visits entire file if no 'which' argument specified for
-      'scanBamParam' parameter of pileup. Buffered functionality with
+      'ScanBamParam' parameter of pileup. Buffered functionality with
       'yieldSize' available to manage memory consumption when working
       with large BAM files
 
@@ -45,6 +45,9 @@ BUG FIXES
     o scanFa documentation incorrectly indicated that end coordinates
       beyond the range of the sequence would be truncated; they are an
       error.
+
+    o applyPileups would fail on cigars with insertion followed by
+      reference skip, e.g., 2I1024N98M (bug report of Dan Gatti).
 
 CHANGES IN VERSION 1.15.0
 -------------------------
