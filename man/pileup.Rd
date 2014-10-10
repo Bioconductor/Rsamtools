@@ -340,10 +340,12 @@ library("RNAseqData.HNRNPC.bam.chr14")
 
 fl <- RNAseqData.HNRNPC.bam.chr14_BAMFILES[1]
 
+\donttest{
 ## no 'which' argument to ScanBamParam: process entire file at once
 res <- pileup(fl)
 head(res)
 table(res$strand, res$nucleotide)
+}
 
 \donttest{
 ## no 'which' argument to ScanBamParam with 'yieldSize' set on BamFile
@@ -357,9 +359,9 @@ repeat {
 close(bf)
 }
 
-## pileup for all of chr14 with default Pileup parameters
+## pileup for the first half of chr14 with default Pileup parameters
 ## 'which' argument: process only specified genomic range(s)
-sbp <- ScanBamParam(which=GRanges("chr14", IRanges(1, 107349540)))
+sbp <- ScanBamParam(which=GRanges("chr14", IRanges(1, 53674770)))
 res <- pileup(fl, scanBamParam=sbp)
 head(res)
 table(res$strand, res$nucleotide)
