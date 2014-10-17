@@ -283,10 +283,18 @@ FILE *download_and_open(const char *fn)
 faidx_t *fai_load(const char *fn)
 {
 	char *str;
-	FILE *fp;
 	faidx_t *fai;
 	str = (char*)calloc(strlen(fn) + 5, 1);
 	sprintf(str, "%s.fai", fn);
+	fai = fai_load0(fn, str);
+	free(str);
+	return fai;
+}
+
+faidx_t *fai_load0(const char *fn, const char *str)
+{
+	FILE *fp;
+	faidx_t *fai;
 
 #ifdef _USE_KNETFILE
     if (strstr(fn, "ftp://") == fn || strstr(fn, "http://") == fn)
@@ -295,7 +303,6 @@ faidx_t *fai_load(const char *fn)
         if ( !fp )
         {
             fprintf(stderr, "[fai_load] failed to open remote FASTA index %s\n", str);
-            free(str);
             return 0;
         }
     }
@@ -308,7 +315,6 @@ faidx_t *fai_load(const char *fn)
 		fp = fopen(str, "rb");
 		if (fp == 0) {
 			fprintf(stderr, "[fai_load] fail to open FASTA index.\n");
-			free(str);
 			return 0;
 		}
 	}
@@ -317,7 +323,6 @@ faidx_t *fai_load(const char *fn)
 	fclose(fp);
 
 	fai->rz = razf_open(fn, "rb");
-	free(str);
 	if (fai->rz == 0) {
 		fprintf(stderr, "[fai_load] fail to open FASTA file.\n");
 		return 0;

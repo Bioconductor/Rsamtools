@@ -52,7 +52,7 @@ static const R_CallMethodDef callMethods[] = {
     {".index_bcf", (DL_FUNC) & index_bcf, 1},
     /* fafile.c */
     {".fafile_init", (DL_FUNC) & fafile_init, 0},
-    {".fafile_open", (DL_FUNC) & fafile_open, 1},
+    {".fafile_open", (DL_FUNC) & fafile_open, 2},
     {".fafile_close", (DL_FUNC) & fafile_close, 1},
     {".fafile_isopen", (DL_FUNC) & fafile_isopen, 1},
     {".index_fa", (DL_FUNC) & index_fa, 1},

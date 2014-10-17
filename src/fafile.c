@@ -7,9 +7,9 @@
 
 static SEXP FAFILE_TAG = NULL;
 
-static faidx_t *_fa_tryopen(const char *fname)
+static faidx_t *_fa_tryopen(const char *fname, const char *iname)
 {
-    return fai_load(fname);
+    return fai_load0(fname, iname);
 }
 
 static void _fa_close(faidx_t * fai)
@@ -41,15 +41,19 @@ SEXP fafile_init()
     return R_NilValue;
 }
 
-SEXP fafile_open(SEXP filename)
+SEXP fafile_open(SEXP filename, SEXP indexname)
 {
     if (!IS_CHARACTER(filename) || 1 != Rf_length(filename))
         Rf_error("'file' must be character(1)");
+    if (!IS_CHARACTER(indexname) || 1 != Rf_length(indexname))
+        Rf_error("'index' must be character(1)");
 
     _FA_FILE *ffile = Calloc(1, _FA_FILE);
-    const char *cfile = translateChar(STRING_ELT(filename, 0));
+    const char
+        *cfile = translateChar(STRING_ELT(filename, 0)),
+        *ifile = translateChar(STRING_ELT(indexname, 0));
 
-    ffile->index = _fa_tryopen(cfile);
+    ffile->index = _fa_tryopen(cfile, ifile);
     if (NULL == ffile->index) {
         Free(ffile);
         Rf_error("'open' index failed");

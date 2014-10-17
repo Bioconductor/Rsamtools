@@ -40,7 +40,7 @@
 
 ## Constructors
 
-FaFile(file, ...)
+FaFile(file, index=sprintf("%.fai", file), ...)
 FaFileList(...)
 
 ## Opening / closing
@@ -81,9 +81,9 @@ FaFileList(...)
   \item{con, x}{An instance of \code{FaFile} or (for \code{getSeq})
     \code{FaFileList}.}
 
-  \item{file}{A character(1) vector of the fasta file path (for
-    \code{FaFile}), or an instance of class \code{FaFile} or
-    \code{FaFileList} (for \code{scanFaIndex}, \code{getSeq}).}
+  \item{file, index}{A character(1) vector of the fasta or fasta index
+    file path (for \code{FaFile}), or an instance of class \code{FaFile}
+    or \code{FaFileList} (for \code{scanFaIndex}, \code{getSeq}).}
 
   \item{param}{An optional \code{\linkS4class{GRanges}},
     \code{\linkS4class{RangesList}}, or \code{\linkS4class{RangedData}}

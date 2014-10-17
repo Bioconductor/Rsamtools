@@ -11,7 +11,7 @@ typedef struct {
 #define FAFILE(f) ((_FA_FILE *) R_ExternalPtrAddr(f))
 
 SEXP fafile_init();
-SEXP fafile_open(SEXP filename);
+SEXP fafile_open(SEXP filename, SEXP indexname);
 SEXP fafile_close(SEXP ext);
 /* SEXP fafile_reopen(SEXP ext, SEXP filename, SEXP indexname); */
 SEXP fafile_isopen(SEXP ext);

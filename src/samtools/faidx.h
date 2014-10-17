@@ -64,6 +64,13 @@ extern "C" {
 	faidx_t *fai_load(const char *fn);
 
 	/*!
+	  @abstract   Load index from "fn.fai".
+	  @param  fn  File name of the FASTA file
+          @param  index File name of the FASTA index
+	 */
+	faidx_t *fai_load0(const char *fn, const char *index);
+
+	/*!
 	  @abstract    Fetch the sequence in a region.
 	  @param  fai  Pointer to the faidx_t struct
 	  @param  reg  Region in the format "chr2:20,000-30,000"

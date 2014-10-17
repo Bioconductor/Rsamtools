@@ -1,7 +1,7 @@
 FaFile <-
-    function(file, ...)
+    function(file, index=sprintf("%s.fai", file), ...)
 {
-    .RsamtoolsFile(.FaFile, file, file)
+    .RsamtoolsFile(.FaFile, file, index)
 }
 
 open.FaFile <-
@@ -9,7 +9,7 @@ open.FaFile <-
 {
     .io_check_exists(path(con))
     tryCatch({
-        con$.extptr <- .Call(.fafile_open, path(con))
+        con$.extptr <- .Call(.fafile_open, path(con), index(con))
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(con))
     })
@@ -56,7 +56,7 @@ setMethod(scanFaIndex, "FaFile",
     function(file, ...)
 {
     what <- list(character(), integer(), NULL, NULL, NULL)
-    tbl <- scan(sprintf("%s.fai", index(file)), what=what, quiet=TRUE)
+    tbl <- scan(index(file), what=what, quiet=TRUE)
     GRanges(tbl[[1]], IRanges(1, width=tbl[[2]]),
             seqlengths=structure(tbl[[2]], .Names=tbl[[1]]))
 })
