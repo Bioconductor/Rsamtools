@@ -40,7 +40,7 @@
 
 ## Constructors
 
-FaFile(file, index=sprintf("%.fai", file), ...)
+FaFile(file, index=sprintf("\%.fai", file), ...)
 FaFileList(...)
 
 ## Opening / closing
@@ -222,3 +222,4 @@ ranges(idx) <- narrow(ranges(idx), -10)  # last 10 nucleotides
 }
 
 \keyword{classes}
+
