@@ -6,7 +6,6 @@
 #include "utilities.h"
 
 #define BAM_PARSE_STATUS_OK 0
-#define CIGAR_BUFFER_OVERFLOW_ERROR 2
 
 static const int BAM_INIT_SIZE = 1048576;
 
@@ -18,8 +17,8 @@ static BAM_DATA _Calloc_BAM_DATA(int blocksize, int cigar_buf_sz)
 {
     BAM_DATA bd = Calloc(1, _BAM_DATA);
     bd->BLOCKSIZE = blocksize;
-    bd->CIGAR_BUF_SZ = cigar_buf_sz;
-    bd->CIGAR_BUF = Calloc(bd->CIGAR_BUF_SZ, char);
+    bd->cigar_buf_sz = cigar_buf_sz;
+    bd->cigar_buf = Calloc(bd->cigar_buf_sz, char);
     return bd;
 }
 
@@ -55,8 +54,15 @@ _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
 
 void _Free_BAM_DATA(BAM_DATA bd)
 {
-    Free(bd->CIGAR_BUF);
+    Free(bd->cigar_buf);
     Free(bd);
+}
+
+
+static void _grow_BAM_DATA_cigar(BAM_DATA bd)
+{
+    bd->cigar_buf_sz = bd->cigar_buf_sz * 1.6;
+    bd->cigar_buf = Realloc(bd->cigar_buf, bd->cigar_buf_sz, char);
 }
 
 BAM_FILE _bam_file_BAM_DATA(BAM_DATA bd)
@@ -331,12 +337,10 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
             if (bam->core.flag & BAM_FUNMAP)
                 sbd->cigar[idx] = NULL;
             else {
-                if (_bamcigar(bam1_cigar(bam), bam->core.n_cigar,
-                              bd->CIGAR_BUF, bd->CIGAR_BUF_SZ) < 0) {
-                    bd->parse_status |= CIGAR_BUFFER_OVERFLOW_ERROR;
-                    return -sbd->icnt;
-                }
-                sbd->cigar[idx] = _map(sbd->cigarhash, bd->CIGAR_BUF);
+                while (_bamcigar(bam1_cigar(bam), bam->core.n_cigar,
+                              bd->cigar_buf, bd->cigar_buf_sz) < 0)
+                    _grow_BAM_DATA_cigar(bd);
+                sbd->cigar[idx] = _map(sbd->cigarhash, bd->cigar_buf);
             }
             break;
         case MRNM_IDX:

@@ -13,8 +13,8 @@ typedef char * (*bam_qname_f)(const bam1_t *bam, char qname_prefix,
 
 typedef struct {
     int BLOCKSIZE;              /* size to grow vectors */
-    char *CIGAR_BUF;            /* string representation of CIGAR */
-    uint32_t CIGAR_BUF_SZ;
+    char *cigar_buf;            /* string representation of CIGAR */
+    uint32_t cigar_buf_sz;
 
     int parse_status;
     BAM_FILE bfile;
