@@ -5,6 +5,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
     o FaFile accepts a distinct index file
 
+    o Support for cigars > 32767 characters
+
 CHANGES IN VERSION 1.17.0
 -------------------------
 
