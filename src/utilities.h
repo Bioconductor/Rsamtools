@@ -5,6 +5,14 @@
 extern "C" {
 #endif
 
+/* robust memory re-allocation */
+
+#define _Rs_Realloc(p, n, t)	(t *) _Rs_Realloc_impl(p, n, sizeof(t))
+
+void *_Rs_Realloc_impl(void *p, size_t n, size_t t);
+
+/* coercion */
+
 SEXP _get_namespace(const char *pkg);
 SEXP _get_encoding_lookup(const char *from, const char *to);
 SEXP _get_lkup(const char *baseclass);

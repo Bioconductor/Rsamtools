@@ -351,7 +351,7 @@ static int _scan_bam_all(BAM_DATA bd, bam_fetch_f parse1,
     /* end-of-file */
     if ((NA_INTEGER == yieldSize) || (yield < yieldSize))
         bfile->pos0 = bam_tell(bfile->file->x.bam);
-    if (NULL != finish1)
+    if ((NULL != finish1) && (bd->iparsed >= 0))
         (*finish1) (bd);
 
     return bd->iparsed;
@@ -430,9 +430,11 @@ static int _filter_and_parse1(const bam1_t *bam, void *data)
     /* requires 'data' to be BAM_DATA */
     BAM_DATA bd = (BAM_DATA) data; 
     int result = _filter_and_parse1_BAM_DATA(bam, bd);
-    if (result < 0)
+    if (result < 0) {
         /* parse error: e.g., cigar buf overflow */
         _grow_SCAN_BAM_DATA(bd, 0);
+        bd->iparsed = -1;
+    }
     return result;
 }
 

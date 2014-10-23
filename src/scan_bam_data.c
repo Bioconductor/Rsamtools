@@ -75,53 +75,53 @@ int _grow_SCAN_BAM_DATA(BAM_DATA bd, int len)
             continue;
         switch (i) {
         case FLAG_IDX:
-            sbd->flag = Realloc(sbd->flag, len, int);
+            sbd->flag = _Rs_Realloc(sbd->flag, len, int);
             break;
         case RNAME_IDX:
-            sbd->rname = Realloc(sbd->rname, len, int);
+            sbd->rname = _Rs_Realloc(sbd->rname, len, int);
             break;
         case STRAND_IDX:
-            sbd->strand = Realloc(sbd->strand, len, int);
+            sbd->strand = _Rs_Realloc(sbd->strand, len, int);
             break;
         case POS_IDX:
-            sbd->pos = Realloc(sbd->pos, len, int);
+            sbd->pos = _Rs_Realloc(sbd->pos, len, int);
             break;
         case QWIDTH_IDX:
-            sbd->qwidth = Realloc(sbd->qwidth, len, int);
+            sbd->qwidth = _Rs_Realloc(sbd->qwidth, len, int);
             break;
         case MAPQ_IDX:
-            sbd->mapq = Realloc(sbd->mapq, len, int);
+            sbd->mapq = _Rs_Realloc(sbd->mapq, len, int);
             break;
         case MRNM_IDX:
-            sbd->mrnm = Realloc(sbd->mrnm, len, int);
+            sbd->mrnm = _Rs_Realloc(sbd->mrnm, len, int);
             break;
         case MPOS_IDX:
-            sbd->mpos = Realloc(sbd->mpos, len, int);
+            sbd->mpos = _Rs_Realloc(sbd->mpos, len, int);
             break;
         case ISIZE_IDX:
-            sbd->isize = Realloc(sbd->isize, len, int);
+            sbd->isize = _Rs_Realloc(sbd->isize, len, int);
             break;
         case QNAME_IDX:
-            sbd->qname = Realloc(sbd->qname, len, char *);
+            sbd->qname = _Rs_Realloc(sbd->qname, len, char *);
             break;
         case CIGAR_IDX:
-            sbd->cigar = Realloc(sbd->cigar, len, const char *);
+            sbd->cigar = _Rs_Realloc(sbd->cigar, len, const char *);
             break;
         case SEQ_IDX:
-            sbd->seq = Realloc(sbd->seq, len, const char *);
+            sbd->seq = _Rs_Realloc(sbd->seq, len, const char *);
             break;
         case QUAL_IDX:
-            sbd->qual = Realloc(sbd->qual, len, const char *);
+            sbd->qual = _Rs_Realloc(sbd->qual, len, const char *);
             break;
         case TAG_IDX:
             if (R_NilValue != s)
                 _grow_SCAN_BAM_DATA_tags(s, len);
             break;
         case PARTITION_IDX:
-            sbd->partition = Realloc(sbd->partition, len, int);
+            sbd->partition = _Rs_Realloc(sbd->partition, len, int);
             break;
         case MATES_IDX:
-            sbd->mates = Realloc(sbd->mates, len, int);
+            sbd->mates = _Rs_Realloc(sbd->mates, len, int);
             break;
         default:
             Rf_error("[Rsamtools internal] unhandled _grow_SCAN_BAM_DATA");

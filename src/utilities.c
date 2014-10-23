@@ -1,9 +1,20 @@
 #include <Rdefines.h>
+#include <R_ext/RS.h>
 #include "utilities.h"
 #include "IRanges_interface.h"
 #include "XVector_interface.h"
 
-#include <stdlib.h>  /* for malloc() / free() */
+void *_Rs_Realloc_impl(void *p, size_t n, size_t t)
+{
+    /* Realloc(p, 0, *) fails inappropriately */
+    if (n == 0) {
+        Free(p);
+        p = NULL;
+    } else {
+        p = R_chk_realloc((void *) p, (size_t) (n * t));
+    }
+    return p;
+}
 
 SEXP _get_namespace(const char *pkg)
 {
