@@ -70,10 +70,10 @@ setMethod(isOpen, "BcfFile",
     tags <- sub(rex, "\\1", lines)
 
     keyval0 <- sub(rex, "\\2", lines)
-    ## Handle INFO, FORMAT, FILTER and ALT
+    ## Handle INFO, FORMAT, FILTER, ALT, SAMPLE, PEDIGREE
     keyval1 <- rep(NA_character_, length(keyval0))
     keyval <- list()
-    idx <- tags %in% c("INFO", "FORMAT", "FILTER", "ALT")
+    idx <- tags %in% c("INFO", "FORMAT", "FILTER", "ALT", "SAMPLE", "PEDIGREE")
     keyval1[idx] <- strsplit(keyval0[idx], 
             ",(?=(ID|Number|Type)=[[:alnum:]]*)|,(?=Description=\".*?\")", 
             perl=TRUE)
