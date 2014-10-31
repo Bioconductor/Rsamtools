@@ -14,7 +14,8 @@
         distinguish_nucleotides = "logical", # 6
         ignore_query_Ns = "logical", # 7
         include_deletions="logical", # 8
-        cycle_bins = "numeric")) # 9
+        include_insertions="logical", # 9
+        cycle_bins = "numeric")) # 10
 
 setMethod(show, "PileupParam", function(object) {
     cat("class: ", class(object), "\n")
@@ -34,7 +35,7 @@ PileupParam <-
              min_nucleotide_depth=1, min_minor_allele_depth=0,
              distinguish_strands=TRUE, distinguish_nucleotides=TRUE,
              ignore_query_Ns=TRUE, include_deletions=TRUE,
-             cycle_bins=numeric())
+             include_insertions=FALSE, cycle_bins=numeric())
 {
     ## argument checking
     stopifnot(isSingleNumber(max_depth))
@@ -52,6 +53,7 @@ PileupParam <-
     stopifnot(isTRUEorFALSE(distinguish_nucleotides))
     stopifnot(isTRUEorFALSE(ignore_query_Ns))
     stopifnot(isTRUEorFALSE(include_deletions))
+    stopifnot(isTRUEorFALSE(include_insertions))
     
     ## creation
     .PileupParam(max_depth=max_depth, min_base_quality=min_base_quality,
@@ -61,7 +63,7 @@ PileupParam <-
                  distinguish_nucleotides=distinguish_nucleotides,
                  ignore_query_Ns=ignore_query_Ns,
                  include_deletions=include_deletions,
-                 cycle_bins=cycle_bins)
+                 include_insertions=include_insertions, cycle_bins=cycle_bins)
 }
 
 .pileup <-

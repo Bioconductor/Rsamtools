@@ -81,9 +81,12 @@ private:
     bool include_deletions() const {
         return LOGICAL(VECTOR_ELT(pileupParams, 8))[0];
     }
-    // cycle_bins pileupParams[9]
+    bool include_insertions() const {
+        return LOGICAL(VECTOR_ELT(pileupParams, 9))[0];
+    }
+    // cycle_bins pileupParams[10]
     int cycleBinsLength() const {
-        return Rf_length(VECTOR_ELT(pileupParams, 9));
+        return Rf_length(VECTOR_ELT(pileupParams, 10));
     }
     bool hasBins() const {
         return cycleBinsLength() > 0;
@@ -134,7 +137,7 @@ public:
                 new ResultMgr(min_nucleotide_depth(), min_minor_allele_depth(),
                               hasStrands(), hasNucleotides(), hasBins(),
                               isRanged, isBuffered, posCacheColl_);
-            binPoints = binPointsAsVec(VECTOR_ELT(pileupParams, 9));
+            binPoints = binPointsAsVec(VECTOR_ELT(pileupParams, 10));
         }
     ~Pileup() {
         delete resultMgr;
@@ -177,6 +180,8 @@ public:
             return 6;
         else if(nuc == '-')
             return 7;
+        else if(nuc == '+')
+            return 8;
         else
             Rf_error("Unrecognized nucleotide '%c'\n", nuc);
     }

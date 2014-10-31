@@ -22,6 +22,15 @@
 @SQ	SN:seqnames_from_tinysam_c	LN:15
 @SQ	SN:all_nuc_levels	LN:15
 @SQ	SN:bins_5	LN:5
+@SQ	SN:ins1	LN:15
+@SQ	SN:ins3	LN:15
+@SQ	SN:ins_multiread	LN:15
+@SQ	SN:ins_base_disqualifiers	LN:15
+B7	0	ins_base_disqualifiers	1	99	1M1I	*	0	0	NT	++
+B7	0	ins_multiread	1	99	1M1I1M1I1M	*	0	0	TGGGT	=====
+B7	0	ins_multiread	1	99	1M1I1M1I1M	*	0	0	TTTTT	=====
+B7	0	ins3	1	99	1M3I1M	*	0	0	AGGGC	=====
+B7	0	ins1	1	99	1M1I1M	*	0	0	AGC	===
 B7	0	bins_5	1	99	5M	*	0	0	ACGT=	=====
 B7	0	all_nuc_levels	1	99	2M1D4M	*	0	0	ACGTN=	======
 B7	0	seqnames_from_tinysam_c	1	99	1M	*	0	0	=	=

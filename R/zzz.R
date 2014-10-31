@@ -1,6 +1,6 @@
 .STRAND_LEVELS <- c("+", "-", "*")
 
-.PILEUP_NUCLEOTIDE_LEVELS <- c("A", "C", "G", "T", "N", "=", "-")
+.PILEUP_NUCLEOTIDE_LEVELS <- c("A", "C", "G", "T", "N", "=", "-", "+")
 
 .onLoad <-
     function(libname, pkgname)

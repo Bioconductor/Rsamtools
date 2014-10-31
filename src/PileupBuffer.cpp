@@ -24,9 +24,36 @@ int Pileup::insert(uint32_t tid, uint32_t pos, int n,
             const uint8_t mapqual = curBam->b->core.qual;
             if(mapqual < pileup->min_mapq()) continue;
             
-            // individual nucleotide disqualifiers
-            char nucleotide = 'X', strand = 'X';
+            char strand = 'X', nucleotide = 'X';
             int bin = 0;
+
+            // invariant: alignments that fail strand criterion not included
+            if(pileup->hasStrands())
+                strand = bam1_strand(curBam->b) ? '-' : '+';
+
+            // positional disqualifier(s)
+            if(pileup->hasBins()) { // all bin work
+                int minBinPoint = pileup->minBinPoint(),
+                    maxBinPoint = pileup->maxBinPoint();
+                int qpos = curBam->qpos + 1;
+                // discard if outside outer range
+                if(qpos > minBinPoint && qpos <= maxBinPoint)
+                    bin = pileup->calcBin(qpos);
+                else
+                    continue;
+            }
+
+            // IMPORTANT: it's essential that propagating insertions
+            // remains in this position relative to other
+            // disqualifiers; insertions are separate from called
+            // bases--therefore should propagate independent of
+            // considerations about the called base. I.e., an
+            // insertion at a position can propagate while the called
+            // base is diqualified.
+            if(curBam->indel > 0 && pileup->include_insertions())
+                pileup->resultMgr->forwardTuple(BamTuple('+', strand, bin));
+
+            // individual nucleotide disqualifiers
             const uint8_t basequal = bam1_qual(curBam->b)[curBam->qpos];
             if(basequal < pileup->min_baseq()) continue;
             bool isDeletion = curBam->is_del;
@@ -42,22 +69,6 @@ int Pileup::insert(uint32_t tid, uint32_t pos, int n,
 
             bool dropNucleotide = (nucleotide == 'N' && pileup->ignoreNs());
             if(dropNucleotide) continue;
-
-            // invariant: alignments that fail strand criterion not included
-            if(pileup->hasStrands())
-                strand = bam1_strand(curBam->b) ? '-' : '+';
-
-            if(pileup->hasBins()) { // all bin work
-                int minBinPoint = pileup->minBinPoint(),
-                    maxBinPoint = pileup->maxBinPoint();
-                int qpos = curBam->qpos + 1;
-                // discard if outside outer range
-                if(qpos > minBinPoint && qpos <= maxBinPoint) {
-                    bin = pileup->calcBin(qpos);
-                    //Rprintf("bin number %d\n", bin);
-                } else
-                    continue;
-            }
 
             pileup->resultMgr->forwardTuple(BamTuple(nucleotide, strand, bin));
         }

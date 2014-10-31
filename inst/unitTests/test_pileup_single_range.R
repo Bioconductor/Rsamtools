@@ -28,7 +28,7 @@ bf <- BamFile(fl)
     levels(strand())
 }
 .n_levels <- function() {
-    c("A", "C", "G", "T", "N", "=", "-")
+    c("A", "C", "G", "T", "N", "=", "-", "+")
 }
 
 .tiny.sam_seqlevels <- function() {
@@ -138,6 +138,114 @@ bf <- BamFile(fl)
 ## test sequence with length 5
 .bins_5 <- function()
     ScanBamParam(which=GRanges("bins_5", IRanges(1,5)))
+.ins1 <- function()
+    ScanBamParam(which=GRanges("ins1", IRanges(1,5)))
+.ins3 <- function()
+    ScanBamParam(which=GRanges("ins3", IRanges(1,5)))
+.ins_multiread <- function()
+    ScanBamParam(which=GRanges("ins_multiread", IRanges(1,5)))
+.ins_base_disqualifiers <- function()
+    ScanBamParam(which=GRanges("ins_base_disqualifiers", IRanges(1,5)))
+
+## Throw in a couple individual base disqualifiers (instead of
+## whole-alignment disqualifiers) to verify that insertions are
+## getting passed on even when the aligned base at a given position
+## does not satisfy filtering criteria
+test_insert_independent_of_base_disqualifiers <- function() {
+    sb_param <- .ins_base_disqualifiers()
+    p_param <- PileupParam(
+        min_base_quality=11L, ## called base in .sam has quality 10 ('+' ASCII)
+        ignore_query_Ns=TRUE, ## and is 'N' nucleotide
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=TRUE,
+        include_insertions=TRUE)
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=1L,
+                      nucleotide="+",
+                      count=1L,
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(.reorder_data.frame(xx)); ##str(xx)
+    ##print(expected); ##str(expected)
+    .unordered_check(xx, expected)
+}
+##test_insert_independent_of_base_disqualifiers()
+
+test_insert_multiread <- function() {
+    sb_param <- .ins_multiread()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=TRUE,
+        include_insertions=TRUE)
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=c(1L, 1L, 2L, 2L, 2L, 3L),
+                      nucleotide=c("T", "+", "G", "T", "+", "T"),
+                      count=c(2L, 2L, 1L, 1L, 2L, 2L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(.reorder_data.frame(xx)); ##str(xx)
+    ##print(expected); ##str(expected)
+    .unordered_check(xx, expected)
+}
+##test_insert_multiread()
+
+test_insert_truncate <- function() {
+    sb_param <- .ins3()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=TRUE,
+        include_insertions=TRUE)
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=c(1L, 1L, 2L),
+                      nucleotide=c("A", "+", "C"),
+                      count=rep(1L, 3L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(.reorder_data.frame(xx)); ##str(xx)
+    ##print(expected); ##str(expected)
+    .unordered_check(xx, expected)
+}
+##test_insert_truncate()
+
+test_insert1_collapse <- function() {
+    sb_param <- .ins1()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=FALSE,
+        include_insertions=TRUE)
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=c(1L, 2L),
+                      count=c(2L, 1L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(xx); ##str(xx);
+    ##print(expected); ##str(expected)
+    checkIdentical(expected, xx)
+}
+##test_insert1_collapse()
+
+test_insert1_distinguish <- function() {
+    sb_param <- .ins1()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=TRUE,
+        include_insertions=TRUE)
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=c(1L, 1L, 2L),
+                      nucleotide=c("A", "+", "C"),
+                      count=rep(1L, 3L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(.reorder_data.frame(xx)); ##str(xx);
+    ##print(expected); ##str(expected)
+    .unordered_check(xx, expected)
+}
+##test_insert1_distinguish()
 
 test_bins_5_unsorted <- function() {
     sb_param <- .bins_5()

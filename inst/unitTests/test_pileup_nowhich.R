@@ -19,7 +19,7 @@ suppressMessages({
     levels(strand())
 }
 .n_levels <- function() {
-    c("A", "C", "G", "T", "N", "=", "-")
+    c("A", "C", "G", "T", "N", "=", "-", "+")
 }
 
 .tiny.sam_seqlevels <- function() {

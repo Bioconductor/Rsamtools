@@ -13,6 +13,7 @@
 \alias{distinguish_nucleotides}
 \alias{ignore_query_Ns}
 \alias{include_deletions}
+\alias{include_insertions}
 \alias{cycle_bins}
 
 % pileup
@@ -44,7 +45,7 @@ pileup(file, index=file, ..., scanBamParam=ScanBamParam(),
 PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
     min_nucleotide_depth=1, min_minor_allele_depth=0,
     distinguish_strands=TRUE, distinguish_nucleotides=TRUE,
-    ignore_query_Ns=TRUE, include_deletions=TRUE,
+    ignore_query_Ns=TRUE, include_deletions=TRUE, include_insertions=FALSE,
     cycle_bins=numeric())
 }
 
@@ -96,6 +97,9 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
 
   \item{include_deletions}{logical(1); \code{TRUE} to include deletions
     in pileup.}
+
+  \item{include_insertions}{logical(1); \code{TRUE} to include
+    insertions in pileup.}
 
   \item{cycle_bins}{numeric; non-negative, unique positions within a
     read to delimit bins. At least two values are required so at least
@@ -177,21 +181,48 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   that a match with the reference genome is counted separately in the
   results if \code{distinguish_nucleotides} is \code{TRUE}.
 
-  The extended \code{CIGAR} format is partially supported by
-  \code{pileup}, with a focus of supporting the range of deletion-like
-  operations. The extended CIGAR allows a number of operations
-  conceptually similar to a \sQuote{deletion} with respect to the
-  reference genome, but offer more specialized meanings than a simple
-  deletion. CIGAR \sQuote{N} operations (not to be confused with
-  \sQuote{N} used for non-determinate bases in the \code{SEQ} field)
-  indicate a large skipped region, \sQuote{S} a soft clip, and
-  \sQuote{H} a hard clip. \sQuote{N}, \sQuote{S}, and \sQuote{H} CIGAR
-  operations are never included in pileup counts. Only true deletions
-  (\sQuote{D} in the CIGAR) can be included by setting
-  \code{include_deletions} to \code{TRUE}.
+  CIGAR support: \code{pileup} handles the extended CIGAR format by only
+  heeding operations that contribute to counts (\sQuote{M}, \sQuote{D},
+  \sQuote{I}). If you are confused about how the different CIGAR
+  operations interact, see the SAM versions of the BAM files used for
+  \code{pileup} unit testing for a fairly comprehensive human-readable
+  treatment.
+  
+  \itemize{
+    \item{Deletions and clipping:
 
-  Insertion operations with respect to the reference genome (and
-  therefore \sQuote{P} CIGAR operations) are ignored for \code{pileup}.
+      The extended CIGAR allows a number of operations conceptually
+      similar to a \sQuote{deletion} with respect to the reference
+      genome, but offer more specialized meanings than a simple
+      deletion. CIGAR \sQuote{N} operations (not to be confused with
+      \sQuote{N} used for non-determinate bases in the \code{SEQ} field)
+      indicate a large skipped region, \sQuote{S} a soft clip, and
+      \sQuote{H} a hard clip. \code{pileup} ignores \sQuote{N},
+      \sQuote{S}, and \sQuote{H} CIGAR operations; only counts of true
+      deletions (\sQuote{D} in the CIGAR) can be included by setting
+      \code{include_deletions} to \code{TRUE}.
+
+    }
+
+    \item{Insertions and padding:
+
+      \code{pileup} can include counts of insertion operations by
+      settting \code{include_insertions} to \code{TRUE}. Details about
+      insertions are effectively truncated such that each insertion is
+      reduced to a single \sQuote{+} nucleotide. Information about
+      e.g. the nucleotide code and base quality within the insertion is
+      not included. The position of an insertion is the same as the
+      called base that precedes it.
+
+      Because \sQuote{+} is used as a nucleotide code to represent
+      insertions in \code{pileup}, counts of the \sQuote{+} nucleotide
+      participate in voting for \code{min_nucleotide_depth} and
+      \code{min_minor_allele_depth} functionality.
+
+      \sQuote{P} CIGAR (padding) operations never affect counts.
+
+    }
+  }
 
   \code{cycle_bins} allows users to differentiate pileup counts based on
   arbitrary regions within a read. \code{pileup} relies on
