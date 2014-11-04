@@ -211,8 +211,10 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
       insertions are effectively truncated such that each insertion is
       reduced to a single \sQuote{+} nucleotide. Information about
       e.g. the nucleotide code and base quality within the insertion is
-      not included. The position of an insertion is the same as the
-      called base that precedes it.
+      not included.
+
+      The position of an insertion is the position that precedes it on
+      the reference sequence.
 
       Because \sQuote{+} is used as a nucleotide code to represent
       insertions in \code{pileup}, counts of the \sQuote{+} nucleotide

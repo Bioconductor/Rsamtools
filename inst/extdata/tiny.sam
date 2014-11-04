@@ -26,6 +26,10 @@
 @SQ	SN:ins3	LN:15
 @SQ	SN:ins_multiread	LN:15
 @SQ	SN:ins_base_disqualifiers	LN:15
+@SQ	SN:ins_deletion	LN:15
+@SQ	SN:ins_refskip	LN:15
+B7	0	ins_refskip	1	99	1M1N1I1M	*	0	0	AGC	===
+B7	0	ins_deletion	1	99	1M1D1I1M	*	0	0	AGC	===
 B7	0	ins_base_disqualifiers	1	99	1M1I	*	0	0	NT	++
 B7	0	ins_multiread	1	99	1M1I1M1I1M	*	0	0	TGGGT	=====
 B7	0	ins_multiread	1	99	1M1I1M1I1M	*	0	0	TTTTT	=====

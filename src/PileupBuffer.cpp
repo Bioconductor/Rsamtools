@@ -18,18 +18,11 @@ int Pileup::insert(uint32_t tid, uint32_t pos, int n,
         for(bamBufOffset = 0; bamBufOffset != n; ++bamBufOffset) {
             const bam_pileup1_t *curBam = pl + bamBufOffset;
 
-            // whole-alignment disqualifiers/filters
-            if(curBam->is_refskip) // never pileup a refskip ('N' op in cigar)
-                continue;
             const uint8_t mapqual = curBam->b->core.qual;
             if(mapqual < pileup->min_mapq()) continue;
-            
+
             char strand = 'X', nucleotide = 'X';
             int bin = 0;
-
-            // invariant: alignments that fail strand criterion not included
-            if(pileup->hasStrands())
-                strand = bam1_strand(curBam->b) ? '-' : '+';
 
             // positional disqualifier(s)
             if(pileup->hasBins()) { // all bin work
@@ -43,6 +36,10 @@ int Pileup::insert(uint32_t tid, uint32_t pos, int n,
                     continue;
             }
 
+            // invariant: alignments that fail strand criterion not included
+            if(pileup->hasStrands())
+                strand = bam1_strand(curBam->b) ? '-' : '+';
+
             // IMPORTANT: it's essential that propagating insertions
             // remains in this position relative to other
             // disqualifiers; insertions are separate from called
@@ -52,6 +49,10 @@ int Pileup::insert(uint32_t tid, uint32_t pos, int n,
             // base is diqualified.
             if(curBam->indel > 0 && pileup->include_insertions())
                 pileup->resultMgr->forwardTuple(BamTuple('+', strand, bin));
+
+            // whole-alignment disqualifiers/filters
+            if(curBam->is_refskip) // never pileup a refskip ('N' op in cigar)
+                continue;
 
             // individual nucleotide disqualifiers
             const uint8_t basequal = bam1_qual(curBam->b)[curBam->qpos];

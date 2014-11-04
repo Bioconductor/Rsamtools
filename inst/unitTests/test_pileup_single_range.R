@@ -146,6 +146,48 @@ bf <- BamFile(fl)
     ScanBamParam(which=GRanges("ins_multiread", IRanges(1,5)))
 .ins_base_disqualifiers <- function()
     ScanBamParam(which=GRanges("ins_base_disqualifiers", IRanges(1,5)))
+.ins_deletion <- function()
+    ScanBamParam(which=GRanges("ins_deletion", IRanges(1,12)))
+.ins_refskip <- function()
+    ScanBamParam(which=GRanges("ins_refskip", IRanges(1,12)))
+
+## verify that, in terms of insertions, refskips and deletions are
+## handled identically (i.e., insertion info doesn't get dropped when
+## a refskip precedes the insertion)
+test_insert_refskip_deletion_identical <- function() {
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=TRUE,
+        include_deletions=FALSE,
+        include_insertions=TRUE)
+    refskip_res <- pileup(bf, scanBamParam=.ins_refskip(), pileupParam=p_param)
+    deletion_res <- pileup(bf, scanBamParam=.ins_deletion(), pileupParam=p_param)
+    test_cols <- c("pos", "nucleotide", "count")
+    ##print(refskip_res[test_cols])
+    ##print(deletion_res[test_cols])
+    
+    .unordered_check(deletion_res[test_cols], refskip_res[test_cols])
+}
+##test_insert_refskip_deletion_identical()
+
+test_insert_refskip <- function() {
+    sb_param <- .ins_refskip()
+    p_param <- PileupParam(
+        distinguish_strands=FALSE,
+        distinguish_nucleotides=TRUE,
+        include_insertions=TRUE)
+    xx <- pileup(bf, scanBamParam=sb_param, pileupParam=p_param)
+    seqnames <- space(bamWhich(sb_param))
+    expected <- .tadf(seqnames=seqnames,
+                      pos=seq(1L, 3L),
+                      nucleotide=c("A", "+", "C"),
+                      count=rep(1L, 3L),
+                      which_label=.mwls(sb_param, length(seqnames)))
+    ##print(.reorder_data.frame(xx)); ##str(xx)
+    ##print(expected); ##str(expected)
+    .unordered_check(xx, expected)
+}
+##test_insert_refskip()
 
 ## Throw in a couple individual base disqualifiers (instead of
 ## whole-alignment disqualifiers) to verify that insertions are
