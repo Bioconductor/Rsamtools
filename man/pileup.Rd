@@ -213,13 +213,17 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
       e.g. the nucleotide code and base quality within the insertion is
       not included.
 
-      The position of an insertion is the position that precedes it on
-      the reference sequence.
-
       Because \sQuote{+} is used as a nucleotide code to represent
       insertions in \code{pileup}, counts of the \sQuote{+} nucleotide
       participate in voting for \code{min_nucleotide_depth} and
       \code{min_minor_allele_depth} functionality.
+      
+      The position of an insertion is the position that precedes it on
+      the reference sequence. \emph{Note:} this means if
+      \code{include_insertions} is \code{TRUE} a single read will
+      contribute two nucleotide codes (\code{+}, plus that of the
+      non-insertion base) at a given position if the non-insertion base
+      passes filter criteria.
 
       \sQuote{P} CIGAR (padding) operations never affect counts.
 
