@@ -77,14 +77,13 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   \item{min_mapq}{integer(1); minimum \sQuote{MAPQ} value for an
     alignment to be included in pileup.}
 
-  \item{min_nucleotide_depth}{integer(1); minimum number of occurrences
-    of a nucleotide at a given position required for a particular nucleotide to
-    appear in the result.}
+  \item{min_nucleotide_depth}{integer(1); minimum count of each
+    nucleotide (\emph{independent} of other nucleotides) at a given
+    position required for said nucleotide to appear in the result.}
 
-  \item{min_minor_allele_depth}{integer(1); minimum number of
-    occurrences of \emph{all} nucleotides other than the major allele at
-    a given position required for a particular nucleotide to appear in
-    the result.}
+  \item{min_minor_allele_depth}{integer(1); minimum count of \emph{all}
+    nucleotides other than the major allele at a given position required
+    for a particular nucleotide to appear in the result.}
 
   \item{distinguish_strands}{logical(1); \code{TRUE} if result should
     differentiate between strands.}
