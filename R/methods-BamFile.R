@@ -215,20 +215,6 @@ setMethod(countBam, "BamFile",
     .countBam_postprocess(x, file, param)
 })
 
-### 'x' must be a list of length >= 1 where all the elements have the same
-### type so combining them is straightforward.
-.quickUnlist <- function(x)
-{
-    x1 <- x[[1L]]
-    if (is.factor(x1)) {
-        ## Fast unlisting of a list of factors that have all
-        ## the same levels in the same order.
-        structure(unlist(x), class="factor", levels=levels(x1))
-    } else {
-        do.call(c, x)  # doesn't work on list of factors
-    }
-}
-
 ### NOTE: Not exported but used in the GenomicAlignments package!
 ### 'bamfile' must be a BamFile object. Returns a named list with 1 element
 ### per loaded column.
@@ -264,7 +250,7 @@ setMethod(countBam, "BamFile",
     ans1 <- lapply(setNames(bamWhat(param), bamWhat(param)),
                    function(nm) {
                        tmp <- lapply(res, "[[", nm)
-                       .quickUnlist(tmp)
+                       S4Vectors:::quick_unlist(tmp)
                    })
 
     ## Extract the "tag" cols.
@@ -281,7 +267,7 @@ setMethod(countBam, "BamFile",
                                          }
                                          tag_elt
                                      })
-                       .quickUnlist(tmp)
+                       S4Vectors:::quick_unlist(tmp)
                    })
     ## Put all the cols together and return them.
     c(ans1, ans2, ans3)

@@ -31,14 +31,14 @@ setMethod("scanBam", "BamSampler",
     open(bfile, "rb")
     on.exit(close(bfile))
 
-    smpl <- .quickUnlist(unname(scanBam(bfile, param=param)))
+    smpl <- S4Vectors:::quick_unlist(unname(scanBam(bfile, param=param)))
     tot <- length(smpl[[1]])
     if (tot > sampleSize) {             # e.g., ranges
         idx <- sample(tot, sampleSize)
         smpl <- lapply(smpl, `[`, idx)
     }
     repeat {
-        yld <- .quickUnlist(scanBam(bfile, param=param))
+        yld <- S4Vectors:::quick_unlist(scanBam(bfile, param=param))
         yld_n <- length(yld[[1]])
         if (length(yld[[1]]) == 0L)
             break

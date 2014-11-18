@@ -171,7 +171,7 @@ PileupParam <-
         lapply(setNames(ans_colnames, ans_colnames),
                function(nm) {
                    tmp <- lapply(x, "[[", nm)
-                   .quickUnlist(tmp)
+                   S4Vectors:::quick_unlist(tmp)
                })
     ans <- data.frame(ans, stringsAsFactors=FALSE)
 }
