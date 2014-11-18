@@ -196,10 +196,19 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
       deletion. CIGAR \sQuote{N} operations (not to be confused with
       \sQuote{N} used for non-determinate bases in the \code{SEQ} field)
       indicate a large skipped region, \sQuote{S} a soft clip, and
-      \sQuote{H} a hard clip. \code{pileup} ignores \sQuote{N},
-      \sQuote{S}, and \sQuote{H} CIGAR operations; only counts of true
-      deletions (\sQuote{D} in the CIGAR) can be included by setting
+      \sQuote{H} a hard clip. \sQuote{N}, \sQuote{S}, and \sQuote{H}
+      CIGAR operations are never counted: only counts of true deletions
+      (\sQuote{D} in the CIGAR) can be included by setting
       \code{include_deletions} to \code{TRUE}.
+
+      Soft clip operations contribute to the relative position of
+      nucleotides within a read, whereas hard clip and refskip
+      operations do not. For example, consider a sequence in a bam file
+      that starts at 11, with a CIGAR \code{2S1M} and \code{SEQ} field
+      \code{ttA}. The cycle position of the \code{A} nucleotide will be
+      \code{3}, but the reported position will be \code{11}. If using
+      \code{cycle_bins} it might make sense to first preprocess your
+      files to remove soft clipping.
 
     }
 
@@ -245,6 +254,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
       \item{In order to account for variable-length reads in BAM files,
       \code{Inf} should be used to create a bin that extends to the end
       of all reads.}
+    
   } %% end subsection cycle_bins gotchas
 
   \code{pileup} obeys \code{\link{yieldSize}} on \code{BamFile} objects
