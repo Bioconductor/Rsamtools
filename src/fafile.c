@@ -117,12 +117,12 @@ static int translate(Chars_holder *seq_data, const int *lkup, int lkup_length)
     char *dest;
     int nbinvalid, i, j, key, val;
 
-    /* seq_data->seq is a const char * so we need to cast it to
+    /* seq_data->ptr is a const char * so we need to cast it to
        char * before we can write to it */
-    dest = (char *) seq_data->seq;
+    dest = (char *) seq_data->ptr;
     nbinvalid = j = 0;
     for (i = 0; i < seq_data->length; i++) {
-        key = (unsigned char) seq_data->seq[i];
+        key = (unsigned char) seq_data->ptr[i];
         if (key >= lkup_length || (val = lkup[key]) == NA_INTEGER) {
             nbinvalid++;
             continue;
@@ -164,7 +164,7 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP type, SEXP lkup)
         Chars_holder ans_elt_holder = get_elt_from_XRawList_holder(&ans_holder, i);
         int len = faidx_fetch_seq2(fai, CHAR(STRING_ELT(seq, i)),
                                    startp[i] - 1, endp[i] - 1,
-                                   (char *) ans_elt_holder.seq);
+                                   (char *) ans_elt_holder.ptr);
         if (len == -1)
             Rf_error(" record %d (%s:%d-%d) failed", i + 1,
                      (char *) CHAR(STRING_ELT(seq, i)), startp[i], endp[i]);

@@ -127,7 +127,7 @@ SEXP _as_XStringSet(const char **key, int len, const char *baseclass)
     for (i = 0; i < len; ++i) {
         const char *seq = key[i];
         dest = get_elt_from_XRawList_holder(&holder, i);
-        Ocopy_bytes_to_i1i2_with_lkup(0, dest.length - 1, (char *) dest.seq,
+        Ocopy_bytes_to_i1i2_with_lkup(0, dest.length - 1, (char *) dest.ptr,
                                       dest.length, seq, strlen(seq), lkup0,
                                       lkup_length);
     }
