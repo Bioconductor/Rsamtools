@@ -120,7 +120,16 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   constraints implied by \code{which} and \code{flag} of
   \code{scanBamParam}. For a given position, all reads overlapping the
   position that are consistent with constraints dictated by \code{flag}
-  of \code{scanBamParam} and \code{pileupParam} are used for counting.
+  of \code{scanBamParam} and \code{pileupParam} are used for
+  counting. \code{pileup} also automatically excludes reads with flags
+  that indicate any of:
+
+  \itemize{
+    \item{unmapped alignment (\code{\link{isUnmappedQuery}})}
+    \item{secondary alignment (\code{\link{isNotPrimaryRead}})}
+    \item{not passing quality controls (\code{\link{isNotPassingQualityControls}})}
+    \item{PCR or optical duplicate (\code{\link{isDuplicate}})}
+   }
 
   If no \code{which} argument is supplied to the \code{ScanBamParam},
   behavior reflects that of \code{scanBam}: the entire file is visited

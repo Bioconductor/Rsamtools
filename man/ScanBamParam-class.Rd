@@ -35,6 +35,18 @@
 \alias{bamFlagAsBitMatrix}
 \alias{bamFlagAND}
 \alias{bamFlagTest}
+% flag names
+\alias{isPaired}
+\alias{isProperPair}
+\alias{isUnmappedQuery}
+\alias{hasUnmappedMate}
+\alias{isMinusStrand}
+\alias{isMateMinusStrand}
+\alias{isFirstMateRead}
+\alias{isSecondMateRead}
+\alias{isNotPrimaryRead}
+\alias{isNotPassingQualityControls}
+\alias{isDuplicate}
 
 \title{Parameters for scanning BAM files}
 \description{
