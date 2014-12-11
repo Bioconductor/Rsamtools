@@ -40,7 +40,7 @@
 
 ## Constructors
 
-FaFile(file, index=sprintf("\%.fai", file), ...)
+FaFile(file, index=sprintf("\%s.fai", file), ...)
 FaFileList(...)
 
 ## Opening / closing
