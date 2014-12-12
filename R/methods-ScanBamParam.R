@@ -172,7 +172,7 @@ FLAG_BITNAMES <- c(
     "isMateMinusStrand",
     "isFirstMateRead",
     "isSecondMateRead",
-    "isNotPrimaryRead",
+    "isNotPrimaryAlignment",
     "isNotPassingQualityControls",
     "isDuplicate"
 )
@@ -182,8 +182,8 @@ scanBamFlag <-
              hasUnmappedMate=NA, isMinusStrand=NA,
              isMateMinusStrand=NA, isFirstMateRead=NA,
              isSecondMateRead=NA, # redundant
-             isNotPrimaryRead=NA, isNotPassingQualityControls=NA,
-             isDuplicate=NA)
+             isNotPrimaryRead=NA, isNotPrimaryAlignment=NA,
+             isNotPassingQualityControls=NA, isDuplicate=NA)
 
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
 {
@@ -194,6 +194,27 @@ scanBamFlag <-
         stop("all arguments must be logical(1)")
     if (length(args) > 0)
     {
+        ## deprecate isNotPrimaryRead
+        if ("isNotPrimaryRead" %in% names(args))
+        {
+            .Deprecated("isNotPrimaryAlignment",
+                        old="isNotPrimaryRead")
+            old <- args[["isNotPrimaryRead"]]
+            args[["isNotPrimaryRead"]] <- NULL
+            value_to_use <- if ("isNotPrimaryAlignment" %in% names(args))
+                args[["isNotPrimaryAlignment"]]
+            else
+                old
+            if (("isNotPrimaryAlignment" %in% names(args)) &&
+                !identical(args[["isNotPrimaryAlignment"]], old))
+            {
+                msg <- sprintf("'%s' inconsistent with '%s', using '%s'",
+                               "isNotPrimaryRead", "isNotPrimaryAlignment",
+                               "isNotPrimaryAlignment")
+                warning(paste(strwrap(msg, exdent=2), collapse="\n"))
+            }
+            args[["isNotPrimaryAlignment"]] <- value_to_use
+        }
         ## keep0: NA | FALSE --> drop !NA & TRUE
         idx <- names(args[sapply(args, function(x) !is.na(x) && x)])
         keep0 <- Reduce("+", flag[ !names(flag) %in% idx ], 0L)

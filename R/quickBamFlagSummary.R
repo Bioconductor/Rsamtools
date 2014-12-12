@@ -106,7 +106,8 @@
     N_unmapped_rec_per_uqname <- .runlen(qnameid[rec_is_unmapped])
 
     ## 'N_primary_rec_per_uqname' and 'N_secondary_rec_per_uqname':
-    rec_is_secondary <- as.logical(bamFlagAsBitMatrix(flag, "isNotPrimaryRead"))
+    rec_is_secondary <- as.logical(bamFlagAsBitMatrix(flag,
+                                                      "isNotPrimaryAlignment"))
     ## The notion of primary/secondary alignment only applies to mapped
     ## seqments:
     stopifnot(!any(rec_is_secondary & rec_is_unmapped))

@@ -126,7 +126,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
 
   \itemize{
     \item{unmapped alignment (\code{\link{isUnmappedQuery}})}
-    \item{secondary alignment (\code{\link{isNotPrimaryRead}})}
+    \item{secondary alignment (\code{\link{isNotPrimaryAlignment}})}
     \item{not passing quality controls (\code{\link{isNotPassingQualityControls}})}
     \item{PCR or optical duplicate (\code{\link{isDuplicate}})}
    }

@@ -44,7 +44,8 @@
 \alias{isMateMinusStrand}
 \alias{isFirstMateRead}
 \alias{isSecondMateRead}
-\alias{isNotPrimaryRead}
+\alias{isNotPrimaryRead} % deprecated
+\alias{isNotPrimaryAlignment}
 \alias{isNotPassingQualityControls}
 \alias{isDuplicate}
 
@@ -69,7 +70,8 @@ ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
     hasUnmappedMate = NA, isMinusStrand = NA, isMateMinusStrand = NA,
     isFirstMateRead = NA, isSecondMateRead = NA, isNotPrimaryRead = NA,
-    isNotPassingQualityControls = NA, isDuplicate = NA)
+    isNotPrimaryAlignment = NA, isNotPassingQualityControls = NA,
+    isDuplicate = NA)
 
 scanBamWhat()
 
@@ -173,14 +175,16 @@ bamFlagTest(flag, value)
     mate read should be returned (TRUE) or not (FALSE), or whether mate
     read number should be ignored (NA).}
 
-  \item{isNotPrimaryRead}{A logical(1) indicating whether alignments
-    that are primary (FALSE), are not primary (TRUE) or whose primary
-    status does not matter (NA) should be returned. A non-primary
-    alignment (\dQuote{secondary alignment} in the SAM specification)
-    might result when a read aligns to multiple locations. One alignment
-    is designated as primary and has this flag set to FALSE; the
-    remainder, for which this flag is TRUE, are designated by the
-    aligner as secondary.}
+  \item{isNotPrimaryRead}{Deprecated; use \code{isNotPrimaryAlignment}.}
+
+  \item{isNotPrimaryAlignment}{A logical(1) indicating whether
+    alignments that are primary (FALSE), are not primary (TRUE) or whose
+    primary status does not matter (NA) should be returned. A
+    non-primary alignment (\dQuote{secondary alignment} in the SAM
+    specification) might result when a read aligns to multiple
+    locations. One alignment is designated as primary and has this flag
+    set to FALSE; the remainder, for which this flag is TRUE, are
+    designated by the aligner as secondary.}
 
   \item{isNotPassingQualityControls}{A logical(1) indicating whether
     reads passing quality controls (FALSE), reads not passing quality
