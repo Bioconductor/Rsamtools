@@ -255,6 +255,11 @@ setMethod(show, "ScanBamParam",
 bamFlagAsBitMatrix <- function(flag, bitnames=FLAG_BITNAMES)
 {
     bitpos <- match(bitnames, FLAG_BITNAMES)
+    invalid_bitnames_idx <- which(is.na(bitpos))
+    if (length(invalid_bitnames_idx) != 0L) {
+        in1string <- paste0(bitnames[invalid_bitnames_idx], collapse=", ")
+        stop("invalid bitname(s): ", in1string)
+    }
     ans <- S4Vectors:::explodeIntBits(flag, bitpos=bitpos)
     dimnames(ans) <- list(names(flag), bitnames)
     ans
