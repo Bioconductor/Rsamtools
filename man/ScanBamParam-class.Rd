@@ -177,14 +177,14 @@ bamFlagTest(flag, value)
 
   \item{isNotPrimaryRead}{Deprecated; use \code{isSecondaryAlignment}.}
 
-  \item{isSecondaryAlignment}{A logical(1) indicating whether
-    alignments that are secondary (TRUE), are not (FALSE) or whose
-    primary status does not matter (NA) should be returned. A
-    non-primary alignment (\dQuote{secondary alignment} in the SAM
-    specification) might result when a read aligns to multiple
-    locations. One alignment is designated as primary and has this flag
-    set to FALSE; the remainder, for which this flag is TRUE, are
-    designated by the aligner as secondary.}
+  \item{isSecondaryAlignment}{A logical(1) indicating whether alignments
+    that are secondary (TRUE), are not (FALSE) or whose secondary status
+    does not matter (NA) should be returned. A non-primary alignment
+    (\dQuote{secondary alignment} in the SAM specification) might result
+    when a read aligns to multiple locations. One alignment is
+    designated as primary and has this flag set to FALSE; the remainder,
+    for which this flag is TRUE, are designated by the aligner as
+    secondary.}
 
   \item{isNotPassingQualityControls}{A logical(1) indicating whether
     reads passing quality controls (FALSE), reads not passing quality
