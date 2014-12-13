@@ -107,7 +107,7 @@
 
     ## 'N_primary_rec_per_uqname' and 'N_secondary_rec_per_uqname':
     rec_is_secondary <- as.logical(bamFlagAsBitMatrix(flag,
-                                                      "isNotPrimaryAlignment"))
+                                                      "isSecondaryAlignment"))
     ## The notion of primary/secondary alignment only applies to mapped
     ## seqments:
     stopifnot(!any(rec_is_secondary & rec_is_unmapped))

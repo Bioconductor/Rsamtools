@@ -172,7 +172,7 @@ FLAG_BITNAMES <- c(
     "isMateMinusStrand",
     "isFirstMateRead",
     "isSecondMateRead",
-    "isNotPrimaryAlignment",
+    "isSecondaryAlignment",
     "isNotPassingQualityControls",
     "isDuplicate"
 )
@@ -182,7 +182,7 @@ scanBamFlag <-
              hasUnmappedMate=NA, isMinusStrand=NA,
              isMateMinusStrand=NA, isFirstMateRead=NA,
              isSecondMateRead=NA, # redundant
-             isNotPrimaryRead=NA, isNotPrimaryAlignment=NA,
+             isNotPrimaryRead=NA, isSecondaryAlignment=NA,
              isNotPassingQualityControls=NA, isDuplicate=NA)
 
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
@@ -197,23 +197,23 @@ scanBamFlag <-
         ## deprecate isNotPrimaryRead
         if ("isNotPrimaryRead" %in% names(args))
         {
-            .Deprecated("isNotPrimaryAlignment",
+            .Deprecated("isSecondaryAlignment",
                         old="isNotPrimaryRead")
             old <- args[["isNotPrimaryRead"]]
             args[["isNotPrimaryRead"]] <- NULL
-            value_to_use <- if ("isNotPrimaryAlignment" %in% names(args))
-                args[["isNotPrimaryAlignment"]]
+            value_to_use <- if ("isSecondaryAlignment" %in% names(args))
+                args[["isSecondaryAlignment"]]
             else
                 old
-            if (("isNotPrimaryAlignment" %in% names(args)) &&
-                !identical(args[["isNotPrimaryAlignment"]], old))
+            if (("isSecondaryAlignment" %in% names(args)) &&
+                !identical(args[["isSecondaryAlignment"]], old))
             {
                 msg <- sprintf("'%s' inconsistent with '%s', using '%s'",
-                               "isNotPrimaryRead", "isNotPrimaryAlignment",
-                               "isNotPrimaryAlignment")
+                               "isNotPrimaryRead", "isSecondaryAlignment",
+                               "isSecondaryAlignment")
                 warning(paste(strwrap(msg, exdent=2), collapse="\n"))
             }
-            args[["isNotPrimaryAlignment"]] <- value_to_use
+            args[["isSecondaryAlignment"]] <- value_to_use
         }
         ## keep0: NA | FALSE --> drop !NA & TRUE
         idx <- names(args[sapply(args, function(x) !is.na(x) && x)])

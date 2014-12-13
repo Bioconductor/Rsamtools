@@ -45,7 +45,7 @@
 \alias{isFirstMateRead}
 \alias{isSecondMateRead}
 \alias{isNotPrimaryRead} % deprecated
-\alias{isNotPrimaryAlignment}
+\alias{isSecondaryAlignment}
 \alias{isNotPassingQualityControls}
 \alias{isDuplicate}
 
@@ -70,7 +70,7 @@ ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
     hasUnmappedMate = NA, isMinusStrand = NA, isMateMinusStrand = NA,
     isFirstMateRead = NA, isSecondMateRead = NA, isNotPrimaryRead = NA,
-    isNotPrimaryAlignment = NA, isNotPassingQualityControls = NA,
+    isSecondaryAlignment = NA, isNotPassingQualityControls = NA,
     isDuplicate = NA)
 
 scanBamWhat()
@@ -175,10 +175,10 @@ bamFlagTest(flag, value)
     mate read should be returned (TRUE) or not (FALSE), or whether mate
     read number should be ignored (NA).}
 
-  \item{isNotPrimaryRead}{Deprecated; use \code{isNotPrimaryAlignment}.}
+  \item{isNotPrimaryRead}{Deprecated; use \code{isSecondaryAlignment}.}
 
-  \item{isNotPrimaryAlignment}{A logical(1) indicating whether
-    alignments that are primary (FALSE), are not primary (TRUE) or whose
+  \item{isSecondaryAlignment}{A logical(1) indicating whether
+    alignments that are secondary (TRUE), are not (FALSE) or whose
     primary status does not matter (NA) should be returned. A
     non-primary alignment (\dQuote{secondary alignment} in the SAM
     specification) might result when a read aligns to multiple
