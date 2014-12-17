@@ -254,34 +254,36 @@ setMethod(show, "ScanBamParam",
 ## Explode the bits of a 'flag' vector into a matrix.
 bamFlagAsBitMatrix <- function(flag, bitnames=FLAG_BITNAMES)
 {
-    bitnames <- .deprecate_bamFlag_names(bitnames, oldname="isNotPrimaryRead",
-                                         newname="isSecondaryAlignment")
-    bitpos <- match(bitnames, FLAG_BITNAMES)
-    invalid_bitnames_idx <- which(is.na(bitpos))
-    if (length(invalid_bitnames_idx) != 0L) {
-        in1string <- paste0(bitnames[invalid_bitnames_idx], collapse=", ")
-        stop("invalid bitname(s): ", in1string)
+    ## deprecate 'isNotPrimaryRead'
+    oldname <- "isNotPrimaryRead"
+    newname <- "isSecondaryAlignment"
+    if(oldname %in% bitnames && newname %in% bitnames) {
+        msg <- paste0("'%s' is deprecated form of '%s', please specify ",
+                      "only one")
+        msg <- sprintf(msg, oldname, newname)
+        stop(paste(strwrap(msg, exdent=2), collapse="\n"))
+    }
+    if(oldname %in% bitnames) {
+        .Deprecated(newname, old=oldname)
+        normalized <- bitnames
+        normalized[[which(normalized == oldname)]] <- newname
+        bitpos <- .calcBitPos(normalized)
+    } else {
+        bitpos <- .calcBitPos(bitnames)
     }
     ans <- S4Vectors:::explodeIntBits(flag, bitpos=bitpos)
     dimnames(ans) <- list(names(flag), bitnames)
     ans
 }
 
-.deprecate_bamFlag_names <- function(bitnames, oldname, newname) {
-    if(oldname %in% bitnames) {
-        .Deprecated(newname, old=oldname)
-        if(newname %in% bitnames) {
-            ## if both appear, simply drop deprecated one
-            msg <- sprintf("'%s' and '%s' is redundant, dropping '%s'",
-                           newname, oldname, oldname)
-            warning(paste(strwrap(msg, exdent=2), collapse="\n"))
-            bitnames <- bitnames[ ! bitnames %in% oldname ]
-        } else {
-            ## otherwise, replace deprecated with newer
-            bitnames[[match(oldname, bitnames)]] <- newname
-        }
+.calcBitPos <- function(bitnames) {
+    bitpos <- match(bitnames, FLAG_BITNAMES)
+    invalid_bitnames_idx <- which(is.na(bitpos))
+    if (length(invalid_bitnames_idx) != 0L) {
+        in1string <- paste0(bitnames[invalid_bitnames_idx], collapse=", ")
+        stop("invalid bitname(s): ", in1string)
     }
-    bitnames
+    bitpos
 }
 
 ## Performs a logical AND between 2 'flag' vectors.
@@ -296,6 +298,13 @@ bamFlagAND <- function(flag1, flag2)
 
 bamFlagTest <- function(flag, value)
 {
+    ## deprecate 'isNotPrimaryRead'
+    oldname <- "isNotPrimaryRead"
+    newname <- "isSecondaryAlignment"
+    if(oldname == value) {
+        .Deprecated(newname, old=oldname)
+        value <- newname
+    }
     if (length(value) != 1 || !value %in% FLAG_BITNAMES) {
         msg <- sprintf("'is' must be character(1) in '%s'",
                        paste(FLAG_BITNAMES, collapse="' '"))
