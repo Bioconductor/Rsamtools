@@ -21,8 +21,9 @@ testPairedEndBam(file, index=file, ...)
 
 \arguments{
 
-    \item{file}{The character(1) bam file name, or a
-      \code{\link{BamFile}} instance.}
+    \item{file}{character(1) BAM file name, or a \code{\link{BamFile}}
+      instance. Open \code{BamFile}s are closed; their yield size is
+      respected when iterating through the file.}
         
     \item{index}{(optional) character(1) name of the index file of the
         'BAM' file being processed; this is given \emph{without} the
