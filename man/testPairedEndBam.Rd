@@ -1,5 +1,7 @@
 \name{testPairedEndBam}
 \alias{testPairedEndBam}
+\alias{testPairedEndBam,character-method}
+\alias{testPairedEndBam,BamFile-method}
 
 \title{
     Quickly test if a BAM file has paired end reads
@@ -10,7 +12,9 @@
 }
 
 \usage{
-    testPairedEndBam(file, index = file, ..., fast = TRUE)
+    testPairedEndBam(file, index, ..., fast=TRUE)
+    \S4method{testPairedEndBam}{character}(file,index, ..., fast=TRUE)
+    \S4method{testPairedEndBam}{BamFile}(file, index, ..., fast=TRUE)
 }
 
 \arguments{
@@ -40,3 +44,4 @@
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
     testPairedEndBam(fl)
 }
+
