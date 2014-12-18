@@ -266,7 +266,7 @@ bamFlagAsBitMatrix <- function(flag, bitnames=FLAG_BITNAMES)
     if(oldname %in% bitnames) {
         .Deprecated(newname, old=oldname)
         normalized <- bitnames
-        normalized[[which(normalized == oldname)]] <- newname
+        normalized[which(normalized == oldname)] <- newname
         bitpos <- .calcBitPos(normalized)
     } else {
         bitpos <- .calcBitPos(bitnames)
