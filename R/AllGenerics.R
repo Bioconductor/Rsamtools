@@ -172,8 +172,6 @@ setGeneric("qnameSuffixStart<-",
 
 setGeneric("isOpen")
 
-setGeneric("testPairedEndBam", 
-           function(file, index=file, ..., fast=TRUE) 
+setGeneric("testPairedEndBam", function(file, index=file, ...) 
            standardGeneric("testPairedEndBam"),
            signature="file")
-

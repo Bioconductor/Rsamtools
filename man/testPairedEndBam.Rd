@@ -8,40 +8,46 @@
 }
 
 \description{
-    Quickly test if a BAM file has paired end reads 
+
+    Iterate through a BAM file until a paired-end read is encountered or
+    the end of file is reached; report the occurrence of paired-end
+    reads to the user.
+
 }
 
 \usage{
-    testPairedEndBam(file, index, ..., fast=TRUE)
-    \S4method{testPairedEndBam}{character}(file,index, ..., fast=TRUE)
-    \S4method{testPairedEndBam}{BamFile}(file, index, ..., fast=TRUE)
+testPairedEndBam(file, index=file, ...)
 }
 
 \arguments{
-    \item{file}{The character(1) file name of the `BAM' ('SAM' for
-        \code{asBam}) file to be processed.}
+
+    \item{file}{The character(1) bam file name, or a
+      \code{\link{BamFile}} instance.}
         
-    \item{index}{The character(1) name of the index file of the 'BAM' file
-        being processed; this is given \emph{without} the '.bai' extension.}
+    \item{index}{(optional) character(1) name of the index file of the
+        'BAM' file being processed; this is given \emph{without} the
+        '.bai' extension.}
     
-    \item{\dots}{Additional arguments, passed to methods.}
-    
-    \item{fast}{If fast is TRUE(default), then 1000000 reads are used to 
-        determine if the BAM file has paired end reads, otherwise all reads of 
-        the BAM file are used.}
+    \item{\dots}{Additional arguments, currently unused.}
+
 }
 
 \value{
+
     A logical vector of length 1 containing TRUE is returned if BAM file 
     contained paired end reads, FALSE otherwise.  
+
 }
 
 \author{
-    Martin Morgan <mtmorgan@fhcrc.org>, Sonali Arora <sarora@fhcrc.org>
+
+  Martin Morgan \url{mailto:mtmorgan@fhcrc.org}, Sonali Arora
+  \url{mailto:sarora@fhcrc.org}
+
 }
 
 \examples{
-    fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-    testPairedEndBam(fl)
+fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
+testPairedEndBam(fl)
 }
 
