@@ -33,6 +33,7 @@ import(XVector)
 importClassesFrom(Biostrings, DNAStringSet, BStringSet, PhredQuality)
 
 importFrom(Biostrings, DNA_ALPHABET, readDNAStringSet,
+           readRNAStringSet, readAAStringSet,
            DNAStringSet, BStringSet, PhredQuality,
            getSeq, reverseComplement)
 
