@@ -2,8 +2,7 @@
 #define TAG_FILTER_H
 
 #include "samtools/sam.h"
-#include "bamfile.h"
-#include "utilities.h"
+#include <Rdefines.h>
 
 typedef enum { TAGFILT_T_UNSET = 0, TAGFILT_T_INT,
                TAGFILT_T_STRING } TagFilterType;
