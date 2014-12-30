@@ -20,6 +20,8 @@
 \alias{bamSimpleCigar}
 \alias{bamTag<-}
 \alias{bamTag}
+\alias{bamTagFilter}
+\alias{bamTagFilter<-}
 \alias{bamWhat<-}
 \alias{bamWhat}
 \alias{bamWhich<-}
@@ -63,7 +65,7 @@
 
 # Constructor
 ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
-    reverseComplement = FALSE, tag = character(0),
+    reverseComplement = FALSE, tag = character(0), tagFilter = list(),
     what = character(0), which)
 
 # Constructor helpers
@@ -84,6 +86,8 @@ bamSimpleCigar(object)
 bamSimpleCigar(object) <- value
 bamTag(object)
 bamTag(object) <- value
+bamTagFilter(object)
+bamTagFilter(object) <- value
 bamWhat(object)
 bamWhat(object) <- value
 bamWhich(object)
@@ -126,6 +130,13 @@ bamFlagTest(flag, value)
     optional field, with arbitrary information, stored with each
     record. Tags are identified by two-letter codes, so all elements of
     \code{tag} must have exactly 2 characters.}
+
+  \item{tagFilter}{A named \code{list} of atomic vectors. The name of
+    each \code{list} element is the tag name (two-letter code), and the
+    corresponding atomic vector is the set of acceptable values for the
+    tag. Only reads with specified tags are included. \code{NULL}s,
+    \code{NA}s, and empty strings are not allowed in the atomic
+    vectors.}
 
   \item{what}{A character vector naming the fields to return
     \code{scanBamWhat()} returns a vector of available fields.
@@ -235,6 +246,10 @@ bamFlagTest(flag, value)
     \item{\code{tag}}{Object of class \code{character} indicating what
       tags are to be returned.}
 
+    \item{\code{tagFilter}}{Object of class \code{list} (named)
+      indicating tags to filter by, and the set of acceptable values for
+      each tag.}
+
     \item{\code{what}}{Object of class \code{character} indicating
       what fields are to be returned.}
 
@@ -263,6 +278,10 @@ bamFlagTest(flag, value)
     \item{bamTag, bamTag<-}{Returns or sets a \code{character} vector of
       tags to be extracted.}
 
+    \item{bamTagFilter, bamTagFilter<-}{Returns or sets a named
+      \code{list} of tags to filter by, and the set of their acceptable
+      values.}
+  
     \item{bamWhat, bamWhat<-}{Returns or sets a \code{character} vector
       of fields to be extracted.}
 
@@ -324,14 +343,19 @@ p4 <- ScanBamParam(tag=c("NM", "H1"), what="flag")
 bam4 <- scanBam(fl, param=p4)
 str(bam4[[1]][["tag"]])
 
+## tagFilter
+p5 <- ScanBamParam(tag=c("NM", "H1"), tagFilter=list(NM=c(2, 3, 4)))
+bam5 <- scanBam(fl, param=p5)
+table(bam5[[1]][["tag"]][["NM"]])
+
 ## flag utils
 flag <- scanBamFlag(isUnmappedQuery=FALSE, isMinusStrand=TRUE)
 
-p5 <- ScanBamParam(what="flag")
-bam5 <- scanBam(fl, param=p5)
-flag5 <- bam5[[1]][["flag"]]
-head(bamFlagAsBitMatrix(flag5[1:9]))
-colSums(bamFlagAsBitMatrix(flag5))
+p6 <- ScanBamParam(what="flag")
+bam6 <- scanBam(fl, param=p6)
+flag6 <- bam6[[1]][["flag"]]
+head(bamFlagAsBitMatrix(flag6[1:9]))
+colSums(bamFlagAsBitMatrix(flag6))
 flag
 bamFlagAsBitMatrix(flag)
 }

@@ -1,55 +1,79 @@
 setMethod(ScanBamParam, c(which="missing"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=character(0), which)
+                   tagFilter=list(), what=character(0), which)
 {
     which <- IRangesList()
     names(which) <- character()
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
-        reverseComplement=reverseComplement, tag=tag, what=what,
+        reverseComplement=reverseComplement, tag=tag,
+        tagFilter=.normalize_tagFilter(tagFilter), what=what,
         which=which)
 })
 
 setMethod(ScanBamParam, c(which="ANY"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=character(0), which)
+                   tagFilter=list(), what=character(0), which)
 {
     which <- as(which, "RangesList")
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
-        reverseComplement=reverseComplement, tag=tag, what=what,
+        reverseComplement=reverseComplement, tag=tag,
+        tagFilter=.normalize_tagFilter(tagFilter), what=what,
         which=which)
 })
 
 setMethod(ScanBamParam, c(which="RangesList"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=character(0), which)
+                   tagFilter=list(), what=character(0), which)
 {
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
-        reverseComplement=reverseComplement, tag=tag, what=what,
+        reverseComplement=reverseComplement, tag=tag,
+        tagFilter=.normalize_tagFilter(tagFilter), what=what,
         which=which)
 })
 
 setMethod(ScanBamParam, c(which="RangedData"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=character(0), which)
+                   tagFilter=list(), what=character(0), which)
 {
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
-                reverseComplement=reverseComplement, tag=tag, what=what,
-                which=ranges(which))
+                 reverseComplement=reverseComplement, tag=tag,
+                 tagFilter=.normalize_tagFilter(tagFilter), what=what,
+                 which=ranges(which))
 })
 
 setMethod(ScanBamParam, c(which="GRanges"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   what=character(0), which)
+                   tagFilter=list(), what=character(0), which)
 {
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
-                reverseComplement=reverseComplement, tag=tag, what=what,
-                which=split(ranges(which), seqnames(which)))
+                 reverseComplement=reverseComplement, tag=tag,
+                 tagFilter=.normalize_tagFilter(tagFilter), what=what,
+                 which=split(ranges(which), seqnames(which)))
 })
+
+## adapted from ?integer
+.has.wholenumbers <- function(x, tol=.Machine$double.eps^0.5)
+    all(abs(x - round(x)) < tol)
+
+.normalize_tagFilter <- function(tagfilter) {
+    tagfilter <- lapply(tagfilter, function(x) {
+        if(is.numeric(x)) {
+            if(!.has.wholenumbers(x)) {
+                msg <- paste0("Filtering tags by floating point values ",
+                              "not supported. Please use integer values.")
+                stop(paste(strwrap(msg, exdent=2), collapse="\n"))
+            }
+            x <- as.integer(x)
+        }
+        x ##unique(x)
+    })
+    tagfilter
+}
 
 setValidity("ScanBamParam", function(object) {
     msg <- NULL
@@ -57,8 +81,10 @@ setValidity("ScanBamParam", function(object) {
     simpleCigar <- bamSimpleCigar(object)
     reverseComplement <- bamReverseComplement(object)
     tag <- bamTag(object)
+    tagFilter <- bamTagFilter(object)
     what <- bamWhat(object)
     which <- bamWhich(object)
+    ## flag
     if (length(flag) != 2 || typeof(flag) != "integer")
         msg <- c(msg, "'flag' must be integer(2)")
     else {
@@ -67,16 +93,39 @@ setValidity("ScanBamParam", function(object) {
         else if (any(flag < 0 | flag >= 2^16))
             msg <- c(msg, "'flag' values must be >=0, <2048")
     }
+    ## simpleCigar
     if (!((1L == length(simpleCigar)) &&
           !is.na(simpleCigar)))
         msg <- c(msg, "'simpleCigar' must be logical(1), not NA")
+    ## reverseComplement
     if (!((1L == length(reverseComplement)) &&
           !is.na(reverseComplement)))
         msg <- c(msg, "'reverseComplement' must be logical(1)")
+    ## tag
     if (0 != length(tag) && any(2 != nchar(tag)))
         msg <- c(msg, "'tag' must be two letters, e.g,, 'MD'")
+    ## tagFilter
+    if (length(tagFilter) > 0) {
+        tagnms <- names(tagFilter)
+        if(length(tagnms) == 0L || any(2 != nchar(tagnms)))
+            msg <- c(msg, paste0("'tagFilter' elements must be named with ",
+                                 "two characters each"))
+        for(valvec in tagFilter)
+            if(is.character(valvec) && any(!nzchar(valvec)))
+                msg <- c(msg, "character() tagFilter values must be non-empty")
+        elt_typeinfo <- vapply(tagFilter, function(x) {
+            length(x) && (is.character(x) || is.integer(x)) && ##is.atomic(x)
+            !is.null(x) && !anyNA(x)
+        }, logical(1))
+        if(any(!elt_typeinfo))
+            msg <- c(msg, paste0("'tagFilter' must contain only non-NULL, ",
+                                 "non-NA, non-empty character or integer ",
+                                 "values"))
+    }
+    ## what
     if (!all(what %in% scanBamWhat()))
         msg <- c(msg, "'what' must be from 'scanBamWhat()'")
+    ## which
     if (length(which) != 0 &&
         (any(!nzchar(names(which))) || any(is.na(names(which)))))
         msg <- c(msg, "'which' elements must be named (not NA)")
@@ -118,6 +167,12 @@ bamTag <- function(object) slot(object, "tag")
 "bamTag<-" <- function(object, value)
 {
     slot(object, "tag") <- value
+    object
+}
+bamTagFilter <- function(object) slot(object, "tagFilter")
+"bamTagFilter<-" <- function(object, value)
+{
+    slot(object, "tagFilter") <- .normalize_tagFilter(value)
     object
 }
 
@@ -244,6 +299,17 @@ setMethod(show, "ScanBamParam",
     cat("bamReverseComplement: ", bamReverseComplement(object), "\n",
         sep="")
     cat("bamTag:", paste(bamTag(object), collapse=", "), "\n")
+    cat("bamTagFilter:\n")
+    tagFilter <- lapply(bamTagFilter(object), function(x) {
+        if(is.character(x)) sQuote(x) else x
+    })
+    tagnms <- names(tagFilter)
+    for(idx in seq_along(tagFilter)) {
+        elt <- paste(tagnms[[idx]],
+                     paste(BiocGenerics:::selectSome(tagFilter[[idx]]),
+                           collapse=", "), sep=" : ")
+        cat(strwrap(elt, exdent=7, indent=2), sep="\n")
+    }
     cat("bamWhich:", sum(elementLengths(bamWhich(object))), "ranges\n")
     what <- paste("bamWhat: ", paste(bamWhat(object), collapse=", "))
     cat(strwrap(what, exdent=2), sep="\n")

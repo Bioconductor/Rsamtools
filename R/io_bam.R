@@ -3,6 +3,7 @@
 {
     flag <- bamFlag(param, asInteger=TRUE)
     simpleCigar <- bamSimpleCigar(param)
+    tagFilter <- bamTagFilter(param)
     which <- bamWhich(param)
     space <- 
         if (0L != length(space(which)))
@@ -13,7 +14,7 @@
 
     .io_check_exists(path(file))
     tryCatch({
-        .Call(func, .extptr(file), space, flag, simpleCigar, ...)
+        .Call(func, .extptr(file), space, flag, simpleCigar, tagFilter, ...)
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(file),
              "\n  index: ", index(file))

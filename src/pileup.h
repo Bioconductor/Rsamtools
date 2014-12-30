@@ -13,7 +13,7 @@
 extern "C" {
 #endif
     SEXP c_Pileup(SEXP ext, SEXP space, SEXP keepFlags,
-                  SEXP isSimpleCigar, SEXP reverseComplement,
+                  SEXP isSimpleCigar, SEXP tagFilter, SEXP reverseComplement,
                   SEXP yieldSize, SEXP obeyQname, SEXP asMates,
                   SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
                   SEXP schema, SEXP pileupParams);

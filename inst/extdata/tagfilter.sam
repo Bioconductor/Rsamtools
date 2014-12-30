@@ -1,0 +1,23 @@
+@HD	VN:1.3	SO:coordinate
+@SQ	SN:notags	LN:15
+@SQ	SN:twotags	LN:15
+@SQ	SN:itag	LN:15
+@SQ	SN:Atag	LN:15
+@SQ	SN:Ztag	LN:15
+@SQ	SN:Ftag	LN:15
+@SQ	SN:Htag	LN:15
+@SQ	SN:Btag	LN:15
+B7	0	notags	1	99	5M	*	0	0	ACNTA	=====
+B7	0	twotags	1	99	5M	*	0	0	ACNTA	=====	II:i:45	AA:A:d
+B7	0	itag	1	99	5M	*	0	0	ACNTA	=====	II:i:42
+B7	0	itag	1	99	5M	*	0	0	ACNTA	=====	II:i:43
+B7	0	itag	1	99	5M	*	0	0	ACNTA	=====	II:i:44
+B7	0	Atag	1	99	5M	*	0	0	ACNTA	=====	AA:A:a
+B7	0	Atag	1	99	5M	*	0	0	ACNTA	=====	AA:A:b
+B7	0	Atag	1	99	5M	*	0	0	ACNTA	=====	AA:A:c
+B7	0	Ztag	1	99	5M	*	0	0	ACNTA	=====	ZZ:Z:woo
+B7	0	Ztag	1	99	5M	*	0	0	ACNTA	=====	ZZ:Z:won
+B7	0	Ztag	1	99	5M	*	0	0	ACNTA	=====	ZZ:Z:wow
+B7	0	Ftag	1	99	5M	*	0	0	ACNTA	=====	FF:f:13.6
+B7	0	Htag	1	99	5M	*	0	0	ACNTA	=====	HH:H:1AE301
+B7	0	Btag	1	99	5M	*	0	0	ACNTA	=====	BB:B:i42,43

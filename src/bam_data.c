@@ -24,8 +24,8 @@ static BAM_DATA _Calloc_BAM_DATA(int blocksize, int cigar_buf_sz)
 
 BAM_DATA
 _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
-	       int reverseComplement, int yieldSize, int obeyQname,
-	       int asMates, char qnamePrefixEnd, 
+	       SEXP tagFilter, int reverseComplement, int yieldSize,
+               int obeyQname, int asMates, char qnamePrefixEnd, 
                char qnameSuffixStart, bam_qname_f qname_trim,
                void *extra)
 {
@@ -41,6 +41,7 @@ _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
     bd->keep_flag[0] = INTEGER(flag)[0];
     bd->keep_flag[1] = INTEGER(flag)[1];
     bd->cigar_flag = LOGICAL(isSimpleCigar)[0];
+    bd->tagfilter = _tagFilter_as_C_types(tagFilter);
     bd->reverseComplement = reverseComplement;
     bd->yieldSize = yieldSize;
     bd->obeyQname = obeyQname;
@@ -54,6 +55,7 @@ _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
 
 void _Free_BAM_DATA(BAM_DATA bd)
 {
+    _Free_C_TAGFILTER(bd->tagfilter);
     Free(bd->cigar_buf);
     Free(bd);
 }
@@ -267,6 +269,10 @@ int _filter1_BAM_DATA(const bam1_t * bam, BAM_DATA bd)
        test = (keep0 & ~flag) | (keep1 & flag) = 0010 | 1101 = 1111
        ~test = 0000 = FALSE
      */
+    
+    /* tagfilter */
+    if(bd->tagfilter != NULL && !_tagfilter(bam, bd->tagfilter, bd->irec))
+        return 0;
 
     uint32_t test = (bd->keep_flag[0] & ~bam->core.flag) |
         (bd->keep_flag[1] & bam->core.flag);

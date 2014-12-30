@@ -8,6 +8,9 @@
     function(file, param)
 {
     tmpl <- .scanBamTemplate(factor(levels=seqlevels(file)), bamTag(param))
+    ## set those elements of the template that are not 'tag' (treat
+    ## specially because nested list) nor specified by 'what'
+    ## parameter to NULL
     tmpl[!names(tmpl) %in% c(bamWhat(param), "tag")] <- list(NULL)
     if (0L == length(tmpl[["tag"]]))
         tmpl["tag"] <- list(NULL)

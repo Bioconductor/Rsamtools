@@ -14,7 +14,8 @@ typedef struct {
 SEXP bambuffer_init();
 SEXP bambuffer(int yieldSize, int as_mates);
 SEXP bambuffer_length(SEXP bufext);
-SEXP bambuffer_parse(SEXP bamext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP bambuffer_parse(SEXP bamext, SEXP space, SEXP keepFlags,
+                     SEXP isSimpleCigar, SEXP tagFilter,
                      SEXP bufext, SEXP reverseComplement, SEXP template_list);
 SEXP bambuffer_write(SEXP bufext, SEXP bamext, SEXP filter);
 

@@ -183,7 +183,7 @@ setMethod(scanBam, "BamFile",
         stop(msg)
     }
     if (0L == length(bamWhat(param)) && 0L == length(bamTag(param))) {
-        txt <- "no BAM fields selected for input (niether 'bamWhat(param)'
+        txt <- "no BAM fields selected for input (neither 'bamWhat(param)'
                 nor 'bamTag(param)' defined)"
         warning(paste(strwrap(txt), collapse="\n  "))
     }

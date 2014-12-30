@@ -3,6 +3,7 @@
 
 #include "Rdefines.h"
 #include "bamfile.h"
+#include "tagfilter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,6 +24,7 @@ typedef struct {
     int reverseComplement, yieldSize, obeyQname, asMates;
     char qnamePrefixEnd, qnameSuffixStart;
     bam_qname_f qname_trim;
+    C_TAGFILTER tagfilter;
 
     void *extra;
 } _BAM_DATA, *BAM_DATA;
@@ -34,8 +36,8 @@ enum {
 };
 
 BAM_DATA _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
-			int reverseComplement, int yieldSize, int obeyQname,
-			int asMates, char qnamePrefixEnd, 
+			SEXP tagFilter, int reverseComplement, int yieldSize,
+                        int obeyQname, int asMates, char qnamePrefixEnd, 
                         char qnameSuffixStart, bam_qname_f qname_trim,
                         void *extra);
 void _Free_BAM_DATA(BAM_DATA bd);

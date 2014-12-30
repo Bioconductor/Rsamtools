@@ -9,6 +9,7 @@ setClass("ScanBamParam",
            simpleCigar="logical",
            reverseComplement="logical",
            tag="character",
+           tagFilter="list",
            what="character",
            which="RangesList"))
 
