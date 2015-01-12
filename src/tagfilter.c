@@ -61,8 +61,8 @@ void _Free_C_TAGFILTER(C_TAGFILTER ctf) {
 static const char* const TagFilterType_str[]  = { "INTERNAL_ERROR: UNSET",
                                            "integer()", "character()" };
 
-static const int AUXTYPE_LEN = 12;
 static const char const auxtype[] = "cCsSiIfdAZHB";
+static const char const inttype[] = "cCsSiI";
 static const char* const auxtype_str[] = {
     "integer", "integer", "integer", "integer", "integer", "integer",
     "float", "double", "single printable character", "string",
@@ -71,32 +71,28 @@ static const char* const auxtype_str[] = {
 static void _typemismatch_error(const char *tagname, uint8_t *aux,
                                 TagFilterType tft, const char* val_as_string,
                                 int irec) {
-    static const char* msg = "tag type does not match tagFilter\n"
-        "    Found:      %s:%c:%s ('%s')\n"
-        "    Input type: %s\n"
-        "    Record:     %d";
-    int i;
-    for(i = 0; i < AUXTYPE_LEN; ++i) {
-        if(aux[0] == auxtype[i])
-            break;
-    }
-    const char *printable_name = auxtype_str[i];
-    Rf_error(msg, tagname, aux[0], val_as_string, printable_name,
-             TagFilterType_str[tft], irec);
+    static const char* msg =
+        "tag '%s' type ('%s') does not match tagFilter type\n"
+        "    BAM read tag:   %s:%c:%s\n"
+        "    tagFilter type: %s\n"
+        "    Record number:  %d";
+    int i = strchr(auxtype, aux[0]) - auxtype;
+    const char *printable_typename = auxtype_str[i];
+    const char tagtypechar = strchr(inttype, aux[0]) ? 'i' : aux[0];
+    Rf_error(msg, tagname, printable_typename, tagname, tagtypechar,
+             val_as_string, TagFilterType_str[tft], irec);
 }
 
 static void _typeunsupported_error(const char *tagname, uint8_t *aux,
     const char* val_as_string, int irec) {
-    static const char* msg = "tag type unsupported by tagFilter\n"
-        "    Found:  %s:%c:%s ('%s')\n"
-        "    Record: %d";
-    int i;
-    for(i = 0; i < AUXTYPE_LEN; ++i) {
-        if(aux[0] == auxtype[i])
-            break;
-    }
-    const char *printable_name = auxtype_str[i];
-    Rf_error(msg, tagname, aux[0], val_as_string, printable_name, irec);
+    static const char* msg =
+        "tag '%s' type ('%s') unsupported by tagFilter\n"
+        "    BAM read tag:  %s:%c:%s\n"
+        "    Record number: %d";
+    int i = strchr(auxtype, aux[0]) - auxtype;
+    const char *printable_typename = auxtype_str[i];
+    const char tagtypechar = strchr(inttype, aux[0]) ? 'i' : aux[0];
+    Rf_error(msg, tagname, printable_typename, tagname, tagtypechar, val_as_string, irec);
 }
 
 int _tagfilter(const bam1_t * bam, C_TAGFILTER tagfilter, int irec)
