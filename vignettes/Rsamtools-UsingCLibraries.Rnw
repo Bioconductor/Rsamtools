@@ -73,10 +73,14 @@ include $(SAMVARS)
 \end{verbatim}
 or otherwise in \verb|src/Makevars|:
 \begin{verbatim}
-SAMVARS=`echo 'cat(system.file("usretc", .Platform[["r_arch"]],\
-              "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
-      "${R_HOME}/bin/R" --vanilla --slave`
-include $(SAMVARS)
+SAMTOOLS_PATH=\
+	`echo 'cat(system.file("usrlib", .Platform[["r_arch"]],\
+		package="Rsamtools", mustWork=TRUE))' |\
+		"${R_HOME}/bin/R" --vanilla --slave`
+PKG_LIBS="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbcf.a"\
+	"$(SAMTOOLS_PATH)/libtabix.a" -lz -pthread
+PKG_CPPFLAGS=-D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
+	-D_LARGEFILE64_SOURCE
 \end{verbatim}
 This updates the environment variables \verb|$PKG_CPPFLAGS| and
 \verb|$PKG_LIBS|; if your \verb|Makefile| modifies these also, be sure
