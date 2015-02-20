@@ -61,8 +61,8 @@ void _Free_C_TAGFILTER(C_TAGFILTER ctf) {
 static const char* const TagFilterType_str[]  = { "INTERNAL_ERROR: UNSET",
                                            "integer()", "character()" };
 
-static const char auxtype[] = "cCsSiIfdAZHB";
-static const char inttype[] = "cCsSiI";
+static const char const auxtype[] = "cCsSiIfdAZHB";
+static const char const inttype[] = "cCsSiI";
 static const char* const auxtype_str[] = {
     "integer", "integer", "integer", "integer", "integer", "integer",
     "float", "double", "single printable character", "string",

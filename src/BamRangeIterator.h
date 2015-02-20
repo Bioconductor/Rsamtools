@@ -9,7 +9,6 @@
 
 class BamRangeIterator : public BamIterator {
 
-    int32_t tid, beg, end;
     bam_iter_t iter;
 
     void iterate_inprogress(bamFile bfile) {
@@ -23,11 +22,12 @@ class BamRangeIterator : public BamIterator {
 	    }
 	}
 
+	bool done = false;
 	do {
 	    process(bam);
 	    if (bam_iter_read(bfile, iter, bam) < 0)
-		iter_done = true;
-	} while (!iter_done);
+		iter_done = done = true;
+	} while (!done);
         mate_touched_templates();
     }
 
@@ -38,7 +38,7 @@ class BamRangeIterator : public BamIterator {
         for (it = templates.begin(); it != templates.end(); ++it)
             it->second.mate_inprogress_segments(bfile, bindex, complete,
                                                 qname_prefix, qname_suffix,
-                                                tid, beg, end);
+                                                qname_trim);
 
         BamIterator::finalize_inprogress(bfile);
         bam_seek(bfile, pos, SEEK_SET);
@@ -47,10 +47,10 @@ class BamRangeIterator : public BamIterator {
 public:
 
     // constructor / destructor
-    BamRangeIterator(const bam_index_t *bindex,
-                     int32_t tid, int32_t beg, int32_t end,
-                     BAM_DATA bam_data) :
-        BamIterator(bindex, bam_data), tid(tid), beg(beg), end(end)
+    BamRangeIterator(const bam_index_t *bindex, int tid, int beg,
+                     int end, char qname_prefix, char qname_suffix,
+                     bam_qname_f qname_trim) :
+        BamIterator(bindex, qname_prefix, qname_suffix, qname_trim) 
     {
 	iter = bam_iter_query(bindex, tid, beg, end);
     }
