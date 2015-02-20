@@ -16,24 +16,21 @@ class Template {
     typedef Segments::iterator iterator;
     typedef Segments::const_iterator const_iterator;
 
-    char *rg, *qname;
-    Segments inprogress, ambiguous, invalid; 
+    char *rg, *trimmed_qname;
+    Segments inprogress, ambiguous, invalid;
 
-    // check readgroup and qname
-    bool is_template(const bam1_t *mate, char *mate_qname) const {
-        int readgroup_ok, qname_ok;
-        uint8_t *aux = bam_aux_get(mate, "RG");
+    // check readgroup and trimmed_qname
+    bool is_template(const bam1_t *mate, const char *m_trimmed_qname) const {
+        /* read group */
+        const uint8_t *m_aux = bam_aux_get(mate, "RG");
         char *rg0 = NULL;
-        if (aux != 0)
-            rg0 = bam_aux2Z(aux);
-        if (rg == NULL && rg0 == NULL) // both null ok
-            readgroup_ok = 0;
-        else
-            readgroup_ok = strcmp(rg, rg0);
+        if (m_aux != 0)
+            rg0 = bam_aux2Z(m_aux);
+        if (!(((rg == NULL) && (rg0 == NULL)) || (strcmp(rg, rg0) == 0)))
+            return false;
 
-        qname_ok = strcmp(qname, mate_qname);
-
-        return (readgroup_ok == 0) && (qname_ok == 0);
+        /* trimmed qname */
+        return strcmp(trimmed_qname, m_trimmed_qname) == 0;
     }
 
 public:
@@ -41,9 +38,32 @@ public:
     Template() : rg(NULL) {}
 
     bool empty() const {
-        return inprogress.empty() && 
-               invalid.empty() &&
-               ambiguous.empty();
+        return inprogress.empty() && invalid.empty() && ambiguous.empty();
+    }
+
+    static const char *qname_trim(char *qname, const char prefix,
+                                  const char suffix)
+    {
+        char *end = qname + strlen(qname);
+
+        if (suffix != '\0')
+            for (char *e = end; e >= qname; e--) {
+                if (*e == suffix) {
+                    *e = '\0';
+                    end = e;
+                    break;
+                }
+            }
+
+        if (prefix != '\0')
+            for (char *s = qname; *s != '\0'; s++) {
+                if (*s == prefix) {
+                    memmove(qname, s + 1, end - s);
+                    break;
+                }
+            }
+
+        return qname;
     }
 
     // is_valid checks the following bit flags:
@@ -109,7 +129,7 @@ public:
     }
 
     // Returns true if potential mate, false if invalid
-    bool add_segment(const bam1_t *bam1) {
+    bool add_segment(const bam1_t *bam1, const char *t_qname) {
         bam1_t *bam = bam_dup1(bam1);
         // invalid 
         if (!is_valid(bam)) {
@@ -117,8 +137,9 @@ public:
             return false;
         }
         // new template
+        strcpy(bam1_qname(bam), t_qname);
         if (inprogress.empty()) {
-            qname = bam1_qname(bam);
+            trimmed_qname = bam1_qname(bam);
             uint8_t *aux = bam_aux_get(bam, "RG");
             if (aux != 0)
                 rg = bam_aux2Z(aux);
@@ -183,36 +204,42 @@ public:
     void mate_inprogress_segments(bamFile bfile, const bam_index_t * bindex,
                                   queue<Segments> &complete,
                                   char qname_prefix, char qname_suffix,
-                                  bam_qname_f qname_trim) {
+                                  int32_t tid, int32_t beg, int32_t end) {
         Segments found(inprogress);
         bam1_t *bam = bam_init1();
 
         // search for mate for each 'inprogress' segment
-        iterator it = found.begin();
-        while (it != found.end()) {
+        for (iterator it = found.begin(); it != found.end(); ++it) {
             bool touched = false;
             const bam1_t *curr = *it;
-            const int tid = curr->core.mtid;
-            const int beg = curr->core.mpos;
+            const int32_t mtid = curr->core.mtid;
+            const int32_t mbeg = curr->core.mpos;
+
+            if ((mbeg == -1) ||
+                // mate in iterator, so would have been discovered
+                ((tid == mtid) && (beg <= mbeg) && (end > mbeg)))
+                continue;
 
             // search all records that overlap the iterator
-            bam_iter_t iter = bam_iter_query(bindex, tid, beg, beg + 1);
+            bam_iter_t iter = bam_iter_query(bindex, mtid, mbeg, mbeg + 1L);
             while (bam_iter_read(bfile, iter, bam) >= 0) {
-                char *mate_qname = qname_trim(bam, qname_prefix, qname_suffix);
-                if (beg == -1)
+
+                if (bam->core.pos < beg) // iterate up to beg
+                    continue;
+                if (bam->core.pos > beg)
                     break;
+
+                const char *t_qname =
+                    qname_trim(bam1_qname(bam), qname_prefix, qname_suffix);
                 if (is_valid(bam) && 
-                    is_template(bam, mate_qname) &&
+                    is_template(bam, t_qname) &&
                     is_mate(curr, bam)) {
-                    touched = touched || add_segment(bam);
+                    touched = touched || add_segment(bam, t_qname);
                 }
             }
             bam_iter_destroy(iter);
 
-            if (touched)
-                mate(complete);
-
-            ++it;
+            mate(complete);
         }
 
         bam_destroy1(bam);

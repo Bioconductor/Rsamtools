@@ -225,46 +225,6 @@ int check_qname(char *last_qname, int bufsize, bam1_t *bam, int max)
     }
 }
 
-/* no qname trimming */
-char * _bam1_qname_no_trim(const bam1_t *bam, char qname_prefix, 
-                           char qname_suffix)
-{
-    return bam1_qname(bam);
-}
-
-/* trim qname prefix and / or suffix */
-char * _bam1_qname_trim(const bam1_t *bam, char qname_prefix, 
-                        char qname_suffix)
-{
-    char *s = bam1_qname(bam);
-    /* left trim */
-    char *start = s;
-    if (qname_prefix != '\0') {
-        for (; *start != '\0'; start++) {
-            if (*start == qname_prefix) {
-                start++;
-                break;
-            }
-        }
-        if (*start == '\0')
-            start = s;
-    }
-    /* right trim */
-    size_t len = strlen(start);
-    char *end = start + len;
-    for (; end != start; end--) {
-        if (*end == qname_suffix) {
-            len = end - start;
-            *end = '\0';
-            break;
-        }
-    }
-
-    memmove(s, start, len + 1);
-
-    return s; 
-} 
-
 int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
              bam_fetch_f parse1)
 {
@@ -523,9 +483,6 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
     if (suffix_elt != NA_STRING)
         qname_suffix = CHAR(suffix_elt)[0];
-    bam_qname_f qname_trim = _bam1_qname_no_trim;
-    if (qname_prefix != '\0' || qname_suffix != '\0')
-        qname_trim = _bam1_qname_trim;
 
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  tagFilter,
@@ -533,8 +490,7 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                                  INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
                                  LOGICAL(asMates)[0], 
-                                 qname_prefix, qname_suffix, qname_trim,
-                                 (void *) sbd);
+                                 qname_prefix, qname_suffix, (void *) sbd);
 
     int status = _do_scan_bam(bd, space, _filter_and_parse1,
                               _filter_and_parse1_mate, _finish1range_BAM_DATA);
@@ -566,7 +522,7 @@ SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     SEXP result = PROTECT(NEW_LIST(2));
     BAM_DATA bd =
         _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, tagFilter, 0,
-                       NA_INTEGER, 0, 0, '\0', '\0', NULL, result);
+                       NA_INTEGER, 0, 0, '\0', '\0', result);
 
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(bd->nrange));
     SET_VECTOR_ELT(result, 1, NEW_NUMERIC(bd->nrange));
@@ -646,15 +602,11 @@ _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
     if (suffix_elt != NA_STRING)
         qname_suffix = CHAR(suffix_elt)[0];
-    bam_qname_f qname_trim = _bam1_qname_no_trim;
-    if (qname_prefix != '\0' || qname_suffix != '\0')
-        qname_trim = _bam1_qname_trim;
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
                                  tagFilter, 0, INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
                                  LOGICAL(asMates)[0], 
-                                 qname_prefix, qname_suffix, qname_trim,
-                                 BAMBUFFER(ext));
+                                 qname_prefix, qname_suffix, BAMBUFFER(ext));
     int status =
         _do_scan_bam(bd, space, _prefilter1, _prefilter1_mate, NULL);
     if (status < 0) {
@@ -689,7 +641,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
     /* open destination */
     BAM_DATA bd =
         _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, tagFilter, 0,
-                       NA_INTEGER, 0, 0, '\0', '\0', NULL, NULL);
+                       NA_INTEGER, 0, 0, '\0', '\0', NULL);
     /* FIXME: this just copies the header... */
     bam_header_t *header = BAMFILE(bfile)->file->header;
     samfile_t *f_out = _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),

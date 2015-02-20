@@ -8,6 +8,7 @@
 #include <set>
 #include <map>
 #include "Template.h"
+#include "bam_data.h"
 
 class BamIterator {
 
@@ -16,8 +17,8 @@ public:
     const bam_index_t *bindex;
     bam1_t *bam;
     bool iter_done;
+    BAM_DATA bam_data;
     char qname_prefix, qname_suffix;
-    bam_qname_f qname_trim;
 
     typedef map<string, Template> Templates;
     Templates templates;
@@ -27,11 +28,10 @@ public:
     set<string> touched_templates;
 
     // constructor / destructor
-    BamIterator(const bam_index_t *bindex, char qname_prefix, 
-        char qname_suffix, bam_qname_f qname_trim) :
-        bindex(bindex), bam(NULL), iter_done(false), 
-        qname_prefix(qname_prefix), qname_suffix(qname_suffix),
-        qname_trim(qname_trim) {}
+    BamIterator(const bam_index_t *bindex, BAM_DATA bam_data) :
+        bindex(bindex), bam(NULL), iter_done(false),
+        bam_data(bam_data), qname_prefix(bam_data->qnamePrefixEnd),
+        qname_suffix(bam_data->qnameSuffixStart) {}
 
     virtual ~BamIterator() {
         if (NULL != bam)
@@ -39,28 +39,40 @@ public:
     }
 
     void mate_touched_templates() {
+        Rprintf("mate_touched_templates start size: %d\n", templates.size());
         for (set<string>::iterator it=touched_templates.begin();
              it != touched_templates.end(); ++it) {
             templates[*it].mate(complete);
             if (templates[*it].empty())
                 templates.erase(*it);
         }
+        Rprintf("mate_touched_templates end size: %d\n", templates.size());
         touched_templates.clear();
     }
 
     // process
     void process(const bam1_t *bam) {
-        char *s = qname_trim(bam, qname_prefix, qname_suffix);
-        if (templates[s].add_segment(bam))
-            touched_templates.insert(s);
+        if (!_filter1_BAM_DATA(bam, bam_data))
+            return;
+        const char *trimmed_qname =
+            Template::qname_trim(bam1_qname(bam), qname_prefix, qname_suffix);
+        if (templates[trimmed_qname].add_segment(bam, trimmed_qname))
+            touched_templates.insert(trimmed_qname);
     }
 
     // yield
     void yield(bamFile bfile, bam_mates_t *result) {
-        if (complete.empty())
+        if (complete.empty()) {
+            Rprintf("iterate_inprogress\n");
             iterate_inprogress(bfile);
-        if (complete.empty())
+            Rprintf("iterate_inprogress complete.size(): %d\n", complete.size());
+        }
+        if (complete.empty()) {
+            Rprintf("finalize_inprogress\n");
             finalize_inprogress(bfile);
+            Rprintf("finalize_inprogress complete.size(): %d\n",
+                    complete.size());
+        }
 
         list<const bam1_t *> elts;
         int mated = 1;
