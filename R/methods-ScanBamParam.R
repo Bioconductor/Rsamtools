@@ -148,12 +148,14 @@ bamFlag <- function(object, asInteger=FALSE) {
     ## FIXME: make this support input like bamFlag
 {
     slot(object, "flag") <- value
+    validObject(object)
     object
 }
 bamSimpleCigar <- function(object) slot(object, "simpleCigar")
 "bamSimpleCigar<-" <- function(object, value)
 {
     slot(object, "simpleCigar") <- value
+    validObject(object)
     object
 }
 bamReverseComplement <-
@@ -161,18 +163,21 @@ bamReverseComplement <-
 "bamReverseComplement<-" <- function(object, value)
 {
     slot(object, "reverseComplement") <- value
+    validObject(object)
     object
 }
 bamTag <- function(object) slot(object, "tag")
 "bamTag<-" <- function(object, value)
 {
     slot(object, "tag") <- value
+    validObject(object)
     object
 }
 bamTagFilter <- function(object) slot(object, "tagFilter")
 "bamTagFilter<-" <- function(object, value)
 {
     slot(object, "tagFilter") <- .normalize_tagFilter(value)
+    validObject(object)
     object
 }
 
@@ -185,6 +190,7 @@ setReplaceMethod("bamWhich", c("ScanBamParam", "RangesList"),
     function(object, value) 
 {
     slot(object, "which") <- value
+    validObject(object)
     object
 })
 
@@ -192,6 +198,7 @@ setReplaceMethod("bamWhich", c("ScanBamParam", "GRanges"),
     function(object, value) 
 {
     bamWhich(object) <- split(ranges(value), seqnames(value))
+    validObject(object)
     object
 })
         
@@ -199,6 +206,7 @@ setReplaceMethod("bamWhich", c("ScanBamParam", "RangedData"),
     function(object, value) 
 {
     bamWhich(object) <- ranges(value)
+    validObject(object)
     object
 })
         
@@ -206,6 +214,7 @@ setReplaceMethod("bamWhich", c("ScanBamParam", "ANY"),
     function(object, value) 
 {
     bamWhich(object) <-  as(value, "RangesList")
+    validObject(object)
     object
 })
 
@@ -213,6 +222,7 @@ bamWhat <- function(object) slot(object, "what")
 "bamWhat<-" <- function(object, value)
 {
     slot(object, "what") <- value
+    validObject(object)
     object
 }
 

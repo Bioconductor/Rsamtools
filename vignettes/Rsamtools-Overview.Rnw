@@ -173,13 +173,8 @@ causes \Rfunction{scanBam} to report that the ``EOF marker is
 absent''; this message can safely be ignored.
 
 \bam{} files may be read by functions in packages other than
-\Biocpkg{Rsamtools}. In \Rpackage{ShortRead}, \Rfunction{readAligned} invoked
-with \Rcode{type="bam"} will read \bam{} files in to an
-\Rclass{AlignedRead} object. This function takes a \Rcode{param}
-argument, just as \Rfunction{scanBam}, so the user can control which
-portions of the file are input. Similar input facilities are available
-through the \Rfunction{readGAlignments} function in
-\Rpackage{GenomicAlignments}.
+\Biocpkg{Rsamtools}, in particular the \Rfunction{readGAlignments}
+family of functions in \Rpackage{GenomicAlignments}.
 
 Additional ways of interacting with \bam{} files include
 \Rfunction{scanBamHeader} (to extract header information) and

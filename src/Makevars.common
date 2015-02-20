@@ -19,11 +19,11 @@ DFLAGS = -D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
   -Dexit=_samtools_exit \
   -Dabort=_samtools_abort
 
-PKG_CFLAGS += \
+PKG_CFLAGS0 = \
   $(SHLIB_OPENMP_CFLAGS) \
   $(DFLAGS) -I./samtools -I./samtools/bcftools -I./tabix
 
-PKG_LIBS += -pthread \
+PKG_LIBS0 = -pthread \
   $(SHLIB_OPENMP_CFLAGS) \
   "${R_PACKAGE_DIR}/usrlib${R_ARCH}/libbam.a" \
   "${R_PACKAGE_DIR}/usrlib${R_ARCH}/libbcf.a" \

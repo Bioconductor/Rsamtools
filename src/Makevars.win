@@ -2,8 +2,8 @@ include Makevars.common
 
 # order of -llib important -- bcf, bam before ws2_32
 
-PKG_CFLAGS+=-D_LARGEFILE64_SOURCE
-PKG_LIBS+=-lws2_32
+PKG_CFLAGS = ${PKG_CFLAGS0} -D_LARGEFILE64_SOURCE
+PKG_LIBS = ${PKG_LIBS0} -lws2_32
 
 ZLIB_CFLAGS+=$(shell echo 'zlibbioc::pkgconfig("PKG_CFLAGS")'|\
     "${R_HOME}/bin/R" --vanilla --slave)

@@ -171,7 +171,6 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
     function(X, FUN, ..., fapply=ShortRead:::.fapply(),
              reduce=ShortRead:::.reduce(), verbose=FALSE)
 {
-    require(ShortRead)
     result <- fapply(X, FUN, ..., verbose=verbose)
     reduce(result)
 }
