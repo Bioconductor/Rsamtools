@@ -365,7 +365,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   }
 }
 
-\author{Nate Hayden \url{nhayden@fhcrc.org}}
+\author{Nathaniel Hayden \url{nhayden@fredhutch.org}}
 
 %% This information must go somewhere--essential for an outside
 %% developer to help build context quickly
