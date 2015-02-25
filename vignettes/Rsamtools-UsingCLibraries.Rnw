@@ -80,6 +80,9 @@ SAMVARS=$(shell echo 'cat(system.file("usretc", .Platform[["r_arch"]],\
     "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
     "${R_HOME}/bin/R" --vanilla --slave)
 include $(SAMVARS)
+
+PKG_LIBS=$(SAMTOOLS_LIBS)
+PKG_CPPFLAGS=$(SAMTOOLS_CPPFLAGS)
 \end{verbatim}
 
 and with the following code in \verb|src/Makevars| for all other platforms:
