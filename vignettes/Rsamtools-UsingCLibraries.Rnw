@@ -99,21 +99,11 @@ PKG_CPPFLAGS=$(SAMTOOLS_CPPFLAGS)
 
 This updates the environment variables \verb|$PKG_CPPFLAGS| and
 \verb|$PKG_LIBS|; if your \verb|Makevars|/\verb|Makevars.win| modifies
-these also, be sure to do so appropriately to maximize portability:
-
-For \verb|Makevars|, add to the respective \verb|PKG_LIBS| or
-\verb|PKG_CPPFLAGS| line, e.g.,
+these also, do so by adding to the respecitve line, e.g.,
 
 \begin{verbatim}
 PKG_LIBS=$(SAMTOOLS_LIBS) -lfoo
 PKG_CPPFLAGS=$(SAMTOOLS_CPPFLAGS) -I/path/bar
-\end{verbatim}
-
-For Makevars.win, use the \verb|+=| append syntax, e.g.,
-
-\begin{verbatim}
-PKG_LIBS+=-lfoo
-PKG_CPPFLAGS+=-I/path/bar
 \end{verbatim}
 
 \end{document}
