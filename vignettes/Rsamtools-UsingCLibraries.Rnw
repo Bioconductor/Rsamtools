@@ -86,23 +86,34 @@ and with the following code in \verb|src/Makevars| for all other platforms:
 
 \begin{verbatim}
 SAMTOOLS_PATH=\
-    `echo 'cat(system.file("usrlib", .Platform[["r_arch"]],\
-        package="Rsamtools", mustWork=TRUE))' |\
+    `echo 'cat(system.file("usrlib", package="Rsamtools", mustWork=TRUE))' |\
         "${R_HOME}/bin/R" --vanilla --slave`
-PKG_LIBS="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbcf.a"\
+SAMTOOLS_LIBS="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbcf.a"\
     "$(SAMTOOLS_PATH)/libtabix.a" -lz -pthread
-PKG_CPPFLAGS=-D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
+SAMTOOLS_CPPFLAGS=-D_USE_KNETFILE -DBGZF_CACHE -D_FILE_OFFSET_BITS=64 \
     -D_LARGEFILE64_SOURCE
+
+PKG_LIBS=$(SAMTOOLS_LIBS)
+PKG_CPPFLAGS=$(SAMTOOLS_CPPFLAGS)
 \end{verbatim}
 
 This updates the environment variables \verb|$PKG_CPPFLAGS| and
-\verb|$PKG_LIBS|; if your \verb|Makefile| modifies these also, be sure
-to use appropriate syntax like
+\verb|$PKG_LIBS|; if your \verb|Makevars|/\verb|Makevars.win| modifies
+these also, be sure to do so appropriately to maximize portability:
+
+For \verb|Makevars|, add to the respective \verb|PKG_LIBS| or
+\verb|PKG_CPPFLAGS| line, e.g.,
 
 \begin{verbatim}
-    PKG_LIBS="$(PKG_LIBS)" -l...
+PKG_LIBS=$(SAMTOOLS_LIBS) -lfoo
+PKG_CPPFLAGS=$(SAMTOOLS_CPPFLAGS) -I/path/bar
 \end{verbatim}
 
-to add to environment variables in a cross-platform way.
+For Makevars.win, use the \verb|+=| append syntax, e.g.,
+
+\begin{verbatim}
+PKG_LIBS+=-lfoo
+PKG_CPPFLAGS+=-I/path/bar
+\end{verbatim}
 
 \end{document}

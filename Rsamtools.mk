@@ -4,5 +4,5 @@ SAMTOOLS_PATH=\
                  "${R_HOME}/bin/R" --vanilla --slave`
 PKG_LIBS+="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbcf.a"\
 	"$(SAMTOOLS_PATH)/libtabix.a" -lz -pthread
-PKG_CPPFLAGS+=-D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
+PKG_CPPFLAGS+=-D_USE_KNETFILE -DBGZF_CACHE -D_FILE_OFFSET_BITS=64 \
 	-D_LARGEFILE64_SOURCE
