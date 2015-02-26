@@ -12,38 +12,33 @@
 using namespace std;
 
 class Template {
+
     typedef list<const bam1_t *> Segments;
     typedef Segments::iterator iterator;
     typedef Segments::const_iterator const_iterator;
 
-    char *rg, *qname;
-    Segments inprogress, ambiguous, invalid; 
+    Segments inprogress, ambiguous, invalid;
 
-    // check readgroup and qname
-    bool is_template(const bam1_t *mate, char *mate_qname) const {
-        int readgroup_ok, qname_ok;
-        uint8_t *aux = bam_aux_get(mate, "RG");
-        char *rg0 = NULL;
-        if (aux != 0)
-            rg0 = bam_aux2Z(aux);
-        if (rg == NULL && rg0 == NULL) // both null ok
-            readgroup_ok = 0;
-        else
-            readgroup_ok = strcmp(rg, rg0);
+    // check readgroup and trimmed_qname
+    bool is_template(const string trimmed_qname,
+                     const string m_trimmed_qname,
+                     const bam1_t *mate) const {
+        bool test = false;
 
-        qname_ok = strcmp(qname, mate_qname);
+        /* read group */
+        const uint8_t
+            *aux = bam_aux_get(inprogress.front(), "RG"),
+            *m_aux = bam_aux_get(mate, "RG");
+        const char
+            *rg = (aux == NULL) ? NULL : bam_aux2Z(aux),
+            *m_rg = (m_aux == NULL) ? NULL : bam_aux2Z(m_aux);
 
-        return (readgroup_ok == 0) && (qname_ok == 0);
-    }
+        if ((aux == NULL && m_aux == NULL) ||
+            (aux != NULL && m_aux != NULL && strcmp(rg, m_rg) == 0))
+            test = true;
 
-public:
-
-    Template() : rg(NULL) {}
-
-    bool empty() const {
-        return inprogress.empty() && 
-               invalid.empty() &&
-               ambiguous.empty();
+        /* trimmed qname */
+        return test && trimmed_qname.compare(m_trimmed_qname) == 0;
     }
 
     // is_valid checks the following bit flags:
@@ -70,7 +65,8 @@ public:
     //      segment1 mpos matches segment2 pos AND
     //      segment2 mpos matches segment1 pos
     // 6. tid match
-    bool is_mate(const bam1_t *bam, const bam1_t *mate) const {
+    bool is_mate(const bam1_t *bam, const bam1_t *mate,
+                 const uint32_t *target_len) const {
         const bool bam_read1 = bam->core.flag & BAM_FREAD1;
         const bool mate_read1 = mate->core.flag & BAM_FREAD1;
         const bool bam_read2 = bam->core.flag & BAM_FREAD2;
@@ -83,15 +79,19 @@ public:
         const bool mate_rev = mate->core.flag & BAM_FREVERSE;
         const bool bam_mrev = bam->core.flag & BAM_FMREVERSE;
         const bool mate_mrev = mate->core.flag & BAM_FMREVERSE;
+        const uint32_t
+            pos = bam->core.pos % target_len[bam->core.tid],
+            mpos = bam->core.mpos % target_len[bam->core.mtid],
+            mate_pos = mate->core.pos % target_len[mate->core.tid],
+            mate_mpos = mate->core.mpos % target_len[mate->core.mtid];
         return
             ((bam_read1 ^ bam_read2) && (mate_read1 ^ mate_read2)) &&
             (bam_read1 != mate_read1) &&
             (bam_secondary == mate_secondary) &&
             (bam_rev != mate_rev) &&
             ((bam_mrev == mate_rev) || (bam_rev == mate_mrev)) &&
-            (bam_proper == mate_proper) && 
-            (bam->core.pos == mate->core.mpos) && 
-            (bam->core.mpos == mate->core.pos) &&
+            (bam_proper == mate_proper) &&
+            (pos == mate_mpos) && (mpos == mate_pos) &&
             (bam->core.mtid == mate->core.tid);
     }
 
@@ -108,26 +108,51 @@ public:
         complete.push(tmp);
     }
 
+public:
+
+    Template() {}
+
+    bool empty() const {
+        return inprogress.empty() && invalid.empty() && ambiguous.empty();
+    }
+
+    static const char *qname_trim(char *qname, const char prefix,
+                                  const char suffix)
+    {
+        char *end = qname + strlen(qname);
+
+        if (suffix != '\0')
+            for (char *e = end; e >= qname; e--) {
+                if (*e == suffix) {
+                    *e = '\0';
+                    end = e;
+                    break;
+                }
+            }
+
+        if (prefix != '\0')
+            for (char *s = qname; *s != '\0'; s++) {
+                if (*s == prefix) {
+                    memmove(qname, s + 1, end - s);
+                    break;
+                }
+            }
+
+        return qname;
+    }
+
     // Returns true if potential mate, false if invalid
     bool add_segment(const bam1_t *bam1) {
         bam1_t *bam = bam_dup1(bam1);
-        // invalid 
         if (!is_valid(bam)) {
             invalid.push_back(bam);
             return false;
-        }
-        // new template
-        if (inprogress.empty()) {
-            qname = bam1_qname(bam);
-            uint8_t *aux = bam_aux_get(bam, "RG");
-            if (aux != 0)
-                rg = bam_aux2Z(aux);
         }
         inprogress.push_back(bam);
         return true;
     }
 
-    void mate(queue<Segments> &complete) {
+    void mate(queue<Segments> &complete, const uint32_t *target_len) {
         const int unmated=-1, multiple=-2, processed=-3;
         vector<pair<int, const bam1_t *> >
             status(inprogress.size(), pair<int, const bam1_t *>(unmated, NULL));
@@ -140,7 +165,7 @@ public:
             Segments::iterator it1 = it0;
             for (unsigned int j = i + 1; j < inprogress.size(); ++j) {
                 ++it1;
-                if (is_mate(*it0, *it1)) {
+                if (is_mate(*it0, *it1, target_len)) {
                     status[i].first = status[i].first == unmated ? j : multiple;
                     status[j].first = status[j].first == unmated ? i : multiple;
                 }
@@ -183,36 +208,44 @@ public:
     void mate_inprogress_segments(bamFile bfile, const bam_index_t * bindex,
                                   queue<Segments> &complete,
                                   char qname_prefix, char qname_suffix,
-                                  bam_qname_f qname_trim) {
+                                  int32_t tid, int32_t beg, int32_t end,
+                                  uint32_t *target_len,
+                                  string trimmed_qname) {
         Segments found(inprogress);
         bam1_t *bam = bam_init1();
 
         // search for mate for each 'inprogress' segment
-        iterator it = found.begin();
-        while (it != found.end()) {
+        for (iterator it = found.begin(); it != found.end(); ++it) {
             bool touched = false;
             const bam1_t *curr = *it;
-            const int tid = curr->core.mtid;
-            const int beg = curr->core.mpos;
+            const int32_t mtid = curr->core.mtid;
+            const int32_t mpos = curr->core.mpos % target_len[mtid];
+
+            if ((mpos == -1) ||
+                // mate in iterator, so would have been discovered
+                ((tid == mtid) && (beg <= mpos) && (end > mpos)))
+                continue;
 
             // search all records that overlap the iterator
-            bam_iter_t iter = bam_iter_query(bindex, tid, beg, beg + 1);
+            bam_iter_t iter = bam_iter_query(bindex, mtid, mpos, mpos + 1L);
             while (bam_iter_read(bfile, iter, bam) >= 0) {
-                char *mate_qname = qname_trim(bam, qname_prefix, qname_suffix);
-                if (beg == -1)
+                
+                if (bam->core.pos < mpos) // iterate up to mpos
+                    continue;
+                if (bam->core.pos > mpos)
                     break;
+
+                const char *mate_trimmed_qname =
+                    qname_trim(bam1_qname(bam), qname_prefix, qname_suffix);
                 if (is_valid(bam) && 
-                    is_template(bam, mate_qname) &&
-                    is_mate(curr, bam)) {
+                    is_template(trimmed_qname, mate_trimmed_qname, bam) &&
+                    is_mate(curr, bam, target_len)) {
                     touched = touched || add_segment(bam);
                 }
             }
             bam_iter_destroy(iter);
 
-            if (touched)
-                mate(complete);
-
-            ++it;
+            mate(complete, target_len);
         }
 
         bam_destroy1(bam);

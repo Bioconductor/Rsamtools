@@ -61,7 +61,7 @@ static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
-                                 LOGICAL(asMates)[0], '\0', '\0', NULL,
+                                 LOGICAL(asMates)[0], '\0', '\0',
                                  (void *) &shim);
     int status = 0;
     if(!(dynamic_cast<Pileup&>(buffer).isBufferedPileup())) {
