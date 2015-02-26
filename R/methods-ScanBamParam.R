@@ -1,48 +1,57 @@
+## Native method first.
+setMethod(ScanBamParam, c(which="RangesList"),
+          function(flag=scanBamFlag(), simpleCigar=FALSE,
+                   reverseComplement=FALSE, tag=character(0),
+                   tagFilter=list(), what=character(0), which)
+{
+    if (is.null(names(which))) {
+        if (length(which) != 0L)
+            stop(wmsg("'which' must have names in \"ScanBamParam\" ",
+                      "method for RangesList objects "))
+        names(which) <- character()
+    }
+    new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
+        reverseComplement=reverseComplement, tag=tag,
+        tagFilter=.normalize_tagFilter(tagFilter), what=what,
+        which=which)
+})
+
 setMethod(ScanBamParam, c(which="missing"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
                    tagFilter=list(), what=character(0), which)
 {
     which <- IRangesList()
-    names(which) <- character()
-    new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
-        reverseComplement=reverseComplement, tag=tag,
-        tagFilter=.normalize_tagFilter(tagFilter), what=what,
-        which=which)
+    ScanBamParam(flag=flag, simpleCigar=simpleCigar,
+                 reverseComplement=reverseComplement, tag=tag,
+                 tagFilter=tagFilter, what=what, which=which)
 })
 
+## Default method.
 setMethod(ScanBamParam, c(which="ANY"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
                    tagFilter=list(), what=character(0), which)
 {
     which <- as(which, "RangesList")
-    new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
-        reverseComplement=reverseComplement, tag=tag,
-        tagFilter=.normalize_tagFilter(tagFilter), what=what,
-        which=which)
+    ScanBamParam(flag=flag, simpleCigar=simpleCigar,
+                 reverseComplement=reverseComplement, tag=tag,
+                 tagFilter=tagFilter, what=what, which=which)
 })
 
-setMethod(ScanBamParam, c(which="RangesList"),
-          function(flag=scanBamFlag(), simpleCigar=FALSE,
-                   reverseComplement=FALSE, tag=character(0),
-                   tagFilter=list(), what=character(0), which)
-{
-    new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
-        reverseComplement=reverseComplement, tag=tag,
-        tagFilter=.normalize_tagFilter(tagFilter), what=what,
-        which=which)
-})
-
+## Note that the 2 methods below are not needed. Coercing a RangedData or
+## GRanges to RangesList works and produces exactly what the methods below
+## are doing by hand. So the default ScanBamParam method above just works
+## on a RangedData or GRanges. -- Herv\'e
 setMethod(ScanBamParam, c(which="RangedData"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
                    tagFilter=list(), what=character(0), which)
 {
+    which <- ranges(which)
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                  reverseComplement=reverseComplement, tag=tag,
-                 tagFilter=.normalize_tagFilter(tagFilter), what=what,
-                 which=ranges(which))
+                 tagFilter=tagFilter, what=what, which=which)
 })
 
 setMethod(ScanBamParam, c(which="GRanges"),
@@ -50,10 +59,10 @@ setMethod(ScanBamParam, c(which="GRanges"),
                    reverseComplement=FALSE, tag=character(0),
                    tagFilter=list(), what=character(0), which)
 {
+    which <- split(ranges(which), seqnames(which))
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                  reverseComplement=reverseComplement, tag=tag,
-                 tagFilter=.normalize_tagFilter(tagFilter), what=what,
-                 which=split(ranges(which), seqnames(which)))
+                 tagFilter=tagFilter, what=what, which=which)
 })
 
 ## adapted from ?integer
