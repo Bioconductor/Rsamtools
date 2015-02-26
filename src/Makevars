@@ -4,8 +4,6 @@ PKG_CFLAGS = ${PKG_CFLAGS0}
 PKG_LIBS = ${PKG_LIBS0} -lz
 
 libs0: libbam.a libbcf.a libtabix.a
-	mkdir -p "${R_PACKAGE_DIR}/usretc${R_ARCH}"
-	cp ../Rsamtools.mk "${R_PACKAGE_DIR}/usretc${R_ARCH}"
 
 libbam.a: $(BAMOBJ)
 	$(AR) -crus $@ $(BAMOBJ)

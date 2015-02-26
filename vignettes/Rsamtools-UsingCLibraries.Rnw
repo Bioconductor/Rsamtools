@@ -11,7 +11,7 @@ BiocStyle::latex()
 
 \title{Using samtools C libraries with \Biocpkg{Rsamtools}}
 \author{Martin Morgan}
-\date{Modified: 21 March, 2011. Compiled: \today}
+\date{Modified: 26 February, 2015. Compiled: \today}
 
 \begin{document}
 
