@@ -63,7 +63,8 @@ class Template {
     //                       flag 0x10 of the other mate and vice versa
     // 4. Bit 0x2: Both proper OR both not proper 
     // 5. mpos match:
-    //      segment1 mpos matches segment2 pos AND
+    //      bit 0x10 of rec1 == bit 0x20 of rec2 AND
+    //      bit 0x10 or rec2 == bit 0x20 of rec1
     //      segment2 mpos matches segment1 pos
     // 6. tid match
     bool is_mate(const bam1_t *bam, const bam1_t *mate,
