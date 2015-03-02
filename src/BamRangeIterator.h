@@ -1,4 +1,4 @@
-// BamFileIterator.h:
+// BamRangeIterator.h:
 // Iterator used when reading ranges from a bam file.
 
 #ifndef BAMRANGEITERATOR_H

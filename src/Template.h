@@ -59,7 +59,8 @@ class Template {
     // 1. Bit 0x40 and 0x80: Segments are a pair of first/last OR
     //    neither segment is marked first/last
     // 2. Bit 0x100: Both segments are secondary OR both not secondary
-    // 3. Bit 0x10 and 0x20: Segments are on opposite strands
+    // 3. Bit 0x10 and 0x20: Strand flag 0x20 of one mate must match strand
+    //                       flag 0x10 of the other mate and vice versa
     // 4. Bit 0x2: Both proper OR both not proper 
     // 5. mpos match:
     //      segment1 mpos matches segment2 pos AND
@@ -88,8 +89,8 @@ class Template {
             ((bam_read1 ^ bam_read2) && (mate_read1 ^ mate_read2)) &&
             (bam_read1 != mate_read1) &&
             (bam_secondary == mate_secondary) &&
-            (bam_rev != mate_rev) &&
-            ((bam_mrev == mate_rev) || (bam_rev == mate_mrev)) &&
+            (((bam_rev != mate_mrev) && (bam_mrev != mate_rev)) || 
+            ((bam_rev == mate_mrev) && (bam_mrev == mate_rev))) &&
             (bam_proper == mate_proper) &&
             (pos == mate_mpos) && (mpos == mate_pos) &&
             (bam->core.mtid == mate->core.tid);
