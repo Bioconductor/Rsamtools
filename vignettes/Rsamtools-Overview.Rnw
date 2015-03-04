@@ -345,11 +345,11 @@ transcripts; by loading the \Rpackage{parallel} package, we tell
 \Biocpkg{Rsamtools} to use as many cores as are available on our machine (the
 \Rpackage{parallel} package does not provide parallel functionality on
  Windows computers)
-<<readGAlignmentsFromBam, eval=FALSE>>=
+<<readGAlignments, eval=FALSE>>=
 library(GenomicAlignments)
 library(parallel)
 options(srapply_fapply="parallel", mc.cores=detectCores())
-olaps <- readGAlignmentsFromBam(bv)
+olaps <- readGAlignments(bv)
 @ 
 %% 
 The resulting object is about 11 MB in size. To avoid having to
