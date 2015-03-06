@@ -1,5 +1,9 @@
 \name{deprecated}
 \Rdversion{1.1}
+\alias{BamSampler}
+\alias{BamSampler-class}
+\alias{scanBam,BamSampler-method}
+\alias{show,BamSampler-method}
 \alias{yieldTabix}
 \alias{yieldTabix,TabixFile-method}
 \title{Deprecated functions}
@@ -9,6 +13,8 @@
   For \code{yieldTabix}, use the \code{yieldSize} argument of
   \code{TabixFiles}. 
 
+  For \code{BamSampler}, use \code{REDUCEsampler} with
+  \code{reduceByYield} in the \code{GenomicFiles} package. 
 }
 
 \author{

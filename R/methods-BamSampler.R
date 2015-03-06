@@ -5,6 +5,8 @@ BamSampler <-
               asMates = FALSE, qnamePrefixEnd = NA,
               qnameSuffixStart = NA) 
 {
+    .Deprecated(msg=paste0("'BamSampler' is deprecated. Use 'REDUCEsampler' ",
+                           "in the GenomicFiles package"))
     qnamePrefixEnd <- .check_qname_arg(qnamePrefixEnd, "qnamePrefixEnd")
     qnameSuffixStart <- .check_qname_arg(qnameSuffixStart, "qnameSuffixStart")
     .RsamtoolsFile(.BamSampler, .normalizePath(file), .normalizePath(index), 
