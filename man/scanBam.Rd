@@ -221,8 +221,9 @@ mergeBam(files, destination, ...)
       \code{cigar} encoding; normally equal to the width of the query
       returned in \code{seq}.
 
-    \item mapq: This is the MAPQ field in SAM Spec v1.4.
-      The MAPping Quality.
+    \item mapq: This is the MAPQ field in SAM Spec v1.4.  The MAPping
+      Quality. MAPQ scores of '255' are represented as
+      \code{NA_integer_}.
 
     \item cigar: This is the CIGAR field in SAM Spec v1.4.
       The CIGAR string.
