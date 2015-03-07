@@ -333,7 +333,7 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
                 NA_INTEGER : bam_cigar2qlen(&bam->core, bam1_cigar(bam));
             break;
         case MAPQ_IDX:
-            if ((bam->core.flag & BAM_FUNMAP) || (255 == bam->core.qual))
+            if ((bam->core.flag & BAM_FUNMAP))
                 sbd->mapq[idx] = NA_INTEGER;
             else sbd->mapq[idx] = bam->core.qual;
             break;

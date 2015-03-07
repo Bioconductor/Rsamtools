@@ -7,6 +7,12 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
     o Support for cigars > 32767 characters
 
+    o Mate pairs use pos and mpos values calculated modulo target
+      length for pairing, facilitating some representations of mates
+      on circular chromosomes.
+
+    o scanBam no longer translates mapq '255' to 'NA'
+
 CHANGES IN VERSION 1.17.0
 -------------------------
 

@@ -222,8 +222,7 @@ mergeBam(files, destination, ...)
       returned in \code{seq}.
 
     \item mapq: This is the MAPQ field in SAM Spec v1.4.  The MAPping
-      Quality. MAPQ scores of '255' are represented as
-      \code{NA_integer_}.
+      Quality.
 
     \item cigar: This is the CIGAR field in SAM Spec v1.4.
       The CIGAR string.
