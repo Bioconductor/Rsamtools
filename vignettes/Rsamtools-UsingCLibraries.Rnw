@@ -50,7 +50,7 @@ library to the location \verb|include/samtools|.
 
 To use these libraries, the third party package developer needs to (1)
 discover the appropriate header files when their package is built, and
-(2) locate the static library when their package is used.
+(2) link in the libraries.
 
 Note that in order to link correctly across platforms your package
 must provide \emph{both} the respective \verb|src/Makevars| \emph{and}
