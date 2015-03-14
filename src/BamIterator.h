@@ -26,9 +26,20 @@ protected:
 
     const bam_index_t *bindex;
     bam_header_t *header;
-    char qname_prefix, qname_suffix;
-
     bam1_t *bam;
+
+    char qname_prefix_end() const {
+        if (bam_data == NULL)
+            Rf_error("[qname_prefix_end] report to maintainer('Rsamtools')");
+        return bam_data->qnamePrefixEnd;
+    }
+
+    char qname_suffix_start() const {
+        if (bam_data == NULL)
+            Rf_error("[qname_suffix_start] report to maintainer('Rsamtools')");
+        return bam_data->qnameSuffixStart;
+    }
+        
 
     void mate_touched_templates() {
         for (set<string>::iterator it=touched_templates.begin();
@@ -42,10 +53,13 @@ protected:
 
     // process
     void process(const bam1_t *bam) {
+        if (bam_data == NULL)
+            Rf_error("[process] report to maintainer('Rsamtools')");
         if (!_filter1_BAM_DATA(bam, bam_data))
             return;
         const char *trimmed_qname =
-            Template::qname_trim(bam1_qname(bam), qname_prefix, qname_suffix);
+            Template::qname_trim(bam1_qname(bam), qname_prefix_end(),
+                                 qname_suffix_start());
         if (templates[trimmed_qname].add_segment(bam))
             touched_templates.insert(trimmed_qname);
     }
@@ -67,10 +81,9 @@ public:
     bool iter_done;
 
     // constructor / destructor
-    BamIterator(bamFile bfile, const bam_index_t *bindex, BAM_DATA bam_data) :
-        bindex(bindex), bam(NULL), iter_done(false),
-        bam_data(bam_data), qname_prefix(bam_data->qnamePrefixEnd),
-        qname_suffix(bam_data->qnameSuffixStart)
+    BamIterator(bamFile bfile, const bam_index_t *bindex) :
+        bindex(bindex), iter_done(false),
+        bam(NULL), bam_data(NULL)
     {
         bam_seek(bfile, 0, 0);
         header = bam_header_read(bfile);
@@ -80,6 +93,10 @@ public:
         if (NULL != bam)
             bam_destroy1(bam);
         bam_header_destroy(header);
+    }
+
+    void set_bam_data(BAM_DATA bd) {
+        this->bam_data = bd;
     }
 
     // yield

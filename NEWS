@@ -13,6 +13,11 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
     o scanBam no longer translates mapq '255' to 'NA'
 
+BUG FIXES
+
+    o segfault on file iteration, introduced in 1.19.35, fixed in
+      1.19.44
+
 CHANGES IN VERSION 1.17.0
 -------------------------
 

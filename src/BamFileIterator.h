@@ -42,9 +42,8 @@ class BamFileIterator : public BamIterator {
 public:
 
     // constructor / destructor
-    BamFileIterator(bamFile bfile, const bam_index_t *bindex,
-                    BAM_DATA bam_data) :
-        BamIterator(bfile, bindex, bam_data), file_done(false) {}
+    BamFileIterator(bamFile bfile, const bam_index_t *bindex) :
+        BamIterator(bfile, bindex), file_done(false) {}
 
 };
 

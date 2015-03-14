@@ -34,7 +34,8 @@ class BamRangeIterator : public BamIterator {
         // mate 'inprogress' segments for all templates
         for (it = templates.begin(); it != templates.end(); ++it)
             it->second.mate_inprogress_segments(bfile, bindex, complete,
-                                                qname_prefix, qname_suffix,
+                                                qname_prefix_end(),
+                                                qname_suffix_start(),
                                                 tid, beg, end,
                                                 header->target_len,
                                                 it->first);
@@ -47,9 +48,8 @@ public:
 
     // constructor / destructor
     BamRangeIterator(bamFile bfile, const bam_index_t *bindex,
-                     int32_t tid, int32_t beg, int32_t end, 
-                     BAM_DATA bam_data) :
-        BamIterator(bfile, bindex, bam_data), tid(tid), beg(beg), end(end)
+                     int32_t tid, int32_t beg, int32_t end) :
+        BamIterator(bfile, bindex), tid(tid), beg(beg), end(end)
     {
 	iter = bam_iter_query(bindex, tid, beg, end);
     }

@@ -62,10 +62,10 @@ int bam_mate_read(bamFile fb, bam_mate_iter_t iter, bam_mates_t *mates)
 // BamRangeIterator methods
 bam_mate_iter_t bam_mate_range_iter_new(bamFile bfile,
                                         const bam_index_t *bindex, int tid,
-                                        int beg, int end, BAM_DATA bd)
+                                        int beg, int end)
 {
     bam_mate_iter_t iter = Calloc(1, struct _bam_mate_iter_t);
-    iter->b_iter = new BamRangeIterator(bfile, bindex, tid, beg, end, bd);
+    iter->b_iter = new BamRangeIterator(bfile, bindex, tid, beg, end);
     return iter;
 }
 
@@ -75,7 +75,8 @@ int bam_fetch_mate(bamFile bf, const bam_index_t *idx, int tid, int beg,
     BAM_DATA bd = (BAM_DATA) data;
     int n_rec;
     bam_mates_t *mates = bam_mates_new();
-    bam_mate_iter_t iter = bam_mate_range_iter_new(bf, idx, tid, beg, end, bd);
+    bam_mate_iter_t iter = bam_mate_range_iter_new(bf, idx, tid, beg, end);
+    iter->b_iter->set_bam_data(bd);
     while ((n_rec = bam_mate_read(bf, iter, mates) > 0))
         func(mates, data);
     bam_mate_iter_destroy(iter);
@@ -85,11 +86,10 @@ int bam_fetch_mate(bamFile bf, const bam_index_t *idx, int tid, int beg,
 
 // BamFileIterator methods
 bam_mate_iter_t bam_mate_file_iter_new(bamFile bfile,
-                                       const bam_index_t *bindex,
-                                       BAM_DATA bd)
+                                       const bam_index_t *bindex)
 {
     bam_mate_iter_t iter = Calloc(1, struct _bam_mate_iter_t);
-    iter->b_iter = new BamFileIterator(bfile, bindex, bd);
+    iter->b_iter = new BamFileIterator(bfile, bindex);
     return iter;
 }
 
@@ -99,12 +99,16 @@ int samread_mate(bamFile bfile, const bam_index_t *bindex,
 {
     BAM_DATA bd = (BAM_DATA) data;
     bam_mate_iter_t iter;
+    int status;
     if (NULL == *iter_p)
-        *iter_p = bam_mate_file_iter_new(bfile, bindex, bd);
+        *iter_p = bam_mate_file_iter_new(bfile, bindex);
     iter = *iter_p;
+    iter->b_iter->set_bam_data(bd);
     iter->b_iter->iter_done = false;
     // single yield
-    return bam_mate_read(bfile, iter, mates);
+    status = bam_mate_read(bfile, iter, mates);
+    iter->b_iter->set_bam_data(NULL);
+    return status;
 }
 
 
