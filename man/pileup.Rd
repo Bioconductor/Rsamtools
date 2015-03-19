@@ -224,7 +224,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
     \item{Insertions and padding:
 
       \code{pileup} can include counts of insertion operations by
-      settting \code{include_insertions} to \code{TRUE}. Details about
+      setting \code{include_insertions} to \code{TRUE}. Details about
       insertions are effectively truncated such that each insertion is
       reduced to a single \sQuote{+} nucleotide. Information about
       e.g. the nucleotide code and base quality within the insertion is
