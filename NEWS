@@ -18,6 +18,8 @@ BUG FIXES
     o segfault on file iteration, introduced in 1.19.35, fixed in
       1.19.44
 
+    o scanBam correctly parses '=' and 'X'
+
 CHANGES IN VERSION 1.17.0
 -------------------------
 

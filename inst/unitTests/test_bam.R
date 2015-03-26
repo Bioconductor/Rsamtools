@@ -26,6 +26,21 @@ test_strand <- function()
     checkIdentical(levels(exp), Rsamtools:::.STRAND_LEVELS)
 }
 
+test_cigar <- function()
+{
+    fl <- system.file("extdata", "example_from_SAM_Spec.sam",
+                      package="Rsamtools")
+    sam <- read.delim(fl, comment="@", header=FALSE, stringsAsFactors=FALSE)
+    exp <- setNames(sam[[6]], sam[[1]])
+
+    fl <- system.file("extdata", "example_from_SAM_Spec.bam",
+                      package="Rsamtools")
+    param <- ScanBamParam(what=c("qname", "cigar"))
+    bam <- scanBam(fl, param=param)[[1]]
+    obs <- setNames(bam$cigar, bam$qname)
+    checkIdentical(exp, obs)
+}
+
 test_scanBam <- function()
 {
     res <- scanBam(fl)[[1]]
