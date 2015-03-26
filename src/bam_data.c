@@ -134,7 +134,7 @@ static const char *_map(khash_t(str) * h, const char *s)
 static int _bamcigar(const uint32_t * cigar, const uint32_t n_cigar, char *buf,
                      int buf_sz)
 {
-    const char lookup[] = { 'M', 'I', 'D', 'N', 'S', 'H', 'P' };
+    const char lookup[] = { 'M', 'I', 'D', 'N', 'S', 'H', 'P', '=' };
     buf[0] = '\0';
     for (uint32_t i = 0; i < n_cigar; ++i) {
         int n = snprintf(buf, buf_sz, "%u%c", cigar[i] >> 4,
