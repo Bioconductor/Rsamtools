@@ -70,10 +70,10 @@ setMethod(isOpen, "BcfFile",
     tags <- sub(rex, "\\1", lines)
 
     keyval0 <- sub(rex, "\\2", lines)
-    ## Handle INFO, FORMAT, FILTER, ALT, SAMPLE, PEDIGREE
+    ## Handle INFO, FORMAT, FILTER, ALT, SAMPLE
     keyval1 <- rep(NA_character_, length(keyval0))
     keyval <- list()
-    idx <- tags %in% c("INFO", "FORMAT", "FILTER", "ALT", "SAMPLE", "PEDIGREE")
+    idx <- tags %in% c("INFO", "FORMAT", "FILTER", "ALT", "SAMPLE")
     keyval1[idx] <- strsplit(keyval0[idx], 
             ",(?=(ID|Number|Type)=[[:alnum:]]*)|,(?=Description=\".*?\")", 
             perl=TRUE)
@@ -84,28 +84,30 @@ setMethod(isOpen, "BcfFile",
     keyval[!idx] <- lapply(which(!idx), function(i, keyval1) {
         strsplit(keyval1[[i]], "(?<=[[:alnum:]])=", perl=TRUE)}, keyval1)
 
-    tbls <- tapply(keyval, tags, function(elt) {
-        keys <- lapply(elt, sapply, "[[", 1)
-        vals0 <- lapply(elt, sapply, "[[", 2)
-        vals <- Map("names<-", vals0, keys)
-        cols <- unique(unlist(keys))
-        entries <- Map(function(k) as.vector(sapply(vals, "[", k)),
-                       cols)
-        desc <- which("DESCRIPTION" == toupper(names(entries)))
-        if (1L == length(desc))
-            entries[[desc]] <- gsub("\"", "", entries[[desc]])
-        id <- which("ID" == toupper(names(entries)))
-        if (length(id) > 0L) {
-            if (any(duplicated(entries[[id]]))) 
-                warning("duplicate ID's in header will be forced to unique ",
-                        "rownames")
-            df <- DataFrame(entries[-id], row.names=make.unique(entries[[id]]))
-        } else {
-            ## ID is not a required field
-            df <- DataFrame(entries)
-        }
-        df
-    })
+    tbls <- tapply(keyval, tags, 
+        function(elt) {
+            keys <- lapply(elt, sapply, "[[", 1)
+            vals0 <- lapply(elt, sapply, "[[", 2)
+            vals <- Map("names<-", vals0, keys)
+            cols <- unique(unlist(keys))
+            entries <- Map(function(k) as.vector(sapply(vals, "[", k)),
+                           cols)
+            desc <- which("DESCRIPTION" == toupper(names(entries)))
+            if (1L == length(desc))
+                entries[[desc]] <- gsub("\"", "", entries[[desc]])
+            id <- which("ID" == toupper(names(entries)))
+            if (length(id) > 0L) {
+                if (any(duplicated(entries[[id]]))) 
+                    warning("duplicate ID's in header will be forced to unique ",
+                            "rownames")
+                df <- DataFrame(entries[-id], 
+                                row.names=make.unique(entries[[id]]))
+            } else {
+                ## ID is not a required field
+                df <- DataFrame(entries)
+            }
+            df
+        })
 
     ## 'GT' first in order
     if (length(tbls))
