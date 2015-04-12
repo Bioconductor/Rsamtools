@@ -24,6 +24,26 @@ setMethod(isIncomplete, "BamFile",
     arg
 }
 
+.BamFile_guessIndex <-
+    function(files)
+{
+    index <- rep(NA_character_, length(files))
+    
+    idx <- sprintf("%s.bai", files)
+    exists <- file.exists(idx)
+    index[exists] <- idx[exists]
+
+    idx <- sub("bam$", "bai", files)
+    exists <- is.na(index) & file.exists(idx)
+    index[exists] <- idx
+
+    idx <- sub("BAM$", "BAI", files)
+    exists <- is.na(index) & file.exists(idx)
+    index[exists] <- idx
+
+    index
+}
+
 BamFile <-
     function(file, index=file, ..., yieldSize=NA_integer_, 
              obeyQname=FALSE, asMates=FALSE, 
@@ -31,25 +51,26 @@ BamFile <-
 {
     if (missing(file) || !isSingleString(file))
         stop("'file' must be character(1) and not NA")
+    file <- .normalizePath(file)
     if (!asMates) {
         if (!is.na(qnamePrefixEnd) || !is.na(qnameSuffixStart))
             warning(paste0("when 'asMates' is FALSE 'qnamePrefixEnd' ",
                     "and 'qnameSuffixStart' are ignored"))
     }
-    if (missing(index) && file.exists(file)) {
-        idx <- sprintf("%s.bai", file)
-        index <- if (file.exists(idx))
-            idx
-        else character(0)
-    } else if (!(isSingleString(index) || 0L == length(index))) {
+    if (missing(index)) {
+        index <- .BamFile_guessIndex(file)
+        if (is.na(index))
+            index <- character()
+    }
+    if (!(isSingleString(index) || 0L == length(index))) {
         txt <- "'index', when present, must be character(0) or character(1)
             with nchar(index) > 0 and not NA"
         stop(paste(strwrap(txt), collapse="\n  "))
     }
+    index <- .normalizePath(index)
     qnamePrefixEnd <- .check_qname_arg(qnamePrefixEnd, "qnamePrefixEnd")
     qnameSuffixStart <- .check_qname_arg(qnameSuffixStart, "qnameSuffixStart")
-    .RsamtoolsFile(.BamFile, .normalizePath(file),
-                   .normalizePath(index), yieldSize=yieldSize,
+    .RsamtoolsFile(.BamFile, path=file, index=index, yieldSize=yieldSize,
                    obeyQname=obeyQname, asMates=asMates, 
                    qnamePrefixEnd=qnamePrefixEnd, 
                    qnameSuffixStart=qnameSuffixStart, ...)
