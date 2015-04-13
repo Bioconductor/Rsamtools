@@ -34,11 +34,11 @@ setMethod(isIncomplete, "BamFile",
     index[exists] <- idx[exists]
 
     idx <- sub("bam$", "bai", files)
-    exists <- is.na(index) & file.exists(idx)
+    exists <- is.na(index) & files != idx & file.exists(idx)
     index[exists] <- idx
 
     idx <- sub("BAM$", "BAI", files)
-    exists <- is.na(index) & file.exists(idx)
+    exists <- is.na(index) & files != idx & file.exists(idx)
     index[exists] <- idx
 
     index
