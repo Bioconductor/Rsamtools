@@ -213,12 +213,13 @@ public:
                                   int32_t tid, int32_t beg, int32_t end,
                                   uint32_t *target_len,
                                   string trimmed_qname) {
-        Segments found(inprogress);
         bam1_t *bam = bam_init1();
+        bool touched = false;
 
-        // search for mate for each 'inprogress' segment
-        for (iterator it = found.begin(); it != found.end(); ++it) {
-            bool touched = false;
+        // complete all inprogress segments, then mate
+        // add_segment calls inprogress.push_back(), so cannot iterate to end()
+        size_t size = inprogress.size();
+        for (iterator it = inprogress.begin(); size--; ++it) {
             const bam1_t *curr = *it;
             const int32_t mtid = curr->core.mtid;
             const int32_t mpos = curr->core.mpos % target_len[mtid];
@@ -242,15 +243,16 @@ public:
                 if (is_valid(bam) && 
                     is_template(trimmed_qname, mate_trimmed_qname, bam) &&
                     is_mate(curr, bam, target_len)) {
-                    touched = touched || add_segment(bam);
+                    bool added = add_segment(bam);
+                    touched = touched || added;
                 }
             }
             bam_iter_destroy(iter);
-
-            mate(complete, target_len);
         }
 
         bam_destroy1(bam);
+        if (touched)
+            mate(complete, target_len);
     }
 
     // move 'ambiguous' to ambiguous_queue 
