@@ -166,15 +166,6 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
 
 ## action
 
-## FIXME: temporary alias for srapply
-.srapply <-
-    function(X, FUN, ..., fapply=ShortRead:::.fapply(),
-             reduce=ShortRead:::.reduce(), verbose=FALSE)
-{
-    result <- fapply(X, FUN, ..., verbose=verbose)
-    reduce(result)
-}
-
 .BamViews_which <- function(file, param, missing)
 {
     grange <- bamRanges(file)
@@ -188,12 +179,12 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
     function(what, bamViews, fun, ...)
 {
     idx <- structure(seq_len(ncol(bamViews)), names=names(bamViews))
-    result <- .srapply(idx, fun, bamViews, ...)
-    if (length(result) != ncol(bamViews)) {
+    result <- bplapply(idx, fun, bamViews, ...)
+    errs <- sapply(result, is, "SRError")
+    
+    if (any(errs))
         stop(sprintf("'%s' failed on '%s'", what,
-                     paste(setdiff(names(bamViews), names(result)),
-                                   collapse="' '")))
-    }
+                     paste(names(bamViews)[!errs], collapse="' '")))
     names(result) <- names(bamViews)
     do.call(new, list("SimpleList", listData=result,
                       elementMetadata=bamSamples(bamViews)))

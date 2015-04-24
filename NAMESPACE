@@ -14,6 +14,8 @@ importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
            order, paste, rbind, Reduce, rep.int, sapply, setdiff,
            tapply, union, unique)
 
+importFrom(BiocParallel, bplapply)
+
 import(S4Vectors)
 
 import(IRanges)
