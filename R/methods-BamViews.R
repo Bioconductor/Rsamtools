@@ -180,11 +180,11 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
 {
     idx <- structure(seq_len(ncol(bamViews)), names=names(bamViews))
     result <- bplapply(idx, fun, bamViews, ...)
-    errs <- sapply(result, is, "SRError")
+    errs <- sapply(result, is, "remote-error")
     
     if (any(errs))
         stop(sprintf("'%s' failed on '%s'", what,
-                     paste(names(bamViews)[!errs], collapse="' '")))
+                     paste(names(bamViews)[errs], collapse="' '")))
     names(result) <- names(bamViews)
     do.call(new, list("SimpleList", listData=result,
                       elementMetadata=bamSamples(bamViews)))
