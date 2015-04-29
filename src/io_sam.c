@@ -67,18 +67,18 @@ static SEXP _tmpl_strand()
 
 static SEXP _tmpl_DNAStringSet()
 {
-    CharAEAE aeae = new_CharAEAE(0, 0);
+    CharAEAE *aeae = new_CharAEAE(0, 0);
     SEXP lkup = PROTECT(_get_lkup("DNAString"));
     SEXP ans = new_XRawList_from_CharAEAE("DNAStringSet", "DNAString",
-                                          &aeae, lkup);
+                                          aeae, lkup);
     UNPROTECT(1);
     return ans;
 }
 
 static SEXP _tmpl_BStringSet()
 {
-    CharAEAE aeae = new_CharAEAE(0, 0);
-    return new_XRawList_from_CharAEAE("BStringSet", "BString", &aeae,
+    CharAEAE *aeae = new_CharAEAE(0, 0);
+    return new_XRawList_from_CharAEAE("BStringSet", "BString", aeae,
                                       R_NilValue);
 }
 
