@@ -48,7 +48,7 @@ egid <- KEGGPATHID2EXTID[[sprintf("hsa%s", kid)]]
 mart <- useMart("ensembl", "hsapiens_gene_ensembl")
 ensid <- getBM(c("ensembl_transcript_id"), filters="entrezgene",
                values=egid, mart=mart)[[1]]
-txdb <- makeTranscriptDbFromBiomart(transcript_ids=ensid)
+txdb <- makeTxDbFromBiomart(transcript_ids=ensid)
 saveFeatures(txdb, "caffeine-txdb.sqlite")
 
 egid <- egid[egid != "9"]               # multiple locations
