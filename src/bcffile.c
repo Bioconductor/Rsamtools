@@ -245,7 +245,7 @@ static void _bcf_gi2sxp(SEXP geno, const int i_rec, const bcf_hdr_t * h,
         if (b->gi[i].fmt == bcf_str2int("PL", 2)) {
             const int x = b->n_alleles * (b->n_alleles + 1) / 2;
             SEXP pl = Rf_allocMatrix(INTSXP, x, h->n_smpl);
-            SET_VECTOR_ELT(g, off, pl);	/* protect */
+            SET_VECTOR_ELT(g, i_rec, pl); /* protect */
             for (int j = 0; j < h->n_smpl; ++j) {
                 uint8_t *d = (uint8_t *) b->gi[i].data + j * x;
                 for (int k = 0; k < x; ++k)
@@ -278,7 +278,7 @@ static void _bcf_gi2sxp(SEXP geno, const int i_rec, const bcf_hdr_t * h,
         } else if (b->gi[i].fmt == bcf_str2int("GL", 2)) {
             const int x = b->n_alleles * (b->n_alleles + 1) / 2;
             SEXP gl = Rf_allocMatrix(REALSXP, x, h->n_smpl);
-            SET_VECTOR_ELT(g, off, gl);	/* protect */
+            SET_VECTOR_ELT(g, i_rec, gl); /* protect */
             for (int j = 0; j < h->n_smpl; ++j) {
                 float *d = (float *) b->gi[i].data + j * x;
                 for (int k = 0; k < x; ++k)
