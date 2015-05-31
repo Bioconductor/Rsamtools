@@ -114,7 +114,7 @@ setMethod(seqinfo, "BamFile",
           function(x)
 {
     h <- scanBamHeader(x, what="targets")[["targets"]]
-    h <- h[!duplicated(h)]
+    h <- h[!(duplicated(h) & duplicated(names(h)))]
     Seqinfo(names(h), unname(h))
 })
 
