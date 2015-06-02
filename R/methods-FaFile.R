@@ -75,6 +75,10 @@ setMethod(scanFaIndex, "FaFileList",
 setMethod(countFa, "FaFile",
     function(file, ...)
 {
+    if (!isOpen(file)) {
+        open(file)
+        on.exit(close(file))
+    }
     tryCatch({
         .Call(.n_fa, .extptr(file))
     }, error=function(err) {
@@ -168,7 +172,7 @@ setMethod(scanFaIndex, "character",
     function(file, ...) scanFaIndex(open(FaFile(file))))
 
 setMethod(countFa, "character",
-    function(file, ...) countFa(open(FaFile(file))))
+    function(file, ...) countFa(FaFile(file)))
 
 setMethod(scanFa, c("character", "GRanges"),
     function(file, param, ...,

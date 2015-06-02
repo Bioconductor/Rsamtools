@@ -38,6 +38,11 @@ test_FaFile_scanFaIndex <- function()
 
 test_FaFile_count <- function()
 {
+    f <- FaFile(fl)
+    status <- isOpen(f)
+    checkIdentical(status, FALSE)
+    checkIdentical(5L, countFa(FaFile(fl)))
+    checkIdentical(status, isOpen(f))
     checkIdentical(5L, countFa(open(FaFile(fl))))
     checkIdentical(5L, countFa(fl))
 }

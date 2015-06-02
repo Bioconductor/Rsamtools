@@ -101,7 +101,7 @@ SEXP index_fa(SEXP filename)
 
 SEXP n_fa(SEXP ext)
 {
-    _checkext(ext, FAFILE_TAG, "isOpen");
+    _checkext(ext, FAFILE_TAG, "countFa");
     faidx_t *fai = FAFILE(ext)->index;
     if (NULL == fai)
         Rf_error("'index' not available");
