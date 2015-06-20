@@ -26,14 +26,33 @@ int Pileup::insert(uint32_t tid, uint32_t pos, int n,
 
             // positional disqualifier(s)
             if(pileup->hasBins()) { // all bin work
-                int minBinPoint = pileup->minBinPoint(),
+                const int minBinPoint = pileup->minBinPoint(),
                     maxBinPoint = pileup->maxBinPoint();
-                int qpos = curBam->qpos + 1;
-                // discard if outside outer range
-                if(qpos > minBinPoint && qpos <= maxBinPoint)
-                    bin = pileup->calcBin(qpos);
-                else
-                    continue;
+                const int qpos = curBam->qpos + 1;
+                // positive bins (counting from left)
+                if(minBinPoint >= 0) {
+                    // discard if outside outer range
+                    if(qpos > minBinPoint && qpos <= maxBinPoint)
+                        bin = pileup->calcBinFromLeft(qpos);
+                    else
+                        continue;
+                }
+                // negative bins (counting from l_qseq)
+                else {
+                    const int32_t qlen = curBam->b->core.l_qseq;
+                    // skip if qlen insufficient
+                    if(qlen < (-maxBinPoint))
+                        continue;
+                    // distance from end
+                    const int dfe = abs(qpos - qlen);
+                    // use |dfe| - 1 since lowest cycle bin should be
+                    // one less than leftmost pos to get the first nuc
+                    if((-dfe) - 1 > minBinPoint && (-dfe) - 1 <= maxBinPoint)
+                        bin = pileup->calcBinRev(dfe);
+                    else
+                        continue;
+                }
+
             }
 
             // invariant: alignments that fail strand criterion not included

@@ -125,6 +125,7 @@ PileupParam <-
 
 .cycle_bin_levels <- function(bins) {
     bins[bins == .Machine$integer.max] <- Inf
+    bins[bins == -.Machine$integer.max] <- -Inf
     levels(cut(0, bins))
 }
 
@@ -136,10 +137,13 @@ PileupParam <-
             stop("'cycle_bins' must not contain NAs, NULLs, or NaNs")
         if(length(bins) == 1L)
             stop("'cycle_bins' must have 0 or >1 elements")
-        if(any(bins < 0L))
-            stop("'cycle_bins' must not contain negative values")
-        ## invariant: only contains +integers and +Inf
-        bins[!is.finite(bins)] <- .Machine$integer.max ## Inf to max_int
+        if(any(bins < 0L) && any(bins > 0L))
+            stop("'cycle_bins' values must all have the same sign (or be Inf)")
+        if(any(bins == 0L) && any(bins < 0L))
+            stop("'0' not allowed when specifying reverse bins; try '-1'?")
+        ## invariant: only contains integers and +/-Inf
+        bins[!is.finite(bins) & bins > 0] <- .Machine$integer.max ## Inf to max_int
+        bins[!is.finite(bins) & bins < 0] <- -.Machine$integer.max ## -Inf to -max_int
         bins <- as.integer(bins)
         if(any(duplicated(bins)))
            stop("'cycle_bins' must not contain duplicate values")

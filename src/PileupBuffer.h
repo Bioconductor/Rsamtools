@@ -99,9 +99,15 @@ private:
         }
         return points;
     }
-    int calcBin(int qpos) {
+    // regular bins (from left)
+    int calcBinFromLeft(int qpos) {
         return std::lower_bound(binPoints.begin(), binPoints.end(), qpos) -
             binPoints.begin();
+    }
+    // reverse bins
+    int calcBinRev(int dfe) {
+        return std::lower_bound(binPoints.begin(), binPoints.end(),
+                                (-dfe) - 1) - binPoints.begin();
     }
     int32_t maxBinPoint() const {
         return *(binPoints.end() - 1);

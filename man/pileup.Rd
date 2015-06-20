@@ -100,7 +100,7 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   \item{include_insertions}{logical(1); \code{TRUE} to include
     insertions in pileup.}
 
-  \item{cycle_bins}{numeric; non-negative, unique positions within a
+  \item{cycle_bins}{numeric; all same sign, unique positions within a
     read to delimit bins. At least two values are required so at least
     one range can be formed. numeric(0) (default) indicates no
     binning. Sorted order is not required. Floating-point values are
@@ -248,22 +248,33 @@ PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
   }
 
   \code{cycle_bins} allows users to differentiate pileup counts based on
-  arbitrary regions within a read. \code{pileup} relies on
-  \code{\link{cut}} to derive bins, but limits input to non-negative
-  numeric values (coerced to \code{integer}s), including \code{Inf}. If
+  non-overlapping arbitrary regions within a read. Postitive values
+  specify from the left (start of a read), negative values specify from
+  the right (end of a read). \code{pileup} relies on \code{\link{cut}}
+  to derive bins, but limits input to numeric values of the same sign
+  (coerced to \code{integer}s), including \code{+/-Inf}. If
   \code{cycle_bins} is set \code{pileup} automatically excludes bases
-  outside the implicit outer range. There are two important factors to
-  consider when specifying bins:
+  outside the implicit outer range. Below are details about how to use
+  positive and negative bins.
   
   \itemize{
-      \item{Because \code{\link{cut}} produces ranges in the form
-      (first,last], \sQuote{0} should be used to create a bin that
-      includes the first position.}
 
-      \item{In order to account for variable-length reads in BAM files,
-      \code{Inf} should be used to create a bin that extends to the end
-      of all reads.}
-    
+      \item{\emph{From start of reads}: use positive values, \code{0},
+      and \code{(+)Inf}. Because \code{\link{cut}} produces ranges in
+      the form (first,last], \sQuote{0} should be used to create a bin
+      that includes the first position. To account for variable-length
+      reads in BAM files, use \code{(+)Inf} as the upper bound on a bin
+      that extends to the end of all reads.}
+
+      \item{\emph{From end of reads}: use negative values and
+      \code{-Inf}. \code{-1} denotes the last nucleotide in a
+      read. Because \code{\link{cut}} produces ranges in the form
+      (first,last], specify the lower bound of a bin by using one less
+      than the desired value, e.g., a bin that captures only the second
+      nucleotide from the end: \code{cycle_bins=c(-3, -2)}. To account
+      for variable-length reads in BAM files, use \code{-Inf} as the
+      lower bound on a bin that extends to the beginning of all reads.}
+
   } %% end subsection cycle_bins gotchas
 
   \code{pileup} obeys \code{\link{yieldSize}} on \code{BamFile} objects
@@ -463,14 +474,24 @@ head(xtabs(count ~ pos + nucleotide, res))
 ## cycle_bins
 
 \donttest{
-## basic use: single pivot; count bases that appear in first 10
-## positions of a read separately from the rest
+
+## basic use of positive bins: single pivot; count bases that appear in
+## first 10 positions of a read separately from the rest
 p_param <- PileupParam(cycle_bins=c(0, 10, Inf))
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 
-## basic use: simple range; only include bases in positions 6-10 within
-## read
+## basic use of positive bins: simple range; only include bases in
+## positions 6-10 within read
 p_param <- PileupParam(cycle_bins=c(5, 10))
+res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
+
+## basic use of negative bins: single pivot; count bases that appear in
+## last 3 positions of a read separately from the rest.
+p_param <- PileupParam(cycle_bins=c(-Inf, -4, -1))
+res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
+
+## basic use of negative bins: drop last nucleotide of each read
+p_param <- PileupParam(cycle_bins=c(-Inf, -3))
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 }
 

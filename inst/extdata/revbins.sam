@@ -1,0 +1,25 @@
+@HD	VN:1.3	SO:coordinate
+@SQ	SN:simple	LN:15
+@SQ	SN:bistag	LN:15
+@SQ	SN:tristag	LN:15
+@SQ	SN:inf	LN:15
+@SQ	SN:diffstr	LN:15
+B7	0	simple	1	99	1M	*	0	0	=	=
+B7	0	simple	1	99	2M	*	0	0	A=	==
+B7	0	simple	1	99	3M	*	0	0	CA=	===
+B7	0	simple	1	99	4M	*	0	0	GCA=	====
+B7	0	simple	1	99	5M	*	0	0	TGCA=	=====
+B7	0	bistag	1	99	2M	*	0	0	A=	==
+B7	0	bistag	2	99	2M	*	0	0	C=	==
+B7	0	bistag	3	99	2M	*	0	0	G=	==
+B7	0	bistag	4	99	2M	*	0	0	T=	==
+B7	0	bistag	5	99	2M	*	0	0	N=	==
+B7	0	tristag	1	99	2M	*	0	0	A=	==
+B7	0	tristag	2	99	3M	*	0	0	C=C	===
+B7	0	tristag	3	99	3M	*	0	0	G=G	===
+B7	0	tristag	4	99	3M	*	0	0	T=T	===
+B7	0	tristag	5	99	3M	*	0	0	N=N	===
+B7	0	inf	1	99	6M	*	0	0	AAAAA=	======
+B7	0	inf	3	99	5M	*	0	0	CCCC=	=====
+B7	0	diffstr	1	99	3M	*	0	0	ACG	===
+B7	16	diffstr	2	99	3M	*	0	0	T=N	===
