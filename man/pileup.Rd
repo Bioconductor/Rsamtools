@@ -490,7 +490,7 @@ res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 p_param <- PileupParam(cycle_bins=c(-Inf, -4, -1))
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 
-## basic use of negative bins: drop last nucleotide of each read
+## basic use of negative bins: drop last two nucleotides of each read
 p_param <- PileupParam(cycle_bins=c(-Inf, -3))
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 }
