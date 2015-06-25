@@ -51,6 +51,8 @@ private:
     // 'buffered' is when intermediate results for genomic positions
     // are store across calls to pileup
     const bool isRanged, isBuffered;
+    bool isQueryBin;
+    int binsLength;
     const SEXP schema, pileupParams, seqnamesLevels;
     ResultMgrInterface *resultMgr;
     std::vector<int32_t> binPoints;
@@ -84,12 +86,22 @@ private:
     bool include_insertions() const {
         return LOGICAL(VECTOR_ELT(pileupParams, 9))[0];
     }
-    // cycle_bins pileupParams[10]
-    int cycleBinsLength() const {
+    // left_bins pileupParams[10]
+    int leftBinsParamLength() const {
         return Rf_length(VECTOR_ELT(pileupParams, 10));
     }
+    // query_bins pileupParams[11]
+    int queryBinsParamLength() const {
+        return Rf_length(VECTOR_ELT(pileupParams, 11));
+    }
+    int getBinsLength() const {
+        return binsLength;
+    }
     bool hasBins() const {
-        return cycleBinsLength() > 0;
+        return binsLength > 0;
+    }
+    bool isQueryBinMode() const {
+        return isQueryBin;
     }
     std::vector<int32_t> binPointsAsVec(SEXP cycleBins) const {
         int numPoints = Rf_length(cycleBins);
@@ -99,15 +111,9 @@ private:
         }
         return points;
     }
-    // regular bins (from left)
-    int calcBinFromLeft(int qpos) {
-        return std::lower_bound(binPoints.begin(), binPoints.end(), qpos) -
-            binPoints.begin();
-    }
-    // reverse bins
-    int calcBinRev(int dfe) {
-        return std::lower_bound(binPoints.begin(), binPoints.end(),
-                                (-dfe) - 1) - binPoints.begin();
+    int calcBin(int dfe) {
+        return std::lower_bound(binPoints.begin(), binPoints.end(), dfe)
+            - binPoints.begin();
     }
     int32_t maxBinPoint() const {
         return *(binPoints.end() - 1);
@@ -132,18 +138,30 @@ public:
     // PileupBuffer doesn't know anything about PosCacheColl
     Pileup(bool isRanged_, bool isBuffered_, SEXP schema_, SEXP pileupParams_,
            SEXP seqnamesLevels_, PosCacheColl** posCacheColl_)
-        : isRanged(isRanged_), isBuffered(isBuffered_), schema(schema_),
+        : isRanged(isRanged_), isBuffered(isBuffered_), isQueryBin(false),
+          binsLength(0),
+          schema(schema_),
           pileupParams(pileupParams_), seqnamesLevels(seqnamesLevels_),
           resultMgr(NULL), binPoints()
         {
             if(isRanged && isBuffered) {
                 Rf_error("internal: Pileup cannot both query specific genomic ranges and store partial genomic position results");
             }
+            // bins stuff (needs to come before ResultMgr ctor call
+            // because ctor uses hasBins()
+            if(leftBinsParamLength() > 0) {
+                isQueryBin = false;
+                binsLength = leftBinsParamLength();
+                binPoints = binPointsAsVec(VECTOR_ELT(pileupParams, 10));
+            } else if(queryBinsParamLength() > 0) {
+                isQueryBin = true;
+                binsLength = queryBinsParamLength();
+                binPoints = binPointsAsVec(VECTOR_ELT(pileupParams, 11));
+            }
             resultMgr =
                 new ResultMgr(min_nucleotide_depth(), min_minor_allele_depth(),
                               hasStrands(), hasNucleotides(), hasBins(),
                               isRanged, isBuffered, posCacheColl_);
-            binPoints = binPointsAsVec(VECTOR_ELT(pileupParams, 10));
         }
     ~Pileup() {
         delete resultMgr;

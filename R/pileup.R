@@ -15,7 +15,8 @@
         ignore_query_Ns = "logical", # 7
         include_deletions="logical", # 8
         include_insertions="logical", # 9
-        cycle_bins = "numeric")) # 10
+        left_bins = "numeric", # 10
+        query_bins="numeric")) # 11
 
 setMethod(show, "PileupParam", function(object) {
     cat("class: ", class(object), "\n")
@@ -35,9 +36,24 @@ PileupParam <-
              min_nucleotide_depth=1, min_minor_allele_depth=0,
              distinguish_strands=TRUE, distinguish_nucleotides=TRUE,
              ignore_query_Ns=TRUE, include_deletions=TRUE,
-             include_insertions=FALSE, cycle_bins=numeric())
+             include_insertions=FALSE, left_bins=NULL,
+             query_bins=NULL, cycle_bins=NULL)
 {
     ## argument checking
+    if(!is.null(cycle_bins)) {
+        .Deprecated("cycle_bins", "Rsamtools",
+                    paste("'cycle_bins' deprecated; rename 'cycle_bins'",
+                          "to 'left_bins' (identical behvaior)"))
+        left_bins <- cycle_bins
+    }
+    if(!is.null(left_bins) && !is.null(query_bins))
+        stop("only one of 'left_bins', 'query_bins', and 'cycle_bins' allowed")
+    if(is.null(left_bins)) left_bins <- numeric()
+    if(is.null(query_bins)) query_bins <- numeric()
+    ## invariant:
+    ## - left_bins & query_bins length 0
+    ## - one of left_bins or query_bins length > 0, but the other length 0
+
     stopifnot(isSingleNumber(max_depth))
     stopifnot(isSingleNumber(min_base_quality))
     stopifnot(isSingleNumber(min_mapq))
@@ -48,7 +64,9 @@ PileupParam <-
     min_mapq <- as.integer(min_mapq)
     min_nucleotide_depth <- as.integer(min_nucleotide_depth)
     min_minor_allele_depth <- as.integer(min_minor_allele_depth)
-    cycle_bins <- .preprocess_cycle_bins(cycle_bins)
+    left_bins <- .preprocess_bins(left_bins)
+    query_bins <- .preprocess_bins(query_bins)
+
     stopifnot(isTRUEorFALSE(distinguish_strands))
     stopifnot(isTRUEorFALSE(distinguish_nucleotides))
     stopifnot(isTRUEorFALSE(ignore_query_Ns))
@@ -63,7 +81,8 @@ PileupParam <-
                  distinguish_nucleotides=distinguish_nucleotides,
                  ignore_query_Ns=ignore_query_Ns,
                  include_deletions=include_deletions,
-                 include_insertions=include_insertions, cycle_bins=cycle_bins)
+                 include_insertions=include_insertions, left_bins=left_bins,
+                 query_bins=query_bins)
 }
 
 .pileup <-
@@ -89,6 +108,7 @@ PileupParam <-
             yieldSize(file), obeyQname(file), asMates(file),
             qnamePrefixEnd(file), qnameSuffixStart(file), schema, 
             .as.list_PileupParam(pileupParam), param=scanBamParam)
+    ##browser()
 
     which_labels <- .scanBam_extract_which_labels(scanBamParam)
     which_labels <- .make_unique(which_labels)
@@ -97,48 +117,62 @@ PileupParam <-
         rep.int(factor(which_labels, levels=which_labels), run_lens)
 
     ## no-op if no bins
-    result <- .apply_cycle_bin_levels(result, pileupParam@cycle_bins)
-    ##print(result)
+    if(length(pileupParam@left_bins) > 0)
+        result <- .apply_bin_levels(result, pileupParam@left_bins)
+    else if(length(pileupParam@query_bins) > 0)
+        result <- .apply_bin_levels(result, pileupParam@query_bins)
+
     result <- .as.data.frame_list_of_lists(result)
+
+    ## wait to rename column until after converted to data.frame
+    if(length(pileupParam@left_bins) > 0) {
+        if(! "bin" %in% names(result))
+            stop("internal: expected a 'bin' column to rename 'left_bin'")
+        names(result)[names(result) == "bin"] <- "left_bin"
+    } else if(length(pileupParam@query_bins) > 0) {
+        if(! "bin" %in% names(result))
+            stop("internal: expected a 'bin' column to rename 'query_bin'")
+        names(result)[names(result) == "bin"] <- "query_bin"
+    }
+
     if(length(bamWhich(scanBamParam)) != 0L) ## if no space arg
         result <- cbind(result, which_label) ## last col
     result
 }
 
-.apply_cycle_bin_levels <- function(result, cycle_bins) {
+.apply_bin_levels <- function(result, bins) {
     ## no-op if user didn't ask for bins
-    if(length(cycle_bins) > 0L) {
-        bin_levels <- .cycle_bin_levels(cycle_bins)
+    if(length(bins) > 0L) {
+        bin_levels <- .bin_levels(bins)
         for(i in seq_along(result))
-            result[[i]]$cycle_bin <- .as.factor_cycle_bin(result[[i]]$cycle_bin,
-                                                          bin_levels)
+            result[[i]]$bin <- .as.factor_bin(result[[i]]$bin, bin_levels)
     }
     result
 }
 
-.as.factor_cycle_bin <- function(cycle_bin, cycle_bin_levels) {
-    structure(cycle_bin, levels=cycle_bin_levels, class="factor")
+.as.factor_bin <- function(bin, bin_levels) {
+    structure(bin, levels=bin_levels, class="factor")
     ## equivalent:
     ## attributes(cycle_bin) <- list(levels=cycle_bin_levels, class="factor")
     ## cycle_bin
 }
 
-.cycle_bin_levels <- function(bins) {
+.bin_levels <- function(bins) {
     bins[bins == .Machine$integer.max] <- Inf
     bins[bins == -.Machine$integer.max] <- -Inf
     levels(cut(0, bins))
 }
 
 ## return value: numeric vector of increasing values that contains
-## only integers and +Inf
-.preprocess_cycle_bins <- function(bins) {
+## only integers and +/-Inf
+.preprocess_bins <- function(bins) {
     if(length(bins) != 0L) {
         if(any(is.na(bins)) || any(is.null(bins)) || any(is.nan(bins)))
-            stop("'cycle_bins' must not contain NAs, NULLs, or NaNs")
+            stop("bin args must not contain NAs, NULLs, or NaNs")
         if(length(bins) == 1L)
-            stop("'cycle_bins' must have 0 or >1 elements")
+            stop("bins args must have 0 or >1 elements")
         if(any(bins < 0L) && any(bins > 0L))
-            stop("'cycle_bins' values must all have the same sign (or be Inf)")
+            stop("bin args values must all have the same sign (or be Inf)")
         if(any(bins == 0L) && any(bins < 0L))
             stop("'0' not allowed when specifying reverse bins; try '-1'?")
         ## invariant: only contains integers and +/-Inf
@@ -146,7 +180,7 @@ PileupParam <-
         bins[!is.finite(bins) & bins < 0] <- -.Machine$integer.max ## -Inf to -max_int
         bins <- as.integer(bins)
         if(any(duplicated(bins)))
-           stop("'cycle_bins' must not contain duplicate values")
+           stop("bin args must not contain duplicate values")
         bins <- sort(bins)
     }
     bins

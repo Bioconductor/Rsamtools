@@ -26,32 +26,31 @@ int Pileup::insert(uint32_t tid, uint32_t pos, int n,
 
             // positional disqualifier(s)
             if(pileup->hasBins()) { // all bin work
-                const int minBinPoint = pileup->minBinPoint(),
+                const int32_t minBinPoint = pileup->minBinPoint(),
                     maxBinPoint = pileup->maxBinPoint();
-                const int qpos = curBam->qpos + 1;
-                // positive bins (counting from left)
-                if(minBinPoint >= 0) {
-                    // discard if outside outer range
-                    if(qpos > minBinPoint && qpos <= maxBinPoint)
-                        bin = pileup->calcBinFromLeft(qpos);
+                const int32_t qlen = curBam->b->core.l_qseq;
+                const int32_t qpos = curBam->qpos + 1;
+                const bool isMinusStrand = curBam->b->core.flag & 16;
+
+                // distance from end
+                int32_t dfe = 0;
+                // QUERY BINS
+                if(pileup->isQueryBinMode()) {
+                    if(minBinPoint >= 0)
+                        dfe = isMinusStrand ? qlen - qpos + 1 : qpos;
                     else
-                        continue;
+                        dfe = isMinusStrand ? -qpos : -(qlen - qpos + 1);
                 }
-                // negative bins (counting from l_qseq)
+                // LEFT BINS
                 else {
-                    const int32_t qlen = curBam->b->core.l_qseq;
-                    // skip if qlen insufficient
-                    if(qlen < (-maxBinPoint))
-                        continue;
-                    // distance from end
-                    const int dfe = abs(qpos - qlen);
-                    // use |dfe| - 1 since lowest cycle bin should be
-                    // one less than leftmost pos to get the first nuc
-                    if((-dfe) - 1 > minBinPoint && (-dfe) - 1 <= maxBinPoint)
-                        bin = pileup->calcBinRev(dfe);
+                    if(minBinPoint >= 0)
+                        dfe = qpos;
                     else
-                        continue;
+                        dfe = -(qlen - qpos + 1);
                 }
+                if(dfe > maxBinPoint || dfe <= minBinPoint)
+                    continue;
+                bin = pileup->calcBin(dfe);
 
             }
 
@@ -180,7 +179,7 @@ SEXP Pileup::yield() {
     if(hasNucleotides())
         SET_STRING_ELT(nms, curDim++, mkChar("nucleotide"));
     if(hasBins())
-        SET_STRING_ELT(nms, curDim++, mkChar("cycle_bin"));
+        SET_STRING_ELT(nms, curDim++, mkChar("bin"));
     SET_STRING_ELT(nms, curDim++, mkChar("count"));
     SET_ATTR(result, R_NamesSymbol, nms);
 
