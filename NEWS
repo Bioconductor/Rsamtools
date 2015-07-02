@@ -6,6 +6,9 @@ SIGNIFICANT USER-VISIBLE CHANGES
     o pileup allows negative values (including -Inf) to cycle_bins to
       specify bins from the end of a read
 
+    o mapqFilter allows specification of a mapping quality filter
+      threshold
+
 BUG FIXES
 
     o segfault on range iteration introduced 1.19.35, fixed in 1.21.1

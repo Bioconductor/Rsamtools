@@ -1,7 +1,8 @@
 setGeneric("ScanBamParam",
            function(flag=scanBamFlag(), simpleCigar=FALSE,
                     reverseComplement=FALSE, tag=character(0),
-                    tagFilter=list(), what=character(0), which)
+                    tagFilter=list(), what=character(0), which,
+                    mapqFilter=NA_integer_)
            standardGeneric("ScanBamParam"),
            signature="which")
 

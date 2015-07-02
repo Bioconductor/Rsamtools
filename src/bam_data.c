@@ -24,9 +24,9 @@ static BAM_DATA _Calloc_BAM_DATA(int blocksize, int cigar_buf_sz)
 
 BAM_DATA
 _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
-	       SEXP tagFilter, int reverseComplement, int yieldSize,
-               int obeyQname, int asMates, char qnamePrefixEnd, 
-               char qnameSuffixStart, void *extra)
+               SEXP tagFilter, SEXP mapqFilter, int reverseComplement,
+               int yieldSize, int obeyQname, int asMates,
+               char qnamePrefixEnd, char qnameSuffixStart, void *extra)
 {
     int nrange = R_NilValue == space ? 1 : LENGTH(VECTOR_ELT(space, 0));
     BAM_DATA bd =
@@ -41,6 +41,8 @@ _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
     bd->keep_flag[1] = INTEGER(flag)[1];
     bd->cigar_flag = LOGICAL(isSimpleCigar)[0];
     bd->tagfilter = _tagFilter_as_C_types(tagFilter);
+    int mapqfilter = INTEGER(mapqFilter)[0];
+    bd->mapqfilter = mapqfilter == NA_INTEGER ? 0 : mapqfilter; /* uint32_t */
     bd->reverseComplement = reverseComplement;
     bd->yieldSize = yieldSize;
     bd->obeyQname = obeyQname;
@@ -248,6 +250,13 @@ static void _bamtags(const bam1_t * bam, BAM_DATA bd, SEXP tags)
 
 int _filter1_BAM_DATA(const bam1_t * bam, BAM_DATA bd)
 {
+    
+    /* tagfilter */
+    if (bd->tagfilter != NULL && !_tagfilter(bam, bd->tagfilter, bd->irec))
+        return 0;
+    if (bam->core.qual < bd->mapqfilter)
+        return 0;
+
     /*
        flag : 1101
        keep0: 1111
@@ -267,10 +276,6 @@ int _filter1_BAM_DATA(const bam1_t * bam, BAM_DATA bd)
        test = (keep0 & ~flag) | (keep1 & flag) = 0010 | 1101 = 1111
        ~test = 0000 = FALSE
      */
-    
-    /* tagfilter */
-    if(bd->tagfilter != NULL && !_tagfilter(bam, bd->tagfilter, bd->irec))
-        return 0;
 
     uint32_t test = (bd->keep_flag[0] & ~bam->core.flag) |
         (bd->keep_flag[1] & bam->core.flag);

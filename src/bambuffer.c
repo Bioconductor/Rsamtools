@@ -91,8 +91,8 @@ SEXP bambuffer_length(SEXP bufext)
 }
 
 SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-                     SEXP tagFilter, SEXP bufext, SEXP reverseComplement,
-                     SEXP templateList)
+                     SEXP tagFilter, SEXP mapqFilter, SEXP bufext,
+                     SEXP reverseComplement, SEXP templateList)
 {
     _check_isbamfile(ext, "bamBuffer, 'parse'");
     _checkparams(space, keepFlags, isSimpleCigar);
@@ -107,7 +107,8 @@ SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                                       BAMFILE(ext)));
     SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
     BAM_DATA bd = _init_BAM_DATA(ext, R_NilValue, keepFlags, isSimpleCigar,
-                                 tagFilter, LOGICAL(reverseComplement)[0],
+                                 tagFilter, mapqFilter,
+                                 LOGICAL(reverseComplement)[0],
                                  NA_INTEGER, 0, 0, '\0', '\0', (void *) sbd);
     bd->irange = 0;             /* everything parsed to 'irange' 0 */
     BAM_BUFFER buf = BAMBUFFER(bufext);

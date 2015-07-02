@@ -11,7 +11,8 @@ setClass("ScanBamParam",
            tag="character",
            tagFilter="list",
            what="character",
-           which="RangesList"))
+           which="RangesList",
+           mapqFilter="integer"))
 
 setClass("BamViews",
          representation=representation(

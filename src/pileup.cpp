@@ -41,7 +41,8 @@ static void _finish_buffered_yieldSize_chunk(BAM_DATA bd) {
 }
 
 static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
-    SEXP reverseComplement, SEXP isSimpleCigar, SEXP tagFilter,
+    SEXP reverseComplement, SEXP isSimpleCigar,
+    SEXP tagFilter, SEXP mapqFilter,
     SEXP yieldSize, SEXP obeyQname, SEXP asMates, SEXP qnamePrefixEnd,
     SEXP qnameSuffixStart, PileupBuffer& buffer)
 {
@@ -57,7 +58,7 @@ static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
     SEXP result = PROTECT(_pileup_bam_result_init(space));
     PileupBufferShim shim(space, result, buffer);
     BAM_DATA bd = _init_BAM_DATA(ext, space, keepFlags, isSimpleCigar,
-                                 tagFilter,
+                                 tagFilter, mapqFilter,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
@@ -128,7 +129,7 @@ class PosCacheColl;
 
 extern "C" {
     SEXP c_Pileup(SEXP ext, SEXP space, SEXP keepFlags,
-                  SEXP isSimpleCigar, SEXP tagFilter,
+                  SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                   SEXP reverseComplement, SEXP yieldSize,
                   SEXP obeyQname, SEXP asMates,
                   SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
@@ -155,7 +156,7 @@ extern "C" {
             Pileup(isRanged, isBuffered, schema, pileupParams, seqnamesLevels,
                    (PosCacheColl**)&(BAMFILE(ext)->pbuffer));
         SEXP res = PROTECT(_pileup_bam(ext, space, keepFlags,
-            reverseComplement, isSimpleCigar, tagFilter,
+            reverseComplement, isSimpleCigar, tagFilter, mapqFilter,
             yieldSize, obeyQname,
             asMates, qnamePrefixEnd, qnameSuffixStart, buffer));
         UNPROTECT(2);

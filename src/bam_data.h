@@ -24,6 +24,7 @@ typedef struct {
     int reverseComplement, yieldSize, obeyQname, asMates;
     char qnamePrefixEnd, qnameSuffixStart;
     C_TAGFILTER tagfilter;
+    uint32_t mapqfilter;
 
     void *extra;
 } _BAM_DATA, *BAM_DATA;
@@ -35,7 +36,8 @@ enum {
 };
 
 BAM_DATA _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
-			SEXP tagFilter, int reverseComplement, int yieldSize,
+                        SEXP tagFilter, SEXP mapqFilter,
+                        int reverseComplement, int yieldSize,
                         int obeyQname, int asMates, char qnamePrefixEnd, 
                         char qnameSuffixStart, void *extra);
 void _Free_BAM_DATA(BAM_DATA bd);

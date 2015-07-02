@@ -30,6 +30,8 @@
 \alias{bamWhich<-,ScanBamParam,RangesList-method}
 \alias{bamWhich<-,ScanBamParam,ANY-method}
 \alias{bamWhich}
+\alias{bamMapqFilter}
+\alias{bamMapqFilter<-}
 % methods
 \alias{show,ScanBamParam-method}
 % flag utils
@@ -66,7 +68,7 @@
 # Constructor
 ScanBamParam(flag = scanBamFlag(), simpleCigar = FALSE,
     reverseComplement = FALSE, tag = character(0), tagFilter = list(),
-    what = character(0), which)
+    what = character(0), which, mapqFilter=NA_integer_)
 
 # Constructor helpers
 scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA, 
@@ -92,6 +94,8 @@ bamWhat(object)
 bamWhat(object) <- value
 bamWhich(object)
 bamWhich(object) <- value
+bamMapqFilter(object)
+bamMapqFilter(object) <- value
 
 \S4method{show}{ScanBamParam}(object)
 
@@ -141,6 +145,10 @@ bamFlagTest(flag, value)
   \item{what}{A character vector naming the fields to return
     \code{scanBamWhat()} returns a vector of available fields.
     Fields are described on the \code{\link{scanBam}} help page.}
+
+  \item{mapqFilter}{A non-negative integer(1) specifying the minimum
+    mapping quality to include. BAM records with mapping qualities less
+    than \code{mapqFilter} are discarded.}
 
   \item{which}{A \code{\linkS4class{GRanges}},
     \code{\linkS4class{RangesList}}, \code{\linkS4class{RangedData}},
@@ -255,6 +263,10 @@ bamFlagTest(flag, value)
 
     \item{\code{which}}{Object of class \code{RangesList} indicating
       which reference sequence and coordinate reads must overlap.}
+
+    \item{\code{mapqFilter}}{Object of class \code{integer} indicating
+      the minimum mapping quality required for input, or NA to indicate
+      no filtering.}
 
   }
 }

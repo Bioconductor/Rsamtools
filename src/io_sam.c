@@ -466,7 +466,8 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space,
 }
 
 SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-               SEXP tagFilter, SEXP reverseComplement, SEXP yieldSize,
+               SEXP tagFilter, SEXP mapqFilter,
+               SEXP reverseComplement, SEXP yieldSize,
                SEXP template_list, SEXP obeyQname, SEXP asMates,
                SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
 {
@@ -485,7 +486,7 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
         qname_suffix = CHAR(suffix_elt)[0];
 
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
-                                 tagFilter,
+                                 tagFilter, mapqFilter,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
@@ -517,12 +518,12 @@ static int _count1(const bam1_t * bam, void *data)
 }
 
 SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-    SEXP tagFilter)
+                SEXP tagFilter, SEXP mapqFilter)
 {
     SEXP result = PROTECT(NEW_LIST(2));
     BAM_DATA bd =
-        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, tagFilter, 0,
-                       NA_INTEGER, 0, 0, '\0', '\0', result);
+        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, tagFilter,
+                       mapqFilter, 0, NA_INTEGER, 0, 0, '\0', '\0', result);
 
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(bd->nrange));
     SET_VECTOR_ELT(result, 1, NEW_NUMERIC(bd->nrange));
@@ -589,7 +590,8 @@ static int _prefilter1_mate(const bam_mates_t *mates, void *data)
 
 SEXP
 _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
-               SEXP tagFilter, SEXP yieldSize, SEXP obeyQname, SEXP asMates, 
+               SEXP tagFilter, SEXP mapqFilter, SEXP yieldSize, SEXP obeyQname,
+               SEXP asMates, 
                SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
 {
     SEXP ext = PROTECT(bambuffer(INTEGER(yieldSize)[0],
@@ -603,7 +605,7 @@ _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     if (suffix_elt != NA_STRING)
         qname_suffix = CHAR(suffix_elt)[0];
     BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
-                                 tagFilter, 0, INTEGER(yieldSize)[0],
+                                 tagFilter, mapqFilter, 0, INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
                                  LOGICAL(asMates)[0], 
                                  qname_prefix, qname_suffix, BAMBUFFER(ext));
@@ -636,11 +638,13 @@ static int _filter1(const bam1_t * bam, void *data)
 
 SEXP
 _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
-            SEXP isSimpleCigar, SEXP tagFilter, SEXP fout_name, SEXP fout_mode)
+            SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
+            SEXP fout_name, SEXP fout_mode)
 {
     /* open destination */
     BAM_DATA bd =
-        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, tagFilter, 0,
+        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
+                       tagFilter, mapqFilter, 0,
                        NA_INTEGER, 0, 0, '\0', '\0', NULL);
     /* FIXME: this just copies the header... */
     bam_header_t *header = BAMFILE(bfile)->file->header;

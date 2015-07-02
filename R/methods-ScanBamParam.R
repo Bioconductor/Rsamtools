@@ -2,7 +2,8 @@
 setMethod(ScanBamParam, c(which="RangesList"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   tagFilter=list(), what=character(0), which)
+                   tagFilter=list(), what=character(0), which,
+                   mapqFilter=NA_integer_)
 {
     if (is.null(names(which))) {
         if (length(which) != 0L)
@@ -13,30 +14,35 @@ setMethod(ScanBamParam, c(which="RangesList"),
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
         reverseComplement=reverseComplement, tag=tag,
         tagFilter=.normalize_tagFilter(tagFilter), what=what,
-        which=which)
+        which=which,
+        mapqFilter=as.integer(mapqFilter))
 })
 
 setMethod(ScanBamParam, c(which="missing"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   tagFilter=list(), what=character(0), which)
+                   tagFilter=list(), what=character(0), which,
+                   mapqFilter=NA_integer_)
 {
     which <- IRangesList()
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                  reverseComplement=reverseComplement, tag=tag,
-                 tagFilter=tagFilter, what=what, which=which)
+                 tagFilter=tagFilter, what=what, which=which,
+                 mapqFilter=as.integer(mapqFilter))
 })
 
 ## Default method.
 setMethod(ScanBamParam, c(which="ANY"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   tagFilter=list(), what=character(0), which)
+                   tagFilter=list(), what=character(0), which,
+                   mapqFilter=NA_integer_)
 {
     which <- as(which, "RangesList")
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                  reverseComplement=reverseComplement, tag=tag,
-                 tagFilter=tagFilter, what=what, which=which)
+                 tagFilter=tagFilter, what=what, which=which,
+                 mapqFilter=as.integer(mapqFilter))
 })
 
 ## Note that the 2 methods below are not needed. Coercing a RangedData or
@@ -46,23 +52,27 @@ setMethod(ScanBamParam, c(which="ANY"),
 setMethod(ScanBamParam, c(which="RangedData"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   tagFilter=list(), what=character(0), which)
+                   tagFilter=list(), what=character(0), which,
+                   mapqFilter=NA_integer_)
 {
     which <- ranges(which)
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                  reverseComplement=reverseComplement, tag=tag,
-                 tagFilter=tagFilter, what=what, which=which)
+                 tagFilter=tagFilter, what=what, which=which,
+                 mapqFilter=as.integer(mapqFilter))
 })
 
 setMethod(ScanBamParam, c(which="GRanges"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
-                   tagFilter=list(), what=character(0), which)
+                   tagFilter=list(), what=character(0), which,
+                   mapqFilter=NA_integer_)
 {
     which <- split(ranges(which), seqnames(which))
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                  reverseComplement=reverseComplement, tag=tag,
-                 tagFilter=tagFilter, what=what, which=which)
+                 tagFilter=tagFilter, what=what, which=which,
+                 mapqFilter=as.integer(mapqFilter))
 })
 
 ## adapted from ?integer
@@ -93,6 +103,7 @@ setValidity("ScanBamParam", function(object) {
     tagFilter <- bamTagFilter(object)
     what <- bamWhat(object)
     which <- bamWhich(object)
+    mapqFilter <- bamMapqFilter(object)
     ## flag
     if (length(flag) != 2 || typeof(flag) != "integer")
         msg <- c(msg, "'flag' must be integer(2)")
@@ -138,6 +149,12 @@ setValidity("ScanBamParam", function(object) {
     if (length(which) != 0 &&
         (any(!nzchar(names(which))) || any(is.na(names(which)))))
         msg <- c(msg, "'which' elements must be named (not NA)")
+    ## mapqFilter
+    if (length(mapqFilter) != 1)
+        msg <- c(msg, "'mapqFilter' must be integer(1), >= 0")
+    else if (!(is.na(mapqFilter) || mapqFilter >= 0))
+        msg <- c(msg, "'mapqFilter' must be NA or >= 0")
+
     if (is.null(msg)) TRUE else msg
 })
 
@@ -231,6 +248,14 @@ bamWhat <- function(object) slot(object, "what")
 "bamWhat<-" <- function(object, value)
 {
     slot(object, "what") <- value
+    validObject(object)
+    object
+}
+
+bamMapqFilter <- function(object) slot(object, "mapqFilter")
+"bamMapqFilter<-" <- function(object, value)
+{
+    slot(object, "mapqFilter") <- as.integer(value)
     validObject(object)
     object
 }
@@ -332,6 +357,7 @@ setMethod(show, "ScanBamParam",
     cat("bamWhich:", sum(elementLengths(bamWhich(object))), "ranges\n")
     what <- paste("bamWhat: ", paste(bamWhat(object), collapse=", "))
     cat(strwrap(what, exdent=2), sep="\n")
+    cat("bamMapqFilter: ", bamMapqFilter(object), "\n", sep="")
 })
 
 ## flag utils
