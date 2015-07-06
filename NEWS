@@ -3,8 +3,10 @@ CHANGES IN VERSION 1.21
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
-    o pileup allows negative values (including -Inf) to cycle_bins to
-      specify bins from the end of a read
+    o pileup adds query_bins arg to give strand-sensitive cycle bin
+      behavior; cycle_bins renamed left_bins; negative values allowed
+      (including -Inf) to specify bins based on distance from
+      end-of-read.
 
     o mapqFilter allows specification of a mapping quality filter
       threshold
