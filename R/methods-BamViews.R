@@ -179,7 +179,7 @@ setMethod("[", c("BamViews", "ANY", "ANY"),
     function(what, bamViews, fun, ...)
 {
     idx <- structure(seq_len(ncol(bamViews)), names=names(bamViews))
-    result <- bplapply(idx, fun, bamViews, ...)
+    result <- bplapply(idx, fun, bamViews=bamViews, ...)
     errs <- sapply(result, is, "remote-error")
     
     if (any(errs))

@@ -15,6 +15,9 @@ BUG FIXES
 
     o segfault on range iteration introduced 1.19.35, fixed in 1.21.1
 
+    o BamViews parallel evaluation with BatchJobs back-end requires
+      named arguments
+
 CHANGES IN VERSION 1.19
 -----------------------
 
