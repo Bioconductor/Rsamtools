@@ -350,7 +350,7 @@ setMethod(show, "ScanBamParam",
     tagnms <- names(tagFilter)
     for(idx in seq_along(tagFilter)) {
         elt <- paste(tagnms[[idx]],
-                     paste(BiocGenerics:::selectSome(tagFilter[[idx]]),
+                     paste(S4Vectors:::selectSome(tagFilter[[idx]]),
                            collapse=", "), sep=" : ")
         cat(strwrap(elt, exdent=7, indent=2), sep="\n")
     }

@@ -220,7 +220,7 @@ setMethod(show, "BamViews", function(object) {
     cat(class(object), "dim:",
         paste(dim(object), c("ranges", "samples"), collapse=" x "),
         "\n")
-    cat("names:", BiocGenerics:::selectSome(names(object)), "\n")
+    cat("names:", S4Vectors:::selectSome(names(object)), "\n")
     cat("detail: use bamPaths(), bamSamples(), bamRanges(), ...",
         "\n")
 })

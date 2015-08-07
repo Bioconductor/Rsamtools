@@ -66,7 +66,7 @@ bcfSamples <- function(object) slot(object, "samples")
 bcfTrimEmpty <- function(object) slot(object, "trimEmpty")
 bcfWhich <- function(object) slot(object, "which")
 
-.some <- BiocGenerics:::selectSome
+.some <- S4Vectors:::selectSome
 setMethod(show, "ScanBVcfParam", function(object)
 {
     .ptags <- function(tags) {
