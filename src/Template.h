@@ -19,6 +19,23 @@ class Template {
 
     Segments inprogress, ambiguous, invalid;
 
+    void add_to_complete(const bam1_t *bam, const bam1_t *mate,
+                         queue<Segments> &complete) {
+        Segments tmp;
+        if (bam->core.flag & BAM_FREAD1) {
+            tmp.push_back(bam);
+            tmp.push_back(mate);
+        } else {
+            tmp.push_back(mate);
+            tmp.push_back(bam);
+        } 
+        complete.push(tmp);
+    }
+
+public:
+
+    bool touched;
+
     // check readgroup and trimmed_qname
     bool is_template(const string trimmed_qname,
                      const string m_trimmed_qname,
@@ -40,7 +57,6 @@ class Template {
         /* trimmed qname */
         return test && trimmed_qname.compare(m_trimmed_qname) == 0;
     }
-
     // is_valid checks the following bit flags:
     // 1. Bit 0x1 (multiple segments) is 1 
     // 2. Bit 0x4 (segment unmapped) is 0
@@ -97,25 +113,22 @@ class Template {
             (bam->core.mtid == mate->core.tid);
     }
 
-    void add_to_complete(const bam1_t *bam, const bam1_t *mate,
-                         queue<Segments> &complete) {
-        Segments tmp;
-        if (bam->core.flag & BAM_FREAD1) {
-            tmp.push_back(bam);
-            tmp.push_back(mate);
-        } else {
-            tmp.push_back(mate);
-            tmp.push_back(bam);
-        } 
-        complete.push(tmp);
-    }
-
-public:
-
-    Template() {}
+    Template() { touched = false; }
 
     bool empty() const {
         return inprogress.empty() && invalid.empty() && ambiguous.empty();
+    }
+ 
+    void touched_true() {
+        touched = true;
+    }
+
+    bool get_touched() {
+        return touched;
+    }
+
+    list<const bam1_t*> get_inprogress() {
+        return inprogress;
     }
 
     static const char *qname_trim(char *qname, const char prefix,
@@ -175,7 +188,7 @@ public:
             ++it0;
         }
 
-        // process unambiguous and ambigous mates
+        // process unambiguous and ambiguous mates
         for (unsigned int i = 0; i < status.size(); ++i) {
             if (status[i].first == unmated)
                 continue;
@@ -187,7 +200,7 @@ public:
                 status[status[i].first].first = processed;
                 status[i].first = processed;
             } else if (status[i].first != processed) {
-                // ambigous mates, added to 'ambigous' queue
+                // ambiguous mates, added to 'ambiguous' queue
                 ambiguous.push_back(status[i].second);
                 status[i].first = processed;
             }
@@ -204,55 +217,6 @@ public:
                 ++it0;
             }
         }
-    }
-
-    // (BamRangeIterator only)
-    void mate_inprogress_segments(bamFile bfile, const bam_index_t * bindex,
-                                  queue<Segments> &complete,
-                                  char qname_prefix, char qname_suffix,
-                                  int32_t tid, int32_t beg, int32_t end,
-                                  uint32_t *target_len,
-                                  string trimmed_qname) {
-        bam1_t *bam = bam_init1();
-        bool touched = false;
-
-        // complete all inprogress segments, then mate
-        // add_segment calls inprogress.push_back(), so cannot iterate to end()
-        size_t size = inprogress.size();
-        for (iterator it = inprogress.begin(); size--; ++it) {
-            const bam1_t *curr = *it;
-            const int32_t mtid = curr->core.mtid;
-            const int32_t mpos = curr->core.mpos % target_len[mtid];
-
-            if ((mpos == -1) ||
-                // mate in iterator, so would have been discovered
-                ((tid == mtid) && (beg <= mpos) && (end > mpos)))
-                continue;
-
-            // search all records that overlap the iterator
-            bam_iter_t iter = bam_iter_query(bindex, mtid, mpos, mpos + 1L);
-            while (bam_iter_read(bfile, iter, bam) >= 0) {
-                
-                if (bam->core.pos < mpos) // iterate up to mpos
-                    continue;
-                if (bam->core.pos > mpos)
-                    break;
-
-                const char *mate_trimmed_qname =
-                    qname_trim(bam1_qname(bam), qname_prefix, qname_suffix);
-                if (is_valid(bam) && 
-                    is_template(trimmed_qname, mate_trimmed_qname, bam) &&
-                    is_mate(curr, bam, target_len)) {
-                    bool added = add_segment(bam);
-                    touched = touched || added;
-                }
-            }
-            bam_iter_destroy(iter);
-        }
-
-        bam_destroy1(bam);
-        if (touched)
-            mate(complete, target_len);
     }
 
     // move 'ambiguous' to ambiguous_queue 
