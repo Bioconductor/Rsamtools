@@ -54,7 +54,6 @@ class BamRangeIterator : public BamIterator {
         map<pair<int32_t, int>,
             vector<pair<int32_t, Template *> > > groups;
         for (template_it it = templates.begin(); it != templates.end(); ++it) {
-            // FIXME: should ip be a pointer?
             list<const bam1_t *> ip = it->second.get_inprogress();
             for (list_it l_it = ip.begin(); l_it != ip.end(); ++l_it) {
                 const bam1_t *curr = *l_it;
@@ -100,9 +99,6 @@ class BamRangeIterator : public BamIterator {
                 while (p_end != tmpl_v.end() && p_end->first == p_start->first)
                     ++p_end;
 
-                const char *mate_qname =
-                    Template::qname_trim(bam1_qname(bam), qname_prefix_end(),
-                                         qname_suffix_start());
                 /* find mates for this read, across all mates */
                 for (pairs_it p = p_start; p != p_end; ++p) {
                     // Each Template has an 'inprogress' list that may have > 1 

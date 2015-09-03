@@ -39,7 +39,6 @@ protected:
             Rf_error("[qname_suffix_start] report to maintainer('Rsamtools')");
         return bam_data->qnameSuffixStart;
     }
-        
 
     void mate_touched_templates() {
         for (set<string>::iterator it=touched_templates.begin();
