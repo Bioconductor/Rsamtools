@@ -141,11 +141,13 @@ test_BamViews_scanBam <- function()
     res <- scanBam(bv)
     for (i in seq_along(fl))
         .scanBam_ok(scanBam(fl[[i]]), res[[i]])
+    closeAllConnections()
 
     param <- ScanBamParam(what="rname")
     res <- scanBam(bv, param=param)
     for (i in seq_along(fl))
         .scanBam_ok(scanBam(fl[[i]], param=param), res[[i]])
+    closeAllConnections()
 }
 
 test_BamViews_countBam <- function()
@@ -157,6 +159,7 @@ test_BamViews_countBam <- function()
     res <- countBam(bv)
     for (i in seq_along(fl))
         checkIdentical(countBam(fl[i]), res[[i]])
+    closeAllConnections()
 
     which <- IRangesList(seq1=IRanges(1, 1000),
                          seq2=IRanges(1, 1000))
@@ -166,4 +169,5 @@ test_BamViews_countBam <- function()
     res <- countBam(bv)
     for (i in seq_along(fl))
         checkIdentical(countBam(fl[i], param=param), res[[i]])
+    closeAllConnections()
 }
