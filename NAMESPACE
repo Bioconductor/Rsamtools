@@ -24,9 +24,9 @@ importClassesFrom(GenomeInfoDb, Seqinfo)
 
 importFrom(GenomeInfoDb, Seqinfo, seqinfo, seqlevels)
 
-importClassesFrom(GenomicRanges, GRanges)
+importClassesFrom(GenomicRanges, GRanges, GRangesList)
 
-importFrom(GenomicRanges, GRanges)
+importFrom(GenomicRanges, GRanges, GRangesList)
 
 importMethodsFrom(GenomicRanges, seqnames, strand)
 
