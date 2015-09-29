@@ -167,8 +167,8 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
             s = Rf_lengthgets(s, sbd->icnt);
             SET_VECTOR_ELT(r, i, s);
             memcpy(INTEGER(s), sbd->rname, sbd->icnt * sizeof(int));
-            _as_factor(s, (const char **) header->target_name,
-                       header->n_targets);
+            _as_rname(s, (const char **) header->target_name,
+                      header->n_targets);
             Free(sbd->rname);
             break;
         case STRAND_IDX:
@@ -200,8 +200,8 @@ void _finish1range_SCAN_BAM_DATA(SCAN_BAM_DATA sbd, bam_header_t *header,
             s = Rf_lengthgets(s, sbd->icnt);
             SET_VECTOR_ELT(r, i, s);
             memcpy(INTEGER(s), sbd->mrnm, sbd->icnt * sizeof(int));
-            _as_factor(s, (const char **) header->target_name,
-                       header->n_targets);
+            _as_rname(s, (const char **) header->target_name,
+                      header->n_targets);
             Free(sbd->mrnm);
             break;
         case MPOS_IDX:

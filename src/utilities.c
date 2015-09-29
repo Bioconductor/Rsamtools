@@ -3,6 +3,7 @@
 #include "utilities.h"
 #include "IRanges_interface.h"
 #include "XVector_interface.h"
+#include "samtools/khash.h"
 
 void *_Rs_Realloc_impl(void *p, size_t n, size_t t)
 {
@@ -74,6 +75,7 @@ SEXP _get_lkup(const char *baseclass)
 
 void _as_seqlevels(SEXP vec, SEXP lvls)
 {
+    
     _as_factor_SEXP(vec, lvls);
 }
 
@@ -83,6 +85,43 @@ void _as_factor_SEXP(SEXP vec, SEXP lvls)
     SET_STRING_ELT(cls, 0, mkChar("factor"));
     SET_CLASS(vec, cls);
     SET_ATTR(vec, install("levels"), lvls);
+    UNPROTECT(1);
+}
+
+KHASH_MAP_INIT_STR(str, int)
+
+void _as_rname(SEXP vec, const char **lvls, const int n_lvls)
+{
+    /* map duplicate levels to first occurrence */
+    SEXP levels = R_NilValue;
+    int i, n = 0, ret, *map = NULL;
+    khash_t(str) *level_map = kh_init(str);
+    khiter_t iter;
+
+    for (i = 0; i < n_lvls; ++i) {
+        iter = kh_get(str, level_map, lvls[i]);
+        if (iter == kh_end(level_map)) {
+            iter = kh_put(str, level_map, lvls[i], &ret);
+            kh_value(level_map, iter) = ++n;
+        }
+    }
+    
+    map = (int *) calloc(n_lvls, sizeof(int));
+    levels = PROTECT(NEW_CHARACTER(n));
+    for (i = 0; i < n_lvls; ++i) {
+        iter = kh_get(str, level_map, lvls[i]);
+        map[i] = kh_value(level_map, iter);
+        SET_STRING_ELT(levels, map[i] - 1, mkChar(lvls[i]));
+    }
+
+    /* don't need to free keys (owned by calling function) */
+    kh_destroy(str, level_map);
+
+    int *v = INTEGER(vec);
+    for (i = 0; i < Rf_length(vec); ++i)
+        v[i] = v[i] == NA_INTEGER ? v[i] : map[v[i] - 1];
+
+    _as_factor_SEXP(vec, levels);
     UNPROTECT(1);
 }
 

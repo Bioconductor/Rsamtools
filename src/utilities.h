@@ -19,6 +19,7 @@ SEXP _get_lkup(const char *baseclass);
 void _as_factor_SEXP(SEXP vec, SEXP lvls);
 void _as_factor(SEXP vec, const char **lvls, const int n_lvls);
 void _as_strand(SEXP vec);
+void _as_rname(SEXP vec, const char **lvls, const int n_lvls);
 void _as_nucleotide(SEXP vec);
 void _as_seqlevels(SEXP vec, SEXP lvls);
 SEXP _as_XStringSet(const char **key, int len, const char *baseclass);
