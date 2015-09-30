@@ -45,6 +45,7 @@ static void _bamfile_close(SEXP ext)
     bfile->file = NULL;
     bfile->index = NULL;
     bfile->iter = NULL;
+    bfile->pbuffer = NULL;
 }
 
 static void _bamfile_finalizer(SEXP ext)
