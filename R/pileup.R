@@ -32,7 +32,7 @@ setMethod(show, "PileupParam", function(object) {
 }
 
 PileupParam <-
-    function(max_depth=250, min_base_quality=0, min_mapq=13,
+    function(max_depth=250, min_base_quality=13, min_mapq=0,
              min_nucleotide_depth=1, min_minor_allele_depth=0,
              distinguish_strands=TRUE, distinguish_nucleotides=TRUE,
              ignore_query_Ns=TRUE, include_deletions=TRUE,
@@ -89,7 +89,6 @@ PileupParam <-
     function(file, index=file, ..., scanBamParam=ScanBamParam(),
              pileupParam=PileupParam())
 {
-    cfun <- "c_Pileup"
     if (!isOpen(file)) {
         open(file)
         on.exit(close(file))
@@ -100,7 +99,7 @@ PileupParam <-
         bamReverseComplement(scanBamParam) <- FALSE
     }
     schema <- .schemaBuilder(pileupParam)
-    result <- .io_bam(cfun, file,
+    result <- .io_bam(.c_Pileup, file,
             ## space, keepFlags, isSimpleCigar extracted from 'scanBamParam'
             ## in .io_bam;
             ## remainder (...) passed to C

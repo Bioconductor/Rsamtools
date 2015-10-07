@@ -505,12 +505,12 @@ test_data.frame_format <- function() {
                                distinguish_nucleotides=TRUE)
     xx <- pileup(bf, scanBamParam=scanBamParam, pileupParam=pileupParam)
     expected <- .tadf(
-        seqnames=c(rep("seq1", 3), rep("seq2", 6)),
-        pos=c(1, 2, 3, 1, 1, 2, 2, 3, 3),
-        strand=c("+", "+", "+", "+", "-", "+", "-", "+", "-"),
-        nucleotide=c("C", "A", "C", "T", "T", "T", "T", "C", "C"),
-        count=c(1, 1, 2, 2, 1, 3, 1, 3, 1),
-        which_label=c(rep("seq1:1-3", 3), rep("seq2:1-3", 6)),
+        seqnames=c(rep("seq1", 3), rep("seq2", 5)),
+        pos=c(1, 2, 3, 1, 2, 2, 3, 3),
+        strand=c("+", "+", "+", "+", "+", "-", "+", "-"),
+        nucleotide=c("C", "A", "C", "T", "T", "T", "C", "C"),
+        count=c(1, 1, 2, 2, 3, 1, 3, 1),
+        which_label=c(rep("seq1:1-3", 3), rep("seq2:1-3", 5)),
         use_ex1.bam_levels=TRUE)
     ##print(xx);str(xx);print(expected);str(expected)
     checkIdentical(expected, xx)

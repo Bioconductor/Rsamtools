@@ -18,6 +18,10 @@ BUG FIXES
     o BamViews parallel evaluation with BatchJobs back-end requires
       named arguments
 
+    o PileupParam() now correctly follows samtools with
+      min_base_quality=13, min_map_quality=0 (previously, values were
+      assigned as 0 and 13, respectively)
+
 CHANGES IN VERSION 1.19
 -----------------------
 

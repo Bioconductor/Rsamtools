@@ -44,7 +44,7 @@ pileup(file, index=file, ..., scanBamParam=ScanBamParam(),
        pileupParam=PileupParam())
 
 ## PileupParam constructor
-PileupParam(max_depth=250, min_base_quality=0, min_mapq=13,
+PileupParam(max_depth=250, min_base_quality=13, min_mapq=0,
     min_nucleotide_depth=1, min_minor_allele_depth=0,
     distinguish_strands=TRUE, distinguish_nucleotides=TRUE,
     ignore_query_Ns=TRUE, include_deletions=TRUE, include_insertions=FALSE,
