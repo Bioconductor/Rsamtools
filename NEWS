@@ -11,16 +11,18 @@ SIGNIFICANT USER-VISIBLE CHANGES
     o mapqFilter allows specification of a mapping quality filter
       threshold
 
+    o PileupParam() now correctly follows samtools with
+      min_base_quality=13, min_map_quality=0 (previously, values were
+      assigned as 0 and 13, respectively)
+
+    o Support parsing 'B' tags in bam file headers.
+
 BUG FIXES
 
     o segfault on range iteration introduced 1.19.35, fixed in 1.21.1
 
     o BamViews parallel evaluation with BatchJobs back-end requires
       named arguments
-
-    o PileupParam() now correctly follows samtools with
-      min_base_quality=13, min_map_quality=0 (previously, values were
-      assigned as 0 and 13, respectively)
 
 CHANGES IN VERSION 1.19
 -----------------------

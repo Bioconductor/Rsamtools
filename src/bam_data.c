@@ -158,6 +158,51 @@ static void _tag_type_check(const char *tagname, SEXP tag, SEXPTYPE is)
           tagname, Rf_type2char(was), Rf_type2char(is));
 }
 
+static SEXP _bamtags_B(uint8_t *s) {
+    uint8_t sub_type = *(s++);
+    int32_t n;
+    memcpy(&n, s, 4);
+
+    SEXP tag_B = R_NilValue;
+    switch(sub_type) {
+    case 'c':
+    case 'C':
+    case 'i':
+    case 'I':
+    case 's':
+    case 'S':
+        tag_B = NEW_INTEGER(n); PROTECT(tag_B);
+        for (int j = 0; j < n; ++j)
+            INTEGER(tag_B)[j] = NA_INTEGER;
+        break;
+    case 'f':
+        tag_B = NEW_NUMERIC(n); PROTECT(tag_B);
+        for (int j = 0; j < n; ++j)
+            REAL(tag_B)[j] = NA_REAL;
+        break;
+    }
+
+    s += 4; // now point to the start of the array
+    for (int i = 0; i < n; ++i) { // FIXME: better performance: loop after "if"
+        if ('c' == sub_type || 'C' == sub_type) {
+            INTEGER(tag_B)[i] = (int) (*(uint8_t *) s);
+            ++s;
+        } else if ('s' == sub_type || 'S' == sub_type) {
+            INTEGER(tag_B)[i] = (int) (*(int16_t *) s);
+            s += 2;
+        } else if ('i' == sub_type || 'I' == sub_type) {
+            INTEGER(tag_B)[i] = (int) (*(int32_t *) s);
+            s += 4;
+        } else if ('f' == sub_type) {
+            REAL(tag_B)[i] = *(float *) s;
+            s += 4;
+        }
+    }
+
+    UNPROTECT(1);
+    return tag_B;
+}
+
 static void _bamtags(const bam1_t * bam, BAM_DATA bd, SEXP tags)
 {
     SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
@@ -202,6 +247,9 @@ static void _bamtags(const bam1_t * bam, BAM_DATA bd, SEXP tags)
             case 'H':
                 tag = NEW_RAW(n);
                 break;
+            case 'B':
+                tag = NEW_LIST(n);
+                break;
             default:
                 error("unknown tag type '%c'", aux[0]);
                 break;
@@ -238,6 +286,10 @@ static void _bamtags(const bam1_t * bam, BAM_DATA bd, SEXP tags)
         case 'H':              /* FIXME: one byte or many? */
             _tag_type_check(tagname, tag, RAWSXP);
             RAW(tag)[idx] = aux[1];
+            break;
+        case 'B':
+            _tag_type_check(tagname, tag, VECSXP);
+            SET_VECTOR_ELT(tag, idx, _bamtags_B(&aux[1]));
             break;
         default:
             error("unknown tag type '%c'", aux[0]);
