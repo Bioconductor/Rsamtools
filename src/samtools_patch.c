@@ -33,6 +33,8 @@ int _samtools_fprintf(FILE * file, const char *fmt, ...)
         va_start(argp, fmt);
         n = vsnprintf(buf, bufsize, fmt, argp);
         va_end(argp);
+        if (0 == strncmp("[khttp_connect_file] fail to open file", fmt, 38))
+            Rf_error(buf);
         Rf_warning(buf);
     }
     return n;
