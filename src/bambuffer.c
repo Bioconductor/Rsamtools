@@ -40,7 +40,7 @@ void bambuffer_push(BAM_BUFFER buf, const bam1_t *bam)
     buf->i += 1;
 }
 
-void bambuffer_reset(BAM_BUFFER buf)
+void _bambuffer_reset(BAM_BUFFER buf)
 {
     for (int i = 0; i < buf->i; ++i)
         bam_destroy1(buf->buffer[i]);
@@ -49,7 +49,7 @@ void bambuffer_reset(BAM_BUFFER buf)
 
 void bambuffer_free(BAM_BUFFER buf)
 {
-    bambuffer_reset(buf);
+    _bambuffer_reset(buf);
     Free(buf->buffer);
     if (buf->as_mates) {
         Free(buf->mates);
@@ -170,6 +170,13 @@ SEXP bambuffer_write(SEXP bufext, SEXP bamext, SEXP filter)
                 Rf_error("'bamBuffer' write failed, record %d", i);
         }
 
-    bambuffer_reset(buf);
     return ScalarInteger(n);
+}
+
+SEXP bambuffer_reset(SEXP bufext)
+{
+    _checkext(bufext, BAMBUFFER_TAG, "bamBuffer 'reset'");
+    BAM_BUFFER buf = BAMBUFFER(bufext);
+    _bambuffer_reset(buf);
+    return ScalarLogical(TRUE);
 }

@@ -18,10 +18,10 @@ SEXP bambuffer_parse(SEXP bamext, SEXP space, SEXP keepFlags,
                      SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                      SEXP bufext, SEXP reverseComplement, SEXP template_list);
 SEXP bambuffer_write(SEXP bufext, SEXP bamext, SEXP filter);
+SEXP bambuffer_reset(SEXP bufext);
 
 BAM_BUFFER bambuffer_new(int n, int as_mates);
 void bambuffer_push(BAM_BUFFER buf, const bam1_t *bam);
-void bambuffer_reset(BAM_BUFFER buf);
 void bambuffer_free(BAM_BUFFER buf);
 
 #endif

@@ -330,6 +330,7 @@ setMethod(countBam, "BamFile",
         ans <- DataFrame(.load_bamcols_from_scanBam_res(ans, param))
         ans <- eval(filter, ans)
         n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
+        .Call(.bambuffer_reset, buf)
     }
 
     destination
