@@ -20,6 +20,7 @@
 \alias{names<-,BamViews-method}
 \alias{dim,BamViews-method}
 \alias{dimnames,BamViews-method}
+\alias{dimnames<-,BamViews-method}
 \alias{dimnames<-,BamViews,ANY-method}
 \alias{[,BamViews,ANY,missing-method}
 \alias{[,BamViews,missing,ANY-method}
