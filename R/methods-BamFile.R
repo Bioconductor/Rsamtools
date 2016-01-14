@@ -298,6 +298,11 @@ setMethod(countBam, "BamFile",
 .filterBam_FilterRules <-
     function(file, destination, filter, param)
 {
+    if (!is.list(filter))
+        filter <- list(filter)
+    if (length(destination) != length(filter))
+        stop("length of 'destination' must equal length of 'filter' list")
+
     which <- unlist(bamWhich(param))
     nRange <- length(which)
     if (nRange)                         # yield by range
@@ -314,10 +319,11 @@ setMethod(countBam, "BamFile",
     if (is.na(qnameSuffix <- qnameSuffixStart(file)))
         qnameSuffix <- ""
 
-    dest <- .Call(.bamfile_open, destination, path(file), "wb")
-    on.exit(.Call(.bamfile_close, dest))
+    dest <- lapply(destination, function(dest) {
+        .Call(.bamfile_open, dest, path(file), "wb")
+    })
+    on.exit(for (d in dest) .Call(.bamfile_close, d))
 
-    n_tot <- 0L
     repeat {
         buf <- .io_bam(.prefilter_bamfile, file, param=param,
                        yieldSize, obeyQname(file), asMates(file),
@@ -328,8 +334,10 @@ setMethod(countBam, "BamFile",
         ans <- .io_bam(.bambuffer_parse, file, param=param, buf,
                        reverseComplement, tmpl)
         ans <- DataFrame(.load_bamcols_from_scanBam_res(ans, param))
-        ans <- eval(filter, ans)
-        n_tot <- n_tot + .Call(.bambuffer_write, buf, dest, ans)
+        for (i in seq_along(dest)) {
+            keep <- eval(filter[[i]], ans)
+            .Call(.bambuffer_write, buf, dest[[i]], keep)
+        }
         .Call(.bambuffer_reset, buf)
     }
 
@@ -359,16 +367,17 @@ setMethod(filterBam, "BamFile",
     else
         .io_bam(.filter_bamfile, file, param=param, destination, "wb")
 
-    if (indexDestination) {
-        if (asMates(file)) {
-            ## FIXME: filtering by mates requires expensive re-sort!
-            fl <- tempfile()
-            file.rename(destination, fl)
-            sortBam(fl, destination)
-            file.rename(paste0(destination, ".bam"), destination)
+    if (indexDestination)
+        for (dest in destination) {
+            if (asMates(file)) {
+                ## FIXME: filtering by mates requires expensive re-sort!
+                fl <- tempfile()
+                file.rename(dest, fl)
+                sortBam(fl, dest)
+                file.rename(paste0(dest, ".bam"), dest)
+            }
+            indexBam(dest)
         }
-        indexBam(destination)
-    }
     destination
 })
 

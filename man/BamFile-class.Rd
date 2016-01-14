@@ -312,9 +312,10 @@ qnameSuffixStart(object, ...) <- value
       the result of \code{\link{countBam}} applied to the specified
       path.}
 
-    \item{filterBam}{Visit the path in \code{path(file)}, returning
-      the result of \code{\link{filterBam}} applied to the specified
-      path.}
+    \item{filterBam}{Visit the path in \code{path(file)}, returning the
+      result of \code{\link{filterBam}} applied to the specified
+      path. A single file can be filtered to one or several
+      destinations, as described in \code{\link{filterBam}}.}
 
     \item{indexBam}{Visit the path in \code{path(file)}, returning
       the result of \code{\link{indexBam}} applied to the specified

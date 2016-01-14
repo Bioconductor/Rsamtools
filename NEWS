@@ -1,3 +1,12 @@
+CHANGES IN VERSION 1.23
+-----------------------
+
+NEW FEATURES
+
+    o filterBam can filter one source file into multiple destinations
+      by providing a vector of destination files and a list of
+      FilterRules.
+
 CHANGES IN VERSION 1.21
 -----------------------
 

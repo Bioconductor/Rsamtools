@@ -158,9 +158,13 @@ mergeBam(files, destination, ...)
   corresponding records in the filtered BAM file.  The BAM file is
   created at \code{destination}. An index file is created on the
   destination when \code{indexDestination=TRUE}. It is more space- and
-  time-efficient to filter use \code{bamWHich}, \code{bamFlag}, and
+  time-efficient to filter using \code{bamWhich}, \code{bamFlag}, and
   \code{bamSimpleCigar}, if appropriate, than to supply
-  \code{FilterRules}.
+  \code{FilterRules}.  \code{filter} may be a list of \code{FilterRules}
+  instances, in which case \code{destination} must be a character vector
+  of equal length. The original \code{file} is then separately filtered
+  into \code{destination[[i]]}, using \code{filter[[i]]} as the filter
+  criterion.
   
   \code{sortBam} sorts the BAM file given as its first argument,
   analogous to the \dQuote{samtools sort} function.
@@ -332,11 +336,22 @@ param <- ScanBamParam(
    what="seq")
 dest <- filterBam(fl, tempfile(), param=param)
 countBam(dest)  ## 3271 records
-filt <- list(MinWidth = function(x) width(x$seq) > 35)
-dest <- filterBam(fl, tempfile(), param=param, filter=FilterRules(filt))
+
+## filter to a single file
+filter <- FilterRules(list(MinWidth = function(x) width(x$seq) > 35))
+dest <- filterBam(fl, tempfile(), param=param, filter=filter)
 countBam(dest)  ## 398 records
 res3 <- scanBam(dest, param=ScanBamParam(what="seq"))[[1]]
 table(width(res3$seq))
+
+## filter 1 file to 2 destinations
+filters <- list(
+    FilterRules(list(long=function(x) width(x$seq) > 35)),
+    FilterRules(list(short=function(x) width(x$seq) <= 35))
+)
+destinations <- replicate(2, tempfile())
+dest <- filterBam(fl, destinations, param=param, filter=filters)
+lapply(dest, countBam)
 
 ##
 ## sortBam
