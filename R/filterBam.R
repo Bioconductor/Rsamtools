@@ -18,7 +18,7 @@
     } else {
         reduce(rangesList, drop.empty.ranges=TRUE)
     }
-    reducedList[elementLengths(reducedList) != 0]
+    reducedList[lengths(reducedList) != 0]
 }
 
 .filterBam_preprocess <-

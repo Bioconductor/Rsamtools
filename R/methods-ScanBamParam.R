@@ -354,7 +354,7 @@ setMethod(show, "ScanBamParam",
                            collapse=", "), sep=" : ")
         cat(strwrap(elt, exdent=7, indent=2), sep="\n")
     }
-    cat("bamWhich:", sum(elementLengths(bamWhich(object))), "ranges\n")
+    cat("bamWhich:", sum(lengths(bamWhich(object))), "ranges\n")
     what <- paste("bamWhat: ", paste(bamWhat(object), collapse=", "))
     cat(strwrap(what, exdent=2), sep="\n")
     cat("bamMapqFilter: ", bamMapqFilter(object), "\n", sep="")
