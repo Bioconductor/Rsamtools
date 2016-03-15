@@ -23,6 +23,9 @@
 \alias{pileup,character-method}
 \alias{pileup,BamFile-method}
 
+% utility
+\alias{phred2ASCIIOffset}
+
 \title{
 
   Use filters and output formats to calculate pile-up statistics for a
@@ -49,6 +52,10 @@ PileupParam(max_depth=250, min_base_quality=13, min_mapq=0,
     distinguish_strands=TRUE, distinguish_nucleotides=TRUE,
     ignore_query_Ns=TRUE, include_deletions=TRUE, include_insertions=FALSE,
     left_bins=NULL, query_bins=NULL, cycle_bins=NULL)
+
+phred2ASCIIOffset(phred=integer(),
+    scheme= c("Illumina 1.8+", "Sanger", "Solexa", "Illumina 1.3+",
+              "Illumina 1.5+"))
 }
 
 \arguments{
@@ -74,7 +81,8 @@ PileupParam(max_depth=250, min_base_quality=13, min_mapq=0,
     considered for each position in the pileup.}
 
   \item{min_base_quality}{integer(1); minimum \sQuote{QUAL} value for
-    each nucleotide in an alignment.}
+    each nucleotide in an alignment. Use \code{phred2ASCIIOffset} to
+    help translate numeric or character values to these offsets.}
 
   \item{min_mapq}{integer(1); minimum \sQuote{MAPQ} value for an
     alignment to be included in pileup.}
@@ -124,6 +132,16 @@ PileupParam(max_depth=250, min_base_quality=13, min_mapq=0,
     be formed. \code{NULL} (default) indicates no binning. Use negative
     values to count from the opposite end. Sorted order not
     required. Floating-point values are coerced to \code{integer}.}
+
+  \item{phred}{Either a numeric() (coerced to integer()) PHRED score
+    (e.g., in the range (0, 41) for the \sQuote{Illumina 1.8+} scheme)
+    or character() of printable ASCII characters. When \code{phred} is
+    character(), it can be of length 1 with 1 or more characters, or of
+    any length where all elements have exactly 1 character.}
+
+  \item{scheme}{Encoding scheme, used to translate numeric() PHRED
+    scores to their ASCII code. Ignored when \code{phred} is already
+    character().}
 
   \item{cycle_bins}{DEPRECATED. See \code{\link{left_bins}} for
     identical behavior.}
@@ -419,6 +437,11 @@ PileupParam(max_depth=250, min_base_quality=13, min_mapq=0,
 
   \code{PileupParam} returns an instance of PileupParam class.
 
+  \code{phred2ASCIIOffset} returns a named integer vector of the same
+  length or number of characters in \code{phred}. The names are the
+  ASCII encoding, and the values are the offsets to be used with
+  \code{min_base_quality}.
+
 }
 
 \seealso{
@@ -429,6 +452,9 @@ PileupParam(max_depth=250, min_base_quality=13, min_mapq=0,
     \item{\link{scanBam}}
     \item{\link{cut}}
   }
+
+  For the relationship between PHRED scores and ASCII encoding, see
+  \url{https://en.wikipedia.org/wiki/FASTQ_format#Encoding}.
 }
 
 \author{Nathaniel Hayden \url{nhayden@fredhutch.org}}
@@ -517,6 +543,10 @@ res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 head(res)
 res <- res[, c("pos", "count")] ## drop seqnames and which_label cols
 plot(count ~ pos, res, pch=".")
+
+## ASCII offsets to help specify min_base_quality, e.g., quality of at
+## least 10 on the Illumina 1.3+ scale
+phred2ASCIIOffset(10, "Illumina 1.3+")
 
 ## Well-supported polymorphic positions (minor allele present in at
 ## least 5 alignments) with high map quality

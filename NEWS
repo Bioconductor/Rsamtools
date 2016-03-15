@@ -7,6 +7,9 @@ NEW FEATURES
       by providing a vector of destination files and a list of
       FilterRules.
 
+    o phred2ASCIIOffset() helps translate PHRED encodings (integer or
+      character) to ASCII offsets for use in pileup()
+
 CHANGES IN VERSION 1.21
 -----------------------
 
