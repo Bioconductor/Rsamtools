@@ -8,6 +8,8 @@ importFrom(bitops, bitAnd)
 
 importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
+ importFrom(stats, rbinom, setNames)
+
 importClassesFrom(BiocGenerics, url, gzfile, unz, pipe)
 
 importFrom(BiocGenerics, cbind, duplicated, eval, Filter, lapply, Map,
