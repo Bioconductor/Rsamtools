@@ -6,6 +6,13 @@
     tagFilter <- bamTagFilter(param)
     mapqFilter <- bamMapqFilter(param)
     which <- bamWhich(param)
+    if (!all(names(which) %in% seqlevels(file))) {
+        bad <- setdiff(names(which), seqlevels(file))
+        stop("seqlevels(param) not in BAM header:",
+             "\n    seqlevels: ", paste(sQuote(bad), collapse=", "),
+             "\n    file: ", path(file),
+             "\n    index: ", index(file))
+    }
     space <- 
         if (0L != length(space(which)))
             list(as.character(space(which)), .uunlist(start(which)),

@@ -106,7 +106,6 @@ test_scanBam_which <- function()
                      "seq2:1000-2000"))
     checkIdentical(exp,
                    sapply(res, function(x) unique(sapply(x, length))))
-
 }
 
 test_scanBam_which_bounds <- function()
@@ -226,24 +225,13 @@ test_scanBam_badSpace <- function()
     which <- RangesList(badspc=IRanges(100000, 2000000))
     p1 <- ScanBamParam(which=which, what=scanBamWhat())
 
-    oopts <- options(warn=-1)
-    on.exit(options(oopts))
-    flag <- list()
-    tryCatch({
-        withCallingHandlers(scanBam(fl, param=p1), warning=function(w) {
-            checkTrue(grepl("space 'badspc'", conditionMessage(w)))
-            flag[["warn"]] <<- TRUE
-        })
+    exp <- "seqlevels(param) not in BAM header"
+    test <- tryCatch({
+        scanBam(fl, param=p1)
     }, error=function(e) {
-        fl0 <- Rsamtools:::.normalizePath(fl)
-        checkTrue(grepl(paste("file:", fl0), conditionMessage(e), fixed=TRUE))
-        flag[["err"]] <<- TRUE
-    }, finally=local({
-        checkEquals(2L, length(flag))
-        checkTrue(all(flag))
-        flag[["flag"]] <<- TRUE
-    }))
-    checkTrue(flag[["flag"]])
+        startsWith(conditionMessage(e), exp)
+    })
+    checkTrue(identical(test, TRUE))
 }
 
 test_scanBam_index <- function()

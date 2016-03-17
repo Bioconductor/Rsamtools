@@ -10,6 +10,10 @@ NEW FEATURES
     o phred2ASCIIOffset() helps translate PHRED encodings (integer or
       character) to ASCII offsets for use in pileup()
 
+BUG FIXES
+
+    o scanBam() fails early when param seqlevels not present in file.
+
 CHANGES IN VERSION 1.21
 -----------------------
 
