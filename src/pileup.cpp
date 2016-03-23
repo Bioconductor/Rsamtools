@@ -73,17 +73,20 @@ static SEXP _pileup_bam(SEXP ext, SEXP space, SEXP keepFlags,
             // _scan_bam_fetch(BAM_DATA bd, SEXP space, int* start, int* end,
             //                 bam_fetch_f , bam_fetch_mate_f , _FINISH_FUNC)
             status = _do_scan_bam(bd, space, _filter_and_parse1_pileup,
-                                  NULL, _finish1range_pileup);
+                                  (bam_fetch_mate_f) NULL,
+                                  _finish1range_pileup);
         }
     } else { // must do loop if buffered
         shim.start1(0);
         status = _do_scan_bam(bd, space, _filter_and_parse1_pileup,
-                              NULL, _finish_buffered_yieldSize_chunk);
+                              (bam_fetch_mate_f) NULL,
+                              _finish_buffered_yieldSize_chunk);
         for(;;) {
             if(!(dynamic_cast<Pileup&>(buffer).needMoreInput()) || status <= 0)
                 break;
             status = _do_scan_bam(bd, space, _filter_and_parse1_pileup,
-                                  NULL, _finish_buffered_yieldSize_chunk);
+                                  (bam_fetch_mate_f) NULL,
+                                  _finish_buffered_yieldSize_chunk);
         }
         shim.finish1(0);
     }

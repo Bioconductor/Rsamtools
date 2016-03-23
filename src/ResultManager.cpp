@@ -2,7 +2,7 @@
 
 void ResultMgr::signalGenomicPosStart(const GenomicPosition& genPos) {
     //Rprintf("signalGenomicPosStart tid %d pos %d\n", genPos.tid, genPos.pos);
-    if(isBuffered && posCache != NULL)
+    if(isBuffered && (posCache != (PosCache *) NULL))
         Rf_error("internal: ResultMgr's previous posCache not deallocated");
     posCache = new PosCache(genPos);
     if(isBuffered) {
@@ -206,10 +206,10 @@ void ResultMgr::signalGenomicPosEnd() {
         if(posCachePassesFilters(*posCache))
             extractFromPosCache();
         delete posCache;
-        posCache = NULL;
+        posCache = (PosCache *) NULL;
     } else {
         (*posCacheCollptrptr)->storePosCache(posCache);
-        posCache = NULL;
+        posCache = (PosCache *) NULL;
     }
 
     //Rprintf("end of signalPosEnd\n\n****************\n\n");
@@ -219,23 +219,23 @@ void ResultMgr::signalGenomicPosEnd() {
 // PosCache->genomicPosition < minLeftmostGenPOS
 void ResultMgr::signalYieldStart() {
     //Rprintf("signalYieldStart\n");
-    if(isBuffered && *posCacheCollptrptr != NULL) {
+    if(isBuffered && *posCacheCollptrptr != (PosCacheColl *) NULL) {
         for(;;) {
             posCache =
                 (*posCacheCollptrptr)->destructiveNextLT(lastLeftmostGenPOS);
-            if(posCache == NULL)
+            if(posCache == (PosCache *) NULL)
                 break;
             if(posCachePassesFilters(*posCache))
                 extractFromPosCache();
             delete posCache;
-            posCache = NULL;
+            posCache = (PosCache *) NULL;
         }
     }
 }
 
 int ResultMgr::numYieldablePosCaches() const {
     //Rprintf("begin numYieldablePosCaches\n");
-    if(isBuffered && *posCacheCollptrptr != NULL) {
+    if(isBuffered && (*posCacheCollptrptr != (PosCacheColl *) NULL)) {
         //Rprintf("printing posCacheColl contents\n");
         //(*posCacheCollptrptr)->printGenPositions();
         int num = (*posCacheCollptrptr)->numPosCachesLT(lastLeftmostGenPOS);
@@ -277,23 +277,23 @@ void ResultMgr::signalYieldEnd() {
 
 void ResultMgr::signalEOI() {
     //Rprintf("got EOI message!\n");
-    if(isBuffered && *posCacheCollptrptr != NULL) {
+    if(isBuffered && (*posCacheCollptrptr != (PosCacheColl *) NULL)) {
         //(*posCacheCollptrptr)->printGenPositions();
         int i = 0;
         for(;;) {
             //printf("i %d\n", i);
             posCache = (*posCacheCollptrptr)->destructiveNext();
-            if(posCache == NULL)
+            if(posCache == (PosCache *) NULL)
                 break;
             if(posCachePassesFilters(*posCache))
                 extractFromPosCache();
             delete posCache;
-            posCache = NULL;
+            posCache = (PosCache *) NULL;
             ++i;
         }
         //Rprintf("deallocating *posCacheCollptrptr's object\n");
         delete *posCacheCollptrptr;
-        *posCacheCollptrptr = NULL;
+        *posCacheCollptrptr = (PosCacheColl *) NULL;
     }
 }
 

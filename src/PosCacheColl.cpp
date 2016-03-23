@@ -9,6 +9,6 @@ void getPosCacheFromColl(PosCacheColl& pcc, PosCache*& posCachePtr) {
     if(tmp != posCachePtr) {
         // found val in pcc, must deallocate incoming ptr's object
         delete tmp;
-        tmp = NULL;
+        tmp = (PosCache *) NULL;
     }
 }

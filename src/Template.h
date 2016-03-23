@@ -47,8 +47,10 @@ public:
             *aux = bam_aux_get(inprogress.front(), "RG"),
             *m_aux = bam_aux_get(mate, "RG");
         const char
-            *rg = (aux == NULL) ? NULL : bam_aux2Z(aux),
-            *m_rg = (m_aux == NULL) ? NULL : bam_aux2Z(m_aux);
+            *rg = (aux == (const uint8_t *) NULL) ?
+                (const char *) NULL : bam_aux2Z(aux),
+            *m_rg = (m_aux == (const uint8_t *)  NULL) ?
+                (const char *) NULL : bam_aux2Z(m_aux);
 
         if ((aux == NULL && m_aux == NULL) ||
             (aux != NULL && m_aux != NULL && strcmp(rg, m_rg) == 0))
@@ -170,7 +172,8 @@ public:
     void mate(queue<Segments> &complete, const uint32_t *target_len) {
         const int unmated=-1, multiple=-2, processed=-3;
         vector<pair<int, const bam1_t *> >
-            status(inprogress.size(), pair<int, const bam1_t *>(unmated, NULL));
+            status(inprogress.size(),
+                   pair<int, const bam1_t *>(unmated, (const bam1_t *) NULL));
         Segments::iterator it0;
 
         // identify unambiguous and ambiguous mates

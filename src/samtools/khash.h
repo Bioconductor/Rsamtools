@@ -199,7 +199,7 @@ static const double __ac_HASH_UPPER = 0.77;
 	}																	\
 	SCOPE void kh_resize_##name(kh_##name##_t *h, khint_t new_n_buckets) \
 	{																	\
-		khint32_t *new_flags = 0;										\
+		khint32_t *new_flags = (khint32_t *) NULL;                      \
 		khint_t j = 1;													\
 		{																\
 			khint_t t = __ac_HASH_PRIME_SIZE - 1;						\

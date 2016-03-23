@@ -14,7 +14,7 @@ class BamFileIterator : public BamIterator {
     void iterate_inprogress(bamFile bfile) {
         if (iter_done | file_done)
             return;
-        if (NULL == bam) {    // first record 
+        if ((bam1_t *) NULL == bam) {    // first record 
             bam = bam_init1();
             if (bam_read1(bfile, bam) < 0) {
                 iter_done = true;

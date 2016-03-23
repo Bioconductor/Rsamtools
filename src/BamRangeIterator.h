@@ -12,7 +12,7 @@ class BamRangeIterator : public BamIterator {
     bam_iter_t iter;
 
     void iterate_inprogress(bamFile bfile) {
-	if (NULL == bam) {	// first record 
+	if ((bam1_t *) NULL == bam) {	// first record 
 	    bam = bam_init1();
 	    if (bam_iter_read(bfile, iter, bam) < 0) {
 		iter_done = true;
@@ -29,7 +29,7 @@ class BamRangeIterator : public BamIterator {
     }
 
     static bool cmp_mpos_template_pair(const pair<int32_t, Template *> m1,
-                                const pair<int32_t, Template *> m2)
+                                       const pair<int32_t, Template *> m2)
     {
         return m1.first < m2.first;
     }

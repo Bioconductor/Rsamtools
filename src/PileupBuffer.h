@@ -21,7 +21,7 @@ protected:
     const char *rname;
     uint32_t start, end;
 public:
-    PileupBuffer() : plbuf(NULL) {}
+    PileupBuffer() : plbuf((bam_plbuf_t *) NULL) {}
     virtual ~PileupBuffer() {
         plbuf_destroy();
     }
@@ -34,7 +34,7 @@ public:
     void plbuf_destroy() {
         if (plbuf != NULL) {
             bam_plbuf_destroy(plbuf);
-            plbuf = NULL;
+            plbuf = (bam_plbuf_t *) NULL;
         }
     }
     void plbuf_push(const bam1_t *bam) {
@@ -142,7 +142,7 @@ public:
           binsLength(0),
           schema(schema_),
           pileupParams(pileupParams_), seqnamesLevels(seqnamesLevels_),
-          resultMgr(NULL), binPoints()
+          resultMgr((ResultMgrInterface *) NULL), binPoints()
         {
             if(isRanged && isBuffered) {
                 Rf_error("internal: Pileup cannot both query specific genomic ranges and store partial genomic position results");

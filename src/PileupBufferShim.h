@@ -16,7 +16,7 @@ public:
 
     void start1(const int irange) {
         if (R_NilValue == space) {
-            buffer.init(NULL, 0, 0);
+            buffer.init((const char *) NULL, 0, 0);
         } else {
             buffer.init(
                 CHAR(STRING_ELT(VECTOR_ELT(space, 0), irange)),
@@ -25,7 +25,7 @@ public:
         }
     }
     void finish1(const int irange) {
-        plbuf_push(0);
+        plbuf_push((const bam1_t *) NULL);
         SET_VECTOR_ELT(result, irange, buffer.yield());
         buffer.plbuf_destroy();
     }
@@ -34,9 +34,9 @@ public:
     // destroy it. Therefore, must destroy and recreate plbuf each
     // time yieldSize records are pushed.
     void process_yieldSize_chunk() {
-        plbuf_push(0);
+        plbuf_push((const bam1_t *) NULL);
         buffer.plbuf_destroy(); // trigger run of Pileup::insert
-        buffer.init(NULL, 0, 0);
+        buffer.init((const char *) NULL, 0, 0);
     }
     // intended to be called from _pileup_bam after EOI message sent
     // to PileupBuffer; same as finish1 but no plbuf is in use

@@ -42,7 +42,7 @@ public:
             Rf_error("internal: posCache already in PosCacheColl");
         }
         posCaches.insert(cachePtr);
-        cachePtr = NULL;
+        cachePtr = (PosCache *) NULL;
     }
     // precondition: val points to an already-allocated PosCache;
     // clients will use this to check if a PosCache with matching

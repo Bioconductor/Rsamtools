@@ -29,13 +29,13 @@ protected:
     bam1_t *bam;
 
     char qname_prefix_end() const {
-        if (bam_data == NULL)
+        if (bam_data == (BAM_DATA) NULL)
             Rf_error("[qname_prefix_end] report to maintainer('Rsamtools')");
         return bam_data->qnamePrefixEnd;
     }
 
     char qname_suffix_start() const {
-        if (bam_data == NULL)
+        if (bam_data == (BAM_DATA) NULL)
             Rf_error("[qname_suffix_start] report to maintainer('Rsamtools')");
         return bam_data->qnameSuffixStart;
     }
@@ -52,7 +52,7 @@ protected:
 
     // process
     void process(const bam1_t *bam) {
-        if (bam_data == NULL)
+        if (bam_data == (BAM_DATA) NULL)
             Rf_error("[process] report to maintainer('Rsamtools')");
         if (!_filter1_BAM_DATA(bam, bam_data))
             return;
@@ -82,14 +82,14 @@ public:
     // constructor / destructor
     BamIterator(bamFile bfile, const bam_index_t *bindex) :
         bindex(bindex), iter_done(false),
-        bam(NULL), bam_data(NULL)
+        bam((bam1_t *) NULL), bam_data((BAM_DATA) NULL)
     {
         bam_seek(bfile, 0, 0);
         header = bam_header_read(bfile);
     }
 
     virtual ~BamIterator() {
-        if (NULL != bam)
+        if ((bam1_t *) NULL != bam)
             bam_destroy1(bam);
         bam_header_destroy(header);
     }

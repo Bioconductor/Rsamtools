@@ -23,7 +23,7 @@ bam_mates_t *bam_mates_new()
     bam_mates_t *mates = Calloc(1, bam_mates_t);
     mates->n = 0;
     mates->mated = MATE_UNKNOWN;
-    mates->bams = NULL;
+    mates->bams = (const bam1_t **) NULL;
     return mates;
 }
 
@@ -31,13 +31,13 @@ void bam_mates_realloc(bam_mates_t *result, int n, MATE_STATUS mated)
 {
     for (int i = 0; i < result->n; ++i) {
         bam_destroy1((bam1_t *) result->bams[i]);
-        result->bams[i] = NULL;
+        result->bams[i] = (const bam1_t *) NULL;
     }
 
     // Realloc(p, 0, *) fails inappropriately
     if (n == 0) {
         Free(result->bams);
-        result->bams = NULL;
+        result->bams = (const bam1_t **) NULL;
     } else {
         result->bams = Realloc(result->bams, n, const bam1_t *);
     }
@@ -100,14 +100,14 @@ int samread_mate(bamFile bfile, const bam_index_t *bindex,
     BAM_DATA bd = (BAM_DATA) data;
     bam_mate_iter_t iter;
     int status;
-    if (NULL == *iter_p)
+    if ((bam_mate_iter_t) NULL == *iter_p)
         *iter_p = bam_mate_file_iter_new(bfile, bindex);
     iter = *iter_p;
     iter->b_iter->set_bam_data(bd);
     iter->b_iter->iter_done = false;
     // single yield
     status = bam_mate_read(bfile, iter, mates);
-    iter->b_iter->set_bam_data(NULL);
+    iter->b_iter->set_bam_data((BAM_DATA) NULL);
     return status;
 }
 
