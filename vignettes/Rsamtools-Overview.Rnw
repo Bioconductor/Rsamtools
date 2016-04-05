@@ -276,7 +276,7 @@ and to drop unused levels.
 <<txdb-transcripts>>=
 library(TxDb.Hsapiens.UCSC.hg18.knownGene)
 bamRanges <- transcripts(TxDb.Hsapiens.UCSC.hg18.knownGene, 
-                         vals=list(gene_id=egid))
+                         filter=list(gene_id=egid))
 seqlevels(bamRanges) <-                 # translate seqlevels
     sub("chr", "", seqlevels(bamRanges))
 lvls <- seqlevels(bamRanges)            # drop unused levels
