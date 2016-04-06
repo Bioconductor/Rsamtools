@@ -15,7 +15,7 @@ test_BamViews_constructors <- function()
     .BamViews_ok(BamViews(), c(0, 0))
     ni <- 10L; nj <- 5L
     fls <- rep("foo", nj)
-    rd <- GRanges(rep(c("chr1", "chr2"), each=5),
+    gr <- GRanges(rep(c("chr1", "chr2"), each=5),
                   IRanges(c(1:5, 101:105), c(11:15, 111:115)),
                   Values=rev(seq_len(ni)))
 
@@ -24,42 +24,41 @@ test_BamViews_constructors <- function()
                      row.names=make.unique(basename(fls)))
 
     .BamViews_ok(BamViews(fls), dim=c(0, nj), bamSamples=sd0)
-    .BamViews_ok(BamViews(fls, bamRanges=rd), dim=c(ni, nj),
-                 bamRanges=rd, bamSamples=sd0)
-    .BamViews_ok(BamViews(fls, bamRanges=rd, bamSamples=sd0),
-                 dim=c(ni, nj), bamRanges=rd, bamSamples=sd0)
-    .BamViews_ok(BamViews(fls, bamRanges=rd, bamSamples=sd1),
-                 dim=c(ni, nj), bamRanges=rd, bamSamples=sd1)
+    .BamViews_ok(BamViews(fls, bamRanges=gr), dim=c(ni, nj),
+                 bamRanges=gr, bamSamples=sd0)
+    .BamViews_ok(BamViews(fls, bamRanges=gr, bamSamples=sd0),
+                 dim=c(ni, nj), bamRanges=gr, bamSamples=sd0)
+    .BamViews_ok(BamViews(fls, bamRanges=gr, bamSamples=sd1),
+                 dim=c(ni, nj), bamRanges=gr, bamSamples=sd1)
 }
 
 test_BamViews_subset <- function()
 {
-    rl2 <- GRanges(rep(c("chr1", "chr2"), each=5),
+    gr2 <- GRanges(rep(c("chr1", "chr2"), each=5),
                    IRanges(c(1:5, 101:105), c(11:15, 111:115)))
     nj1 <- 4L
     fls1 <- rep("foo", nj1)
     sd1 <- DataFrame(Value=rev(seq_len(nj1)))
-    ni2 <- length(rl2)
+    ni2 <- length(gr2)
 
-    rd2 <- rl2
-    mcols(rd2)[["Count"]] <- rev(seq_len(ni2))
+    mcols(gr2)[["Count"]] <- rev(seq_len(ni2))
     ## rows
-    v <- BamViews(bamPaths=fls1, bamRanges=rd2, bamSamples=sd1)
-    .BamViews_ok(v, c(ni2, nj1), bamRanges=rd2, bamSamples=sd1)
-    .BamViews_ok(v[TRUE,], c(ni2, nj1), bamRanges=rd2, bamSamples=sd1)
+    v <- BamViews(bamPaths=fls1, bamRanges=gr2, bamSamples=sd1)
+    .BamViews_ok(v, c(ni2, nj1), bamRanges=gr2, bamSamples=sd1)
+    .BamViews_ok(v[TRUE,], c(ni2, nj1), bamRanges=gr2, bamSamples=sd1)
     i_idx <- c(FALSE, TRUE)
-    .BamViews_ok(v[i_idx,], c(ni2/2, nj1), bamRanges=rd2[i_idx,],
+    .BamViews_ok(v[i_idx,], c(ni2/2, nj1), bamRanges=gr2[i_idx,],
                  bamSamples=sd1)
     i_idx <- c(2, 4)
-    .BamViews_ok(v[i_idx,],c(length(i_idx), nj1), bamRanges=rd2[i_idx,],
+    .BamViews_ok(v[i_idx,],c(length(i_idx), nj1), bamRanges=gr2[i_idx,],
                  bamSamples=sd1)
     ## columns
-    .BamViews_ok(v[,TRUE], c(ni2, nj1), bamRanges=rd2, bamSamples=sd1)
+    .BamViews_ok(v[,TRUE], c(ni2, nj1), bamRanges=gr2, bamSamples=sd1)
     j_idx <- c(FALSE, TRUE, FALSE, TRUE)
-    .BamViews_ok(v[,j_idx], c(ni2, nj1/2), bamRanges=rd2,
+    .BamViews_ok(v[,j_idx], c(ni2, nj1/2), bamRanges=gr2,
                  bamSamples=sd1[j_idx,,drop=FALSE])
     j_idx <- c(2, 4)
-    .BamViews_ok(v[,j_idx], c(ni2, nj1/2), bamRanges=rd2,
+    .BamViews_ok(v[,j_idx], c(ni2, nj1/2), bamRanges=gr2,
                  bamSamples=sd1[j_idx,,drop=FALSE])
 }
 
