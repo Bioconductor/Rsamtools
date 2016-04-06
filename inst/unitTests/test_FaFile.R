@@ -76,7 +76,7 @@ test_FaFile_scanFa <- function()
 
     ## RangesList
     rl <- as(gr, "RangesList")
-    checkIdentical(as.character(exp0), as.character(scanFa(fa, rd)))
+    checkIdentical(as.character(exp0), as.character(scanFa(fa, rl)))
 }
 
 test_FaFile_getSeq <- function()
@@ -95,5 +95,5 @@ test_FaFile_getSeq <- function()
 
     ## RangesList
     rl <- as(gr, "RangesList")
-    checkIdentical(as.character(exp0), as.character(getSeq(fa, rd)))
+    checkIdentical(as.character(exp0), as.character(getSeq(fa, rl)))
 }
