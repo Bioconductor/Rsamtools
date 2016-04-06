@@ -14,7 +14,6 @@
 \alias{seqnamesTabix,TabixFile-method}
 \alias{headerTabix,TabixFile-method}
 \alias{scanTabix,TabixFile,RangesList-method}
-\alias{scanTabix,TabixFile,RangedData-method}
 \alias{scanTabix,TabixFile,GRanges-method}
 \alias{scanTabix,TabixFile,missing-method}
 \alias{scanTabix,character,ANY-method}
@@ -57,7 +56,6 @@ TabixFileList(..., yieldSize=NA_integer_)
 \S4method{headerTabix}{TabixFile}(file, ...)
 \S4method{scanTabix}{TabixFile,GRanges}(file, ..., param)
 \S4method{scanTabix}{TabixFile,RangesList}(file, ..., param)
-\S4method{scanTabix}{TabixFile,RangedData}(file, ..., param)
 \S4method{scanTabix}{TabixFile,missing}(file, ..., param)
 \S4method{scanTabix}{character,ANY}(file, ..., param)
 \S4method{scanTabix}{character,missing}(file, ..., param)
@@ -83,7 +81,7 @@ countTabix(file, ...)
     include \code{NA}, when creating a \code{TabixFileList} from
     \code{TabixFile} instances.}
 
-  \item{param}{An instance of GRanges, IRangedData, or RangesList, used
+  \item{param}{An instance of GRanges or RangesList, used
     to select which records to scan.}
 
   \item{...}{Additional arguments. For \code{TabixFileList}, this can

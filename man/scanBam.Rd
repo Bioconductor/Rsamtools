@@ -60,7 +60,7 @@ indexBam(files, ...)
 \S4method{indexBam}{character}(files, ...)
 
 mergeBam(files, destination, ...)
-\S4method{mergeBam}{character}(files, destination, ..., region = RangedData(),
+\S4method{mergeBam}{character}(files, destination, ..., region = GRanges(),
     overwrite = FALSE, header = character(), byQname = FALSE,
     addRG = FALSE, compressLevel1 = FALSE, indexDestination = FALSE)
 
@@ -83,7 +83,7 @@ mergeBam(files, destination, ...)
     \code{asBam} \code{asSam}, and \code{sortBam} this is without the
     \dQuote{.bam} file suffix.}
 
-  \item{region}{A RangedData() instance with \code{>= 1} rows,
+  \item{region}{A GRanges() instance with \code{<= 1} elements,
     specifying the region of the BAM files to merged.}
 
   \item{\dots}{Additional arguments, passed to methods.}

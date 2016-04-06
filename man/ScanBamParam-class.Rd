@@ -6,7 +6,6 @@
 \alias{ScanBamParam,missing-method}
 \alias{ScanBamParam,ANY-method}
 \alias{ScanBamParam,RangesList-method}
-\alias{ScanBamParam,RangedData-method}
 \alias{ScanBamParam,GRanges-method}
 % helpers
 \alias{scanBamWhat}
@@ -26,7 +25,6 @@
 \alias{bamWhat}
 \alias{bamWhich<-}
 \alias{bamWhich<-,ScanBamParam,GRanges-method}
-\alias{bamWhich<-,ScanBamParam,RangedData-method}
 \alias{bamWhich<-,ScanBamParam,RangesList-method}
 \alias{bamWhich<-,ScanBamParam,ANY-method}
 \alias{bamWhich}
@@ -150,9 +148,8 @@ bamFlagTest(flag, value)
     mapping quality to include. BAM records with mapping qualities less
     than \code{mapqFilter} are discarded.}
 
-  \item{which}{A \code{\linkS4class{GRanges}},
-    \code{\linkS4class{RangesList}}, \code{\linkS4class{RangedData}},
-    any object that can be coerced to a \code{RangesList}, or
+  \item{which}{A \code{\linkS4class{GRanges}}, \code{\linkS4class{RangesList}},
+    or any object that can be coerced to a \code{RangesList}, or
     missing object, from which a \code{IRangesList} instance will be
     constructed. Names of the \code{IRangesList} correspond to reference
     sequences, and ranges to the regions on that reference sequence for

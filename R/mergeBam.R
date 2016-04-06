@@ -1,5 +1,5 @@
 setMethod(mergeBam, "character",
-    function(files, destination, ..., region = RangedData(),
+    function(files, destination, ..., region = GRanges(),
              overwrite = FALSE, header = character(), byQname = FALSE,
              addRG = FALSE, compressLevel1 = FALSE,
              indexDestination = FALSE)
@@ -9,10 +9,10 @@ setMethod(mergeBam, "character",
         files <- sapply(files, .normalizePath)
         destination <- .normalizePath(destination)
         region <- local({
-            x <- as(region, "RangedData")
-            if (1L < nrow(x))
+            x <- as(region, "GRanges")
+            if (1L < length(x))
                 stop("'region' must specify one range")
-            sprintf("%s:%d-%d", as.character(space(x)), start(x), end(x))
+            sprintf("%s:%d-%d", as.character(seqnames(x)), start(x), end(x))
         })
 
         if (!overwrite && file.exists(destination)) {

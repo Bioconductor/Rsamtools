@@ -5,7 +5,6 @@
 \alias{BamViews}
 \alias{BamViews,missing-method}
 \alias{BamViews,GRanges-method}
-\alias{BamViews,RangedData-method}
 % accessors
 \alias{bamPaths}
 \alias{bamIndicies}
@@ -90,10 +89,9 @@ bamDirname(x, ...) <- value
 	many rows as \code{length(bamPaths)}, containing sample information
 	associated with each path.}
 
-  \item{bamRanges}{A \code{\linkS4class{GRanges}},
-	\code{\linkS4class{RangedData}} or missing instance with ranges
-	defined on the spaces of the BAM files. Ranges are \emph{not}
-	validated against the BAM files.}
+  \item{bamRanges}{Missing or a \code{\linkS4class{GRanges}} instance with
+        ranges defined on the reference chromosomes of the BAM files. Ranges
+        are \emph{not} validated against the BAM files.}
 
   \item{bamExperiment}{A list() containing additional information about
 	the experiment.}

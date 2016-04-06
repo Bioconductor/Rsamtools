@@ -113,8 +113,6 @@ setMethod(scanFa, c("FaFile", "GRanges"), .scanFa)
 
 setMethod(scanFa, c("FaFile", "RangesList"), .scanFa)
 
-setMethod(scanFa, c("FaFile", "RangedData"), .scanFa)
-
 setMethod(scanFa, c("FaFile", "missing"),
     function(file, param, ...,
         as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
@@ -183,14 +181,6 @@ setMethod(scanFa, c("character", "GRanges"),
 })
 
 setMethod(scanFa, c("character", "RangesList"),
-    function(file, param, ...,
-        as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
-{
-    as <- match.arg(as)
-    scanFa(FaFile(file), param, ..., as=as)
-})
-
-setMethod(scanFa, c("character", "RangedData"),
     function(file, param, ...,
         as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 {

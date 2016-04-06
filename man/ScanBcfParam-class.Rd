@@ -9,7 +9,6 @@
 
 \alias{ScanBcfParam,GRanges-method}
 \alias{ScanBcfParam,GRangesList-method}
-\alias{ScanBcfParam,RangedData-method}
 \alias{ScanBcfParam,RangesList-method}
 \alias{ScanBcfParam,missing-method}
 \alias{bcfFixed}
@@ -39,8 +38,6 @@ ScanBcfParam(fixed=character(), info=character(), geno=character(),
 \S4method{ScanBcfParam}{missing}(fixed=character(), info=character(), geno=character(), 
              samples=character(), trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{RangesList}(fixed=character(), info=character(), geno=character(), 
-             samples=character(), trimEmpty=TRUE, which, ...)
-\S4method{ScanBcfParam}{RangedData}(fixed=character(), info=character(), geno=character(), 
              samples=character(), trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{GRanges}(fixed=character(), info=character(), geno=character(), 
              samples=character(), trimEmpty=TRUE, which, ...)

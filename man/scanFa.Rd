@@ -10,7 +10,6 @@
 \alias{scanFa}
 \alias{scanFa,character,GRanges-method}
 \alias{scanFa,character,RangesList-method}
-\alias{scanFa,character,RangedData-method}
 \alias{scanFa,character,missing-method}
 
 \title{
@@ -40,8 +39,6 @@ scanFa(file, param, ...,
     as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 \S4method{scanFa}{character,RangesList}(file, param, ...,
     as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
-\S4method{scanFa}{character,RangedData}(file, param, ...,
-    as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 \S4method{scanFa}{character,missing}(file, param, ...,
     as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 
@@ -51,9 +48,9 @@ scanFa(file, param, ...,
 
   \item{file}{A character(1) vector containing the fasta file path.}
 
-  \item{param}{An optional \code{\linkS4class{GRanges}},
-    \code{\linkS4class{RangesList}}, or \code{\linkS4class{RangedData}}
-    instance to select reads (and sub-sequences) for input.}
+  \item{param}{An optional \code{\linkS4class{GRanges}} or
+    \code{\linkS4class{RangesList}} instance to select reads (and
+    sub-sequences) for input.}
 
   \item{as}{A character(1) vector indicating the type of object to
     return; default \code{DNAStringSet}.}

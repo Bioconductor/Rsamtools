@@ -11,20 +11,6 @@ setMethod(BamViews, c(bamRanges="GRanges"),
         bamExperiment=bamExperiment)
 })
 
-setMethod(BamViews, c(bamRanges="RangedData"),
-          function(bamPaths=character(0),
-                   bamIndicies=bamPaths,
-                   bamSamples=DataFrame(row.names=
-                     make.unique(basename(bamPaths))),
-                   bamRanges,
-                   bamExperiment=list(), ...)
-{
-    bamRanges <- as(bamRanges, "GRanges")
-    BamViews(bamPaths=bamPaths, bamIndicies=bamIndicies,
-             bamSamples=bamSamples, bamRanges=bamRanges,
-             bamExperiment=bamExperiment, ...)
-})
-
 setMethod(BamViews, c(bamRanges="missing"), 
           function(bamPaths=character(0),
                    bamIndicies=bamPaths,

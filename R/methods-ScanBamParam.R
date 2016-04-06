@@ -45,23 +45,9 @@ setMethod(ScanBamParam, c(which="ANY"),
                  mapqFilter=as.integer(mapqFilter))
 })
 
-## Note that the 2 methods below are not needed. Coercing a RangedData or
-## GRanges to RangesList works and produces exactly what the methods below
-## are doing by hand. So the default ScanBamParam method above just works
-## on a RangedData or GRanges. -- Herv\'e
-setMethod(ScanBamParam, c(which="RangedData"),
-          function(flag=scanBamFlag(), simpleCigar=FALSE,
-                   reverseComplement=FALSE, tag=character(0),
-                   tagFilter=list(), what=character(0), which,
-                   mapqFilter=NA_integer_)
-{
-    which <- ranges(which)
-    ScanBamParam(flag=flag, simpleCigar=simpleCigar,
-                 reverseComplement=reverseComplement, tag=tag,
-                 tagFilter=tagFilter, what=what, which=which,
-                 mapqFilter=as.integer(mapqFilter))
-})
-
+## Note that this method is not needed. Coercing a GRanges to RangesList works
+## and produces exactly what the method below is doing by hand. So the default
+## ScanBamParam method above just works on a GRanges. -- Herv\'e
 setMethod(ScanBamParam, c(which="GRanges"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
@@ -224,14 +210,6 @@ setReplaceMethod("bamWhich", c("ScanBamParam", "GRanges"),
     function(object, value) 
 {
     bamWhich(object) <- split(ranges(value), seqnames(value))
-    validObject(object)
-    object
-})
-        
-setReplaceMethod("bamWhich", c("ScanBamParam", "RangedData"),
-    function(object, value) 
-{
-    bamWhich(object) <- ranges(value)
     validObject(object)
     object
 })

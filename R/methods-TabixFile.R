@@ -138,12 +138,6 @@ setMethod(scanTabix, c("TabixFile", "RangesList"),
                 end=.uunlist(end(param)))
 })
 
-setMethod(scanTabix, c("TabixFile", "RangedData"),
-    function(file, ..., param)
-{
-    .tabix_scan(file, ..., param=ranges(param))
-})
-
 setMethod(scanTabix, c("TabixFile", "GRanges"),
     function(file, ..., param)
 {

@@ -74,9 +74,7 @@ test_FaFile_scanFa <- function()
     strand(gr) <- c("-", "+")
     checkIdentical(as.character(exp0), as.character(scanFa(fa, gr)))
 
-    ## RangedData, RangesList
-    rd <- as(gr, "RangedData")
-    checkIdentical(as.character(exp0), as.character(scanFa(fa, rd)))
+    ## RangesList
     rl <- as(gr, "RangesList")
     checkIdentical(as.character(exp0), as.character(scanFa(fa, rd)))
 }
@@ -95,9 +93,7 @@ test_FaFile_getSeq <- function()
     exp[1] <- reverseComplement(exp[1])
     checkIdentical(as.character(exp), as.character(getSeq(fa, gr)))
 
-    ## RangedData, RangesList
-    rd <- as(gr, "RangedData")
-    checkIdentical(as.character(exp0), as.character(getSeq(fa, rd)))
+    ## RangesList
     rl <- as(gr, "RangesList")
     checkIdentical(as.character(exp0), as.character(getSeq(fa, rd)))
 }

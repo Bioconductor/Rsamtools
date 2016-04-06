@@ -41,14 +41,6 @@ setMethod(ScanBcfParam, c(which="RangesList"),
     .ScanBcfParam(fixed, info, geno, samples, trimEmpty, which, ...)
 })
 
-setMethod(ScanBcfParam, c(which="RangedData"),
-    function(fixed=character(), info=character(), geno=character(), 
-             samples=character(), trimEmpty=TRUE, which, ...)
-{
-    which <- ranges(which)
-    .ScanBcfParam(fixed, info, geno, samples, trimEmpty, which, ...)
-})
-
 setMethod(ScanBcfParam, c(which="GRanges"),
     function(fixed=character(), info=character(), geno=character(), 
              samples=character(), trimEmpty=TRUE, which, ...)
