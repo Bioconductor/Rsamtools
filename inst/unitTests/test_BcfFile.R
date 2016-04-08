@@ -60,6 +60,11 @@ test_BcfFile_scanBcfHeader_no_SAMPLE_header <- function()
 
 test_BcfFile_scanBcfHeader_remote <- function()
 {
+    if ("windows" == .Platform$OS.type) {
+        DEACTIVATED("remote scanBcFHeader not supported on Windows")
+        return(TRUE)
+    }
+
     fl <- "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20110521/ALL.chr22.phase1_release_v3.20101123.snps_indels_svs.genotypes.vcf.gz"
     file <- tryCatch({
         open(BcfFile(fl))
