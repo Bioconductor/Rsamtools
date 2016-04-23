@@ -76,8 +76,9 @@ Linking to the static libraries is accomplished by including the
 following code in \verb|src/Makevars.win| for \emph{Windows}:
 
 \begin{verbatim}
-SAMVARS=$(shell echo 'cat(system.file("usretc", .Platform[["r_arch"]],\
-    "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))' |\
+SAMVARS=$(shell echo 'cat(shortPathName(system.file("usretc",
+    .Platform[["r_arch"]],\
+    "Rsamtools.mk", package="Rsamtools", mustWork=TRUE)))' |\
     "${R_HOME}/bin/R" --vanilla --slave)
 include $(SAMVARS)
 

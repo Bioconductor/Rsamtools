@@ -3,8 +3,9 @@
 # order of -llib important -- bcf, bam before ws2_32
 
 SAMTOOLS_PATH=\
-    $(shell echo 'cat(system.file("usrlib", .Platform[["r_arch"]],\
-        package="Rsamtools", mustWork=TRUE))'|\
+    $(shell echo 'cat(shortPathName(system.file("usrlib",
+        .Platform[["r_arch"]],\
+        package="Rsamtools", mustWork=TRUE)))'|\
         "${R_HOME}/bin/R" --vanilla --slave)
 SAMTOOLS_LIBS+="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbam.a"\
     "$(SAMTOOLS_PATH)/libbcf.a" "$(SAMTOOLS_PATH)/libtabix.a"\

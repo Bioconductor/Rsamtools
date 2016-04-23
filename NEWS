@@ -14,6 +14,8 @@ BUG FIXES
 
     o scanBam() fails early when param seqlevels not present in file.
 
+    o Rsamtools.mk for Windows avoids spaces in file paths
+
 CHANGES IN VERSION 1.21
 -----------------------
 
