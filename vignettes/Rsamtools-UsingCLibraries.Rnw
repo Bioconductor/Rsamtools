@@ -76,9 +76,7 @@ Linking to the static libraries is accomplished by including the
 following code in \verb|src/Makevars.win| for \emph{Windows}:
 
 \begin{verbatim}
-SAMVARS=$(shell echo 'cat(shortPathName(system.file("usretc",
-    .Platform[["r_arch"]],\
-    "Rsamtools.mk", package="Rsamtools", mustWork=TRUE)))' |\
+SAMVARS=$(shell echo 'cat(Rsamtools:::.pkgconfig())' |\
     "${R_HOME}/bin/R" --vanilla --slave)
 include $(SAMVARS)
 
@@ -90,8 +88,7 @@ and with the following code in \verb|src/Makevars| for all other platforms:
 
 \begin{verbatim}
 SAMTOOLS_PATH=\
-    `echo 'cat(system.file("usrlib", .Platform[["r_arch"]], \
-        package="Rsamtools", mustWork=TRUE))' |\
+    `echo 'cat(Rsamtools:::.pkgconfig())' |\
         "${R_HOME}/bin/R" --vanilla --slave`
 SAMTOOLS_LIBS="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbcf.a"\
     "$(SAMTOOLS_PATH)/libtabix.a" -lz -pthread
