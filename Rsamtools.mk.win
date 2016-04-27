@@ -3,7 +3,7 @@
 # order of -llib important -- bcf, bam before ws2_32
 
 SAMTOOLS_PATH=\
-    $(shell echo 'cat(Rsamtools:::.pkgconfig())'|\
+    $(shell echo 'cat(Rsamtools:::.pkgLd())'|\
         "${R_HOME}/bin/R" --vanilla --slave)
 SAMTOOLS_LIBS+="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbam.a"\
     "$(SAMTOOLS_PATH)/libbcf.a" "$(SAMTOOLS_PATH)/libtabix.a"\

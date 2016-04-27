@@ -10,15 +10,20 @@
     path
 }
 
-.pkgconfig <-
+.pkgMk <-
     function()
 {
-    path <- if (.Platform$OS.type == "windows") {
-        system.file(package="Rsamtools", "usrlib", .Platform[["r_arch"]],
-                    "Rsamtools.mk", mustWork=TRUE)
-    } else {
-        system.file(package="Rsamtools", "usrlib", .Platform[["r_arch"]],
-                    mustWork=TRUE)
-    }
+    if (.Platform$OS.type != "windows")
+        stop(".pkgMk() expects windows operating system")
+    path <- system.file(package="Rsamtools", "usretc", .Platform$r_arch,
+                        "Rsamtools.mk", mustWork=TRUE)
+    .build_path(path)
+}
+
+.pkgLd <-
+    function()
+{
+    path <- system.file(package="Rsamtools", "usrlib", .Platform$r_arch,
+                        mustWork=TRUE)
     .build_path(path)
 }
