@@ -20,6 +20,10 @@ setReplaceMethod("yieldSize", "RsamtoolsFile",
 .RsamtoolsFile <-
     function(g, path, index, ..., yieldSize=NA_integer_)
 {
+    if (1L != length(path))
+        stop("'file' must be length 1") # argh! public api is 'file'
+    if (1L < length(index))
+        stop("'index' must be length 0 or 1")
     if (1L != length(yieldSize))
         stop("'yieldSize' must be length 1")
     yieldSize <- as.integer(yieldSize)

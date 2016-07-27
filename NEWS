@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.25
+-----------------------
+
+BUG FIXES
+
+    o *File constructors now check that the file argument is length 1,
+      and that the index argument is length 0 or 1.
+
 CHANGES IN VERSION 1.23
 -----------------------
 
