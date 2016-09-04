@@ -8,7 +8,7 @@ importFrom(bitops, bitAnd)
 
 importFrom(utils, read.table)           # normalizePath --> base in R-2.13
 
- importFrom(stats, rbinom, setNames)
+importFrom(stats, rbinom, setNames)
 
 importClassesFrom(BiocGenerics, url, gzfile, unz, pipe)
 
@@ -42,8 +42,6 @@ importFrom(Biostrings, DNA_ALPHABET, readDNAStringSet,
            getSeq, reverseComplement)
 
 exportPattern("^[^\\.]")
-
-export(path)
 
 exportMethods(length, names, "[", "[[", show, getSeq, seqinfo)
 
