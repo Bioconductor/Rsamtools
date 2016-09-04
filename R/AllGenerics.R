@@ -20,6 +20,10 @@ setGeneric("countBam",
            standardGeneric("countBam"),
            signature="file")
  
+setGeneric("idxstatsBam",
+           function(file, index=file, ...) standardGeneric("idxstatsBam"),
+           signature="file")
+
 setGeneric("asBam",
            function(file, destination, ...)
            standardGeneric("asBam"))

@@ -1,6 +1,11 @@
 CHANGES IN VERSION 1.25
 -----------------------
 
+NEW FEATURES
+
+    o idxstatsBam() quickly summarizes the number of mapped and
+      unmapped reads on each sequence in a BAM file.
+
 BUG FIXES
 
     o *File constructors now check that the file argument is length 1,

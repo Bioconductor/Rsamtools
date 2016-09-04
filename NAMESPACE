@@ -24,7 +24,7 @@ import(IRanges)
 
 importClassesFrom(GenomeInfoDb, Seqinfo)
 
-importFrom(GenomeInfoDb, Seqinfo, seqinfo, seqlevels)
+importFrom(GenomeInfoDb, Seqinfo, seqinfo, seqlevels, sortSeqlevels)
 
 importClassesFrom(GenomicRanges, GRanges, GRangesList)
 

@@ -237,6 +237,21 @@ setMethod(countBam, "BamFile",
     .countBam_postprocess(x, file, param)
 })
 
+setMethod(idxstatsBam, "BamFile",
+          function(file, index=file, ...)
+{
+    stopifnot(nzchar(index(file)), file.exists(index(file)))
+    if (!isOpen(file)) {
+        open(file)
+        on.exit(close(file))
+    }
+    result <- .Call(.idxstats_bamfile, .extptr(file))
+    seqnames <- factor(result[[1]], levels=sortSeqlevels(unique(result[[1]])))
+    o <- order(seqnames)
+    data.frame(seqnames=seqnames[o], seqlength=result[[2]][o],
+               mapped=result[[3]][o], unmapped=result[[4]][o])
+})
+
 ### NOTE: Not exported but used in the GenomicAlignments package!
 ### 'bamfile' must be a BamFile object. Returns a named list with 1 element
 ### per loaded column.

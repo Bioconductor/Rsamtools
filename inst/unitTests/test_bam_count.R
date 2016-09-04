@@ -51,3 +51,20 @@ test_countBam_index <- function()
         suppressWarnings(countBam(fl, tempfile(), param=p1))
     }, silent=TRUE)
 }
+
+test_idxstatsBam <- function()
+{
+    target = structure(
+        list(
+            seqnames = structure(
+                1:2, .Label = c("seq1", "seq2"), class = "factor"
+            ),
+            seqlength = c(1575L, 1584L),
+            mapped = c(1482, 1789),
+            unmapped = c(19, 17)),
+        .Names = c("seqnames", "seqlength", "mapped", "unmapped"),
+        row.names = c(NA, -2L), class = "data.frame")
+    checkIdentical(target, idxstatsBam(fl))
+
+    checkException(idxstatsBam("cases/ex1_noindex.bam"))
+}

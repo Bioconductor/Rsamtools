@@ -5,6 +5,8 @@
 \alias{scanBam,character-method}
 \alias{countBam}
 \alias{countBam,character-method}
+\alias{idxstatsBam}
+\alias{idxstatsBam,character-method}
 \alias{scanBamHeader}
 \alias{scanBamHeader,character-method}
 \alias{asBam}
@@ -37,6 +39,8 @@
 scanBam(file, index=file, ..., param=ScanBamParam(what=scanBamWhat()))
 
 countBam(file, index=file, ..., param=ScanBamParam())
+
+idxstatsBam(file, index=file, ...)
 
 scanBamHeader(files, ...)
 \S4method{scanBamHeader}{character}(files, ...)
@@ -125,6 +129,9 @@ mergeBam(files, destination, ...)
 
   \code{countBam} returns a count of records consistent with
   \code{param}.
+
+  \code{idxstatsBam} visit the index in \code{index(file)}, and quickly
+  returns the number of mapped and unmapped reads on each seqname.
 
   \code{scanBamHeader} visits the header information in a BAM file,
   returning for each file a list containing elements \code{targets} and
@@ -260,6 +267,11 @@ mergeBam(files, destination, ...)
       \code{ambiguous}, \code{unmated}) of each record.
   }
 
+  \code{idxstatsBam} returns a \code{data.frame} with columns
+  \code{seqnames}, \code{seqlength}, \code{mapped} (number of mapped
+  reads on \code{seqnames}) and \code{unmapped} (number of unmapped
+  reads).
+
   \code{scanBamHeader} returns a list, with one element for each file
   named in \code{files}. The list contains two element. The
   \code{targets} element contains target (reference) sequence
@@ -326,6 +338,12 @@ p3 <- ScanBamParam(
     what="flag",           # information to query from BAM file 
     flag=scanBamFlag(isMinusStrand=FALSE))
 length(scanBam(fl, param=p3)[[1]]$flag)
+
+##
+## idxstatsBam
+##
+
+idxstatsBam(fl)
 
 ##
 ## filterBam

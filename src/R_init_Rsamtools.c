@@ -6,6 +6,7 @@
 #include "fafile.h"
 #include "tabixfile.h"
 #include "io_sam.h"
+#include "idxstats.h"
 #include "as_bam.h"
 #include "pileupbam.h"
 #include "pileup.h"
@@ -29,6 +30,7 @@ static const R_CallMethodDef callMethods[] = {
     {".bamfile_isincomplete", (DL_FUNC) & bamfile_isincomplete, 1},
     {".read_bamfile_header", (DL_FUNC) & read_bamfile_header, 2},
     {".scan_bamfile", (DL_FUNC) & scan_bamfile, 13},
+    {".idxstats_bamfile", (DL_FUNC) & idxstats_bamfile, 1},
     {".count_bamfile", (DL_FUNC) & count_bamfile, 6},
     {".prefilter_bamfile", (DL_FUNC) & prefilter_bamfile, 11},
     {".filter_bamfile", (DL_FUNC) & filter_bamfile, 8},

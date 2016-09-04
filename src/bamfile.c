@@ -3,7 +3,7 @@
 #include "bam_mate_iter.h"
 #include "utilities.h"
 
-static SEXP BAMFILE_TAG = NULL;
+SEXP BAMFILE_TAG = NULL;
 #define TYPE_BAM 1
 
 void _check_isbamfile(SEXP ext, const char *lbl)

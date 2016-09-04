@@ -40,6 +40,7 @@
 \alias{qnameSuffixStart,BamFileList-method}
 \alias{qnameSuffixStart<-,BamFileList-method}
 \alias{scanBam,BamFile-method}
+\alias{idxstatsBam,BamFile-method}
 \alias{countBam,BamFile-method}
 \alias{countBam,BamFileList-method}
 \alias{filterBam,BamFile-method}
@@ -111,6 +112,7 @@ qnameSuffixStart(object, ...) <- value
 
 ## counting
 
+\S4method{idxstatsBam}{BamFile}(file, index=file, ...)
 \S4method{countBam}{BamFile}(file, index=file, ..., param=ScanBamParam())
 \S4method{countBam}{BamFileList}(file, index=file, ..., param=ScanBamParam())
 \S4method{quickBamFlagSummary}{BamFile}(file, ..., param=ScanBamParam(), main.groups.only=FALSE)
@@ -311,6 +313,11 @@ qnameSuffixStart(object, ...) <- value
     \item{countBam}{Visit the path(s) in \code{path(file)}, returning
       the result of \code{\link{countBam}} applied to the specified
       path.}
+
+    \item{idxstatsBam}{Visit the index in \code{index(file)}, quickly
+      returning a \code{data.frame} with columns \code{seqnames},
+      \code{seqlength}, \code{mapped} (number of mapped reads on
+      \code{seqnames}) and \code{unmapped} (number of unmapped reads).}
 
     \item{filterBam}{Visit the path in \code{path(file)}, returning the
       result of \code{\link{filterBam}} applied to the specified
