@@ -29,7 +29,7 @@
     o <- order(match(names(which), hnames))
     what <- bamWhat(param)
     if (asMates(file))
-        what <- union(what, c("mates", "groupid"))
+        what <- union(what, c("mate_status", "groupid"))
     initialize(param, which=which[o], what=what)
 }
 
