@@ -52,9 +52,13 @@ test_BamFile_yield <- function()
     bf <- open(BamFile(fl, yieldSize=500))
     which <- GenomicRanges::tileGenome(seqlengths(bf), tilewidth=500,
                                        cut.last.tile.in.chrom=TRUE)
-    p <- ScanBamParam(what="rname", which=which)
+    param <- ScanBamParam(what="rname", which=which)
     it <- integer()
-    while(res <- sum(lengths(unlist(scanBam(bf, param=p), recursive=FALSE))))
+    fun <- function(bf, param) {
+        res <- unlist(scanBam(bf, param=param), use.names=FALSE, recursive=FALSE)
+        sum(unlist(lapply(res, as.integer)))
+    }
+    while (res <- fun(bf, param))
         it <- append(it, res)
     close(bf)
     checkIdentical(6L, length(it))
