@@ -2,6 +2,8 @@ TabixFile <-
     function(file, index=paste(file, "tbi", sep="."), ...,
              yieldSize=NA_integer_)
 {
+    if (is(file, "TabixFile"))
+        return(file)
     tryCatch({
         .io_check_exists(c(file, index))
     }, error=function(err) {

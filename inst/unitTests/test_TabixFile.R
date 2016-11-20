@@ -7,6 +7,7 @@ test_TabixFile_openclose <- function()
     checkTrue(!isOpen(tab))
     open(tab)
     checkTrue(isOpen(tab))
+    checkTrue(isOpen(TabixFile(tab)))
 
     checkIdentical(.normalizePath(fl), path(tab))
     checkIdentical(sprintf("%s.tbi", .normalizePath(fl)), index(tab))
