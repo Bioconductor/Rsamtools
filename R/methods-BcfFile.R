@@ -13,7 +13,8 @@ open.BcfFile <-
     function(con, ...)
 {
     .io_check_exists(path(con))
-    con$.extptr <- .Call(.bcffile_open, path(con), index(con), bcfMode(con))
+    con$.extptr <-
+        .Call(.bcffile_open, path(con), index(con, asNA=FALSE), bcfMode(con))
     invisible(con)
 }
 

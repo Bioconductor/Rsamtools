@@ -3,10 +3,10 @@ test_RsamtoolsFile_constructor <- function() {
     checkException(TabixFile(c(fl, fl)), silent=TRUE)
 
     checkTrue(validObject(tbx <- TabixFile(fl, character())))
-    checkIdentical(index(tbx), character())
+    checkIdentical(character(0), index(tbx, asNA=FALSE))
 
     checkTrue(validObject(tbx <- TabixFile(fl, NA)))
-    checkIdentical(index(tbx), character())
+    checkIdentical(character(0), index(tbx, asNA=FALSE))
 }
 
 test_RsamtoolsFileList_constructor <- function() {
@@ -16,15 +16,15 @@ test_RsamtoolsFileList_constructor <- function() {
     checkTrue(validObject(tbx <- TabixFileList(fls)))
     checkIdentical(setNames(fls, basename(fls)), path(tbx))
     checkIdentical(setNames(paste(fls, "tbi", sep="."), basename(fls)),
-                   vapply(as.list(tbx), index, character(1)))
+                   index(tbx))
 
     checkTrue(validObject(tbx <- TabixFileList(fls, character())))
     checkIdentical(setNames(fls, basename(fls)), path(tbx))
-    checkIdentical(setNames(rep(list(character(0)), 2), basename(fls)),
-                   sapply(as.list(tbx), index))
+    checkIdentical(setNames(rep(NA_character_, 2), basename(fls)),
+                   index(tbx))
     
     checkTrue(validObject(tbx <- TabixFileList(fls, NA)))
     checkIdentical(setNames(fls, basename(fls)), path(tbx))
-    checkIdentical(setNames(rep(list(character(0)), 2), basename(fls)),
-                   sapply(as.list(tbx), index))
+    checkIdentical(setNames(rep(NA_character_, 2), basename(fls)),
+                   index(tbx))
 }

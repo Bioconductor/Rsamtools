@@ -6,6 +6,13 @@ NEW FEATURES
     o *File and *FileList (e.g., TabixFile, TabixFileList)
       constructors support NA as 'index'
 
+    o *File and *FileList have accessor method for index
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o index() by default returns NA rather than character(), but can be
+    controled with asNA argument 
+
 CHANGES IN VERSION 1.25
 -----------------------
 

@@ -34,13 +34,19 @@ setMethod(.RsamtoolsFileList, "ANY",
 setMethod(path, "RsamtoolsFileList",
     function(object, ...)
 {
-    sapply(as.list(object), path)
+    vapply(object, path, character(1))
+})
+
+setMethod(index, "RsamtoolsFileList",
+    function(object, ...)
+{
+    sapply(object, index, ...)
 })
 
 setMethod(yieldSize, "RsamtoolsFileList",
     function(object, ...)
 {
-    sapply(as.list(object), yieldSize)
+    vapply(object, yieldSize, numeric(1))
 })
 
 setReplaceMethod("yieldSize", "RsamtoolsFileList", 

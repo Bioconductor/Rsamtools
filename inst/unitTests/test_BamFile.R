@@ -78,7 +78,7 @@ test_BamFileList_constructor <- function()
     ## old-style index=character()
     checkTrue(validObject(res <- BamFileList(fl, index=character())))
     checkIdentical(fl, path(res[[1]]))
-    checkIdentical(character(), index(res[[1]]))
+    checkIdentical(character(0), index(res[[1]], asNA=FALSE))
 
     ## vector of files
     fl <- c(fl, fl)
@@ -92,7 +92,8 @@ test_BamFileList_constructor <- function()
     ## old-style index=character()
     checkTrue(validObject(res <- BamFileList(fl, index=character())))
     checkIdentical(fl, unname(path(res)))
-    checkIdentical(list(character(), character()), unname(lapply(res, index)))
+    checkIdentical(setNames(rep(NA_character_, 2), basename(fl)),
+                   index(res))
 }
 
 test_BamFileList_yield <- function()

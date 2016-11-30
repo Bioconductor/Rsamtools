@@ -145,6 +145,11 @@ setGeneric("applyPileups", function(files, FUN, ..., param)
 setGeneric("path",
            function(object, ...) standardGeneric("path"))
 
+setGeneric("index",
+           function(object, ..., asNA=TRUE)
+           standardGeneric("index"),
+           signature="object")
+
 setGeneric("yieldSize",
            function(object, ...) standardGeneric("yieldSize"))
 

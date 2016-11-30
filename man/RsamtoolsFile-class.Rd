@@ -2,12 +2,13 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{RsamtoolsFile-class}
-\alias{index}
 \alias{path}
+\alias{index}
 \alias{yieldSize}
 \alias{yieldSize<-}
 \alias{yieldSize<-,RsamtoolsFile-method}
 \alias{path,RsamtoolsFile-method}
+\alias{index,RsamtoolsFile-method}
 \alias{isOpen,RsamtoolsFile-method}
 \alias{show,RsamtoolsFile-method}
 \alias{yieldSize,RsamtoolsFile-method}
@@ -25,8 +26,8 @@
 \usage{
 
 ## accessors
-index(object)
 \S4method{path}{RsamtoolsFile}(object, ...)
+\S4method{index}{RsamtoolsFile}(object, ..., asNA = TRUE)
 \S4method{isOpen}{RsamtoolsFile}(con, rw="")
 \S4method{yieldSize}{RsamtoolsFile}(object, ...)
 yieldSize(object, ...) <- value
@@ -36,8 +37,12 @@ yieldSize(object, ...) <- value
 
 \arguments{
 
-  \item{con, object}{An instance of a class derived from \code{RsamtoolsFile}.}
+  \item{con, object}{An instance of a class derived from
+    \code{RsamtoolsFile}.}
 
+  \item{asNA}{logical indicating if missing output should be NA or
+    character()}
+  
   \item{rw}{Mode of file; ignored.}
 
   \item{\dots}{Additional arguments, unused.}

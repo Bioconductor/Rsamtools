@@ -16,7 +16,7 @@ open.TabixFile <-
     function(con, ...)
 {
     ## FIXME: path? index?
-    con$.extptr <- .Call(.tabixfile_open, path(con), index(con))
+    con$.extptr <- .Call(.tabixfile_open, path(con), index(con, asNA=FALSE))
     invisible(con)
 }
 

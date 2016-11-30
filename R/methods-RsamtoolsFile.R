@@ -1,6 +1,14 @@
 .extptr <- function(object) object$.extptr
 
-index <- function(object) object$index
+setMethod(index, "RsamtoolsFile",
+    function(object, ..., asNA=TRUE)
+{
+    index <- object$index
+    if (asNA && ((length(index) == 0L) || !nzchar(index)))
+        NA_character_
+    else
+        index
+})
 
 setMethod(yieldSize, "RsamtoolsFile",
     function(object, ...)

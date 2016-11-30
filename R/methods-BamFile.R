@@ -81,7 +81,7 @@ open.BamFile <-
 {
     tryCatch({
         .io_check_exists(path(con))
-        index <- sub("\\.bai$", "", index(con))
+        index <- sub("\\.bai$", "", index(con, asNA=FALSE))
         con$.extptr <- .Call(.bamfile_open, path(con), index, "rb")
     }, error=function(err) {
         stop("failed to open BamFile: ", conditionMessage(err))

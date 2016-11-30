@@ -4,6 +4,7 @@
 \alias{RsamtoolsFileList-class}
 \alias{RsamtoolsFileList}
 \alias{path,RsamtoolsFileList-method}
+\alias{index,RsamtoolsFileList-method}
 \alias{isOpen,RsamtoolsFileList-method}
 \alias{open.RsamtoolsFileList}
 \alias{close.RsamtoolsFileList}
@@ -24,6 +25,7 @@
 \usage{
 
 \S4method{path}{RsamtoolsFileList}(object, ...)
+\S4method{index}{RsamtoolsFileList}(object, ..., asNA = TRUE)
 \S4method{isOpen}{RsamtoolsFileList}(con, rw="")
 \S3method{open}{RsamtoolsFileList}(con, ...)
 \S3method{close}{RsamtoolsFileList}(con, ...)
@@ -36,6 +38,9 @@
 
   \item{con, object, x}{An instance of a class derived from
     \code{RsamtoolsFileList}.}
+
+  \item{asNA}{logical indicating if missing output should be NA or
+    character()}
 
   \item{rw}{Mode of file; ignored.}
 
