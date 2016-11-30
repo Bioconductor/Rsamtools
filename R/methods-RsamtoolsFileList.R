@@ -87,9 +87,11 @@ setMethod(names, "RsamtoolsFileList",
 BcfFileList <- function(...) .RsamtoolsFileList(..., class="BcfFile")
 
 TabixFileList <-
-    function(..., yieldSize=NA_integer_)
+    function(file, index=paste(file, "tbi", sep = "."), ...,
+             yieldSize=NA_integer_)
 {
-    .RsamtoolsFileList(..., yieldSize=yieldSize, class="TabixFile")
+    index <- as.character(index)
+    .RsamtoolsFileList(file, index, ..., yieldSize=yieldSize, class="TabixFile")
 }
 
 FaFileList <- function(...) .RsamtoolsFileList(..., class="FaFile")

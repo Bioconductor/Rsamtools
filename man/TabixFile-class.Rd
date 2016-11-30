@@ -38,8 +38,9 @@
 ## Constructors
 
 TabixFile(file, index = paste(file, "tbi", sep="."), ...,
-          yieldSize=NA_integer_)
-TabixFileList(..., yieldSize=NA_integer_)
+    yieldSize=NA_integer_)
+TabixFileList(file, index = paste(file, "tbi", sep="."), ...,
+    yieldSize=NA_integer_)
 
 ## Opening / closing
 

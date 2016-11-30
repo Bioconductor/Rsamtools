@@ -15,7 +15,7 @@
 {
     if (!length(file))
         stop("'file' is length(0)")
-    idx <- !grepl("^(ftp)|(http)://", file)
+    idx <- !grepl("^(ftp)|(http)://", file) & !is.na(file)
     if (!all(sapply(file[idx], file.exists))) {
         msg <- paste(sprintf("'%s'", file[idx]), collapse="\n  ")
         stop("file(s) do not exist:\n  ", msg)
@@ -30,7 +30,7 @@
 {
     if (is(path, "RsamtoolsFile"))
         path <- path(path)
-    idx <- !grepl("^(ftp)|(http)://", path)
+    idx <- !grepl("^(ftp)|(http)://", path) & !is.na(path)
     ## expand ~/, but don't chase links (i.e., don't normalizePath())
     path[idx] <- path.expand(path[idx])
     path

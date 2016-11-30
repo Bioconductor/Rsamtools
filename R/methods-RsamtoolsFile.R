@@ -29,6 +29,8 @@ setReplaceMethod("yieldSize", "RsamtoolsFile",
     yieldSize <- as.integer(yieldSize)
     if (!(yieldSize > 0L || is.na(yieldSize)))
         stop("'yieldSize' must be >0 or NA")
+    if (length(index) && is.na(index))
+        index <- character(0)
     g$new(path=.normalizePath(path), index=.normalizePath(index), ...,
           yieldSize=yieldSize)
 }

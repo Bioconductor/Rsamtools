@@ -3,6 +3,14 @@ CHANGES IN VERSION 1.25
 
 NEW FEATURES
 
+    o *File and *FileList (e.g., TabixFile, TabixFileList)
+      constructors support NA as 'index'
+
+CHANGES IN VERSION 1.25
+-----------------------
+
+NEW FEATURES
+
     o idxstatsBam() quickly summarizes the number of mapped and
       unmapped reads on each sequence in a BAM file.
 
