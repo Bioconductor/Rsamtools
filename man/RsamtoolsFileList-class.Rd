@@ -5,6 +5,7 @@
 \alias{RsamtoolsFileList}
 \alias{path,RsamtoolsFileList-method}
 \alias{index,RsamtoolsFileList-method}
+\alias{index<-,RsamtoolsFileList-method}
 \alias{isOpen,RsamtoolsFileList-method}
 \alias{open.RsamtoolsFileList}
 \alias{close.RsamtoolsFileList}

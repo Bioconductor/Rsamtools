@@ -4,11 +4,13 @@
 \alias{RsamtoolsFile-class}
 \alias{path}
 \alias{index}
+\alias{index<-}
 \alias{yieldSize}
 \alias{yieldSize<-}
 \alias{yieldSize<-,RsamtoolsFile-method}
 \alias{path,RsamtoolsFile-method}
 \alias{index,RsamtoolsFile-method}
+\alias{index<-,RsamtoolsFile-method}
 \alias{isOpen,RsamtoolsFile-method}
 \alias{show,RsamtoolsFile-method}
 \alias{yieldSize,RsamtoolsFile-method}

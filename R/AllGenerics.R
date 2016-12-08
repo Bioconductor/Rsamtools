@@ -150,6 +150,9 @@ setGeneric("index",
            standardGeneric("index"),
            signature="object")
 
+setGeneric("index<-",
+           function(object, ..., value) standardGeneric("index<-"))
+
 setGeneric("yieldSize",
            function(object, ...) standardGeneric("yieldSize"))
 

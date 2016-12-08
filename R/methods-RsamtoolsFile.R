@@ -10,6 +10,14 @@ setMethod(index, "RsamtoolsFile",
         index
 })
 
+setReplaceMethod("index", "RsamtoolsFile",
+    function(object, ..., value)
+{
+    stopifnot(length(value) == 1, is.character(value))
+    object$index <- value
+    object
+})
+
 setMethod(yieldSize, "RsamtoolsFile",
     function(object, ...)
 {
