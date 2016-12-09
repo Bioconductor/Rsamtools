@@ -13,8 +13,8 @@ setMethod(index, "RsamtoolsFile",
 setReplaceMethod("index", "RsamtoolsFile",
     function(object, ..., value)
 {
-    stopifnot(length(value) == 1, is.character(value))
-    object$index <- value
+    stopifnot(length(value) == 1L)
+    object$index <- as.character(value)
     object
 })
 

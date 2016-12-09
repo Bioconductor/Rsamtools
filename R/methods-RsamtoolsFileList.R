@@ -46,7 +46,7 @@ setMethod(index, "RsamtoolsFileList",
 setReplaceMethod("index", "RsamtoolsFileList",
     function(object, ..., value)
 {
-    stopifnot(length(value) == length(path(object)), is.character(value))
+    stopifnot(length(value) == length(path(object)))
     for (i in seq_along(object))
         index(object[[i]]) <- value[i]
     object
