@@ -2,7 +2,7 @@
 {
     wd <- options('width')[[1]] - nchar(tag) - 6
     if(is.na(filepath))
-        return(NA_character_)
+        return(sprintf("%s: %s\n", tag, NA_character_))
     if (0L == length(filepath) || nchar(filepath) < wd)
         return(sprintf("%s: %s\n", tag, filepath))
     bname <- basename(filepath)
