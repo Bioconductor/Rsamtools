@@ -3,6 +3,12 @@ setGeneric(".RsamtoolsFileList",
                standardGeneric(".RsamtoolsFileList"),
            signature="file")
 
+setMethod(.RsamtoolsFileList, "missing",
+    function(file, ..., yieldSize=NA_integer_, class)
+{
+    new(paste0(class, "List"))
+})
+
 setMethod(.RsamtoolsFileList, "character",
     function(file, index, ..., yieldSize=NA_integer_, class)
 {

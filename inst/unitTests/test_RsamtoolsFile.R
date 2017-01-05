@@ -7,11 +7,17 @@ test_RsamtoolsFile_constructor <- function() {
 
     checkTrue(validObject(tbx <- TabixFile(fl, NA)))
     checkIdentical(character(0), index(tbx, asNA=FALSE))
+
+    tbx <- TabixFile(fl)
+    checkIdentical(tbx, TabixFile(tbx))
+    checkTrue(validObject(TabixFile(tbx))) # idempotent
 }
 
 test_RsamtoolsFileList_constructor <- function() {
     fl <- system.file("extdata", "example.gtf.gz", package="Rsamtools")
     fls <- c(fl, fl)
+
+    checkTrue(validObject(TabixFileList())) # 0-length
 
     checkTrue(validObject(tbx <- TabixFileList(fls)))
     checkIdentical(setNames(fls, basename(fls)), path(tbx))
@@ -27,4 +33,12 @@ test_RsamtoolsFileList_constructor <- function() {
     checkIdentical(setNames(fls, basename(fls)), path(tbx))
     checkIdentical(setNames(rep(NA_character_, 2), basename(fls)),
                    index(tbx))
+
+    tbx <- TabixFile(fl)
+    checkTrue(validObject(TabixFileList(tbx)))
+    checkTrue(validObject(TabixFileList(tbx, tbx)))
+    checkTrue(validObject(TabixFileList(list(tbx, tbx))))
+
+    tbx <- TabixFileList(TabixFile(fl))
+    checkIdentical(TabixFileList(tbx), tbx) # idempotent
 }
