@@ -39,8 +39,7 @@
 
 TabixFile(file, index = paste(file, "tbi", sep="."), ...,
     yieldSize=NA_integer_)
-TabixFileList(file, index = paste(file, "tbi", sep="."), ...,
-    yieldSize=NA_integer_)
+TabixFileList(...)
 
 ## Opening / closing
 
@@ -86,8 +85,12 @@ countTabix(file, ...)
     to select which records to scan.}
 
   \item{...}{Additional arguments. For \code{TabixFileList}, this can
-    either be a single character vector of paths to tabix files, or
-    several instances of \code{TabixFile} objects.}
+    include \code{file}, \code{index}, and \code{yieldSize}
+    arguments. The \code{file} can be a single character vector of paths
+    to tabix files (and optionally a similarly lengthed vector of
+    \code{index}), or several instances of \code{TabixFile} objects. The
+    arguments can also include \code{yieldSize}, applied to all elements
+    of the list.}
 
   \item{rw}{character() indicating mode of file; not used for \code{TabixFile}.}
 

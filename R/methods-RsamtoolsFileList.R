@@ -1,7 +1,7 @@
 setGeneric(".RsamtoolsFileList",
-           function(..., yieldSize=NA_integer_, class)
+           function(file, ..., yieldSize=NA_integer_, class)
                standardGeneric(".RsamtoolsFileList"),
-           signature="...")
+           signature="file")
 
 setMethod(.RsamtoolsFileList, "character",
     function(file, index, ..., yieldSize=NA_integer_, class)
@@ -11,7 +11,7 @@ setMethod(.RsamtoolsFileList, "character",
     if (is.null(names(file)))
         names(file) <- basename(file)
     listData <- if (!missing(index) && length(index))
-        Map(fun, file, index, ...,
+        Map(fun, file, as.character(index), ...,
             MoreArgs=list(yieldSize=yieldSize, class=class))
     else if (missing(index))
         Map(fun, file, ..., MoreArgs=list(yieldSize=yieldSize, class=class))
@@ -23,12 +23,18 @@ setMethod(.RsamtoolsFileList, "character",
 })
 
 setMethod(.RsamtoolsFileList, "ANY",
-    function(..., yieldSize=NA_integer_, class)
+    function(file, ..., yieldSize=NA_integer_, class)
 {
-    list <- list(...)
+    list <- list(file, ...)
     if (length(list) == 1 && (is.list(list[[1L]]) || is(list[[1L]], "List")))
         list <- as.list(list[[1L]])
     new(paste0(class, "List"), listData=list)
+})
+
+setMethod(.RsamtoolsFileList, "RsamtoolsFile",
+    function(file, ..., yieldSize=NA_integer_, class)
+{
+    new(paste0(class, "List"), listData=list(file, ...))
 })
 
 setMethod(path, "RsamtoolsFileList",
@@ -101,13 +107,8 @@ setMethod(names, "RsamtoolsFileList",
 
 BcfFileList <- function(...) .RsamtoolsFileList(..., class="BcfFile")
 
-TabixFileList <-
-    function(file, index=paste(file, "tbi", sep = "."), ...,
-             yieldSize=NA_integer_)
-{
-    index <- as.character(index)
-    .RsamtoolsFileList(file, index, ..., yieldSize=yieldSize, class="TabixFile")
-}
+TabixFileList <- function(...)
+    .RsamtoolsFileList(..., class="TabixFile")
 
 FaFileList <- function(...) .RsamtoolsFileList(..., class="FaFile")
 

@@ -13,6 +13,10 @@ SIGNIFICANT USER-VISIBLE CHANGES
     o index() by default returns NA rather than character(), but can be
     controled with asNA argument 
 
+BUG FIXES
+
+    o TabixFileList(TabixFile()) works.
+
 CHANGES IN VERSION 1.25
 -----------------------
 
