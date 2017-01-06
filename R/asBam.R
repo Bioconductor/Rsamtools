@@ -1,5 +1,5 @@
 setMethod(asSam, "character",
-    function(file, destination, ..., overwrite=FALSE)
+    function(file, destination=sub("\\.bam", "", file), ..., overwrite=FALSE)
 {
     file <- .normalizePath(file)
     destination <- .normalizePath(destination)
@@ -25,7 +25,7 @@ setMethod(asSam, "character",
 })
 
 setMethod(asBam, "character",
-    function(file, destination, ...,
+    function(file, destination=sub("\\.sam(\\.gz)?", "", file), ...,
              overwrite=FALSE, indexDestination=TRUE)
 {
     file <- .normalizePath(file)

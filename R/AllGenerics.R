@@ -25,11 +25,11 @@ setGeneric("idxstatsBam",
            signature="file")
 
 setGeneric("asBam",
-           function(file, destination, ...)
+           function(file, destination = sub("\\.sam(\\.gz)?", "", file), ...)
            standardGeneric("asBam"))
 
 setGeneric("asSam",
-           function(file, destination, ...)
+           function(file, destination = sub("\\.bam", "", file), ...)
            standardGeneric("asSam"))
 
 setGeneric("sortBam",

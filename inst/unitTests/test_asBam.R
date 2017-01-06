@@ -13,4 +13,11 @@ test_asBam <- function()
     checkIdentical("seq2", as.character(unique(res[["rname"]])))
 
     checkException(asBam(fl, ofl), silent=TRUE)
+
+    ## asBam destination construction
+    tmpfl <- file.path(tempdir(), "ex1.sam.gz")
+    file.copy(fl, tmpfl)
+    samfl <- asBam(tmpfl)
+    checkTrue(file.exists(tmpfl))
+    file.remove(tmpfl)
 }

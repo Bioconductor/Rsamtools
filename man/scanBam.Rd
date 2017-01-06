@@ -45,12 +45,13 @@ idxstatsBam(file, index=file, ...)
 scanBamHeader(files, ...)
 \S4method{scanBamHeader}{character}(files, ...)
 
-asBam(file, destination, ...)
-\S4method{asBam}{character}(file, destination, ...,
-    overwrite=FALSE, indexDestination=TRUE)
+asBam(file, destination=sub("\\\\.sam(\\\\.gz)?", "", file), ...)
+\S4method{asBam}{character}(file, destination=sub("\\\\.sam(\\\\.gz)?", "", file),
+    ..., overwrite=FALSE, indexDestination=TRUE)
 
-asSam(file, destination, ...)
-\S4method{asSam}{character}(file, destination, ..., overwrite=FALSE)
+asSam(file, destination=sub("\\\\.bam", "", file), ...)
+\S4method{asSam}{character}(file, destination=sub("\\\\.bam", "", file),
+    ..., overwrite=FALSE)
 
 filterBam(file, destination, index=file, ...)
 \S4method{filterBam}{character}(file, destination, index=file, ...,
