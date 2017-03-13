@@ -153,7 +153,7 @@ setReplaceMethod("asMates", "BamFile",
     if (!is(value, "character"))
         stop("'value' must be a single character")
     if (length(value))
-        if (nchar(value) > 1L)
+        if (!is.na(value) && nchar(value) > 1L)
             stop("nchar(value) must be <= 1")
     if (!asMates(object))
         warning(paste0("when 'asMates' is TRUE '", name, "' is ignored"))

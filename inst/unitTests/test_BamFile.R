@@ -261,7 +261,15 @@ test_BamFile_qname_prefix_suffix <- function()
     qnamePrefixEnd(bfm) <- "*"
     scn_noop_3 <- scanBam(bfm, param=ScanBamParam(what="qname"))
     qnames_noop_3 <- scn_noop_3[[1]]$qname[1:2]
-    checkIdentical(qnames_noop_3, target) 
+    checkIdentical(qnames_noop_3, target)
+
+    ## setter
+    bf <- BamFile(fl, asMates=TRUE)
+    checkIdentical(qnamePrefixEnd(bf), NA_character_)
+    qnamePrefixEnd(bf) <- "."
+    checkIdentical(qnamePrefixEnd(bf), ".")
+    qnamePrefixEnd(bf) <- NA_character_;
+    checkIdentical(qnamePrefixEnd(bf), NA_character_)
 
     ## all
     bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="_")

@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.27
+-----------------------
+
+BUG FIXES
+
+    o qnameSuffixStart<-(), qnamePrefixEnd<-() accept 'NA' (bug report
+    from Peter Hickey).
+
 CHANGES IN VERSION 1.25
 -----------------------
 
@@ -10,6 +18,9 @@ NEW FEATURES
 
     o asBam(), asSam() provide default desinations.
 
+    o idxstatsBam() quickly summarizes the number of mapped and
+      unmapped reads on each sequence in a BAM file.
+
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o index() by default returns NA rather than character(), but can be
@@ -18,16 +29,6 @@ SIGNIFICANT USER-VISIBLE CHANGES
 BUG FIXES
 
     o TabixFileList(TabixFile()) works.
-
-CHANGES IN VERSION 1.25
------------------------
-
-NEW FEATURES
-
-    o idxstatsBam() quickly summarizes the number of mapped and
-      unmapped reads on each sequence in a BAM file.
-
-BUG FIXES
 
     o *File constructors now check that the file argument is length 1,
       and that the index argument is length 0 or 1.
