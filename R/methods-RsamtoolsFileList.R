@@ -4,7 +4,7 @@ setGeneric(".RsamtoolsFileList",
            signature="file")
 
 setMethod(.RsamtoolsFileList, "missing",
-    function(file, ..., yieldSize=NA_integer_, class)
+    function(file, ..., classDef = class, yieldSize=NA_integer_, class)
 {
     new(paste0(class, "List"))
 })
@@ -31,7 +31,7 @@ setMethod(.RsamtoolsFileList, "character",
 })
 
 setMethod(.RsamtoolsFileList, "ANY",
-    function(file, ..., yieldSize=NA_integer_, class)
+    function(file, ..., classDef = class, yieldSize=NA_integer_, class)
 {
     list <- list(file, ...)
     if (length(list) == 1 && (is.list(list[[1L]]) || is(list[[1L]], "List")))
@@ -40,7 +40,7 @@ setMethod(.RsamtoolsFileList, "ANY",
 })
 
 setMethod(.RsamtoolsFileList, "RsamtoolsFile",
-    function(file, ..., yieldSize=NA_integer_, class)
+    function(file, ..., classDef = class, yieldSize=NA_integer_, class)
 {
     new(paste0(class, "List"), listData=list(file, ...))
 })
