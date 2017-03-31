@@ -10,21 +10,23 @@ setMethod(.RsamtoolsFileList, "missing",
 })
 
 setMethod(.RsamtoolsFileList, "character",
-    function(file, index, ..., yieldSize=NA_integer_, class)
+    function(file, index, ..., classDef=class, yieldSize=NA_integer_, class)
 {
-    fun <- function(elt, ..., yieldSize, class)
-        do.call(class, list(elt, ..., yieldSize=yieldSize))
+    fun <- function(elt, ..., yieldSize, classDef)
+        do.call(classDef, list(elt, ..., yieldSize=yieldSize))
     if (is.null(names(file)))
         names(file) <- basename(file)
     listData <- if (!missing(index) && length(index))
         Map(fun, file, as.character(index), ...,
-            MoreArgs=list(yieldSize=yieldSize, class=class))
+            MoreArgs=list(yieldSize=yieldSize, classDef=classDef))
     else if (missing(index))
-        Map(fun, file, ..., MoreArgs=list(yieldSize=yieldSize, class=class))
+        Map(fun, file, ...,
+            MoreArgs=list(yieldSize=yieldSize, classDef=classDef)
+        )
     else
         ## support old index=character() variant
         Map(fun, file, ..., MoreArgs=list(index=index,
-                              yieldSize=yieldSize, class=class))
+                              yieldSize=yieldSize, classDef=classDef))
     new(paste0(class, "List"), listData=listData)
 })
 
