@@ -240,8 +240,10 @@ static void _bamtags(const bam1_t * bam, BAM_DATA bd, SEXP tags)
                 for (int j = 0; j < n; ++j)
                     SET_STRING_ELT(tag, j, NA_STRING);
                 if ('A' == aux[0]) {
+                    PROTECT(tag);
                     buf_A = R_alloc(2, sizeof(char));
                     buf_A[1] = '\0';
+                    UNPROTECT(1);
                 }
                 break;
             case 'H':
