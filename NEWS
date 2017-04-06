@@ -4,7 +4,10 @@ CHANGES IN VERSION 1.27
 BUG FIXES
 
     o qnameSuffixStart<-(), qnamePrefixEnd<-() accept 'NA' (bug report
-    from Peter Hickey).
+      from Peter Hickey).
+
+    o scanBam() accepts a single tag mixing 'Z' and 'A' format. See
+      https://support.bioconductor.org/p/94553/
 
 CHANGES IN VERSION 1.25
 -----------------------
@@ -24,7 +27,7 @@ NEW FEATURES
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o index() by default returns NA rather than character(), but can be
-    controled with asNA argument.
+      controled with asNA argument.
 
 BUG FIXES
 
