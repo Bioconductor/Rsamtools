@@ -142,9 +142,6 @@ setGeneric("applyPileups", function(files, FUN, ..., param)
 
 ## RsamtoolsFile(s)
 
-setGeneric("path",
-           function(object, ...) standardGeneric("path"))
-
 setGeneric("index",
            function(object, ..., asNA=TRUE)
            standardGeneric("index"),
