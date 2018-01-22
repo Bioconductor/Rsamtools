@@ -62,7 +62,7 @@
 .uunlist <-
     function(x) unlist(x, use.names=FALSE)
 
-setMethod(.asSpace, "RangesList", function(x) {
+setMethod(.asSpace, "IntegerRangesList", function(x) {
     list(as.character(space(x)), .uunlist(start(x)), .uunlist(end(x)))
 })
 

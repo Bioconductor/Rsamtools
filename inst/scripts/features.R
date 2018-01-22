@@ -12,7 +12,7 @@ transcripts <- transcripts(geneHuman, proximal=300)
 library(Rsamtools)
 ## remote access
 chr6a0 <- ranges(transcripts)[["chr6"]][1:2]
-p10 <- ScanBamParam(which=RangesList(`6`=chr6a0))
+p10 <- ScanBamParam(which=IRangesList(`6`=chr6a0))
 (cnt0 <- countBam(fl0, fl0, param=p10))
 sum(cnt0$records)
 system.time(res0 <- scanBam(fl0, fl0, param=p10))
@@ -25,7 +25,7 @@ if (file.exists(fl)) {
 
     ## larger, local
     chr6a <- ranges(transcripts)[["chr6"]][1:50]
-    p1 <- ScanBamParam(which=RangesList(`6`=chr6a))
+    p1 <- ScanBamParam(which=IRangesList(`6`=chr6a))
     sum(countBam(fl, param=p1)$records)
     system.time(res <- scanBam(fl, param=p1)) # about 30s
 }

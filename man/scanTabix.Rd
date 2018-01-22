@@ -3,7 +3,7 @@
 
 \alias{scanTabix}
 \alias{scanTabix,character,GRanges-method}
-\alias{scanTabix,character,RangesList-method}
+\alias{scanTabix,character,IntegerRangesList-method}
 
 \title{
 
@@ -16,7 +16,7 @@
 \usage{
 
 scanTabix(file, ..., param)
-\S4method{scanTabix}{character,RangesList}(file, ..., param)
+\S4method{scanTabix}{character,IntegerRangesList}(file, ..., param)
 \S4method{scanTabix}{character,GRanges}(file, ..., param)
 
 }
@@ -27,8 +27,8 @@ scanTabix(file, ..., param)
     processed, or more flexibly an instance of class
     \code{\link{TabixFile}}.}
 
-  \item{param}{A instance of \code{GRanges} or \code{RangesList} providing
-    the sequence names and regions to be parsed.}
+  \item{param}{A instance of \code{GRanges} or \code{IntegerRangesList}
+    providing the sequence names and regions to be parsed.}
 
 
   \item{...}{Additional arguments, currently ignored.}

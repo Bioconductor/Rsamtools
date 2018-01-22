@@ -34,7 +34,7 @@ setMethod(ScanBcfParam, c(which="GRangesList"),
                   which=ranges(which), ...)
 })
 
-setMethod(ScanBcfParam, c(which="RangesList"), 
+setMethod(ScanBcfParam, c(which="IntegerRangesList"), 
     function(fixed=character(), info=character(), geno=character(), 
              samples=character(), trimEmpty=TRUE, which, ...)
 {

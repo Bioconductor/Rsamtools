@@ -17,7 +17,7 @@
 \alias{seqinfo,FaFile-method}
 \alias{countFa,FaFile-method}
 \alias{scanFa,FaFile,GRanges-method}
-\alias{scanFa,FaFile,RangesList-method}
+\alias{scanFa,FaFile,IntegerRangesList-method}
 \alias{scanFa,FaFile,missing-method}
 \alias{getSeq,FaFile-method}
 \alias{getSeq,FaFileList-method}
@@ -64,7 +64,7 @@ FaFileList(...)
 
 \S4method{scanFa}{FaFile,GRanges}(file, param, ...,
     as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
-\S4method{scanFa}{FaFile,RangesList}(file, param, ...,
+\S4method{scanFa}{FaFile,IntegerRangesList}(file, param, ...,
     as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 \S4method{scanFa}{FaFile,missing}(file, param, ...,
     as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
@@ -83,7 +83,7 @@ FaFileList(...)
     or \code{FaFileList} (for \code{scanFaIndex}, \code{getSeq}).}
 
   \item{param}{An optional \code{\linkS4class{GRanges}} or
-    \code{\linkS4class{RangesList}} instance to select reads (and
+    \code{\linkS4class{IntegerRangesList}} instance to select reads (and
     sub-sequences) for input. See Methods, below.}
 
   \item{...}{Additional arguments. \itemize{

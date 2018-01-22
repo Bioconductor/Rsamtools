@@ -73,8 +73,8 @@ in those ranges, we specify that we would like to extract the
 reference name (\Rcode{rname}, e.g., \Rcode{seq1}), strand, alignment
 position, query (i.e., read) width, and query sequence:
 <<ScanBamParam>>=
-which <- RangesList(seq1=IRanges(1000, 2000),
-                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+which <- IRangesList(seq1=IRanges(1000, 2000),
+                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
 what <- c("rname", "strand", "pos", "qwidth", "seq")
 param <- ScanBamParam(which=which, what=what)
 @ 
@@ -158,7 +158,7 @@ small (about 500 KB). With \Rcode{na19240url} set to the above
 address, the following retrieves just those reads in the specified
 range
 <<bam-remote,eval=FALSE>>=
-which <- RangesList("6"=IRanges(100000L, 110000L))
+which <- IRangesList("6"=IRanges(100000L, 110000L))
 param <- ScanBamParam(which=which, what=scanBamWhat())
 na19240bam <- scanBam(na19240url, param=param)
 @ 

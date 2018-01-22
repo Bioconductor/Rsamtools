@@ -5,7 +5,7 @@
 \alias{ScanBamParam}
 \alias{ScanBamParam,missing-method}
 \alias{ScanBamParam,ANY-method}
-\alias{ScanBamParam,RangesList-method}
+\alias{ScanBamParam,IntegerRangesList-method}
 \alias{ScanBamParam,GRanges-method}
 % helpers
 \alias{scanBamWhat}
@@ -25,7 +25,7 @@
 \alias{bamWhat}
 \alias{bamWhich<-}
 \alias{bamWhich<-,ScanBamParam,GRanges-method}
-\alias{bamWhich<-,ScanBamParam,RangesList-method}
+\alias{bamWhich<-,ScanBamParam,IntegerRangesList-method}
 \alias{bamWhich<-,ScanBamParam,ANY-method}
 \alias{bamWhich}
 \alias{bamMapqFilter}
@@ -148,11 +148,12 @@ bamFlagTest(flag, value)
     mapping quality to include. BAM records with mapping qualities less
     than \code{mapqFilter} are discarded.}
 
-  \item{which}{A \code{\linkS4class{GRanges}}, \code{\linkS4class{RangesList}},
-    or any object that can be coerced to a \code{RangesList}, or
-    missing object, from which a \code{IRangesList} instance will be
-    constructed. Names of the \code{IRangesList} correspond to reference
-    sequences, and ranges to the regions on that reference sequence for
+  \item{which}{A \code{\linkS4class{GRanges}},
+    \code{\linkS4class{IntegerRangesList}}, or any object that can be
+    coerced to a \code{IntegerRangesList}, or missing object, from which
+    a \code{IRangesList} instance will be constructed. Names of the
+    \code{IRangesList} correspond to reference sequences, and
+    ranges to the regions on that reference sequence for
     which matches are desired. Because data types are coerced to
     \code{IRangesList}, \code{which} does \emph{not} include strand
     information (use the \code{flag} argument instead). Only records
@@ -258,7 +259,7 @@ bamFlagTest(flag, value)
     \item{\code{what}}{Object of class \code{character} indicating
       what fields are to be returned.}
 
-    \item{\code{which}}{Object of class \code{RangesList} indicating
+    \item{\code{which}}{Object of class \code{IntegerRangesList} indicating
       which reference sequence and coordinate reads must overlap.}
 
     \item{\code{mapqFilter}}{Object of class \code{integer} indicating
@@ -294,8 +295,8 @@ bamFlagTest(flag, value)
     \item{bamWhat, bamWhat<-}{Returns or sets a \code{character} vector
       of fields to be extracted.}
 
-    \item{bamWhich, bamWhich<-}{Returns or sets a \code{RangesList} of
-      bounds on reads to be extracted. A length 0 \code{RangesList}
+    \item{bamWhich, bamWhich<-}{Returns or sets a \code{IntegerRangesList} of
+      bounds on reads to be extracted. A length 0 \code{IntegerRangesList}
       represents all reads.}
 
     \item{bamFlag, bamFlag<-}{Returns or sets an \code{integer(2)}
@@ -330,8 +331,8 @@ bamFlagTest(flag, value)
 p0 <- ScanBamParam()
 
 ## subset of reads based on genomic coordinates
-which <- RangesList(seq1=IRanges(1000, 2000),
-                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+which <- IRangesList(seq1=IRanges(1000, 2000),
+                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
 p1 <- ScanBamParam(what=scanBamWhat(), which=which)
 
 ## subset of reads based on 'flag' value

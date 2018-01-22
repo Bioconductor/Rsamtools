@@ -15,8 +15,8 @@ test_countBam <- function()
                            nucleotides=116551L),
                 countBam(fl))
 
-    which <- RangesList(seq1=IRanges(1000, 2000),
-                        seq2=IRanges(c(100, 1000), c(1000, 2000)))
+    which <- IRangesList(seq1=IRanges(1000, 2000),
+                         seq2=IRanges(c(100, 1000), c(1000, 2000)))
     p1 <- ScanBamParam(which=which)
     exp <- cbind(as_data.frame(which),
                  file=basename(fl),
@@ -24,8 +24,8 @@ test_countBam <- function()
                  nucleotides=c(21549, 41235, 22640))
     checkIdentical(exp, countBam(fl, param=p1))
 
-    which <- RangesList(seq2=IRanges(c(100, 1000), c(1000, 2000)),
-                        seq1=IRanges(1000, 2000))
+    which <- IRangesList(seq2=IRanges(c(100, 1000), c(1000, 2000)),
+                         seq1=IRanges(1000, 2000))
     p2 <- ScanBamParam(which=which)
     exp <- merge(as_data.frame(which), exp, sort=FALSE)
     rownames(exp) <- NULL
@@ -34,8 +34,8 @@ test_countBam <- function()
 
 test_countBam_index <- function()
 {
-    which <- RangesList(seq1=IRanges(1000, 2000),
-                        seq2=IRanges(c(100, 1000), c(1000, 2000)))
+    which <- IRangesList(seq1=IRanges(1000, 2000),
+                         seq2=IRanges(c(100, 1000), c(1000, 2000)))
     p1 <- ScanBamParam(which=which)
     exp <- cbind(as_data.frame(which),
                  file="ex1_noindex.bam",

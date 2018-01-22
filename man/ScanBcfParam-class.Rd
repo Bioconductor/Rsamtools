@@ -9,7 +9,7 @@
 
 \alias{ScanBcfParam,GRanges-method}
 \alias{ScanBcfParam,GRangesList-method}
-\alias{ScanBcfParam,RangesList-method}
+\alias{ScanBcfParam,IntegerRangesList-method}
 \alias{ScanBcfParam,missing-method}
 \alias{bcfFixed}
 \alias{bcfInfo}
@@ -37,7 +37,7 @@ ScanBcfParam(fixed=character(), info=character(), geno=character(),
 
 \S4method{ScanBcfParam}{missing}(fixed=character(), info=character(), geno=character(), 
              samples=character(), trimEmpty=TRUE, which, ...)
-\S4method{ScanBcfParam}{RangesList}(fixed=character(), info=character(), geno=character(), 
+\S4method{ScanBcfParam}{IntegerRangesList}(fixed=character(), info=character(), geno=character(), 
              samples=character(), trimEmpty=TRUE, which, ...)
 \S4method{ScanBcfParam}{GRanges}(fixed=character(), info=character(), geno=character(), 
              samples=character(), trimEmpty=TRUE, which, ...)
@@ -90,7 +90,7 @@ bcfWhich(object)
 }
 \section{Slots}{
   \describe{
-    \item{\code{which}:}{Object of class \code{"RangesList"} indicating
+    \item{\code{which}:}{Object of class \code{"IntegerRangesList"} indicating
       which reference sequence and coordinate variants must overlap.}
     \item{\code{info}:}{Object of class \code{"character"} indicating
       portions of \sQuote{INFO} to be returned.}

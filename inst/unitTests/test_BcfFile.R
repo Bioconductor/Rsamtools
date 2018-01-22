@@ -113,8 +113,8 @@ test_BcfFile_scan_noindex <- function()
 test_BcfFile_scan_index <- function()
 {
     bf <- open(BcfFile(fl))
-    which <- RangesList(seq1=IRanges(c(1, 1000), width=10),
-                        seq2=IRanges(c(100, 1000), width=10))
+    which <- IRangesList(seq1=IRanges(c(1, 1000), width=10),
+                         seq2=IRanges(c(100, 1000), width=10))
     p <- ScanBcfParam(which=which)
     res <- scanBcf(bf, param=p)
     checkEquals(11L, length(res))

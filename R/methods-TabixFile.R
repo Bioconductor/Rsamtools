@@ -132,7 +132,7 @@ setMethod(scanTabix, c("TabixFile", "missing"),
                 end=integer())
 })
 
-setMethod(scanTabix, c("TabixFile", "RangesList"),
+setMethod(scanTabix, c("TabixFile", "IntegerRangesList"),
     function(file, ..., param)
 {
     .tabix_scan(file, ..., space=as.character(space(param)),

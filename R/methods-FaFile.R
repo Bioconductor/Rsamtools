@@ -111,7 +111,7 @@ setMethod(countFa, "FaFile",
 
 setMethod(scanFa, c("FaFile", "GRanges"), .scanFa)
 
-setMethod(scanFa, c("FaFile", "RangesList"), .scanFa)
+setMethod(scanFa, c("FaFile", "IntegerRangesList"), .scanFa)
 
 setMethod(scanFa, c("FaFile", "missing"),
     function(file, param, ...,
@@ -180,7 +180,7 @@ setMethod(scanFa, c("character", "GRanges"),
     scanFa(FaFile(file), param, ..., as=as)
 })
 
-setMethod(scanFa, c("character", "RangesList"),
+setMethod(scanFa, c("character", "IntegerRangesList"),
     function(file, param, ...,
         as=c("DNAStringSet", "RNAStringSet", "AAStringSet"))
 {

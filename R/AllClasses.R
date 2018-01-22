@@ -11,7 +11,7 @@ setClass("ScanBamParam",
            tag="character",
            tagFilter="list",
            what="character",
-           which="RangesList",
+           which="IntegerRangesList",
            mapqFilter="integer"))
 
 setClass("BamViews",
@@ -26,7 +26,7 @@ setClass("BamViews",
 setClass("ScanBVcfParam",
     representation=representation(
       "VIRTUAL",
-      which="RangesList",
+      which="IntegerRangesList",
       fixed="character",
       info="character",
       geno="character",

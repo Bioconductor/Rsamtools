@@ -91,8 +91,8 @@ test_scanBam <- function()
 test_scanBam_which <- function()
 {
     ## 'which'
-    which <- RangesList(seq1=IRanges(1000, 2000),
-                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+    which <- IRangesList(seq1=IRanges(1000, 2000),
+                         seq2=IRanges(c(100, 1000), c(1000, 2000)))
     p1 <- ScanBamParam(which=which, what=scanBamWhat())
     res <- scanBam(fl, param=p1)
 
@@ -111,8 +111,8 @@ test_scanBam_which <- function()
 test_scanBam_which_bounds <- function()
 {
     ## 'which'
-    which <- RangesList(seq1=IRanges(1000, 2000),
-                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+    which <- IRangesList(seq1=IRanges(1000, 2000),
+                         seq2=IRanges(c(100, 1000), c(1000, 2000)))
     p1 <- ScanBamParam(which=which, what=scanBamWhat())
     res <- scanBam(fl, param=p1)
 
@@ -145,8 +145,8 @@ test_scanBam_which_bounds <- function()
 
 test_scanBam_which_order <- function()
 {
-    which <- RangesList(seq2=IRanges(c(1000, 100), c(2000, 1000)),
-                        seq1=IRanges(1000, 2000))
+    which <- IRangesList(seq2=IRanges(c(1000, 100), c(2000, 1000)),
+                         seq1=IRanges(1000, 2000))
     p1 <- ScanBamParam(which=which, what="pos")
     res <- scanBam(fl, param=p1)
     checkIdentical("list", class(res))
@@ -179,12 +179,12 @@ test_scanBam_which_empty <- function()
 test_scanBam_what_overflow <- function()
 {
     ## src/samtools/bam_index.c requires that the largest bin be <= 512Mbp
-    which <- RangesList(seq1=IRanges(1000, 536870912L-1L))
+    which <- IRangesList(seq1=IRanges(1000, 536870912L-1L))
     p1 <- ScanBamParam(which=which, what=scanBamWhat())
     checkTrue(validObject(scanBam(fl, param=p1)))
-    bamWhich(p1) <- RangesList(seq1=IRanges(1000, 536870912L))
+    bamWhich(p1) <- IRangesList(seq1=IRanges(1000, 536870912L))
     checkTrue(validObject(scanBam(fl, param=p1)))
-    bamWhich(p1) <- RangesList(seq1=IRanges(1000, 536870912L+1L))
+    bamWhich(p1) <- IRangesList(seq1=IRanges(1000, 536870912L+1L))
     xx <- tryCatch(scanBam(fl, param=p1), error=conditionMessage)
     checkIdentical("'end' must be <= 536870912", strsplit(xx, "\n")[[1]][1])
     checkTrue(validObject(scanBam(fl)));
@@ -222,7 +222,7 @@ test_scanBam_flag <- function()
 
 test_scanBam_badSpace <- function()
 {
-    which <- RangesList(badspc=IRanges(100000, 2000000))
+    which <- IRangesList(badspc=IRanges(100000, 2000000))
     p1 <- ScanBamParam(which=which, what=scanBamWhat())
 
     exp <- "seqlevels(param) not in BAM header"
@@ -236,8 +236,8 @@ test_scanBam_badSpace <- function()
 
 test_scanBam_index <- function()
 {
-    which <- RangesList(seq1=IRanges(1000, 2000),
-                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+    which <- IRangesList(seq1=IRanges(1000, 2000),
+                         seq2=IRanges(c(100, 1000), c(1000, 2000)))
     p1 <- ScanBamParam(which=which, what=scanBamWhat())
     src <- system.file("unitTests", "cases", package="Rsamtools")
     fl <- file.path(src, "ex1_noindex.bam")

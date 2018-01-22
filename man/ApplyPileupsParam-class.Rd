@@ -104,7 +104,7 @@ plpYieldSize(object) <- value
     \code{yieldAll=TRUE}, positions not passing filter criteria have
     \sQuote{0} entries in \code{seq} or \code{qual}.}
 
-  \item{which}{A \code{GRanges} or \code{RangesList} instance
+  \item{which}{A \code{GRanges} or \code{IntegerRangesList} instance
     restricting pileup calculations to the corresponding genomic
     locations.}
 
@@ -147,7 +147,7 @@ plpYieldSize(object) <- value
 
     \item{\code{yieldAll}}{A \code{logical(1)}.}
 
-    \item{\code{which}}{A \code{GRanges} or \code{RangesList} instance.}
+    \item{\code{which}}{A \code{GRanges} or \code{IntegerRangesList} object.}
 
     \item{\code{what}}{A \code{character()}.}
 

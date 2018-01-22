@@ -1,5 +1,5 @@
 ## Native method first.
-setMethod(ScanBamParam, c(which="RangesList"),
+setMethod(ScanBamParam, c(which="IntegerRangesList"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
                    tagFilter=list(), what=character(0), which,
@@ -8,7 +8,7 @@ setMethod(ScanBamParam, c(which="RangesList"),
     if (is.null(names(which))) {
         if (length(which) != 0L)
             stop(wmsg("'which' must have names in \"ScanBamParam\" ",
-                      "method for RangesList objects "))
+                      "method for IntegerRangesList objects "))
         names(which) <- character()
     }
     new("ScanBamParam", flag=flag, simpleCigar=simpleCigar,
@@ -38,16 +38,16 @@ setMethod(ScanBamParam, c(which="ANY"),
                    tagFilter=list(), what=character(0), which,
                    mapqFilter=NA_integer_)
 {
-    which <- as(which, "RangesList")
+    which <- as(which, "IntegerRangesList")
     ScanBamParam(flag=flag, simpleCigar=simpleCigar,
                  reverseComplement=reverseComplement, tag=tag,
                  tagFilter=tagFilter, what=what, which=which,
                  mapqFilter=as.integer(mapqFilter))
 })
 
-## Note that this method is not needed. Coercing a GRanges to RangesList works
-## and produces exactly what the method below is doing by hand. So the default
-## ScanBamParam method above just works on a GRanges. -- Herv\'e
+## Note that this method is not needed. Coercing a GRanges to IntegerRangesList
+## works and produces exactly what the method below is doing by hand. So the
+## default ScanBamParam method above just works on a GRanges. -- Herv\'e
 setMethod(ScanBamParam, c(which="GRanges"),
           function(flag=scanBamFlag(), simpleCigar=FALSE,
                    reverseComplement=FALSE, tag=character(0),
@@ -198,7 +198,7 @@ bamWhich <- function(object) slot(object, "which")
 setGeneric("bamWhich<-",
            function(object, value) standardGeneric("bamWhich<-"))
         
-setReplaceMethod("bamWhich", c("ScanBamParam", "RangesList"),
+setReplaceMethod("bamWhich", c("ScanBamParam", "IntegerRangesList"),
     function(object, value) 
 {
     slot(object, "which") <- value
@@ -217,7 +217,7 @@ setReplaceMethod("bamWhich", c("ScanBamParam", "GRanges"),
 setReplaceMethod("bamWhich", c("ScanBamParam", "ANY"),
     function(object, value) 
 {
-    bamWhich(object) <-  as(value, "RangesList")
+    bamWhich(object) <-  as(value, "IntegerRangesList")
     validObject(object)
     object
 })

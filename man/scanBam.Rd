@@ -200,7 +200,7 @@ mergeBam(files, destination, ...)
 \value{
 
   The \code{scanBam,character-method} returns a list of lists. The outer
-  list groups results from each \code{Ranges} list of
+  list groups results from each \code{IntegerRanges} list of
   \code{bamWhich(param)}; the outer list is of length one when
   \code{bamWhich(param)} has length 0. Each inner list contains elements
   named after \code{scanBamWhat()}; elements omitted from
@@ -325,8 +325,8 @@ table(res0[["cigar"]], useNA="always")
 table(res0[["strand"]], useNA="always")
 table(res0[["flag"]], useNA="always")
 
-which <- RangesList(seq1=IRanges(1000, 2000),
-                    seq2=IRanges(c(100, 1000), c(1000, 2000)))
+which <- IRangesList(seq1=IRanges(1000, 2000),
+                     seq2=IRanges(c(100, 1000), c(1000, 2000)))
 p1 <- ScanBamParam(which=which, what=scanBamWhat())
 res1 <- scanBam(fl, param=p1)
 names(res1)
