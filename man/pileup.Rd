@@ -487,10 +487,12 @@ phred2ASCIIOffset(phred=integer(),
 library("RNAseqData.HNRNPC.bam.chr14")
 
 fl <- RNAseqData.HNRNPC.bam.chr14_BAMFILES[1]
+## Minimum base quality to be tallied
+p_param <- PileupParam(min_base_quality = 10L)
 
 \donttest{
 ## no 'which' argument to ScanBamParam: process entire file at once
-res <- pileup(fl)
+res <- pileup(fl, pileupParam = p_param)
 head(res)
 table(res$strand, res$nucleotide)
 }
@@ -499,7 +501,7 @@ table(res$strand, res$nucleotide)
 ## no 'which' argument to ScanBamParam with 'yieldSize' set on BamFile
 bf <- open(BamFile(fl, yieldSize=5e4))
 repeat {
-    res <- pileup(bf)
+    res <- pileup(bf, pileupParam = p_param)
     message(nrow(res), " rows in result data.frame")
     if(nrow(res) == 0L)
         break
@@ -510,13 +512,13 @@ close(bf)
 ## pileup for the first half of chr14 with default Pileup parameters
 ## 'which' argument: process only specified genomic range(s)
 sbp <- ScanBamParam(which=GRanges("chr14", IRanges(1, 53674770)))
-res <- pileup(fl, scanBamParam=sbp)
+res <- pileup(fl, scanBamParam=sbp, pileupParam = p_param)
 head(res)
 table(res$strand, res$nucleotide)
 
 ## specify pileup parameters: include ambiguious nucleotides
 ## (the 'N' level in the nucleotide column of the data.frame)
-p_param <- PileupParam(ignore_query_Ns=FALSE)
+p_param <- PileupParam(ignore_query_Ns=FALSE, min_base_quality = 10L)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 head(res)
 table(res$strand, res$nucleotide)
@@ -525,6 +527,7 @@ table(res$strand, res$nucleotide)
 ## nucleotide at a genomic position to be included in results.
 
 p_param <- PileupParam(distinguish_strands=TRUE,
+                       min_base_quality = 10L,
                        min_nucleotide_depth=7)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 head(res)
@@ -552,6 +555,7 @@ phred2ASCIIOffset(10, "Illumina 1.3+")
 ## least 5 alignments) with high map quality
 p_param <- PileupParam(min_minor_allele_depth=5,
                        min_mapq=40,
+                       min_base_quality = 10,
                        distinguish_strand=FALSE)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 dim(res) ## reduced to our biologically interesting positions
@@ -563,22 +567,22 @@ head(xtabs(count ~ pos + nucleotide, res))
 
 ## basic use of positive bins: single pivot; count bases that appear in
 ## first 10 cycles of a read separately from the rest
-p_param <- PileupParam(query_bins=c(0, 10, Inf))
+p_param <- PileupParam(query_bins=c(0, 10, Inf), min_base_quality = 10)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 
 ## basic use of positive bins: simple range; only include bases in
 ## cycle positions 6-10 within read
-p_param <- PileupParam(query_bins=c(5, 10))
+p_param <- PileupParam(query_bins=c(5, 10), min_base_quality = 10)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 
 ## basic use of negative bins: single pivot; count bases that appear in
 ## last 3 cycle positions of a read separately from the rest.
-p_param <- PileupParam(query_bins=c(-Inf, -4, -1))
+p_param <- PileupParam(query_bins=c(-Inf, -4, -1), min_base_quality = 10)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 
 ## basic use of negative bins: drop nucleotides in last two cycle
 ## positions of each read
-p_param <- PileupParam(query_bins=c(-Inf, -3))
+p_param <- PileupParam(query_bins=c(-Inf, -3), min_base_quality = 10)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 }
 
@@ -590,7 +594,8 @@ res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 ## Assume determined ahead of time that for the data 1-7 makes sense for
 ## beginning, 8-12 middle, >=13 end (actual cycle positions should be
 ## tailored to data in actual BAM files).
-p_param <- PileupParam(query_bins=c(0, 7, 12, Inf)) ## note non-symmetric
+p_param <- PileupParam(query_bins=c(0, 7, 12, Inf), ## note non-symmetric
+                       min_base_quality = 10)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 xt <- xtabs(count ~ nucleotide + query_bin, res)
 print(xt)
@@ -601,7 +606,7 @@ t(t(xt) / colSums(xt)) ## cheap normalization for illustrative purposes
 ##  that the first three cycles and any bases beyond the 16th cycle are
 ##  irrelevant. Hence, the implicit outer range is (3,16]; all bases
 ##  outside of that are dropped.
-p_param <- PileupParam(query_bins=c(3, 7, 12, 16))
+p_param <- PileupParam(query_bins=c(3, 7, 12, 16), min_base_quality = 10)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 xt <- xtabs(count ~ nucleotide + query_bin, res)
 print(xt)
@@ -609,7 +614,7 @@ t(t(xt) / colSums(xt))
 
 \donttest{
 ## single-width bins: count each cycle within a read separately.
-p_param <- PileupParam(query_bins=seq(1,20))
+p_param <- PileupParam(query_bins=seq(1,20), min_base_quality = 10)
 res <- pileup(fl, scanBamParam=sbp, pileupParam=p_param)
 xt <- xtabs(count ~ nucleotide + query_bin, res)
 print(xt[ , c(1:3, 18:19)]) ## fit on one screen

@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.31
+-----------------------
+
+BUG FIXES
+
+    o (v.1.31.3) pileup() examples require min_base_quality =
+      10. See https://support.bioconductor.org/p/105515/#105553
+
 CHANGES IN VERSION 1.27
 -----------------------
 
