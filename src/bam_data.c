@@ -1,5 +1,5 @@
-#include "samtools/khash.h"
-#include "samtools/sam.h"
+#include <htslib/khash.h>
+#include <sam.h>
 #include "bamfile.h"
 #include "bam_data.h"
 #include "scan_bam_data.h"
@@ -23,12 +23,12 @@ static BAM_DATA _Calloc_BAM_DATA(int blocksize, int cigar_buf_sz)
 }
 
 BAM_DATA
-_init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
+_init_BAM_DATA(SEXP ext, SEXP regions, SEXP flag, SEXP isSimpleCigar,
                SEXP tagFilter, SEXP mapqFilter, int reverseComplement,
                int yieldSize, int obeyQname, int asMates,
                char qnamePrefixEnd, char qnameSuffixStart, void *extra)
 {
-    int nrange = R_NilValue == space ? 1 : LENGTH(VECTOR_ELT(space, 0));
+    int nrange = R_NilValue == regions ? 1 : LENGTH(VECTOR_ELT(regions, 0));
     BAM_DATA bd =
         _Calloc_BAM_DATA(1 == nrange ?
                          5 * BAM_INIT_SIZE : BAM_INIT_SIZE, 32768);
@@ -265,12 +265,9 @@ static void _bamtags(const bam1_t * bam, BAM_DATA bd, SEXP tags)
             INTEGER(tag)[idx] = bam_aux2i(aux);
             break;
         case 'f':
-            _tag_type_check(tagname, tag, REALSXP);
-            REAL(tag)[idx] = (double) bam_aux2f(aux);
-            break;
         case 'd':
             _tag_type_check(tagname, tag, REALSXP);
-            REAL(tag)[idx] = bam_aux2d(aux);
+            REAL(tag)[idx] = bam_aux2f(aux);
             break;
         case 'A':
             _tag_type_check(tagname, tag, STRSXP);

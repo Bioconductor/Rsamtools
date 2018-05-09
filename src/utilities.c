@@ -3,7 +3,7 @@
 #include "utilities.h"
 #include "IRanges_interface.h"
 #include "XVector_interface.h"
-#include "samtools/khash.h"
+#include <htslib/khash.h>
 
 void *_Rs_Realloc_impl(void *p, size_t n, size_t t)
 {
@@ -249,6 +249,28 @@ char *_rtrim(char *s)
     return s;
 }
 
+/*
+ * Copied from XVector/src/io_utils.c
+ * Doesn't actually delete anything but returns the length that the 'buf' char
+ * array would have had after deletion of the LF ("\n") or CRLF ("\r\n") chars
+ * located at its end.
+ * If 'buf_len' is -1, then 'buf' must be a C string (i.e. null-terminated).
+ */
+int _delete_trailing_LF_or_CRLF(const char *buf, int buf_len)
+{
+    if (buf_len == -1)
+        buf_len = strlen(buf);
+    if (buf_len == 0)
+        return 0;
+    if (buf[--buf_len] != '\n')
+        return ++buf_len;
+    if (buf_len == 0)
+        return 0;
+    if (buf[--buf_len] != '\r')
+        return ++buf_len;
+    return buf_len;
+}
+
 /* scan-related */
 
 void _checkext(SEXP ext, SEXP tag, const char *lbl)
@@ -267,23 +289,23 @@ void _checknames(SEXP filename, SEXP indexname, SEXP filemode)
         Rf_error("'filemode' must be character(1)");
 }
 
-void _checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar)
+void _checkparams(SEXP regions, SEXP keepFlags, SEXP isSimpleCigar)
 {
     const int MAX_CHRLEN = 1 << 29;	/* See samtools/bam_index.c */
-    if (R_NilValue != space) {
-        if (!IS_VECTOR(space) || LENGTH(space) != 3)
-            Rf_error("'space' must be list(3) or NULL");
-        if (!IS_CHARACTER(VECTOR_ELT(space, 0)))
-            Rf_error("internal: 'space[1]' must be character()");
-        if (!IS_INTEGER(VECTOR_ELT(space, 1)))
-            Rf_error("internal: 'space[2]' must be integer()");
-        if (!IS_INTEGER(VECTOR_ELT(space, 2)))
-            Rf_error("internal: 'space[3]' must be integer()");
-        if ((LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 1))) ||
-            (LENGTH(VECTOR_ELT(space, 0)) != LENGTH(VECTOR_ELT(space, 2))))
-            Rf_error("internal: 'space' elements must all be the same length");
-        const int *end = INTEGER(VECTOR_ELT(space, 2)),
-            nrange = LENGTH(VECTOR_ELT(space, 2));
+    if (R_NilValue != regions) {
+        if (!IS_VECTOR(regions) || LENGTH(regions) != 3)
+            Rf_error("'regions' must be list(3) or NULL");
+        if (!IS_CHARACTER(VECTOR_ELT(regions, 0)))
+            Rf_error("internal: 'regions[1]' must be character()");
+        if (!IS_INTEGER(VECTOR_ELT(regions, 1)))
+            Rf_error("internal: 'regions[2]' must be integer()");
+        if (!IS_INTEGER(VECTOR_ELT(regions, 2)))
+            Rf_error("internal: 'regions[3]' must be integer()");
+        if ((LENGTH(VECTOR_ELT(regions, 0)) != LENGTH(VECTOR_ELT(regions, 1))) ||
+            (LENGTH(VECTOR_ELT(regions, 0)) != LENGTH(VECTOR_ELT(regions, 2))))
+            Rf_error("internal: 'regions' elements must all be the same length");
+        const int *end = INTEGER(VECTOR_ELT(regions, 2)),
+            nrange = LENGTH(VECTOR_ELT(regions, 2));
         for (int irange = 0; irange < nrange; ++irange)
             if (end[irange] > MAX_CHRLEN)
                 Rf_error("'end' must be <= %d", MAX_CHRLEN);

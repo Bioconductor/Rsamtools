@@ -62,11 +62,11 @@
 .uunlist <-
     function(x) unlist(x, use.names=FALSE)
 
-setMethod(.asSpace, "IntegerRangesList", function(x) {
+setMethod(.asRegions, "IntegerRangesList", function(x) {
     list(as.character(space(x)), .uunlist(start(x)), .uunlist(end(x)))
 })
 
-setMethod(.asSpace, "GRanges", function(x) {
+setMethod(.asRegions, "GRanges", function(x) {
     list(as.character(seqnames(x)), start(x), end(x))
 })
 

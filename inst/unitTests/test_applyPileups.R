@@ -1,7 +1,7 @@
 ## library(Rsamtools); library(RUnit)
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
-test_applyPileups_byRange <- function()
+TEMPORARY_DISABLED_test_applyPileups_byRange <- function()
 {
     fls <- PileupFiles(c(fl, fl))
     fun <- function(x) x[["seqnames"]]
@@ -31,7 +31,7 @@ test_applyPileups_byRange_yieldAll <- function()
     checkIdentical(list(1000:2000, 1000:1500), res)
 }
 
-test_applyPileups_byPosition <- function()
+TEMPORARY_DISABLED_test_applyPileups_byPosition <- function()
 {
     fls <- PileupFiles(c(fl, fl))
     fun <- function(x) x[["seqnames"]]
@@ -57,7 +57,7 @@ test_applyPileups_byPosition <- function()
     checkIdentical(list(18132L, 20125L, 2908L), res)
 }
 
-test_applyPileups_byPosition_yieldAll <- function() {
+TEMPORARY_DISABLED_test_applyPileups_byPosition_yieldAll <- function() {
     fls <- PileupFiles(c(fl, fl))
     fun <- function(x) colSums(x$seq[,1,,drop=FALSE])
     which <- GRanges("seq1", IRanges(1000, 1100))

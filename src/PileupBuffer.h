@@ -7,7 +7,7 @@
 #include <utility>
 #include <algorithm>
 #include <cassert>
-#include "samtools/bam.h"
+#include <sam.h>
 #include "ResultManager.h"
 #include "utilities.h"
 #include <Rinternals.h>

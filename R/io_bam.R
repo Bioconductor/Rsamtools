@@ -13,7 +13,7 @@
              "\n    file: ", path(file),
              "\n    index: ", index(file))
     }
-    space <- 
+    regions <-
         if (0L != length(space(which)))
             list(as.character(space(which)), .uunlist(start(which)),
                  .uunlist(end(which)))
@@ -22,7 +22,7 @@
 
     .io_check_exists(path(file))
     tryCatch({
-        .Call(func, .extptr(file), space, flag, simpleCigar, tagFilter,
+        .Call(func, .extptr(file), regions, flag, simpleCigar, tagFilter,
               mapqFilter, ...)
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(file),

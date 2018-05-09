@@ -6,22 +6,22 @@
 class PileupBufferShim {
 
 private:
-    const SEXP space;
+    const SEXP regions;
     SEXP result;
     PileupBuffer &buffer;
 public:
-    PileupBufferShim(SEXP _space, SEXP _result, PileupBuffer &_buffer) :
-        space(_space), result(_result), buffer(_buffer)
+    PileupBufferShim(SEXP _regions, SEXP _result, PileupBuffer &_buffer) :
+        regions(_regions), result(_result), buffer(_buffer)
         {}
 
     void start1(const int irange) {
-        if (R_NilValue == space) {
+        if (R_NilValue == regions) {
             buffer.init((const char *) NULL, 0, 0);
         } else {
             buffer.init(
-                CHAR(STRING_ELT(VECTOR_ELT(space, 0), irange)),
-                INTEGER(VECTOR_ELT(space, 1))[irange],
-                INTEGER(VECTOR_ELT(space, 2))[irange]);
+                CHAR(STRING_ELT(VECTOR_ELT(regions, 0), irange)),
+                INTEGER(VECTOR_ELT(regions, 1))[irange],
+                INTEGER(VECTOR_ELT(regions, 2))[irange]);
         }
     }
     void finish1(const int irange) {

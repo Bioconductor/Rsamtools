@@ -90,12 +90,12 @@ SEXP bambuffer_length(SEXP bufext)
     return ScalarInteger(BAMBUFFER(bufext)->i);
 }
 
-SEXP bambuffer_parse(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP bambuffer_parse(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                      SEXP tagFilter, SEXP mapqFilter, SEXP bufext,
                      SEXP reverseComplement, SEXP templateList)
 {
     _check_isbamfile(ext, "bamBuffer, 'parse'");
-    _checkparams(space, keepFlags, isSimpleCigar);
+    _checkparams(regions, keepFlags, isSimpleCigar);
     _checkext(bufext, BAMBUFFER_TAG, "bamBuffer 'parse'");
     if (!(IS_LOGICAL(reverseComplement) && (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");

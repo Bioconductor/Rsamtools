@@ -8,18 +8,21 @@
 
   File compression for tabix (bgzip) and fasta (razip) files.
 
+  IMPORTANT NOTE: Starting with Rsamtools 1.99.0 (Bioconductor 3.9),
+  \code{razip()} is defunct. Please use \code{bgzip()} instead.
 }
 \description{
 
-  These functions compress files for use in other parts of
-  \pkg{Rsamtools}: \code{bgzip} for tabix files, \code{razip} for
-  random-access fasta files.
+  \code{bgzip} compresses tabix (e.g. SAM or VCF) or FASTA files
+  to a format that allows indexing for later fast random-access.
 
 }
 \usage{
 
 bgzip(file, dest=sprintf("\%s.bgz", sub("\\\\.gz$", "", file)),
       overwrite = FALSE)
+
+## Defunct!
 razip(file, dest=sprintf("\%s.rz", sub("\\\\.gz$", "", file)),
       overwrite = FALSE)
 

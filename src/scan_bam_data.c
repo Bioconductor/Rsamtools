@@ -37,6 +37,8 @@ static void _grow_SCAN_BAM_DATA_tags(SEXP tags, int len)
 
     for (i = 0; i < LENGTH(tags); ++i) {
         SEXP elt = VECTOR_ELT(tags, i);
+        if (elt == R_NilValue)
+            continue;
         int len0 = LENGTH(elt);
         elt = Rf_lengthgets(elt, len);
         SET_VECTOR_ELT(tags, i, elt);
@@ -56,7 +58,6 @@ static void _grow_SCAN_BAM_DATA_tags(SEXP tags, int len)
         case RAWSXP:
             for (j = len0; j < len; ++j)
                 RAW(elt)[j] = 0x0;
-        default:
             break;
         }
     }

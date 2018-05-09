@@ -1,6 +1,8 @@
 #ifndef _UTILITIES_H_
 #define _UTILITIES_H_
 
+#include <Rdefines.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,12 +29,13 @@ SEXP _as_PhredQuality(const char **key, int len);
 void _reverse(char *buf, int len);
 void _reverseComplement(char *buf, int len);
 char *_rtrim(char *);
+int _delete_trailing_LF_or_CRLF(const char *buf, int buf_len);
 
 /* common checks */
 
 void _checkext(SEXP ext, SEXP tag, const char *lbl);
 void _checknames(SEXP filename, SEXP indexname, SEXP filemode);
-void _checkparams(SEXP space, SEXP keepFlags, SEXP isSimpleCigar);
+void _checkparams(SEXP regions, SEXP keepFlags, SEXP isSimpleCigar);
 
 /* pairing */
 

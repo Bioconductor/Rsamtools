@@ -134,7 +134,7 @@ setGeneric("pileup",
         standardGeneric("pileup"),
     signature=signature("file"))
 
-setGeneric(".asSpace", function(x) standardGeneric(".asSpace"))
+setGeneric(".asRegions", function(x) standardGeneric(".asRegions"))
 
 setGeneric("applyPileups", function(files, FUN, ..., param)
            standardGeneric("applyPileups"),

@@ -33,11 +33,11 @@ setMethod(applyPileups, c("PileupFiles", "ApplyPileupsParam"),
     tryCatch({
         param <- as(param, "list")
         extptr <- lapply(files, .extptr)
-        space <-
-            if (0L != length(param[["which"]])) .asSpace(param[["which"]])
+        regions <-
+            if (0L != length(param[["which"]])) .asRegions(param[["which"]])
             else NULL
         param[["what"]] <- c("seq", "qual") %in% param[["what"]]
-        .Call(.apply_pileups, extptr, names(files), space, param, FUN)
+        .Call(.apply_pileups, extptr, names(files), regions, param, FUN)
     }, error=function(err) {
         stop("applyPileups: ", conditionMessage(err), call.=FALSE)
     })

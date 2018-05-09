@@ -35,7 +35,7 @@ enum {
     QUAL_IDX, TAG_IDX, PARTITION_IDX, MATES_IDX
 };
 
-BAM_DATA _init_BAM_DATA(SEXP ext, SEXP space, SEXP flag, SEXP isSimpleCigar,
+BAM_DATA _init_BAM_DATA(SEXP ext, SEXP regions, SEXP flag, SEXP isSimpleCigar,
                         SEXP tagFilter, SEXP mapqFilter,
                         int reverseComplement, int yieldSize,
                         int obeyQname, int asMates, char qnamePrefixEnd, 

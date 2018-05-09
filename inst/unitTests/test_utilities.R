@@ -10,7 +10,7 @@ test_catch_samtools <- function()
     })), error=function(msg) {
         err <<- TRUE
     })
-    checkTrue(warn)
+    checkTrue(isFALSE(warn))
     checkTrue(err)
 }
 
