@@ -37,8 +37,9 @@ static void _grow_SCAN_BAM_DATA_tags(SEXP tags, int len)
 
     for (i = 0; i < LENGTH(tags); ++i) {
         SEXP elt = VECTOR_ELT(tags, i);
+        if (R_NilValue == elt)
+            continue;
         int len0 = LENGTH(elt);
-        elt = Rf_lengthgets(elt, len);
         SET_VECTOR_ELT(tags, i, elt);
         switch (TYPEOF(elt)) {
         case INTSXP:
