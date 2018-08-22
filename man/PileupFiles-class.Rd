@@ -6,8 +6,6 @@
 \alias{PileupFiles}
 \alias{PileupFiles,character-method}
 \alias{PileupFiles,list-method}
-\alias{open.PileupFiles}
-\alias{close.PileupFiles}
 % accessors
 \alias{isOpen,PileupFiles-method}
 \alias{plpFiles}
@@ -21,7 +19,7 @@
 
 \description{
 
-  Use \code{PileupFiles()} to create a reference to a BAM files (and
+  Use \code{PileupFiles()} to create a reference to BAM files (and
   their indicies), to be used for calculating pile-up summaries.
 
 }
@@ -34,8 +32,8 @@ PileupFiles(files, ..., param=ApplyPileupsParam())
 \S4method{PileupFiles}{list}(files, ..., param=ApplyPileupsParam())
 
 ## opening / closing
-\S3method{open}{PileupFiles}(con, ...)
-\S3method{close}{PileupFiles}(con, ...)
+## open(con, ...)
+## close(con, ...)
 
 ## accessors; also path()
 \S4method{isOpen}{PileupFiles}(con, rw="")
