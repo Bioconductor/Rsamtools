@@ -4,6 +4,8 @@ BUG FIXES
 
     o (v.1.32.1) don't grow not-yet-encountered tags
 
+    o (v 1.32.3) scanBamFlag() gains isSupplementaryAlignment support.
+
 CHANGES IN VERSION 1.31
 -----------------------
 
