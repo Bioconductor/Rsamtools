@@ -73,7 +73,7 @@ scanBamFlag(isPaired = NA, isProperPair = NA, isUnmappedQuery = NA,
     hasUnmappedMate = NA, isMinusStrand = NA, isMateMinusStrand = NA,
     isFirstMateRead = NA, isSecondMateRead = NA, isNotPrimaryRead = NA,
     isSecondaryAlignment = NA, isNotPassingQualityControls = NA,
-    isDuplicate = NA)
+    isDuplicate = NA, isSupplementaryAlignment = NA)
 
 scanBamWhat()
 
@@ -211,6 +211,11 @@ bamFlagTest(flag, value)
     duplicated (TRUE), or any (NA) reads should be
     returned. 'Duplicated' reads may represent PCR or optical
     duplicates.}
+
+  \item{isSupplementaryAlignment}{A logical(1) indicating that
+    non-supplementary (FALSE), supplementary (TRUE), or any (NA) reads
+    should be returned. The SAM specification indicates that
+    'supplementary' reads are part of a chimeric alignment.}
   
   \item{object}{An instance of class \code{ScanBamParam}.}
 
