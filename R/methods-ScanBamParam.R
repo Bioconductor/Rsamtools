@@ -251,7 +251,8 @@ FLAG_BITNAMES <- c(
     "isSecondMateRead",
     "isSecondaryAlignment",
     "isNotPassingQualityControls",
-    "isDuplicate"
+    "isDuplicate",
+    "isSupplementaryAlignment"
 )
 
 scanBamFlag <-
@@ -260,7 +261,8 @@ scanBamFlag <-
              isMateMinusStrand=NA, isFirstMateRead=NA,
              isSecondMateRead=NA, # redundant
              isNotPrimaryRead=NA, isSecondaryAlignment=NA,
-             isNotPassingQualityControls=NA, isDuplicate=NA)
+             isNotPassingQualityControls=NA, isDuplicate=NA,
+             isSupplementaryAlignment = NA)
 
     ## NA: keep either 0 or 1 flag; FALSE: keep 0 flag; TRUE: keep 1 flag
 {
