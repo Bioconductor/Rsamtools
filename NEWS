@@ -10,6 +10,9 @@ BUG FIXES
     o (v 1.33.1) Do not try to grow NULL (not-yet-encountered) tags
       (https://support.bioconductor.org/p/110609/ ; Robert Bradley)
 
+    o (v 1.33.5) Check for corrupt index 
+      (https://github.com/Bioconductor/Rsamtools/issues/3 ; kjohnsen)
+
 CHANGES IN VERSION 1.31
 -----------------------
 
