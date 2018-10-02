@@ -42,7 +42,8 @@ setMethod(isOpen, "BcfFile",
 {
     h <- sub("^##", "", header[["Header"]])
     h <- h[!duplicated(h)]
-    ## simple key=value pairs --> DataFrame
+
+    ## Simple key=value pairs
     rex <- "^[[:alnum:]]+=[^<]"
     if (length(h1 <- grep(rex, h, value=TRUE))) {
         idx <- regexpr("=", h1, fixed=TRUE) ## first match
@@ -54,12 +55,15 @@ setMethod(isOpen, "BcfFile",
                 rnms <- make.unique(rnms)
             }
         }
-        meta <- DataFrame(row.names=rnms, Value=substring(h1, idx + 1))
+        meta_df <- DataFrame(row.names=rnms, Value=substring(h1, idx + 1))
+        meta <- as(splitAsList(meta_df, rnms), "SimpleDataFrameList")
     } else {
-        meta <- DataFrame()
+        meta <- DataFrameList()
     } 
 
-    ## key=<values> as SimpleList of DataFrame's
+    ## Non-simple key-value pairs 
+    ## These lines have values enclosed in '<>' with subfields such as 'ID', 
+    ## 'Number', 'Type' etc.
     rex <- "^([[:alnum:]]+)=<(.*)>"
     lines <- grep(rex, h, value=TRUE)
     if (length(lines) > 0) {
@@ -118,7 +122,7 @@ setMethod(isOpen, "BcfFile",
 
     SimpleList(Reference=header[["Reference"]],
                Sample=header[["Sample"]],
-               Header=c(DataFrameList(META=meta), tbls[unique(tags)]))
+               Header=c(meta, tbls[unique(tags)]))
 }
 
 setMethod(scanBcfHeader, "BcfFile",

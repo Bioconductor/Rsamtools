@@ -84,11 +84,17 @@ indexBcf(file, ...)
 
   \code{scanBcfHeader} returns a list, with one element for each file 
   named in \code{file}. Each element of the list is itself a list containing 
-  three elements. The \code{reference} element is a character() vector with 
-  names of reference sequences. The \code{sample} element is a character() 
-  vector of names of samples. The \code{header} element is a character() 
-  vector of the header lines (preceeded by \dQuote{##}) present in the VCF 
-  file.
+  three elements. The \code{Reference} element is a character() vector with 
+  names of reference sequences. The \code{Sample} element is a character() 
+  vector of names of samples. The \code{Header} element is a DataFrameList
+  with one DataFrame per unique key value in the header 
+  (preceded by \dQuote{##}).
+
+  NOTE: In Rsamtools >=1.33.6, the \code{Header} DataFrameList no longer
+  contains a DataFrame named "META". The META DataFrame contained all "simple"
+  key-value headers lines from a bcf / vcf file. These "simple" header
+  lines are now parsed into individual DataFrames named for the unique
+  key.
 
   \code{scanBcf} returns a list, with one element per file. Each list has 9 
   elements, corresponding to the columns of the VCF specification: \code{CHROM}, 
