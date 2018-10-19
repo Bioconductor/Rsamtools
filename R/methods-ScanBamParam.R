@@ -96,8 +96,8 @@ setValidity("ScanBamParam", function(object) {
     else {
         if (!identical(names(flag), c("keep0", "keep1")))
             msg <- c(msg, "'names(flag)' must be c('keep0', 'keep1')")
-        else if (any(flag < 0 | flag >= 2^16))
-            msg <- c(msg, "'flag' values must be >=0, <2048")
+        else if (any(flag < 0 | flag >= 2^12))
+            msg <- c(msg, "'flag' values must be >=0, <4096")
     }
     ## simpleCigar
     if (!((1L == length(simpleCigar)) &&

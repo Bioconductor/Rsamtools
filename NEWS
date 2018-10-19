@@ -3,7 +3,8 @@ CHANGES IN VERSION 1.33
 
 NEW FEATURES
 
-    o (v 1.33.4) scanBamFlag() gains isSupplementaryAlignment support.
+    o (v 1.33.4, 1.33.7) scanBamFlag() gains isSupplementaryAlignment
+      support.
 
 BUG FIXES
 

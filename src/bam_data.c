@@ -329,7 +329,7 @@ int _filter1_BAM_DATA(const bam1_t * bam, BAM_DATA bd)
 
     uint32_t test = (bd->keep_flag[0] & ~bam->core.flag) |
         (bd->keep_flag[1] & bam->core.flag);
-    if (~test & 2047u)
+    if (~test & 4095u)
         return 0;
 
     uint32_t *cigar = bam1_cigar(bam);
