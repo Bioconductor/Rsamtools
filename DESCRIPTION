@@ -2,7 +2,7 @@ Package: Rsamtools
 Type: Package
 Title: Binary alignment (BAM), FASTA, variant call (BCF), and tabix
     file import
-Version: 1.35.0
+Version: 1.35.1
 Author: Martin Morgan, Herv\'e Pag\`es, Valerie Obenchain, Nathaniel
     Hayden
 Maintainer: Bioconductor Package Maintainer

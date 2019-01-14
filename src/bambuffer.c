@@ -78,7 +78,7 @@ SEXP bambuffer_init()
 SEXP bambuffer(int yieldSize, int as_mates)
 {
     BAM_BUFFER buf = bambuffer_new(yieldSize, as_mates);
-    SEXP ext = PROTECT(R_MakeExternalPtr(buf, BAMBUFFER_TAG, NULL));
+    SEXP ext = PROTECT(R_MakeExternalPtr(buf, BAMBUFFER_TAG, R_NilValue));
     R_RegisterCFinalizerEx(ext, _bambuffer_finalizer, TRUE);
     UNPROTECT(1);
     return ext;
