@@ -188,6 +188,48 @@ static void swap_endian_data(const bam1_core_t *c, int data_len, uint8_t *data)
 	}
 }
 
+static inline uint32_t le_to_u32(const uint8_t *buf)
+{
+	return (uint32_t)buf[0] | (uint32_t)buf[1] << 8 | (uint32_t)buf[2] << 16 | (uint32_t)buf[3] << 24;
+}
+
+int bam_tag2cigar(bam1_t *b)
+{
+	bam1_core_t *c = &b->core;
+	uint32_t cigar_st, n_cigar4, CG_st, CG_en, ori_len = b->data_len, *cigar0, CG_len, fake_bytes;
+	uint8_t *CG;
+
+	// test where there is a real CIGAR in the CG tag to move
+	if (c->n_cigar == 0 || c->tid < 0 || c->pos < 0) return 0;
+	cigar0 = bam1_cigar(b);
+	if (bam_cigar_op(cigar0[0]) != BAM_CSOFT_CLIP || bam_cigar_oplen(cigar0[0]) != c->l_qseq) return 0;
+	fake_bytes = c->n_cigar * 4;
+	if ((CG = bam_aux_get(b, "CG")) == 0) return 0; // no CG tag
+	if (CG[0] != 'B' || CG[1] != 'I') return 0; // not of type B,I
+	CG_len = le_to_u32(CG + 2);
+	if (CG_len == 0) return 0; // nothing to move
+
+	// move from the CG tag to the right position
+	cigar_st = (uint8_t*)cigar0 - b->data;
+	c->n_cigar = CG_len;
+	n_cigar4 = c->n_cigar * 4;
+	CG_st = CG - b->data - 2;
+	CG_en = CG_st + 8 + n_cigar4;
+	b->data_len += n_cigar4 - fake_bytes; // we need c->n_cigar*4-fake_bytes bytes to swap CIGAR to the right place
+	if (b->m_data < b->data_len) {
+		b->m_data = b->data_len;
+		kroundup32(b->m_data);
+		b->data = (uint8_t*)realloc(b->data, b->m_data);
+	}
+	memmove(b->data + cigar_st + n_cigar4, b->data + cigar_st + fake_bytes, ori_len - (cigar_st + fake_bytes)); // insert 4*c->n_cigar-fake_bytes empty space to make room
+	memcpy(b->data + cigar_st, b->data + (n_cigar4 - fake_bytes) + CG_st + 8, n_cigar4); // copy the real CIGAR to the right place
+	if (ori_len > CG_en) // move data after the CG tag
+		memmove(b->data + CG_st + n_cigar4 - fake_bytes, b->data + CG_en + n_cigar4 - fake_bytes, ori_len - CG_en);
+	b->data_len -= n_cigar4 + 8; // 8: CGBI (4 bytes) and CGBI length (4)
+	b->core.bin = bam_reg2bin(b->core.pos, bam_calend(&b->core, bam1_cigar(b)));
+	return 1;
+}
+
 int bam_read1(bamFile fp, bam1_t *b)
 {
 	bam1_core_t *c = &b->core;
@@ -219,7 +261,14 @@ int bam_read1(bamFile fp, bam1_t *b)
 	b->l_aux = b->data_len - c->n_cigar * 4 - c->l_qname - c->l_qseq - (c->l_qseq+1)/2;
 	if (bam_is_be) swap_endian_data(c, b->data_len, b->data);
 	if (bam_no_B) bam_remove_B(b);
+	bam_tag2cigar(b);
 	return 4 + block_len;
+}
+
+static inline uint8_t *u32_to_le(uint32_t val, uint8_t *buf)
+{
+	buf[0] = val & 0xff; buf[1] = (val >> 8) & 0xff; buf[2] = (val >> 16) & 0xff; buf[3] = (val >> 24) & 0xff;
+	return buf;
 }
 
 inline int bam_write1_core(bamFile fp, const bam1_core_t *c, int data_len, uint8_t *data)
@@ -227,10 +276,12 @@ inline int bam_write1_core(bamFile fp, const bam1_core_t *c, int data_len, uint8
 	uint32_t x[8], block_len = data_len + BAM_CORE_SIZE, y;
 	int i;
 	assert(BAM_CORE_SIZE == 32);
+	if (c->n_cigar > 0xffff) block_len += 16; // 4*2 for fake cigar; 4 for CG:B,I; 4 for real CIGAR length
 	x[0] = c->tid;
 	x[1] = c->pos;
 	x[2] = (uint32_t)c->bin<<16 | c->qual<<8 | c->l_qname;
-	x[3] = (uint32_t)c->flag<<16 | c->n_cigar;
+	if (c->n_cigar > 0xffff) x[3] = (uint32_t)c->flag << 16 | 2;
+	else x[3] = (uint32_t)c->flag<<16 | c->n_cigar;
 	x[4] = c->l_qseq;
 	x[5] = c->mtid;
 	x[6] = c->mpos;
@@ -243,7 +294,23 @@ inline int bam_write1_core(bamFile fp, const bam1_core_t *c, int data_len, uint8
 		swap_endian_data(c, data_len, data);
 	} else bam_write(fp, &block_len, 4);
 	bam_write(fp, x, BAM_CORE_SIZE);
-	bam_write(fp, data, data_len);
+	if (c->n_cigar <= 0xffff) {
+		bam_write(fp, data, data_len);
+	} else {
+		uint8_t buf[4];
+		uint32_t cigar_st, cigar_en, cigar[2];
+		cigar_st = c->l_qname;
+		cigar_en = cigar_st + c->n_cigar * 4;
+		cigar[0] = (uint32_t)c->l_qseq << 4 | BAM_CSOFT_CLIP;
+		cigar[1] = (uint32_t)(bam_calend(c, (uint32_t*)(data + c->l_qname)) - c->pos) << 4 | BAM_CREF_SKIP;
+		bam_write(fp, data, c->l_qname); // write data before cigar
+		bam_write(fp, u32_to_le(cigar[0], buf), 4); // write cigar: <read_length>S
+		bam_write(fp, u32_to_le(cigar[1], buf), 4); // write cigar: <ref_aln_length>N
+		bam_write(fp, &data[cigar_en], data_len - cigar_en); // write data after CIGAR
+		bam_write(fp, "CGBI", 4); // write CG:B,I
+		bam_write(fp, u32_to_le(c->n_cigar, buf), 4); // write the true CIGAR length
+		bam_write(fp, &data[cigar_st], c->n_cigar * 4); // write the real CIGAR
+	}
 	if (bam_is_be) swap_endian_data(c, data_len, data);
 	return 4 + block_len;
 }
