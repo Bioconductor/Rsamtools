@@ -45,7 +45,7 @@ setMethod(indexFa, "FaFile",
     function(file, ...)
 {
     tryCatch({
-        file$index <- .Call(.index_fa, path(file))
+        file$index <- paste0(.Call(.index_fa, path(file)), ".fai")
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(file))
     })

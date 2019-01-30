@@ -24,6 +24,16 @@ test_FaFile_emptyid <- function()
     close(fa)
 }
 
+test_FaFile_indexFa <- function()
+{
+    fl <- system.file("extdata", "ce2dict1.fa", package="Rsamtools",
+                  mustWork=TRUE)
+    fa <- FaFile(fl)
+    fai <- index(fa)
+    fa <- indexFa(fa)
+    checkIdentical(fai, index(fa))
+}
+
 test_FaFile_scanFaIndex <- function()
 {
     .checkIdx <- function(idx) {
