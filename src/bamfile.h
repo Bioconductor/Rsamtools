@@ -2,7 +2,7 @@
 #define BAMFILE_H
 
 #include <Rdefines.h>
-#include "samtools/sam.h"
+#include <sam.h>
 #include "bambuffer.h"
 #include "bam_mate_iter.h"
 #include "pbuffer_wrapper.h"
@@ -29,19 +29,19 @@ SEXP bamfile_isopen(SEXP ext);
 SEXP bamfile_isincomplete(SEXP ext);
 
 SEXP read_bamfile_header(SEXP ext, SEXP what);
-SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
+SEXP scan_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
                   SEXP simpleCigar, SEXP tagFilter,  SEXP mapqFilter,
                   SEXP reverseComplement, SEXP yieldSize,
                   SEXP tmpl, SEXP obeyQname, 
                   SEXP asMates, SEXP qnamePrefix, SEXP qnameSuffix);
-SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP count_bamfile(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                    SEXP tagFilter, SEXP mapqFilter);
-SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
+SEXP prefilter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
 		       SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                        SEXP yieldSize,
                        SEXP obeyQname, SEXP asMates, SEXP qnamePrefix,
                        SEXP qnameSuffix);
-SEXP filter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
+SEXP filter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
                     SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                     SEXP fout_name, SEXP fout_mode);
 

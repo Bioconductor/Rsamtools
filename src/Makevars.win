@@ -1,28 +1,4 @@
-include Makevars.common
-
-# order of -llib important -- bcf, bam before ws2_32
-
-PKG_CFLAGS = ${PKG_CFLAGS0} -D_LARGEFILE64_SOURCE
-PKG_LIBS = ${PKG_LIBS0} -lws2_32
-
-ZLIB_CFLAGS+=$(shell echo 'zlibbioc::pkgconfig("PKG_CFLAGS")'|\
+RHTSLIB_LIBS=$(shell echo 'Rhtslib::pkgconfig("PKG_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave)
-PKG_LIBS+=$(shell echo 'zlibbioc::pkgconfig("PKG_LIBS_shared")' |\
-    "${R_HOME}/bin/R" --vanilla --slave)
+PKG_LIBS=$(RHTSLIB_LIBS)
 
-%.o: %.c
-	$(CC) $(ZLIB_CFLAGS) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c $< -o $@
-%.o: %.cc
-	$(CXX) $(ZLIB_CFLAGS) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -c $< -o $@
-%.o: %.cpp
-	$(CXX) $(ZLIB_CFLAGS) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -c $< -o $@
-
-libs0: libbam.a libbcf.a libtabix.a
-	mkdir -p "${R_PACKAGE_DIR}/usretc${R_ARCH}"
-	cp ../Rsamtools.mk.win "${R_PACKAGE_DIR}/usretc${R_ARCH}/Rsamtools.mk"
-
-libbam.a: $(BAMOBJ)
-
-libbcf.a: $(BCFOBJ)
-
-libtabix.a: $(TABIXOBJ)

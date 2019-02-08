@@ -2,7 +2,7 @@
 #define BAMBUFFER_H
 
 #include <Rinternals.h>
-#include "samtools/bam.h"
+#include <sam.h>
 
 typedef struct {
     bam1_t **buffer;
@@ -14,7 +14,7 @@ typedef struct {
 SEXP bambuffer_init();
 SEXP bambuffer(int yieldSize, int as_mates);
 SEXP bambuffer_length(SEXP bufext);
-SEXP bambuffer_parse(SEXP bamext, SEXP space, SEXP keepFlags,
+SEXP bambuffer_parse(SEXP bamext, SEXP regions, SEXP keepFlags,
                      SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                      SEXP bufext, SEXP reverseComplement, SEXP template_list);
 SEXP bambuffer_write(SEXP bufext, SEXP bamext, SEXP filter);

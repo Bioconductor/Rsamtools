@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <zlib.h>
+#include <fcntl.h>
+#include <htslib/bgzf.h>
 #include "zip_compression.h"
-#include "bgzf.h"
-#include "razf.h"
 
 void _zip_error(const char *txt, const char *err, int infd, int outfd)
 {
@@ -70,33 +70,3 @@ SEXP bgzip(SEXP file, SEXP dest)
     return dest;
 }
 
-SEXP razip(SEXP file, SEXP dest)
-{
-    static const int WINDOW_SIZE = 4096;
-    void *buffer;
-    int infd, outfd, cnt;
-    gzFile in;
-    RAZF *outp;
-
-    _zip_open(file, dest, &infd, &outfd);
-    in = gzdopen(infd, "rb");
-    if (NULL == in)
-        _zip_error("opening input 'file'", NULL, infd, outfd);
-    outp = razf_dopen(outfd, "w");
-    if (NULL == outp)
-        _zip_error("opening output 'dest'", NULL, infd, outfd);
-
-    buffer = R_alloc(WINDOW_SIZE, sizeof(const int));
-    while (0 < (cnt = gzread(in, buffer, WINDOW_SIZE)))
-        if (0 > razf_write(outp, buffer, cnt))
-            _zip_error("writing compressed output", NULL, infd, outfd);
-    if (0 > cnt)
-        _zip_error("reading compressed input: %s",
-                   strerror(errno), infd, outfd);
-
-    razf_close(outp);
-    if (gzclose(in) != Z_OK)
-        _zip_error("closing input after compression", NULL, infd, outfd);
-
-    return dest;
-}

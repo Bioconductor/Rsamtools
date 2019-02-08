@@ -1,5 +1,5 @@
-#include "samtools/khash.h"
-#include "samtools/sam.h"
+#include <htslib/khash.h>
+#include <sam.h>
 #include "bam_data.h"
 #include "scan_bam_data.h"
 #include "io_sam.h"
@@ -36,7 +36,7 @@ void _check_is_bam(const char *filename)
     if (bfile == 0)
         Rf_error("failed to open SAM/BAM file\n  file: '%s'", filename);
 
-    magic_len = bam_read(bfile, buf, 4);
+    magic_len = bgzf_read(bfile, buf, 4);
     bam_close(bfile);
 
     if (magic_len != 4 || strncmp(buf, "BAM\001", 4) != 0)
@@ -225,8 +225,8 @@ int check_qname(char *last_qname, int bufsize, bam1_t *bam, int max)
     }
 }
 
-int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
-             bam_fetch_f parse1)
+static int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
+                    bam_fetch_f parse1)
 {
     int yield = 0, status = 1, bufsize = 1000;
     char *last_qname = Calloc(bufsize, char);
@@ -262,8 +262,8 @@ int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
     return yield;
 }
 
-int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
-                  bam_fetch_mate_f parse1_mate)
+static int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
+                         bam_fetch_mate_f parse1_mate)
 {
     int yield = 0;
     bam_mates_t *bam_mates = bam_mates_new();
@@ -361,12 +361,12 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
     return bd->iparsed - initial;
 }
 
-int _do_scan_bam(BAM_DATA bd, SEXP space, bam_fetch_f parse1,
+int _do_scan_bam(BAM_DATA bd, SEXP regions, bam_fetch_f parse1,
                  bam_fetch_mate_f parse1_mate, _FINISH1_FUNC finish1)
 {
     int status;
 
-    if (R_NilValue == space)
+    if (R_NilValue == regions)
         /* everything */
         status = _scan_bam_all(bd, parse1, parse1_mate, finish1);
     else {                      
@@ -374,9 +374,9 @@ int _do_scan_bam(BAM_DATA bd, SEXP space, bam_fetch_f parse1,
         BAM_FILE bfile = _bam_file_BAM_DATA(bd);
         if (NULL == bfile->index)
             Rf_error("valid 'index' file required");
-        status = _scan_bam_fetch(bd, VECTOR_ELT(space, 0),
-                                 INTEGER(VECTOR_ELT(space, 1)),
-                                 INTEGER(VECTOR_ELT(space, 2)),
+        status = _scan_bam_fetch(bd, VECTOR_ELT(regions, 0),
+                                 INTEGER(VECTOR_ELT(regions, 1)),
+                                 INTEGER(VECTOR_ELT(regions, 2)),
                                  parse1, parse1_mate, finish1);
     }
 
@@ -426,11 +426,11 @@ static int _filter_and_parse1_mate(const bam_mates_t *mates, void *data)
     return yield;
 }
 
-SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space,
+SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP regions,
                            BAM_FILE bfile)
 {
     const int nrange =
-        R_NilValue == space ? 1 : Rf_length(VECTOR_ELT(space, 0));
+        R_NilValue == regions ? 1 : Rf_length(VECTOR_ELT(regions, 0));
     int i;
 
     SEXP result = PROTECT(NEW_LIST(nrange));
@@ -465,14 +465,14 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP space,
     return result;
 }
 
-SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP _scan_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP tagFilter, SEXP mapqFilter,
                SEXP reverseComplement, SEXP yieldSize,
                SEXP template_list, SEXP obeyQname, SEXP asMates,
                SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
 {
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
-    SEXP result = PROTECT(_scan_bam_result_init(template_list, names, space,
+    SEXP result = PROTECT(_scan_bam_result_init(template_list, names, regions,
                                                 BAMFILE(bfile)));
     SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
 
@@ -485,7 +485,7 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     if (suffix_elt != NA_STRING)
         qname_suffix = CHAR(suffix_elt)[0];
 
-    BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
+    BAM_DATA bd = _init_BAM_DATA(bfile, regions, keepFlags, isSimpleCigar,
                                  tagFilter, mapqFilter,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
@@ -493,7 +493,7 @@ SEXP _scan_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
                                  LOGICAL(asMates)[0], 
                                  qname_prefix, qname_suffix, (void *) sbd);
 
-    int status = _do_scan_bam(bd, space, _filter_and_parse1,
+    int status = _do_scan_bam(bd, regions, _filter_and_parse1,
                               _filter_and_parse1_mate, _finish1range_BAM_DATA);
     if (status < 0) {
         int idx = bd->irec;
@@ -517,12 +517,12 @@ static int _count1(const bam1_t * bam, void *data)
     return _count1_BAM_DATA(bam, (BAM_DATA) data);
 }
 
-SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP _count_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                 SEXP tagFilter, SEXP mapqFilter)
 {
     SEXP result = PROTECT(NEW_LIST(2));
     BAM_DATA bd =
-        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar, tagFilter,
+        _init_BAM_DATA(bfile, regions, keepFlags, isSimpleCigar, tagFilter,
                        mapqFilter, 0, NA_INTEGER, 0, 0, '\0', '\0', result);
 
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(bd->nrange));
@@ -537,7 +537,7 @@ SEXP _count_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     setAttrib(result, R_NamesSymbol, nms);
     UNPROTECT(1);
 
-    int status = _do_scan_bam(bd, space, _count1, NULL, NULL);
+    int status = _do_scan_bam(bd, regions, _count1, NULL, NULL);
     if (status < 0) {
         int idx = bd->irec;
         int parse_status = bd->parse_status;
@@ -589,7 +589,7 @@ static int _prefilter1_mate(const bam_mates_t *mates, void *data)
 }
 
 SEXP
-_prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+_prefilter_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP tagFilter, SEXP mapqFilter, SEXP yieldSize, SEXP obeyQname,
                SEXP asMates, 
                SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
@@ -604,13 +604,13 @@ _prefilter_bam(SEXP bfile, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
     if (suffix_elt != NA_STRING)
         qname_suffix = CHAR(suffix_elt)[0];
-    BAM_DATA bd = _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
+    BAM_DATA bd = _init_BAM_DATA(bfile, regions, keepFlags, isSimpleCigar,
                                  tagFilter, mapqFilter, 0, INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
                                  LOGICAL(asMates)[0], 
                                  qname_prefix, qname_suffix, BAMBUFFER(ext));
     int status =
-        _do_scan_bam(bd, space, _prefilter1, _prefilter1_mate, NULL);
+        _do_scan_bam(bd, regions, _prefilter1, _prefilter1_mate, NULL);
     if (status < 0) {
         int idx = bd->irec;
         int parse_status = bd->parse_status;
@@ -637,13 +637,13 @@ static int _filter1(const bam1_t * bam, void *data)
 }
 
 SEXP
-_filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
+_filter_bam(SEXP bfile, SEXP regions, SEXP keepFlags,
             SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
             SEXP fout_name, SEXP fout_mode)
 {
     /* open destination */
     BAM_DATA bd =
-        _init_BAM_DATA(bfile, space, keepFlags, isSimpleCigar,
+        _init_BAM_DATA(bfile, regions, keepFlags, isSimpleCigar,
                        tagFilter, mapqFilter, 0,
                        NA_INTEGER, 0, 0, '\0', '\0', NULL);
     /* FIXME: this just copies the header... */
@@ -652,7 +652,7 @@ _filter_bam(SEXP bfile, SEXP space, SEXP keepFlags,
                                     CHAR(STRING_ELT(fout_mode, 0)), header);
     bd->extra = f_out;
 
-    int status = _do_scan_bam(bd, space, _filter1, NULL, NULL);
+    int status = _do_scan_bam(bd, regions, _filter1, NULL, NULL);
     if (status < 0) {
         int idx = bd->irec;
         int parse_status = bd->parse_status;

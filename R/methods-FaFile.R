@@ -100,10 +100,10 @@ setMethod(countFa, "FaFile",
     base <- sub("Set", "", as)
     lkup <- Biostrings::get_seqtype_conversion_lookup("B", type)
     tryCatch({
-        spc <- .asSpace(param)
-        dna <- .Call(.scan_fa, .extptr(file), spc[[1]], spc[[2]],
-                     spc[[3]], base, lkup)
-        setNames(dna, spc[[1]])
+        regions <- .asRegions(param)
+        dna <- .Call(.scan_fa, .extptr(file), regions[[1]], regions[[2]],
+                     regions[[3]], base, lkup)
+        setNames(dna, regions[[1]])
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(file))
     })

@@ -3,13 +3,12 @@
 #include "XVector_interface.h"
 #include "fafile.h"
 #include "utilities.h"
-#include "razf.h"
 
 static SEXP FAFILE_TAG = NULL;
 
 static faidx_t *_fa_tryopen(const char *fname, const char *iname)
 {
-    return fai_load0(fname, iname);
+    return fai_load3(fname, iname, NULL, FAI_CREATE);
 }
 
 static void _fa_close(faidx_t * fai)
@@ -105,7 +104,7 @@ SEXP n_fa(SEXP ext)
     faidx_t *fai = FAFILE(ext)->index;
     if (NULL == fai)
         Rf_error("'index' not available");
-    return ScalarInteger(faidx_fetch_nseq(fai));
+    return ScalarInteger(faidx_nseq(fai));
 }
 
 /*
@@ -181,3 +180,4 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP type, SEXP lkup)
     UNPROTECT(2);
     return ans;
 }
+

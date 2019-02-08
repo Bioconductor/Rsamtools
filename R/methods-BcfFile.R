@@ -181,7 +181,7 @@ setMethod(scanBcfHeader, "BcfFile",
     }
     tmpl <- .bcf_template(param)
     which <- bcfWhich(param)
-    space <- 
+    regions <-
         if (0L != length(which)) {
             if (!nzchar(index(file)))
                 stop("scanBcf 'index' must exist when non-zero bcfWhich()")
@@ -189,7 +189,7 @@ setMethod(scanBcfHeader, "BcfFile",
                  .uunlist(end(which)))
         } else NULL
     res <- tryCatch({
-        .Call(func, .extptr(file), space, tmpl)
+        .Call(func, .extptr(file), regions, tmpl)
     }, error=function(err) {
         stop("scanBcf: ", conditionMessage(err), "\n  path: ",
              path(file), call.=FALSE)

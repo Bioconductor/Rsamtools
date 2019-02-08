@@ -1,15 +1,4 @@
-include Makevars.common
+RHTSLIB_LIBS=`echo 'Rhtslib::pkgconfig("PKG_LIBS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave`
+PKG_LIBS=$(RHTSLIB_LIBS)
 
-PKG_CFLAGS = ${PKG_CFLAGS0}
-PKG_LIBS = ${PKG_LIBS0} -lz
-
-libs0: libbam.a libbcf.a libtabix.a
-
-libbam.a: $(BAMOBJ)
-	$(AR) -crus $@ $(BAMOBJ)
-
-libbcf.a: $(BCFOBJ)
-	$(AR) -crus $@ $(BCFOBJ)
-
-libtabix.a: $(TABIXOBJ)
-	$(AR) -crus $@ $(TABIXOBJ)

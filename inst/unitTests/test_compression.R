@@ -11,27 +11,3 @@ test_bgzip_openclose <- function()
     checkIdentical(0L, unlink(d, recursive=TRUE))
 }
 
-test_razip_small_files <- function()
-{
-    src <- system.file("extdata", "ce2dict1.fa", package="Rsamtools")
-    file.copy(src, dest <- tempfile())
-    checkIdentical(readLines(src), readLines(dest))
-}
-
-test_razip_gzcompressed <- function()
-{
-    file.copy(system.file("extdata", "ce2dict1.fa", package="Rsamtools"),
-              src <- tempfile())
-    con <- gzfile(gzdest <- tempfile(), "wb")
-    writeLines(readLines(src), con, sep="\n")
-    close(con)
-    rzdest <- razip(gzdest)
-    checkIdentical(paste0(src, ".fai"), indexFa(src))
-    checkIdentical(paste0(gzdest, ".fai"), indexFa(gzdest))
-    checkIdentical(paste0(rzdest, ".fai"), indexFa(rzdest))
-    src <- scanFa(src, param=as(seqinfo(FaFile(rzdest)), "GRanges"))
-    rz <- scanFa(rzdest, param=as(seqinfo(FaFile(rzdest)), "GRanges"))
-    gz <- scanFa(rzdest, param=as(seqinfo(FaFile(rzdest)), "GRanges"))
-    checkIdentical(as.character(src), as.character(rz))
-    checkIdentical(as.character(src), as.character(gz))
-}

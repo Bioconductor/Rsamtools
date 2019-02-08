@@ -15,9 +15,13 @@ test_asBam <- function()
     checkException(asBam(fl, ofl), silent=TRUE)
 
     ## asBam destination construction
-    tmpfl <- file.path(tempdir(), "ex1.sam.gz")
-    file.copy(fl, tmpfl)
-    samfl <- asBam(tmpfl)
-    checkTrue(file.exists(tmpfl))
-    file.remove(tmpfl)
+    tmp_sam <- file.path(tempdir(), "ex1.sam.gz")
+    file.copy(fl, tmp_sam)
+    tmp_bam <- asBam(tmp_sam)
+    tmp_bai <- paste0(tmp_bam, ".bai")
+    checkTrue(file.exists(tmp_sam))
+    checkTrue(file.exists(tmp_bai))
+    file.remove(tmp_bam)
+    file.remove(tmp_bai)
+    file.remove(tmp_sam)
 }

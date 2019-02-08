@@ -1,5 +1,5 @@
-#include "samtools/bam.h"
-#include "samtools/khash.h"
+#include <sam.h>
+#include <htslib/khash.h>
 #include "pileupbam.h"
 #include "bamfile.h"
 #include "utilities.h"
@@ -30,15 +30,15 @@ typedef struct {
 
 typedef struct {
     const char *chr;
-    int i_spc, start, end;
-} SPACE_T;
+    int i_reg, start, end;
+} REGION_T;
 
 typedef struct {
-    SPACE_T *spc;
-    int i_spc, n_spc;
+    REGION_T *region;
+    int i_reg, n_reg;
     const char **chr;
     int *start, *end, stashed;
-} SPACE_ITER_T;
+} REGION_ITER_T;
 
 typedef struct {
     int i_yld;
@@ -63,11 +63,11 @@ const int QUAL_LEVELS = 94,     /* printable ASCII */
 
 static void _bam_header_hash_init(bam_header_t * header)
 {
-    if (0 == header->hash) {
+    if (0 == header->sdict) {
         int ret, i;
         khiter_t iter;
         khash_t(s) * h;
-        header->hash = h = kh_init(s);
+        header->sdict = h = kh_init(s);
         for (i = 0; i < header->n_targets; ++i) {
             iter = kh_put(s, h, header->target_name[i], &ret);
             kh_value(h, iter) = i;
@@ -111,67 +111,67 @@ static PILEUP_ITER_T *_iter_destroy(PILEUP_ITER_T * iter)
     return NULL;
 }
 
-/* SPACE_ITER_T */
+/* REGION_ITER_T */
 
-static SPACE_ITER_T *_space_iter_init(SEXP space)
+static REGION_ITER_T *_region_iter_init(SEXP regions)
 {
     int i;
-    SPACE_ITER_T *iter;
+    REGION_ITER_T *iter;
 
-    iter = Calloc(1, SPACE_ITER_T);
+    iter = Calloc(1, REGION_ITER_T);
 
-    iter->i_spc = -1;
-    iter->n_spc = Rf_length(VECTOR_ELT(space, 0));
-    iter->chr = Calloc(iter->n_spc, const char *);
-    for (i = 0; i < iter->n_spc; ++i)
-        iter->chr[i] = CHAR(STRING_ELT(VECTOR_ELT(space, 0), i));
-    iter->start = INTEGER(VECTOR_ELT(space, 1));
-    iter->end = INTEGER(VECTOR_ELT(space, 2));
+    iter->i_reg = -1;
+    iter->n_reg = Rf_length(VECTOR_ELT(regions, 0));
+    iter->chr = Calloc(iter->n_reg, const char *);
+    for (i = 0; i < iter->n_reg; ++i)
+        iter->chr[i] = CHAR(STRING_ELT(VECTOR_ELT(regions, 0), i));
+    iter->start = INTEGER(VECTOR_ELT(regions, 1));
+    iter->end = INTEGER(VECTOR_ELT(regions, 2));
 
     iter->stashed = FALSE;
-    iter->spc = Calloc(1, SPACE_T);
+    iter->region = Calloc(1, REGION_T);
 
     return iter;
 }
 
-static SPACE_T *_space_iter_next(SPACE_ITER_T * iter)
+static REGION_T *_region_iter_next(REGION_ITER_T * iter)
 {
     iter->stashed = FALSE;
-    iter->i_spc += 1;
-    SPACE_T *spc = iter->spc;
-    if (iter->i_spc < iter->n_spc) {
-        spc->i_spc = iter->i_spc;
-        spc->chr = iter->chr[iter->i_spc];
-        spc->start = iter->start[iter->i_spc];
-        spc->end = iter->end[iter->i_spc];
+    iter->i_reg += 1;
+    REGION_T *region = iter->region;
+    if (iter->i_reg < iter->n_reg) {
+        region->i_reg = iter->i_reg;
+        region->chr = iter->chr[iter->i_reg];
+        region->start = iter->start[iter->i_reg];
+        region->end = iter->end[iter->i_reg];
     } else {
-        spc = NULL;
+        region = NULL;
     }
-    return spc;
+    return region;
 }
 
-static void _space_iter_stash(SPACE_ITER_T * iter, SPACE_T * spc)
+static void _region_iter_stash(REGION_ITER_T * iter, REGION_T * region)
 {
-    iter->spc->chr = spc->chr;
-    iter->spc->start = spc->start;
-    iter->spc->end = spc->end;
+    iter->region->chr = region->chr;
+    iter->region->start = region->start;
+    iter->region->end = region->end;
     iter->stashed = TRUE;
 }
 
-static SPACE_T *_space_iter_pop(SPACE_ITER_T * iter)
+static REGION_T *_region_iter_pop(REGION_ITER_T * iter)
 {
-    SPACE_T *spc = NULL;
+    REGION_T *region = NULL;
     if (iter->stashed) {
-        spc = iter->spc;
+        region = iter->region;
         iter->stashed = FALSE;
     }
-    return spc;
+    return region;
 }
 
-static SPACE_ITER_T *_space_iter_destroy(SPACE_ITER_T * iter)
+static REGION_ITER_T *_region_iter_destroy(REGION_ITER_T * iter)
 {
     Free(iter->chr);
-    Free(iter->spc);
+    Free(iter->region);
     Free(iter);
     return NULL;
 }
@@ -322,7 +322,8 @@ static SEXP _mplp_setup_R(const PILEUP_PARAM_T * param,
     return alloc;
 }
 
-static void _mplp_setup_bam(const PILEUP_PARAM_T * param, const SPACE_T * spc,
+static void _mplp_setup_bam(const PILEUP_PARAM_T * param,
+                            const REGION_T * region,
                             PILEUP_ITER_T * plp_iter)
 {
 #ifdef PILEUPBAM_DEBUG
@@ -332,11 +333,11 @@ static void _mplp_setup_bam(const PILEUP_PARAM_T * param, const SPACE_T * spc,
 
     for (int j = 0; j < plp_iter->n_files; ++j) {
         /* set iterator, get pileup */
-        int32_t tid = bam_get_tid(mfile[j]->bfile->file->header, spc->chr);
+        int32_t tid = bam_get_tid(mfile[j]->bfile->file->header, region->chr);
         if (tid < 0)
-            Rf_error("'%s' not in bam file %d", spc->chr, j + 1);
+            Rf_error("'%s' not in bam file %d", region->chr, j + 1);
         mfile[j]->iter = bam_iter_query(mfile[j]->bfile->index, tid,
-                                        spc->start - 1, spc->end);
+                                        region->start - 1, region->end);
     }
     plp_iter->mplp_iter =
         bam_mplp_init(plp_iter->n_files, _mplp_read_bam, (void **) mfile);
@@ -355,7 +356,7 @@ static void _mplp_teardown_bam(PILEUP_ITER_T * iter)
         bam_iter_destroy(iter->mfile[j]->iter);
 }
 
-static int _bam1(const PILEUP_PARAM_T * param, const SPACE_T * spc,
+static int _bam1(const PILEUP_PARAM_T * param, const REGION_T * region,
                  PILEUP_ITER_T * plp_iter, PILEUP_RESULT_T * result)
 {
 #ifdef PILEUPBAM_DEBUG
@@ -367,7 +368,8 @@ static int _bam1(const PILEUP_PARAM_T * param, const SPACE_T * spc,
         -1, 0, 1, -1, 2, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, 4
     };
 
-    const int n_files = plp_iter->n_files, start = spc->start, end = spc->end;
+    const int n_files = plp_iter->n_files,
+              start = region->start, end = region->end;
     int *n_plp = plp_iter->n_plp, pos, i, j, idx = 0;
 
     int *opos = result->pos + result->i_yld,
@@ -498,28 +500,28 @@ static SEXP _call1(SEXP r, SEXP call)
     return Rf_eval(call, R_GlobalEnv);
 }
 
-static SEXP _yield1_byrange(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
+static SEXP _yield1_byrange(PILEUP_PARAM_T * param, REGION_ITER_T * reg_iter,
                             PILEUP_ITER_T * plp_iter)
 {
 #ifdef PILEUPBAM_DEBUG
     REprintf("_yield1_byrange\n");
 #endif
-    SPACE_T *spc;
+    REGION_T *region;
     PILEUP_RESULT_T plp_result;
     SEXP res = R_NilValue, rle;
     int n_rec;
 
-    if (NULL != (spc = _space_iter_next(spc_iter))) {
-        param->yieldSize = spc->end - spc->start + 1;
+    if (NULL != (region = _region_iter_next(reg_iter))) {
+        param->yieldSize = region->end - region->start + 1;
         res = PROTECT(_mplp_setup_R(param, &plp_result));
 
-        _mplp_setup_bam(param, spc, plp_iter);
-        n_rec = _bam1(param, spc, plp_iter, &plp_result);
+        _mplp_setup_bam(param, region, plp_iter);
+        n_rec = _bam1(param, region, plp_iter, &plp_result);
         if (param->yieldAll)
             n_rec = param->yieldSize;
         _mplp_teardown_bam(plp_iter);
 
-        rle = _seq_rle(&n_rec, &spc->chr, 1);
+        rle = _seq_rle(&n_rec, &region->chr, 1);
         SET_VECTOR_ELT(res, 0, rle);
 
         res = _resize(res, n_rec);
@@ -530,18 +532,18 @@ static SEXP _yield1_byrange(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
     return res;
 }
 
-static SEXP _yieldby_range(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
+static SEXP _yieldby_range(PILEUP_PARAM_T * param, REGION_ITER_T * reg_iter,
                            PILEUP_ITER_T * plp_iter, SEXP call)
 {
     SEXP result, res;
     int i;
 
-    result = PROTECT(NEW_LIST(spc_iter->n_spc));
+    result = PROTECT(NEW_LIST(reg_iter->n_reg));
 
-    for (i = 0; i < spc_iter->n_spc; ++i) {
-        res = PROTECT(_yield1_byrange(param, spc_iter, plp_iter));
+    for (i = 0; i < reg_iter->n_reg; ++i) {
+        res = PROTECT(_yield1_byrange(param, reg_iter, plp_iter));
         if (R_NilValue == res)
-            Rf_error("internal: 'spc_iter' did not yield");
+            Rf_error("internal: 'reg_iter' did not yield");
         SET_VECTOR_ELT(result, i, _call1(res, call));
         UNPROTECT(1);
     }
@@ -550,64 +552,64 @@ static SEXP _yieldby_range(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
     return result;
 }
 
-static SEXP _yield1_byposition(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
+static SEXP _yield1_byposition(PILEUP_PARAM_T * param, REGION_ITER_T * reg_iter,
                                PILEUP_ITER_T * plp_iter)
 {
 #ifdef PILEUPBAM_DEBUG
     REprintf("_yield1_byposition\n");
 #endif
-    const int yieldSize = param->yieldSize, n_spc = spc_iter->n_spc;
+    const int yieldSize = param->yieldSize, n_reg = reg_iter->n_reg;
 
-    SPACE_T *spc;
+    REGION_T *region;
     PILEUP_RESULT_T plp_result;
     SEXP res = R_NilValue, rle;
-    int *cnt, start, start_spc, i_spc, n_rec, i_yld = 0;
+    int *cnt, start, start_reg, i_reg, n_rec, i_yld = 0;
 
-    if (NULL == (spc = _space_iter_pop(spc_iter))) {
-        if (NULL == (spc = _space_iter_next(spc_iter)))
+    if (NULL == (region = _region_iter_pop(reg_iter))) {
+        if (NULL == (region = _region_iter_next(reg_iter)))
             return res;         /* early exit */
-        _mplp_setup_bam(param, spc, plp_iter);
+        _mplp_setup_bam(param, region, plp_iter);
     }
 
-    if ((spc_iter->n_spc - 1 == spc->i_spc) &&
-        (param->yieldSize > spc->end - spc->start + 1))
-        param->yieldSize = spc->end - spc->start + 1;
+    if ((reg_iter->n_reg - 1 == region->i_reg) &&
+        (param->yieldSize > region->end - region->start + 1))
+        param->yieldSize = region->end - region->start + 1;
 
-    start_spc = spc->i_spc;
-    i_spc = 1;
+    start_reg = region->i_reg;
+    i_reg = 1;
     res = PROTECT(_mplp_setup_R(param, &plp_result));
-    cnt = (int *) Calloc(n_spc, int);
-    memset(cnt, 0, sizeof(int) * n_spc);
+    cnt = (int *) Calloc(n_reg, int);
+    memset(cnt, 0, sizeof(int) * n_reg);
 
-    while (spc && yieldSize > i_yld) {
-        n_rec = _bam1(param, spc, plp_iter, &plp_result);
+    while (region && yieldSize > i_yld) {
+        n_rec = _bam1(param, region, plp_iter, &plp_result);
         if (param->yieldAll) {
-            const int spc_width = spc->end - spc->start + 1L;
-            n_rec = spc_width < param->yieldSize ? spc_width : param->yieldSize;
+            const int reg_width = region->end - region->start + 1L;
+            n_rec = reg_width < param->yieldSize ? reg_width : param->yieldSize;
         }
         param->yieldSize -= n_rec;
         i_yld += n_rec;
-        cnt[spc->i_spc] = i_yld;
+        cnt[region->i_reg] = i_yld;
 
-        if (yieldSize > i_yld) {	/* next space */
-            if ((spc = _space_iter_next(spc_iter))) {
+        if (yieldSize > i_yld) {	/* next region */
+            if ((region = _region_iter_next(reg_iter))) {
                 _mplp_teardown_bam(plp_iter);
-                _mplp_setup_bam(param, spc, plp_iter);
-                i_spc++;
+                _mplp_setup_bam(param, region, plp_iter);
+                i_reg++;
             }
         }
     }
 
     if (i_yld) {
-        rle = _seq_rle(cnt + start_spc, spc_iter->chr + start_spc, i_spc);
+        rle = _seq_rle(cnt + start_reg, reg_iter->chr + start_reg, i_reg);
         SET_VECTOR_ELT(res, 0, rle);
     }
-    if (spc) {
+    if (region) {
         if (i_yld) {
             start = INTEGER(VECTOR_ELT(res, 1))[i_yld - 1] + 1;
-            if (spc->end >= start) {
-                spc->start = start;
-                _space_iter_stash(spc_iter, spc);
+            if (region->end >= start) {
+                region->start = start;
+                _region_iter_stash(reg_iter, region);
             }
         }
     }
@@ -620,7 +622,7 @@ static SEXP _yield1_byposition(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
     return res;
 }
 
-static SEXP _yieldby_position(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
+static SEXP _yieldby_position(PILEUP_PARAM_T * param, REGION_ITER_T * reg_iter,
                               PILEUP_ITER_T * plp_iter, SEXP call)
 {
     const int GROW_BY_ELTS = 10;
@@ -628,7 +630,7 @@ static SEXP _yieldby_position(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
     int i_res = 0, len, pidx;
 
     PROTECT_WITH_INDEX(result = NEW_LIST(0), &pidx);
-    while (R_NilValue != (res = _yield1_byposition(param, spc_iter, plp_iter))) {
+    while (R_NilValue != (res = _yield1_byposition(param, reg_iter, plp_iter))) {
         PROTECT(res);
         if (Rf_length(result) == i_res) {	/* more space for results */
             len = Rf_length(result) + GROW_BY_ELTS;
@@ -646,12 +648,12 @@ static SEXP _yieldby_position(PILEUP_PARAM_T * param, SPACE_ITER_T * spc_iter,
     return result;
 }
 
-SEXP apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
+SEXP apply_pileups(SEXP files, SEXP names, SEXP regions, SEXP param,
                    SEXP callback)
 {
     int i;
     PILEUP_PARAM_T p;
-    SPACE_ITER_T *spc_iter;
+    REGION_ITER_T *reg_iter;
     PILEUP_ITER_T *plp_iter;
     SEXP call, result;
 
@@ -667,16 +669,16 @@ SEXP apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
             Rf_error("no index found for file '%s'",
                      CHAR(STRING_ELT(names, i)));
     }
-    if (R_NilValue == space)
-        Rf_error("'NULL' space not (yet) supported");
-    _checkparams(space, R_NilValue, R_NilValue);
+    if (R_NilValue == regions)
+        Rf_error("'NULL' regions not (yet) supported");
+    _checkparams(regions, R_NilValue, R_NilValue);
     if (!Rf_isFunction(callback) || 1L != Rf_length(FORMALS(callback)))
         Rf_error("'callback' must be a function of 1 argument");
     call = PROTECT(Rf_lang2(callback, R_NilValue));
 
 
     /* param */
-    spc_iter = _space_iter_init(space);
+    reg_iter = _region_iter_init(regions);
 
     p.keep_flag[0] = INTEGER(_lst_elt(param, "flag", "param"))[0];
     p.keep_flag[1] = INTEGER(_lst_elt(param, "flag", "param"))[1];
@@ -704,20 +706,20 @@ SEXP apply_pileups(SEXP files, SEXP names, SEXP space, SEXP param,
 
     /* result */
     result = R_NilValue;
-    if (R_NilValue == space) {  /* all */
+    if (R_NilValue == regions) {  /* all */
         /* FIXME: allocate seq, but this is too big! */
         /* _bam1(n, -1, -1, max_depth,  */
         /*        _mplp_read_bam, (void **) mfile,  */
         /*        seq); */
     } else {                    /* some */
         if (YIELDBY_RANGE == p.yieldBy)
-            result = _yieldby_range(&p, spc_iter, plp_iter, call);
+            result = _yieldby_range(&p, reg_iter, plp_iter, call);
         else
-            result = _yieldby_position(&p, spc_iter, plp_iter, call);
+            result = _yieldby_position(&p, reg_iter, plp_iter, call);
     }
 
     _iter_destroy(plp_iter);
-    _space_iter_destroy(spc_iter);
+    _region_iter_destroy(reg_iter);
     UNPROTECT(1);
 
     return result;

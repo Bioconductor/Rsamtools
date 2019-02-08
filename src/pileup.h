@@ -12,7 +12,7 @@
 
 extern "C" {
 #endif
-    SEXP c_Pileup(SEXP ext, SEXP space, SEXP keepFlags,
+    SEXP c_Pileup(SEXP ext, SEXP regions, SEXP keepFlags,
                   SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                   SEXP reverseComplement,
                   SEXP yieldSize, SEXP obeyQname, SEXP asMates,

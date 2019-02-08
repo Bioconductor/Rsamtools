@@ -4,7 +4,6 @@
 #include "utilities.h"
 
 SEXP BAMFILE_TAG = NULL;
-#define TYPE_BAM 1
 
 void _check_isbamfile(SEXP ext, const char *lbl)
 {
@@ -72,7 +71,7 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
     if (0 != Rf_length(filename)) {
         const char *cfile = translateChar(STRING_ELT(filename, 0));
         bfile->file = _bam_tryopen(cfile, CHAR(STRING_ELT(filemode, 0)), 0);
-        if ((bfile->file->type & TYPE_BAM) != 1) {
+        if (hts_get_format(bfile->file->file)->format != bam) {
             samclose(bfile->file);
             Free(bfile);
             Rf_error("'filename' is not a BAM file\n  file: %s", cfile);
@@ -158,12 +157,12 @@ SEXP bamfile_isincomplete(SEXP ext)
         _checkext(ext, BAMFILE_TAG, "isIncomplete");
         bfile = BAMFILE(ext);
         if (NULL != bfile && NULL != bfile->file) {
-            /* heuristic: can we read a record? bam_seek does not
+            /* heuristic: can we read a record? bgzf_seek does not
              * support SEEK_END */
-            off_t offset = bam_tell(bfile->file->x.bam);
+            off_t offset = bgzf_tell(bfile->file->x.bam);
             char buf;
-            ans = bam_read(bfile->file->x.bam, &buf, 1) > 0;
-            bam_seek(bfile->file->x.bam, offset, SEEK_SET);
+            ans = bgzf_read(bfile->file->x.bam, &buf, 1) > 0;
+            bgzf_seek(bfile->file->x.bam, offset, SEEK_SET);
         }
     }
     return ScalarLogical(ans);
@@ -181,14 +180,14 @@ SEXP read_bamfile_header(SEXP ext, SEXP what)
     return _read_bam_header(ext, what);
 }
 
-SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP scan_bamfile(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                   SEXP tagFilter, SEXP mapqFilter, SEXP reverseComplement,
                   SEXP yieldSize,
                   SEXP template_list, SEXP obeyQname, SEXP asMates,
                   SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
 {
     _checkext(ext, BAMFILE_TAG, "scanBam");
-    _checkparams(space, keepFlags, isSimpleCigar);
+    _checkparams(regions, keepFlags, isSimpleCigar);
     if (!(IS_LOGICAL(reverseComplement) && (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");
     if (!(IS_INTEGER(yieldSize) && (1L == LENGTH(yieldSize))))
@@ -198,31 +197,31 @@ SEXP scan_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
     if (!(IS_LOGICAL(asMates) && (1L == LENGTH(asMates))))
         Rf_error("'asMates' must be logical(1)");
     _bam_check_template_list(template_list);
-    return _scan_bam(ext, space, keepFlags, isSimpleCigar,
+    return _scan_bam(ext, regions, keepFlags, isSimpleCigar,
                      tagFilter, mapqFilter, reverseComplement, yieldSize,
                      template_list, obeyQname, asMates, qnamePrefixEnd,
                      qnameSuffixStart);
 }
 
-SEXP count_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP count_bamfile(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                    SEXP tagFilter, SEXP mapqFilter)
 {
     _checkext(ext, BAMFILE_TAG, "countBam");
-    _checkparams(space, keepFlags, isSimpleCigar);
-    SEXP count = _count_bam(ext, space, keepFlags, isSimpleCigar, tagFilter,
+    _checkparams(regions, keepFlags, isSimpleCigar);
+    SEXP count = _count_bam(ext, regions, keepFlags, isSimpleCigar, tagFilter,
                             mapqFilter);
     if (R_NilValue == count)
         Rf_error("'countBam' failed");
     return count;
 }
 
-SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
+SEXP prefilter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
                        SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                        SEXP yieldSize, SEXP obeyQname, SEXP asMates,
                        SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
 {
     _checkext(ext, BAMFILE_TAG, "filterBam");
-    _checkparams(space, keepFlags, isSimpleCigar);
+    _checkparams(regions, keepFlags, isSimpleCigar);
     if (!(IS_INTEGER(yieldSize) && (1L == LENGTH(yieldSize))))
         Rf_error("'yieldSize' must be integer(1)");
     if (!(IS_LOGICAL(obeyQname) && (1L == LENGTH(obeyQname))))
@@ -230,7 +229,7 @@ SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
     if (!(IS_LOGICAL(asMates) && (1L == LENGTH(asMates))))
         Rf_error("'asMates' must be logical(1)");
     SEXP result =
-        _prefilter_bam(ext, space, keepFlags, isSimpleCigar, tagFilter,
+        _prefilter_bam(ext, regions, keepFlags, isSimpleCigar, tagFilter,
                        mapqFilter, yieldSize, obeyQname, asMates,
                        qnamePrefixEnd, qnameSuffixStart);
     if (R_NilValue == result)
@@ -238,17 +237,17 @@ SEXP prefilter_bamfile(SEXP ext, SEXP space, SEXP keepFlags,
     return result;
 }
 
-SEXP filter_bamfile(SEXP ext, SEXP space, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP filter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                     SEXP tagFilter, SEXP mapqFilter,
                     SEXP fout_name, SEXP fout_mode)
 {
     _checkext(ext, BAMFILE_TAG, "filterBam");
-    _checkparams(space, keepFlags, isSimpleCigar);
+    _checkparams(regions, keepFlags, isSimpleCigar);
     if (!IS_CHARACTER(fout_name) || 1 != LENGTH(fout_name))
         Rf_error("'fout_name' must be character(1)");
     if (!IS_CHARACTER(fout_mode) || 1 != LENGTH(fout_mode))
         Rf_error("'fout_mode' must be character(1)");
-    SEXP result = _filter_bam(ext, space, keepFlags, isSimpleCigar,
+    SEXP result = _filter_bam(ext, regions, keepFlags, isSimpleCigar,
                               tagFilter, mapqFilter,
                               fout_name, fout_mode);
     if (R_NilValue == result)
