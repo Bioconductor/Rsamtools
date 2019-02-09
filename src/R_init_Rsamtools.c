@@ -11,10 +11,6 @@
 #include "pileupbam.h"
 #include "pileup.h"
 
-#ifdef _WIN32
-#include <knetfile.h>
-#endif
-
 static const R_CallMethodDef callMethods[] = {
 
     /* zip_compression.c */
@@ -87,18 +83,10 @@ static const R_CallMethodDef callMethods[] = {
 
 void R_init_Rsamtools(DllInfo * info)
 {
-#ifdef _WIN32
-    int status = knet_win32_init();
-    if (status != 0)
-        Rf_error("internal: failed to initialize Winsock; error %d", status);
-#endif
     R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 }
 
 void R_unload_Rsamtools(DllInfo *info)
 {
     (void) info;
-#ifdef _WIN32
-    knet_win32_destroy();
-#endif
 }
