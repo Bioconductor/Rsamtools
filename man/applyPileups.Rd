@@ -132,7 +132,7 @@ param <- ApplyPileupsParam(which=which, yieldSize=500L,
                            yieldBy="position", what="seq")
 res <- applyPileups(fls, calcInfo, param=param)
 sapply(res, "[[", "seqnames")
-
+}
 }
 
 \keyword{ manip }
