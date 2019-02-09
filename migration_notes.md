@@ -46,9 +46,9 @@ Rhtslib, except for the code behind `asBcf()` and `razip()`:
 ### Other remaining problems
 
 - Even though the C code behind `applyPileups()` was migrated (`pileupbam.c`),
-  3 tests in `inst/unitTests/test_applyPileups.R` are currently failing and
-  have been disabled for now: `test_applyPileups_byPosition`,
-  `test_applyPileups_byPosition_yieldAll`, and `test_applyPileups_byRange`.
+  the examples in its man page and most of the tests in
+  `inst/unitTests/test_applyPileups.R` are currently failing and have been
+  disabled for now.
 
 - Test `test_BcfFile_scanBcfHeader_remote` (located in
   `inst/unitTests/test_BcfFile.R`) passes when run interactively (or via

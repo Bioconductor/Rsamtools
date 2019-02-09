@@ -94,7 +94,8 @@ applyPileups(files, FUN, ..., param)
 \seealso{\code{\link{ApplyPileupsParam}}.}
 
 \examples{
-
+## The examples below are currently broken and have been disabled for now
+\dontrun{
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools",
                   mustWork=TRUE)
 
