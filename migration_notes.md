@@ -75,27 +75,27 @@ of them. This was on a 64-bit Ubuntu 16.04.5 LTS laptop running R 3.6
   - BitSeq: migrated (changes not committed yet),
     passes `R CMD check`
 
-  - DiffBind: migrated (changes not committed yet),
+  - DiffBind: migrated (changes committed by Gord Brown),
     passes `R CMD check`
 
-  - h5vc: migrated (changes not committed yet, they also include
-    fixing pre-existing build ERROR currently visible on the build report),
+  - h5vc: migrated (changes committed, including fixing pre-existing
+    build ERROR currently visible on the build report),
     passes `R CMD check`
 
-  - podkat: migrated (changes not committed yet, include fixing
+  - podkat: migrated (changes committed, including fixing
     `inst/examples/example1.vcf.gz` to make it compatible with bcftools 1.7),
     passes `R CMD check`
 
   - qrqc: migrated (changes not committed yet),
     passes `R CMD check`
 
-  - QuasR: migrated (changes not committed yet),
-    passes `R CMD check`
+  - QuasR: migrated (PR created at https://github.com/fmicompbio/QuasR/pull/9
+    per Michael Stadler's request), passes `R CMD check`
 
   - seqbias: migrated (changes not committed yet),
     passes `R CMD check`
 
-  - TransView: migrated (changes not committed yet),
+  - TransView: migrated (changes committed),
     passes `R CMD check`
 
 ### All software packages that use applyPileups() were tested
