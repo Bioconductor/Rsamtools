@@ -9,6 +9,13 @@
 \alias{open.FaFile}
 \alias{close.FaFile }
 % accessors
+\alias{gzindex}
+\alias{gzindex<-}
+\alias{gzindex,FaFile-method}
+\alias{gzindex<-,FaFile-method}
+\alias{gzindex,FaFileList-method}
+\alias{gzindex<-,FaFileList-method}
+\alias{show,FaFile-method}
 \alias{isOpen,FaFile-method}
 % methods
 \alias{indexFa,FaFile-method}
@@ -39,7 +46,8 @@
 
 ## Constructors
 
-FaFile(file, index=sprintf("\%s.fai", file), ...)
+FaFile(file, index=sprintf("\%s.fai", file),
+             gzindex=sprintf("\%s.gzi", file))
 FaFileList(...)
 
 ## Opening / closing
@@ -49,6 +57,8 @@ FaFileList(...)
 
 ## accessors; also path(), index()
 
+\S4method{gzindex}{FaFile}(object, asNA=TRUE)
+\S4method{gzindex}{FaFileList}(object, asNA=TRUE)
 \S4method{isOpen}{FaFile}(con, rw="")
 
 ## actions
@@ -75,12 +85,15 @@ FaFileList(...)
 
 \arguments{
 
-  \item{con, x}{An instance of \code{FaFile} or (for \code{getSeq})
-    \code{FaFileList}.}
+  \item{con, object, x}{An instance of \code{FaFile} or (for \code{gzindex}
+    and \code{getSeq}) \code{FaFileList}.}
 
-  \item{file, index}{A character(1) vector of the fasta or fasta index
-    file path (for \code{FaFile}), or an instance of class \code{FaFile}
-    or \code{FaFileList} (for \code{scanFaIndex}, \code{getSeq}).}
+  \item{file, index, gzindex}{A character(1) vector of the fasta or fasta index
+    or bgzip index file path (for \code{FaFile}), or an instance of class
+    \code{FaFile} or \code{FaFileList} (for \code{scanFaIndex}, \code{getSeq}).}
+
+  \item{asNA}{logical indicating if missing output should be NA or
+    character()}
 
   \item{param}{An optional \code{\linkS4class{GRanges}} or
     \code{\linkS4class{IntegerRangesList}} instance to select reads (and

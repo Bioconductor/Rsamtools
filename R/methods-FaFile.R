@@ -1,15 +1,61 @@
 FaFile <-
-    function(file, index=sprintf("%s.fai", file), ...)
+    function(file, index=sprintf("%s.fai", file),
+                   gzindex=sprintf("%s.gzi", file))
 {
-    .RsamtoolsFile(.FaFile, file, index)
+    ans <- .RsamtoolsFile(.FaFile, file, index)
+    gzindex(ans) <- .normalizePath(gzindex)
+    ans
 }
+
+setMethod(gzindex, "FaFile",
+    function(object, asNA=TRUE)
+{
+    gzindex <- object$gzindex
+    if (asNA && ((length(gzindex) == 0L) || !nzchar(gzindex)))
+        NA_character_
+    else
+        gzindex
+})
+
+setReplaceMethod("gzindex", "FaFile",
+    function(object, value)
+{
+    stopifnot(length(value) == 1L)
+    object$gzindex <- as.character(value)
+    object
+})
+
+setMethod(gzindex, "FaFileList",
+    function(object, asNA=TRUE)
+{
+    sapply(object, gzindex, asNA=asNA)
+})
+
+setReplaceMethod("gzindex", "FaFileList",
+    function(object, value)
+{
+    stopifnot(length(value) == length(path(object)))
+    for (i in seq_along(object))
+        gzindex(object[[i]]) <- value[i]
+    object
+})
+
+setMethod(show, "FaFile", function(object) {
+    cat("class:", class(object), "\n")
+    cat(.ppath("path", path(object)))
+    cat(.ppath("index", index(object)))
+    cat(.ppath("gzindex", gzindex(object)))
+    cat("isOpen:", isOpen(object), "\n")
+    cat("yieldSize:", yieldSize(object), "\n")
+})
 
 open.FaFile <-
     function(con, ...)
 {
     .io_check_exists(path(con))
     tryCatch({
-        con$.extptr <- .Call(.fafile_open, path(con), index(con, asNA=FALSE))
+        con$.extptr <- .Call(.fafile_open, path(con), index(con, asNA=FALSE),
+                                                      gzindex(con, asNA=FALSE))
     }, error=function(err) {
         stop(conditionMessage(err), "\n  file: ", path(con))
     })

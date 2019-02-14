@@ -6,11 +6,6 @@
 
 static SEXP FAFILE_TAG = NULL;
 
-static faidx_t *_fa_tryopen(const char *fname, const char *iname)
-{
-    return fai_load3(fname, iname, NULL, FAI_CREATE);
-}
-
 static void _fa_close(faidx_t * fai)
 {
     fai_destroy(fai);
@@ -19,14 +14,14 @@ static void _fa_close(faidx_t * fai)
 static void _fafile_close(SEXP ext)
 {
     _FA_FILE *ffile = FAFILE(ext);
-    if (NULL != ffile->index)
+    if (ffile->index != NULL)
         _fa_close(ffile->index);
     ffile->index = NULL;
 }
 
 static void _fafile_finalizer(SEXP ext)
 {
-    if (NULL == R_ExternalPtrAddr(ext))
+    if (R_ExternalPtrAddr(ext) == NULL)
         return;
     _fafile_close(ext);
     _FA_FILE *ffile = FAFILE(ext);
@@ -40,20 +35,23 @@ SEXP fafile_init()
     return R_NilValue;
 }
 
-SEXP fafile_open(SEXP filename, SEXP indexname)
+SEXP fafile_open(SEXP filename, SEXP indexname, SEXP gzindexname)
 {
-    if (!IS_CHARACTER(filename) || 1 != Rf_length(filename))
+    if (!IS_CHARACTER(filename) || LENGTH(filename) != 1)
         Rf_error("'file' must be character(1)");
-    if (!IS_CHARACTER(indexname) || 1 != Rf_length(indexname))
+    if (!IS_CHARACTER(indexname) || LENGTH(indexname) != 1)
         Rf_error("'index' must be character(1)");
+    if (!IS_CHARACTER(gzindexname) || LENGTH(gzindexname) != 1)
+        Rf_error("'gzindex' must be character(1)");
 
     _FA_FILE *ffile = Calloc(1, _FA_FILE);
     const char
-        *cfile = translateChar(STRING_ELT(filename, 0)),
-        *ifile = translateChar(STRING_ELT(indexname, 0));
+        *fn = translateChar(STRING_ELT(filename, 0)),
+        *fnfai = translateChar(STRING_ELT(indexname, 0)),
+        *fngzi = translateChar(STRING_ELT(gzindexname, 0));
 
-    ffile->index = _fa_tryopen(cfile, ifile);
-    if (NULL == ffile->index) {
+    ffile->index = fai_load3(fn, fnfai, fngzi, FAI_CREATE);
+    if (ffile->index == NULL) {
         Free(ffile);
         Rf_error("'open' index failed");
     }
@@ -75,9 +73,9 @@ SEXP fafile_close(SEXP ext)
 SEXP fafile_isopen(SEXP ext)
 {
     SEXP ans = ScalarLogical(FALSE);
-    if (NULL != FAFILE(ext)) {
+    if (FAFILE(ext) != NULL) {
         _checkext(ext, FAFILE_TAG, "isOpen");
-        if (NULL != FAFILE(ext)->index)
+        if (FAFILE(ext)->index != NULL)
             ans = ScalarLogical(TRUE);
     }
     return ans;
@@ -90,8 +88,8 @@ SEXP index_fa(SEXP filename)
     if (!IS_CHARACTER(filename) || 1 != Rf_length(filename))
         Rf_error("'file' must be character(1)");
 
-    const char *cfile = translateChar(STRING_ELT(filename, 0));
-    int err = fai_build(cfile);
+    const char *fn = translateChar(STRING_ELT(filename, 0));
+    int err = fai_build(fn);
     if (-1 == err)
         Rf_error("'indexFa' build index failed");
 
@@ -102,7 +100,7 @@ SEXP n_fa(SEXP ext)
 {
     _checkext(ext, FAFILE_TAG, "countFa");
     faidx_t *fai = FAFILE(ext)->index;
-    if (NULL == fai)
+    if (fai == NULL)
         Rf_error("'index' not available");
     return ScalarInteger(faidx_nseq(fai));
 }
@@ -145,7 +143,7 @@ SEXP scan_fa(SEXP ext, SEXP seq, SEXP start, SEXP end, SEXP type, SEXP lkup)
     if (n != Rf_length(start) || n != Rf_length(end))
         Rf_error("'seq', 'start', and 'end' must be the same length");
     faidx_t *fai = FAFILE(ext)->index;
-    if (NULL == fai)
+    if (fai == NULL)
         Rf_error("'index' not available");
 
     SEXP width = PROTECT(NEW_INTEGER(n));

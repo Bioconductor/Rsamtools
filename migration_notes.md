@@ -177,8 +177,8 @@ via their Depends, Imports, or LinkingTo field).
 ### The problem
 
 RAZF is no longer supported in recent samtools, and old razip-compressed
-FASTA files and their index files are now causing problems. Here is an example
-from the sequencing workflow:
+FASTA files (`.rz`) and their index files (`rz.fai`) are now causing problems.
+Here is an example from the sequencing workflow:
 ```
 library(AnnotationHub)
 ah <- AnnotationHub()
@@ -209,7 +209,7 @@ Note that the compression step is actually optional i.e. one can use
 ```
 gunzip myfile.fa,gz  # uncompress to get myfile.fa back
 /path/to/samtools-1.7/samtools faidx myfile.fa     # generates index file
-                                                   # myfile.fa.fai
+                                                   # myfile.fa.fai only
 ```
 
 Note that in this case, only the `.fai` index file is generated

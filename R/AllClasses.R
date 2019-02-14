@@ -65,7 +65,8 @@ setClass("ApplyPileupsParam",
 
 .TabixFile <- setRefClass("TabixFile", contains="RsamtoolsFile")
 
-.FaFile <- setRefClass("FaFile", contains="RsamtoolsFile")
+.FaFile <- setRefClass("FaFile", contains="RsamtoolsFile",
+    fields=list(gzindex="character"))
 
 setClass("RsamtoolsFileList", contains=c("SimpleList", "VIRTUAL"))
 

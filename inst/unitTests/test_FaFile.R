@@ -12,8 +12,7 @@ test_FaFile_emptyfile <- function()
 {
     fl <- tempfile()
     file.create(fl)
-    checkException(suppressWarnings(open(fa <- FaFile(fl))),
-                   silent=TRUE)
+    checkException(open(fa <- FaFile(fl)), silent=TRUE)
 }
     
 test_FaFile_emptyid <- function()
@@ -26,8 +25,6 @@ test_FaFile_emptyid <- function()
 
 test_FaFile_indexFa <- function()
 {
-    fl <- system.file("extdata", "ce2dict1.fa", package="Rsamtools",
-                  mustWork=TRUE)
     fa <- FaFile(fl)
     fai <- index(fa)
     fa <- indexFa(fa)
