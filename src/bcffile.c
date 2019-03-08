@@ -552,7 +552,8 @@ static SEXP _make_double_matrix(int nrow, int n_sample,
     return ans;
 }
 
-static void _load_GENO(SEXP geno, const int n, bcf1_t *bcf1, bcf_hdr_t *hdr)
+static void _load_GENO(SEXP geno, const int n, bcf1_t *bcf1, bcf_hdr_t *hdr,
+                       kstring_t *ksbuf)
 {
     /* FIXME: more flexible geno not supported by bcftools */
     int n_fmt = (int) bcf1->n_fmt;
@@ -561,7 +562,12 @@ static void _load_GENO(SEXP geno, const int n, bcf1_t *bcf1, bcf_hdr_t *hdr)
     int n_sample = bcf1->n_sample;
     SEXP geno_names = GET_NAMES(geno);
     for (int i = 0; i < n_fmt; i++) {
-        const bcf_fmt_t *fmt = bcf1->d.fmt + i;
+        /* We don't use the const qualifier here because 'fmt' will later be
+           passed to bcf_format_gt(). Surprisingly, and quite unfortunately,
+           this function (defined in Rhtslib/src/htslib-1.7/htslib/vcf.h)
+           expects a 'bcf_fmt_t *', not a 'const bcf_fmt_t *'. */
+        //const bcf_fmt_t *fmt = bcf1->d.fmt + i;
+        bcf_fmt_t *fmt = bcf1->d.fmt + i;
         if (fmt->p == NULL)
             continue;
         int id = fmt->id;
@@ -595,26 +601,12 @@ static void _load_GENO(SEXP geno, const int n, bcf1_t *bcf1, bcf_hdr_t *hdr)
             /* 'geno_elt' is an integer matrix with 1 row per sample */
             _load_int_vector(INTEGER(geno_elt) + off, n_sample, fmt, tag);
         } else if (strcmp(tag, "GT") == 0) {
-            /* 'geno_elt' is a character matrix with 1 row per sample */
-            if (fmt->type != BCF_BT_INT8)
-                error("FORMAT tag '%s' has an unexpected C type (%d)",
-                      tag, fmt->type);
-            if (fmt->n != 1)
-                error("FORMAT tag '%s' has an unexpected "
-                      "number of values per sample", tag);
-            char s[4];
-            s[3] = '\0';
             for (int j = 0; j < n_sample; j++) {
-                const void *data = fmt->p + j * fmt->size;
-                int y = ((uint8_t *) data)[0];
-                if (y >> 7 & 1)
-                    SET_STRING_ELT(geno_elt, off++, mkChar("./."));
-                else {
-                    s[0] = '0' + (y >> 3 & 7);
-                    s[1] = "/|"[y >> 6 & 1];
-                    s[2] = '0' + (y & 7);
-                    SET_STRING_ELT(geno_elt, off++, mkChar(s));
-                }
+                ksbuf->l = 0;
+                bcf_format_gt(fmt, j, ksbuf);
+                SEXP s = PROTECT(mkChar(ksbuf->s));
+                SET_STRING_ELT(geno_elt, off++, s);
+                UNPROTECT(1);
             }
         } else if (strcmp(tag, "GL") == 0) {
             /* 'geno_elt' is a list of matrices of doubles */
@@ -662,7 +654,7 @@ static void _scan_bcf_line(bcf1_t *bcf1, bcf_hdr_t *hdr,
     SET_STRING_ELT(VECTOR_ELT(ans, BCF_FMT), n, format);
     UNPROTECT(1);
 
-    _load_GENO(VECTOR_ELT(ans, BCF_GENO), n, bcf1, hdr);
+    _load_GENO(VECTOR_ELT(ans, BCF_GENO), n, bcf1, hdr, ksbuf);
     return;
 }
 
