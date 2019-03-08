@@ -66,13 +66,13 @@ of them. This was on a 64-bit Ubuntu 16.04.5 LTS laptop running R 3.6
 
 ### All software packages with "LinkingTo: Rsamtools" were tested
 
-  - VariantAnnotation: migrated (changes not committed yet),
+  - VariantAnnotation: migrated (changes committed),
     passes `R CMD check`
 
   - ArrayExpressHTS: migrated (changes not committed yet),
     passes `R CMD check`
 
-  - BitSeq: migrated (changes not committed yet),
+  - BitSeq: migrated (changes committed),
     passes `R CMD check`
 
   - DiffBind: migrated (changes committed by Gord Brown),
@@ -113,6 +113,9 @@ of them. This was on a 64-bit Ubuntu 16.04.5 LTS laptop running R 3.6
   - VariantTools: passes `R CMD check` _as-is_
 
 ### A random sample of a few other software packages were tested
+
+  - AllelicImbalance: migrated (changes not committed yet)
+    passes `R CMD check`
 
   - BaalChIP: passes `R CMD check` _as-is_
 
