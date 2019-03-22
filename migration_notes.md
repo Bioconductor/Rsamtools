@@ -69,7 +69,8 @@ of them. This was on a 64-bit Ubuntu 16.04.5 LTS laptop running R 3.6
   - VariantAnnotation: migrated (changes committed),
     passes `R CMD check`
 
-  - ArrayExpressHTS: migrated (changes not committed yet),
+  - ArrayExpressHTS: migrated (changes not committed yet, Angela Goncalves
+    contacted but didn't answer yet),
     passes `R CMD check`
 
   - BitSeq: migrated (changes committed),
@@ -86,13 +87,13 @@ of them. This was on a 64-bit Ubuntu 16.04.5 LTS laptop running R 3.6
     `inst/examples/example1.vcf.gz` to make it compatible with bcftools 1.7),
     passes `R CMD check`
 
-  - qrqc: migrated (changes not committed yet),
-    passes `R CMD check`
+  - qrqc: migrated (PR created at https://github.com/vsbuffalo/qrqc/pull/6
+    per Vince Buffalo's request), passes `R CMD check`
 
   - QuasR: migrated (PR created at https://github.com/fmicompbio/QuasR/pull/9
     per Michael Stadler's request), passes `R CMD check`
 
-  - seqbias: migrated (changes not committed yet),
+  - seqbias: migrated (patch sent to, and applied by, Daniel Jones),
     passes `R CMD check`
 
   - TransView: migrated (changes committed),
