@@ -152,13 +152,14 @@ bamFlagTest(flag, value)
     \code{\linkS4class{IntegerRangesList}}, or any object that can be
     coerced to a \code{IntegerRangesList}, or missing object, from which
     a \code{IRangesList} instance will be constructed. Names of the
-    \code{IRangesList} correspond to reference sequences, and
-    ranges to the regions on that reference sequence for
-    which matches are desired. Because data types are coerced to
-    \code{IRangesList}, \code{which} does \emph{not} include strand
-    information (use the \code{flag} argument instead). Only records
-    with a read overlapping the specified ranges are returned. All
-    ranges must have ends less than or equal to 536870912.}
+    \code{IRangesList} correspond to reference sequences, and ranges to
+    the regions on that reference sequence for which matches are
+    desired. Because data types are coerced to \code{IRangesList},
+    \code{which} does \emph{not} include strand information (use the
+    \code{flag} argument instead). Only records with a read overlapping
+    the specified ranges are returned. All ranges must have ends less
+    than or equal to 536870912. When one record overlaps two ranges in
+    \code{which}, the record is returned \emph{twice}.}
 
   \item{isPaired}{A logical(1) indicating whether unpaired (FALSE),
     paired (TRUE), or any (NA) read should be returned.}
