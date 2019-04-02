@@ -61,20 +61,6 @@ KHASH_MAP_INIT_STR(s, int)
 const int QUAL_LEVELS = 94,     /* printable ASCII */
     SEQ_LEVELS = 5;             /* A, C, G, T, N */
 
-static void _bam_header_hash_init(bam_header_t * header)
-{
-    if (0 == header->sdict) {
-        int ret, i;
-        khiter_t iter;
-        khash_t(s) * h;
-        header->sdict = h = kh_init(s);
-        for (i = 0; i < header->n_targets; ++i) {
-            iter = kh_put(s, h, header->target_name[i], &ret);
-            kh_value(h, iter) = i;
-        }
-    }
-}
-
 /* PILEUP_ITER_T */
 
 static PILEUP_ITER_T *_iter_init(SEXP files, PILEUP_PARAM_T * param)
@@ -91,8 +77,6 @@ static PILEUP_ITER_T *_iter_init(SEXP files, PILEUP_PARAM_T * param)
         iter->mfile[i]->min_map_quality = param->min_map_quality;
         iter->mfile[i]->keep_flag[0] = param->keep_flag[0];
         iter->mfile[i]->keep_flag[1] = param->keep_flag[1];
-        /* header hash destroyed when file closed */
-        _bam_header_hash_init(iter->mfile[i]->bfile->file->header);
     }
 
     iter->plp = Calloc(iter->n_files, const bam_pileup1_t *);
