@@ -8,7 +8,6 @@
 
 class BamRangeIterator : public BamIterator {
 
-    int32_t tid, beg, end;
     bam_iter_t iter;
 
     void iterate_inprogress(bamFile bfile) {
@@ -144,7 +143,7 @@ public:
     // constructor / destructor
     BamRangeIterator(bamFile bfile, const bam_index_t *bindex,
                      int32_t tid, int32_t beg, int32_t end) :
-        BamIterator(bfile, bindex), tid(tid), beg(beg), end(end)
+        BamIterator(bfile, bindex)
     {
 	iter = bam_iter_query(bindex, tid, beg, end);
     }
