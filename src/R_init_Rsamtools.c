@@ -1,4 +1,5 @@
 #include <R_ext/Rdynload.h>
+#include "test_ksprintf.h"
 #include "zip_compression.h"
 #include "utilities.h"
 #include "bamfile.h"
@@ -13,6 +14,8 @@
 
 static const R_CallMethodDef callMethods[] = {
 
+    /* test_ksprintf.c */
+    {".test_ksprintf", (DL_FUNC) & test_ksprintf, 1},
     /* zip_compression.c */
     {".bgzip", (DL_FUNC) & bgzip, 2},
     /* utilities.c */
