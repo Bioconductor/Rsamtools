@@ -207,6 +207,22 @@ SEXP bcffile_isvcf(SEXP ext)
     return ans;
 }
 
+static void print_bcf_hrec_t(const bcf_hrec_t *hrec)
+{
+    int i;
+
+    printf("print_bcf_hrec_t():\n");
+    printf("  type=%d\n", hrec->type);
+    printf("  key=%s\n", hrec->key);
+    printf("  value=%s\n", hrec->value);
+    printf("  nkeys=%d\n", hrec->nkeys);
+    for (i = 0; i < hrec->nkeys; i++) {
+        printf("  keys[%d]=%s\n", i, hrec->keys[i]);
+        printf("  vals[%d]=%s\n", i, hrec->vals[i]);
+    }
+    return;
+}
+
 /* --- .Call ENTRY POINT --- */
 SEXP scan_bcf_header(SEXP ext)
 {
@@ -253,8 +269,10 @@ SEXP scan_bcf_header(SEXP ext)
     ans_elt = VECTOR_ELT(ans, BCF_HDR_HEADER);
     kstring_t str = {0, 0, NULL};
     for (i = 0; i < hdr->nhrec; i++) {
+        print_bcf_hrec_t(hdr->hrec[i]);
         str.l = 0;
         bcf_hrec_format(hdr->hrec[i], &str);
+        printf("scan_bcf_header(): str.s=%s\n", str.s);
         str.l = _delete_trailing_LF_or_CRLF(str.s, str.l);
         SET_STRING_ELT(ans_elt, i, mkCharLen(str.s, str.l));
     }
