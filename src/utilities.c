@@ -250,24 +250,23 @@ char *_rtrim(char *s)
 }
 
 /*
- * Copied from XVector/src/io_utils.c
- * Doesn't actually delete anything but returns the length that the 'buf' char
- * array would have had after deletion of the LF ("\n") or CRLF ("\r\n") chars
- * located at its end.
+ * Doesn't actually delete anything but returns the length that 'buf' would
+ * have after deletion of its trailing LFs ("\n") and CRs ("\r").
  * If 'buf_len' is -1, then 'buf' must be a C string (i.e. null-terminated).
  */
-int _delete_trailing_LF_or_CRLF(const char *buf, int buf_len)
+int _delete_trailing_LFs_and_CRs(const char *buf, int buf_len)
 {
+    char c;
+
     if (buf_len == -1)
         buf_len = strlen(buf);
-    if (buf_len == 0)
-        return 0;
-    if (buf[--buf_len] != '\n')
-        return ++buf_len;
-    if (buf_len == 0)
-        return 0;
-    if (buf[--buf_len] != '\r')
-        return ++buf_len;
+    while (buf_len > 0) {
+        c = buf[--buf_len];
+        if (c != '\n' && c != '\r') {
+            buf_len++;
+            break;
+        }
+    }
     return buf_len;
 }
 

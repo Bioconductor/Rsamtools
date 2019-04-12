@@ -231,7 +231,7 @@ SEXP scan_bcf_header(SEXP ext)
     ans_elt = VECTOR_ELT(ans, BCF_HDR_REF);
     for (i = 0; i < nseqs; i++) {
         seqname = seqnames[i];
-        seqname_len = _delete_trailing_LF_or_CRLF(seqname, -1);
+        seqname_len = _delete_trailing_LFs_and_CRs(seqname, -1);
         SET_STRING_ELT(ans_elt, i, mkCharLen(seqname, seqname_len));
     }
     free(seqnames);
@@ -244,7 +244,7 @@ SEXP scan_bcf_header(SEXP ext)
     ans_elt = VECTOR_ELT(ans, BCF_HDR_SAMPLE);
     for (i = 0; i < nsamples; i++) {
         samplename = hdr->samples[i];
-        samplename_len = _delete_trailing_LF_or_CRLF(samplename, -1);
+        samplename_len = _delete_trailing_LFs_and_CRs(samplename, -1);
         SET_STRING_ELT(ans_elt, i, mkCharLen(samplename, samplename_len));
     }
 
@@ -255,7 +255,7 @@ SEXP scan_bcf_header(SEXP ext)
     for (i = 0; i < hdr->nhrec; i++) {
         str.l = 0;
         bcf_hrec_format(hdr->hrec[i], &str);
-        str.l = _delete_trailing_LF_or_CRLF(str.s, str.l);
+        str.l = _delete_trailing_LFs_and_CRs(str.s, str.l);
         SET_STRING_ELT(ans_elt, i, mkCharLen(str.s, str.l));
     }
     free(str.s);

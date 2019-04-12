@@ -29,7 +29,7 @@ SEXP _as_PhredQuality(const char **key, int len);
 void _reverse(char *buf, int len);
 void _reverseComplement(char *buf, int len);
 char *_rtrim(char *);
-int _delete_trailing_LF_or_CRLF(const char *buf, int buf_len);
+int _delete_trailing_LFs_and_CRs(const char *buf, int buf_len);
 
 /* common checks */
 

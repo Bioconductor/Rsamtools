@@ -102,8 +102,8 @@ of them. This was on a 64-bit Ubuntu 16.04.5 LTS laptop running R 3.6
 ### All software packages that use applyPileups() were tested
 
   - AllelicImbalance: migrated (contained old BCF file (`ERP000101.bcf`, in
-    `extdata/ERP000101_subset/`) that needed to be fixed and reindexed (it
-    no longer worked with recent bcftools).
+    `extdata/ERP000101_subset/`) that needed to be fixed and reindexed
+    because it no longer worked with recent bcftools/Rhtslib)
     passes `R CMD check`
 
   - biovizBase: passes `R CMD check` _as-is_
