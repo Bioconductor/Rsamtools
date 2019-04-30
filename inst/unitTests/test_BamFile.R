@@ -15,6 +15,14 @@ test_BamFile_openclose <- function()
     bf1 <- open(bf)                  # open (clone?) an open BamFile
     checkTrue(isOpen(bf1))
     checkTrue(identical(bf$.extptr, bf1$.extptr))
+    ## no extension necessary
+    dir.create(fl <- tempfile())
+    body <- file.path(fl, "body")
+    index <- file.path(fl, "index")
+    file.copy(fl, body)
+    file.copy(paste0(fl, ".bai"), index)
+    open(bf2 <- BamFile(body, index))
+    checkTrue(isOpen(bf2))
 }
 
 test_BamFile_isIncomplete <- function()
