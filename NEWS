@@ -1,3 +1,15 @@
+CHANGES IN VERSION 2.0
+----------------------
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Migrate Rsamtools to Rhtslib. See Rsamtools/migration_notes.md for
+      more information about this migration.
+
+    o Remove unused fields from BamRangeIterator
+
+    o Remove BAM header hash init for pileup (already memoized in Rhtslib)
+
 CHANGES IN VERSION 1.34
 -----------------------
 
