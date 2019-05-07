@@ -22,9 +22,11 @@ samfile_t *_bam_tryopen(const char *filename, const char *filemode, void *aux)
     return sfile;
 }
 
-static bam_index_t *_bam_tryindexload(const char *indexname)
+static bam_index_t *_bam_tryindexload(const char *file, const char *indexname)
 {
     bam_index_t *index = bam_index_load(indexname);
+    if (index == 0)
+        index = hts_idx_load2(file, indexname);
     if (index == 0)
         Rf_error("failed to load BAM index\n  file: %s", indexname);
     return index;
@@ -68,8 +70,9 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
     BAM_FILE bfile = (BAM_FILE) Calloc(1, _BAM_FILE);
 
     bfile->file = NULL;
+    const char *cfile;
     if (0 != Rf_length(filename)) {
-        const char *cfile = translateChar(STRING_ELT(filename, 0));
+        cfile = translateChar(STRING_ELT(filename, 0));
         bfile->file = _bam_tryopen(cfile, CHAR(STRING_ELT(filemode, 0)), 0);
         if (hts_get_format(bfile->file->file)->format != bam) {
             samclose(bfile->file);
@@ -83,7 +86,7 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
     bfile->index = NULL;
     if (0 != Rf_length(indexname)) {
         const char *cindex = translateChar(STRING_ELT(indexname, 0));
-        bfile->index = _bam_tryindexload(cindex);
+        bfile->index = _bam_tryindexload(cfile, cindex);
         if (NULL == bfile->index) {
             samclose(bfile->file);
             Free(bfile);
