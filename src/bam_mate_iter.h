@@ -1,7 +1,7 @@
 #ifndef BAM_MATE_ITER_H
 #define BAM_MATE_ITER_H
 
-#include <sam.h>
+#include <htslib/sam.h>
 
 #ifdef __cplusplus
 extern "C" {

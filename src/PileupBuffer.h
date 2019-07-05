@@ -7,7 +7,7 @@
 #include <utility>
 #include <algorithm>
 #include <cassert>
-#include <sam.h>
+#include <htslib/sam.h>
 #include "ResultManager.h"
 #include "utilities.h"
 #include <Rinternals.h>

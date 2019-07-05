@@ -1,5 +1,5 @@
 #include <htslib/khash.h>
-#include <sam.h>
+#include <htslib/sam.h>
 #include "bam_data.h"
 #include "scan_bam_data.h"
 #include "io_sam.h"

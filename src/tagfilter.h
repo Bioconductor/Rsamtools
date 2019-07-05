@@ -1,7 +1,7 @@
 #ifndef TAG_FILTER_H
 #define TAG_FILTER_H
 
-#include <sam.h>
+#include <htslib/sam.h>
 #include <Rdefines.h>
 
 typedef enum { TAGFILT_T_UNSET = 0, TAGFILT_T_INT,

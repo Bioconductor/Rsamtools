@@ -1,4 +1,4 @@
-#include <sam.h>
+#include <htslib/sam.h>
 #include <htslib/khash.h>
 #include "pileupbam.h"
 #include "bamfile.h"

@@ -1,4 +1,4 @@
-#include <sam.h>
+#include <htslib/sam.h>
 #include "bamfile.h"
 
 int _as_bam(samfile_t * fin, samfile_t * fout)
