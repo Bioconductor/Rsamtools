@@ -1,4 +1,5 @@
 #include <htslib/khash.h>
+#include <samtools-1.7-compat.h>
 #include "bamfile.h"
 #include "bam_data.h"
 #include "scan_bam_data.h"

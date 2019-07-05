@@ -1,3 +1,4 @@
+#include <samtools-1.7-compat.h>
 #include <htslib/khash.h>
 #include "pileupbam.h"
 #include "bamfile.h"

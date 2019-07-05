@@ -1,3 +1,4 @@
+#include <samtools-1.7-compat.h>
 #include "bamfile.h"
 
 int _as_bam(samfile_t * fin, samfile_t * fout)
