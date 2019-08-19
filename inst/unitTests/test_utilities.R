@@ -25,3 +25,11 @@ test_catch_samtools_504 <- function()
     })
     checkTrue(err)
 }
+
+test_normalizePath <- function()
+{
+    .normalizePath <- Rsamtools:::.normalizePath
+    fl <- tempfile()
+    checkIdentical(fl, .normalizePath(fl))
+    checkIdentical(fl, .normalizePath(factor(fl)))
+}
