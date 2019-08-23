@@ -250,6 +250,7 @@ setMethod(countBam, "BamFile",
 setMethod(idxstatsBam, "BamFile",
           function(file, index=file, ...)
 {
+    .io_check_exists(index(file))
     if (!isOpen(file)) {
         open(file)
         on.exit(close(file))
