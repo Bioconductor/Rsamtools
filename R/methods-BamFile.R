@@ -389,8 +389,11 @@ setMethod(filterBam, "BamFile",
 
     if (length(filter))
         .filterBam_FilterRules(file, param=param, destination, filter)
-    else
-        .io_bam(.filter_bamfile, file, param=param, destination, "wb")
+    else {
+        fout <- .Call(.bamfile_open, destination, path(file), "wb")
+        .io_bam(.filter_bamfile, file, param=param, fout, "wb")
+        .Call(.bamfile_close, fout)
+    }
 
     if (indexDestination)
         for (dest in destination) {

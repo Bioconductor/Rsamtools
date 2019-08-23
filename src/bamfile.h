@@ -43,7 +43,7 @@ SEXP prefilter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
                        SEXP qnameSuffix);
 SEXP filter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
                     SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
-                    SEXP fout_name, SEXP fout_mode);
+                    SEXP ext_out);
 
 void _check_isbamfile(SEXP ext, const char *lbl);
 samfile_t *_bam_tryopen(const char *filename, const char *mode, void *aux);
