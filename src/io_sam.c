@@ -589,12 +589,12 @@ static int _prefilter1_mate(const bam_mates_t *mates, void *data)
 }
 
 SEXP
-_prefilter_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
+_prefilter_bam(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP tagFilter, SEXP mapqFilter, SEXP yieldSize, SEXP obeyQname,
                SEXP asMates, 
                SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
 {
-    SEXP ext = PROTECT(bambuffer(INTEGER(yieldSize)[0],
+    SEXP ext_out = PROTECT(bambuffer(INTEGER(yieldSize)[0],
                                  LOGICAL(asMates)[0]));
     char qname_prefix = '\0';
     SEXP prefix_elt = STRING_ELT(qnamePrefixEnd, 0);
@@ -604,11 +604,12 @@ _prefilter_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
     SEXP suffix_elt = STRING_ELT(qnameSuffixStart, 0);
     if (suffix_elt != NA_STRING)
         qname_suffix = CHAR(suffix_elt)[0];
-    BAM_DATA bd = _init_BAM_DATA(bfile, regions, keepFlags, isSimpleCigar,
+    BAM_DATA bd = _init_BAM_DATA(ext, regions, keepFlags, isSimpleCigar,
                                  tagFilter, mapqFilter, 0, INTEGER(yieldSize)[0],
                                  LOGICAL(obeyQname)[0], 
                                  LOGICAL(asMates)[0], 
-                                 qname_prefix, qname_suffix, BAMBUFFER(ext));
+                                 qname_prefix, qname_suffix,
+                                 BAMBUFFER(ext_out));
     int status =
         _do_scan_bam(bd, regions, _prefilter1, _prefilter1_mate, NULL);
     if (status < 0) {
@@ -622,42 +623,38 @@ _prefilter_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
 
     _Free_BAM_DATA(bd);
     UNPROTECT(1);
-    return ext;
+    return ext_out;
 }
 
 static int _filter1(const bam1_t * bam, void *data)
 {
     BAM_DATA bd = (BAM_DATA) data;
+    BAM_FILE bfile_out = (BAM_FILE) bd->extra;
     bd->irec += 1;
     if (!_filter1_BAM_DATA(bam, bd))
         return 0;
-    samwrite((samfile_t *) bd->extra, bam);
+    if (sam_write1(bfile_out->file, bfile_out->header, bam) < 0)
+        return -1;
     bd->iparsed += 1;
     return 1;
 }
 
 SEXP
-_filter_bam(SEXP bfile, SEXP regions, SEXP keepFlags,
+_filter_bam(SEXP ext, SEXP regions, SEXP keepFlags,
             SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
-            SEXP fout_name, SEXP fout_mode)
+            SEXP ext_out)
 {
-    /* open destination */
     BAM_DATA bd =
-        _init_BAM_DATA(bfile, regions, keepFlags, isSimpleCigar,
+        _init_BAM_DATA(ext, regions, keepFlags, isSimpleCigar,
                        tagFilter, mapqFilter, 0,
                        NA_INTEGER, 0, 0, '\0', '\0', NULL);
-    /* FIXME: this just copies the header... */
-    bam_header_t *header = BAMFILE(bfile)->file->header;
-    samfile_t *f_out = _bam_tryopen(translateChar(STRING_ELT(fout_name, 0)),
-                                    CHAR(STRING_ELT(fout_mode, 0)), header);
-    bd->extra = f_out;
+    bd->extra = BAMFILE(ext_out);
 
     int status = _do_scan_bam(bd, regions, _filter1, NULL, NULL);
     if (status < 0) {
         int idx = bd->irec;
         int parse_status = bd->parse_status;
         _Free_BAM_DATA(bd);
-        samclose(f_out);
         Rf_error("'filterBam' failed:\n  record: %d\n  error: %d",
                  idx, parse_status);
     }
@@ -665,9 +662,8 @@ _filter_bam(SEXP bfile, SEXP regions, SEXP keepFlags,
     /* sort and index destintation ? */
     /* cleanup */
     _Free_BAM_DATA(bd);
-    samclose(f_out);
 
-    return status < 0 ? R_NilValue : fout_name;
+    return status < 0 ? R_NilValue : ext_out;
 }
 
 /* merge_bam */

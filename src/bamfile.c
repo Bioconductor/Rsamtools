@@ -242,17 +242,14 @@ SEXP prefilter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
 
 SEXP filter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                     SEXP tagFilter, SEXP mapqFilter,
-                    SEXP fout_name, SEXP fout_mode)
+                    SEXP ext_out)
 {
     _checkext(ext, BAMFILE_TAG, "filterBam");
+    _checkext(ext_out, BAMFILE_TAG, "filterBam");
     _checkparams(regions, keepFlags, isSimpleCigar);
-    if (!IS_CHARACTER(fout_name) || 1 != LENGTH(fout_name))
-        Rf_error("'fout_name' must be character(1)");
-    if (!IS_CHARACTER(fout_mode) || 1 != LENGTH(fout_mode))
-        Rf_error("'fout_mode' must be character(1)");
     SEXP result = _filter_bam(ext, regions, keepFlags, isSimpleCigar,
                               tagFilter, mapqFilter,
-                              fout_name, fout_mode);
+                              ext_out);
     if (R_NilValue == result)
         Rf_error("'filterBam' failed");
     return result;

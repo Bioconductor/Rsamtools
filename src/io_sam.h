@@ -26,13 +26,13 @@ SEXP _scan_bam(SEXP bfile, SEXP regions, SEXP keepFlags,
                SEXP qnamePrefixEnd, SEXP qnameSuffixStart);
 SEXP _count_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                 SEXP tagFilter, SEXP mapqFilter);
-SEXP _prefilter_bam(SEXP bfile, SEXP regions, SEXP keepFlags,
+SEXP _prefilter_bam(SEXP ext, SEXP regions, SEXP keepFlags,
 		    SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                     SEXP yieldSize, SEXP obeyQname, SEXP asMates,
                     SEXP qnamePrefixEnd, SEXP qnameSuffixStart);
-SEXP _filter_bam(SEXP bfile, SEXP regions, SEXP keepFlags,
+SEXP _filter_bam(SEXP ext, SEXP regions, SEXP keepFlags,
                  SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
-                 SEXP fout_name, SEXP fout_mode);
+                 SEXP ext_out);
 
 typedef void (_FINISH1_FUNC) (BAM_DATA);
 int _do_scan_bam(BAM_DATA bd, SEXP regions, bam_fetch_f parse1,
