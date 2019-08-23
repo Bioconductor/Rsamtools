@@ -17,7 +17,7 @@
 {
     if (!length(file))
         stop("'file' is length(0)")
-    idx <- !grepl("^(ftp)|(http)://", file) & !is.na(file)
+    idx <- !grepl("^(ftp|http|gs|s3)://", file) & !is.na(file)
     if (!all(sapply(file[idx], file.exists))) {
         msg <- paste(sprintf("'%s'", file[idx]), collapse="\n  ")
         stop("file(s) do not exist:\n  ", msg)
