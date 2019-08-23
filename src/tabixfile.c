@@ -1,35 +1,14 @@
 #include <stdlib.h>
 #include <htslib/hfile.h>
-#include <htslib/bgzf.h>
 #include "tabixfile.h"
 #include "utilities.h"
+#include "hts_utilities.h"
 
 static SEXP TABIXFILE_TAG = NULL;
 
 static const int TBX_INIT_SIZE = 32767;
 
-/* Convenience wrappers around bgzf_tell(), bgzf_seek(), bgzf_getline(),
-   and tbx_itr_next(). */
-static int64_t _tbx_tell(htsFile *file)
-{
-    BGZF *fp;
-
-    if (!file->is_bgzf)
-        Rf_error("[internal] hmm.. this doesn't look like a tabix file, sorry");
-    fp = file->fp.bgzf;
-    return bgzf_tell(fp);
-}
-static void _tbx_seek(htsFile *file, int64_t offset)
-{
-    BGZF *fp;
-
-    if (!file->is_bgzf)
-        Rf_error("[internal] hmm.. this doesn't look like a tabix file, sorry");
-    fp = file->fp.bgzf;
-    if (bgzf_seek(fp, offset, SEEK_SET) < 0)
-        Rf_error("[internal] bgzf_seek() failed");
-    return;
-}
+/* Convenience wrappers around bgzf_getline() and tbx_itr_next(). */
 static const char *_tbx_read_line(htsFile *file, int *len)
 {
     BGZF *fp;
@@ -187,7 +166,8 @@ SEXP index_tabix(SEXP filename, SEXP format, SEXP seq, SEXP begin, SEXP end,
         LOGICAL(zeroBased)[0] == TRUE)
         conf.preset |= TBX_UCSC;
 
-    if (bgzf_is_bgzf(fn) != 1)
+    htsFormat fmt = _hts_utilities_format(fn);
+    if (fmt.compression != bgzf)
         Rf_error("file does not appear to be bgzip'd");
     if (tbx_index_build(fn, 0, &conf) == -1)
         Rf_error("index build failed");
@@ -200,13 +180,13 @@ static void _skip_header_lines(htsFile *file, const tbx_conf_t *conf)
     const char *line;
     int linelen;
 
-    int64_t curr_off = _tbx_tell(file);
+    int64_t curr_off = _hts_utilities_tell(file);
     while ((line = _tbx_read_line(file, &linelen)) != NULL) {
         if (line[0] != conf->meta_char)
             break;
-        curr_off = _tbx_tell(file);
+        curr_off = _hts_utilities_tell(file);
     }
-    _tbx_seek(file, curr_off);
+    _hts_utilities_seek(file, curr_off, SEEK_SET);
     return;
 }
 
@@ -220,11 +200,11 @@ static SEXP _read_header_lines(htsFile *file, const tbx_conf_t *conf)
     SEXP lns = NEW_CHARACTER(0);
     PROTECT_WITH_INDEX(lns, &pidx);
 
-    int64_t curr_off = _tbx_tell(file);
+    int64_t curr_off = _hts_utilities_tell(file);
     while ((line = _tbx_read_line(file, &linelen)) != NULL) {
         if (line[0] != conf->meta_char)
             break;
-        curr_off = _tbx_tell(file);
+        curr_off = _hts_utilities_tell(file);
         if ((i_lns % GROW_BY) == 0) {
             SET_LENGTH(lns, LENGTH(lns) + GROW_BY);
             REPROTECT(lns, pidx);
@@ -232,7 +212,7 @@ static SEXP _read_header_lines(htsFile *file, const tbx_conf_t *conf)
         SET_STRING_ELT(lns, i_lns, mkCharLen(line, linelen));
         i_lns++;
     }
-    _tbx_seek(file, curr_off);
+    _hts_utilities_seek(file, curr_off, SEEK_SET);
 
     SET_LENGTH(lns, i_lns);
     UNPROTECT(1);

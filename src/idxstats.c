@@ -2,6 +2,7 @@
 #include "utilities.h"          /* _checkext */
 #include <htslib/khash.h>
 #include <htslib/ksort.h>
+#include "hts_utilities.h"
 
 extern SEXP BAMFILE_TAG;
 
@@ -17,8 +18,8 @@ SEXP idxstats_bamfile(SEXP ext)
     _checkext(ext, BAMFILE_TAG, "idxstats");
     bfile = BAMFILE(ext);
     fp = bfile->file->x.bam;
-    bam_seek(fp, 0, 0);
     header = bam_header_read(fp);
+    _hts_utilities_seek(bfile->file, 0, SEEK_SET);
     idx = bfile->index;
     n = hts_idx_get_n(idx);
 

@@ -9,6 +9,7 @@
 #include <map>
 #include "Template.h"
 #include "bam_data.h"
+#include "hts_utilities.h"
 
 class BamIterator {
 
@@ -84,8 +85,8 @@ public:
         bam_data((BAM_DATA) NULL), bindex(bindex),
         bam((bam1_t *) NULL), iter_done(false)
     {
-        bam_seek(bfile, 0, 0);
         header = bam_header_read(bfile);
+        _hts_utilities_seek(bfile, 0, SEEK_SET);
     }
 
     virtual ~BamIterator() {

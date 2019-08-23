@@ -6,6 +6,7 @@
 #include "bamfile.h"
 #include "encode.h"
 #include "utilities.h"
+#include "hts_utilities.h"
 #include "S4Vectors_interface.h"
 #include "XVector_interface.h"
 #include "Biostrings_interface.h"
@@ -29,18 +30,9 @@ static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
 
 void _check_is_bam(const char *filename)
 {
-    int magic_len;
-    char buf[4];
-    bamFile bfile = bam_open(filename, "r");
-
-    if (bfile == 0)
-        Rf_error("failed to open SAM/BAM file\n  file: '%s'", filename);
-
-    magic_len = bgzf_read(bfile, buf, 4);
-    bam_close(bfile);
-
-    if (magic_len != 4 || strncmp(buf, "BAM\001", 4) != 0)
-        Rf_error("'filename' is not a BAM file\n  file: %s", filename);
+    htsFormat fmt = _hts_utilities_format(filename);
+    if (fmt.format != bam)
+        Rf_error("file is not a BAM file\n  file: %s", filename);
 }
 
 /* template */
@@ -251,7 +243,7 @@ static int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
 
         yield += status;
         if (NA_INTEGER != yieldSize && yield == yieldSize) { 
-            bfile->pos0 = bam_tell(bfile->file->x.bam);
+            bfile->pos0 = _hts_utilities_tell(bfile->file);
             if (!bd->obeyQname) 
                 break;
         }
@@ -283,7 +275,7 @@ static int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
 
         yield += 1;
         if (NA_INTEGER != yieldSize && yield == yieldSize) { 
-            bfile->pos0 = bam_tell(bfile->file->x.bam);
+            bfile->pos0 = _hts_utilities_tell(bfile->file);
             break;
         }
 
@@ -301,7 +293,7 @@ static int _scan_bam_all(BAM_DATA bd, bam_fetch_f parse1,
     const int yieldSize = bd->yieldSize;
     int yield = 0;
 
-    bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
+    _hts_utilities_seek(bfile->file, bfile->pos0, SEEK_SET);
     if (bd->asMates) {
         yield = _samread_mate(bfile, bd, yieldSize, parse1_mate);
     } else {
@@ -310,7 +302,7 @@ static int _scan_bam_all(BAM_DATA bd, bam_fetch_f parse1,
 
     /* end-of-file */
     if ((NA_INTEGER == yieldSize) || (yield < yieldSize))
-        bfile->pos0 = bam_tell(bfile->file->x.bam);
+        bfile->pos0 = _hts_utilities_tell(bfile->file);
     if ((NULL != finish1) && (bd->iparsed >= 0))
         (*finish1) (bd);
 

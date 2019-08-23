@@ -4,11 +4,11 @@
 #include <htslib/kseq.h>
 #include <htslib/vcf.h>
 #include <htslib/hfile.h>
-#include <htslib/bgzf.h>
 #include <hts_internal.h>
 #include "bcffile.h"
 #include "COMPAT_bcf_hdr_read.h"
 #include "utilities.h"
+#include "hts_utilities.h"
 
 enum {
     BCF_HDR_REF = 0, BCF_HDR_SAMPLE, BCF_HDR_HEADER, BCF_HDR_LAST
@@ -33,8 +33,7 @@ static const int BCF_BUFSIZE_GROW = 100000;	/* initial # records */
 
 static int _hts_rewind(htsFile *file)
 {
-    int64_t ret = file->is_bgzf ? bgzf_seek(file->fp.bgzf, 0, SEEK_SET) :
-                                  hseek(file->fp.hfile, 0, SEEK_SET);
+    int64_t ret = _hts_utilities_seek(file, 0, SEEK_SET);
     return ret >= 0 ? 0 : -1;
 }
 

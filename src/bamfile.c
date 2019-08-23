@@ -2,6 +2,7 @@
 #include "io_sam.h"
 #include "bam_mate_iter.h"
 #include "utilities.h"
+#include "hts_utilities.h"
 
 SEXP BAMFILE_TAG = NULL;
 
@@ -113,7 +114,7 @@ static BAM_FILE _bamfile_open_w(SEXP file0, SEXP file1)
 
     bfile = (BAM_FILE) Calloc(1, _BAM_FILE);
     bfile->file = outfile;
-    bfile->pos0 = bam_tell(bfile->file->x.bam);
+    bfile->pos0 = _hts_utilities_tell(bfile->file);
     bfile->irange0 = 0;
 
     return bfile;
@@ -160,12 +161,12 @@ SEXP bamfile_isincomplete(SEXP ext)
         _checkext(ext, BAMFILE_TAG, "isIncomplete");
         bfile = BAMFILE(ext);
         if (NULL != bfile && NULL != bfile->file) {
-            /* heuristic: can we read a record? bgzf_seek does not
-             * support SEEK_END */
-            off_t offset = bgzf_tell(bfile->file->x.bam);
-            char buf;
-            ans = bgzf_read(bfile->file->x.bam, &buf, 1) > 0;
-            bgzf_seek(bfile->file->x.bam, offset, SEEK_SET);
+            /* heuristic: can we read a record? */
+            off_t offset = _hts_utilities_tell(bfile->file);
+            bam1_t *bam = bam_init1();
+            ans = sam_read1(bfile->file, bfile->header, bam) > 0;
+            bam_destroy1(bam);
+            _hts_utilities_seek(bfile->file, offset, SEEK_SET);
         }
     }
     return ScalarLogical(ans);
