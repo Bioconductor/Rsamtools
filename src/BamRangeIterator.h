@@ -34,8 +34,8 @@ class BamRangeIterator : public BamIterator {
     }
 
     // mate 'inprogress' segments for each Template in Templates
-    void finalize_inprogress(bamFile bfile) {
-        int64_t pos = bam_tell(bfile);
+    void finalize_inprogress(htsFile *bfile) {
+        int64_t pos = _hts_utilities_tell(bfile);
         const uint32_t *target_len = header->target_len;
         bam1_t *bam = bam_init1();
 
@@ -135,7 +135,7 @@ class BamRangeIterator : public BamIterator {
             it->second.mate(complete, target_len);
             
         BamIterator::finalize_inprogress(bfile);
-        (void) bam_seek(bfile, pos, SEEK_SET);
+        _hts_utilities_seek(bfile, pos, SEEK_SET);
     }
 
 public:
