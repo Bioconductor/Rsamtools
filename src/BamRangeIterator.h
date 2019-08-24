@@ -11,19 +11,19 @@ class BamRangeIterator : public BamIterator {
     hts_itr_t *iter;
 
     void iterate_inprogress(htsFile *bfile) {
-	if ((bam1_t *) NULL == bam) {	// first record 
-	    bam = bam_init1();
-	    if (sam_itr_next(bfile, iter, bam) < 0) {
-		iter_done = true;
-		return;
-	    }
-	}
+        if ((bam1_t *) NULL == bam) {	// first record
+            bam = bam_init1();
+            if (sam_itr_next(bfile, iter, bam) < 0) {
+                iter_done = true;
+                return;
+            }
+        }
 
-	do {
-	    process(bam);
-	    if (sam_itr_next(bfile, iter, bam) < 0)
-		iter_done = true;
-	} while (!iter_done);
+        do {
+            process(bam);
+            if (sam_itr_next(bfile, iter, bam) < 0)
+                iter_done = true;
+        } while (!iter_done);
         mate_touched_templates();
     }
 
@@ -39,7 +39,7 @@ class BamRangeIterator : public BamIterator {
         const uint32_t *target_len = header->target_len;
         bam1_t *bam = bam_init1();
 
-        // iterators 
+        // iterators
         typedef Templates::iterator template_it;
         typedef list<const bam1_t*>::iterator list_it;
         typedef vector<pair<int32_t, Template *> >::iterator pairs_it;
@@ -100,7 +100,7 @@ class BamRangeIterator : public BamIterator {
 
                 /* find mates for this read, across all mates */
                 for (pairs_it p = p_start; p != p_end; ++p) {
-                    // Each Template has an 'inprogress' list that may have > 1 
+                    // Each Template has an 'inprogress' list that may have > 1
                     // record. In this case the 'groups' map will have
                     // multiple pairs with different mpos but a pointer to
                     // the same Template. All records in 'inprogress' are
@@ -117,7 +117,7 @@ class BamRangeIterator : public BamIterator {
                         tmpl_q = tmpl->qname_trim(bam1_qname(curr), pre, suf);
                         const char *mate_q;
                         mate_q = tmpl->qname_trim(bam1_qname(bam), pre, suf);
-                        if (tmpl->is_valid(bam) && 
+                        if (tmpl->is_valid(bam) &&
                             tmpl->is_template(tmpl_q, mate_q, bam) &&
                             tmpl->is_mate(curr, bam, target_len)) {
                             tmpl->add_segment(bam);
@@ -133,7 +133,7 @@ class BamRangeIterator : public BamIterator {
         // mate Templates
         for (template_it it = templates.begin(); it != templates.end(); ++it)
             it->second.mate(complete, target_len);
-            
+
         BamIterator::finalize_inprogress(bfile);
         _hts_utilities_seek(bfile, pos, SEEK_SET);
     }
@@ -145,11 +145,11 @@ public:
                      int32_t tid, int32_t beg, int32_t end) :
         BamIterator(bfile, bindex)
     {
-	iter = sam_itr_queryi(bindex, tid, beg, end);
+        iter = sam_itr_queryi(bindex, tid, beg, end);
     }
 
     ~BamRangeIterator() {
-	sam_itr_destroy(iter);
+        sam_itr_destroy(iter);
    }
 };
 

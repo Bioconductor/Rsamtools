@@ -75,7 +75,7 @@ SEXP _get_lkup(const char *baseclass)
 
 void _as_seqlevels(SEXP vec, SEXP lvls)
 {
-    
+
     _as_factor_SEXP(vec, lvls);
 }
 
@@ -105,7 +105,7 @@ void _as_rname(SEXP vec, const char **lvls, const int n_lvls)
             kh_value(level_map, iter) = ++n;
         }
     }
-    
+
     map = (int *) calloc(n_lvls, sizeof(int));
     levels = PROTECT(NEW_CHARACTER(n));
     for (i = 0; i < n_lvls; ++i) {

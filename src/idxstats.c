@@ -26,7 +26,7 @@ SEXP idxstats_bamfile(SEXP ext)
     len  = Rf_allocVector(INTSXP, n); SET_VECTOR_ELT(result, 1, len);
     map = Rf_allocVector(REALSXP, n); SET_VECTOR_ELT(result, 2, map);
     unmap = Rf_allocVector(REALSXP, n); SET_VECTOR_ELT(result, 3, unmap);
-    
+
     for (int i = 0; i < n; ++i) {
         uint64_t mapped, unmapped;
         SET_STRING_ELT(name, i, mkChar(header->target_name[i]));

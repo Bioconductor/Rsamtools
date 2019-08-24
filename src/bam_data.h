@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-typedef char * (*bam_qname_f)(const bam1_t *bam, char qname_prefix, 
+typedef char * (*bam_qname_f)(const bam1_t *bam, char qname_prefix,
                               char qname_suffix);
 
 typedef struct {
@@ -38,7 +38,7 @@ enum {
 BAM_DATA _init_BAM_DATA(SEXP ext, SEXP regions, SEXP flag, SEXP isSimpleCigar,
                         SEXP tagFilter, SEXP mapqFilter,
                         int reverseComplement, int yieldSize,
-                        int obeyQname, int asMates, char qnamePrefixEnd, 
+                        int obeyQname, int asMates, char qnamePrefixEnd,
                         char qnameSuffixStart, void *extra);
 void _Free_BAM_DATA(BAM_DATA bd);
 BAM_FILE _bam_file_BAM_DATA(BAM_DATA bd);

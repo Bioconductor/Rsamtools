@@ -195,7 +195,7 @@ SEXP _read_bam_header(SEXP ext, SEXP what)
 
 /* scan_bam framework */
 
-int check_qname(char *last_qname, int bufsize, bam1_t *bam, int max) 
+int check_qname(char *last_qname, int bufsize, bam1_t *bam, int max)
 {
     if (0 != strcmp(last_qname, bam1_qname(bam))) {
         /* stop reading */
@@ -227,12 +227,12 @@ static int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
     while (sam_read1(bfile->file, bfile->header, bam) >= 0) {
         if (NA_INTEGER != yieldSize) {
             if (bd->obeyQname)
-                status = check_qname(last_qname, bufsize, bam, 
+                status = check_qname(last_qname, bufsize, bam,
                                      yield >= yieldSize);
             if (status < 0)
                 break;
         }
- 
+
         int result = parse1(bam, bd);
         if (result < 0) {   /* parse error: e.g., cigar buffer overflow */
             bam_destroy1(bam);
@@ -242,9 +242,9 @@ static int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
             continue;
 
         yield += status;
-        if (NA_INTEGER != yieldSize && yield == yieldSize) { 
+        if (NA_INTEGER != yieldSize && yield == yieldSize) {
             bfile->pos0 = _hts_utilities_tell(bfile->file);
-            if (!bd->obeyQname) 
+            if (!bd->obeyQname)
                 break;
         }
     }
@@ -274,7 +274,7 @@ static int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
             continue;
 
         yield += 1;
-        if (NA_INTEGER != yieldSize && yield == yieldSize) { 
+        if (NA_INTEGER != yieldSize && yield == yieldSize) {
             bfile->pos0 = _hts_utilities_tell(bfile->file);
             break;
         }
@@ -360,7 +360,7 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             break;
     }
     bfile->irange0 = bd->irange;
-        
+
     return bd->iparsed - initial;
 }
 
@@ -372,7 +372,7 @@ int _do_scan_bam(BAM_DATA bd, SEXP regions, bam_fetch_f parse1,
     if (R_NilValue == regions)
         /* everything */
         status = _scan_bam_all(bd, parse1, parse1_mate, finish1);
-    else {                      
+    else {
         /* fetch */
         BAM_FILE bfile = _bam_file_BAM_DATA(bd);
         if (NULL == bfile->index)
@@ -391,7 +391,7 @@ int _do_scan_bam(BAM_DATA bd, SEXP regions, bam_fetch_f parse1,
 static int _filter_and_parse1(const bam1_t *bam, void *data)
 {
     /* requires 'data' to be BAM_DATA */
-    BAM_DATA bd = (BAM_DATA) data; 
+    BAM_DATA bd = (BAM_DATA) data;
     int result = _filter_and_parse1_BAM_DATA(bam, bd);
     if (result < 0) {
         /* parse error: e.g., cigar buf overflow */
@@ -445,7 +445,7 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP regions,
     bam_header_t *header = bfile->header;
     SEXP rname = PROTECT(NEW_INTEGER(0));
     _as_factor(rname, (const char **) header->target_name, header->n_targets);
-    
+
     for (int irange = 0; irange < nrange; ++irange) {
         SEXP tag = VECTOR_ELT(template_list, TAG_IDX);
         SEXP tmpl;
@@ -492,8 +492,8 @@ SEXP _scan_bam(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                                  tagFilter, mapqFilter,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
-                                 LOGICAL(obeyQname)[0], 
-                                 LOGICAL(asMates)[0], 
+                                 LOGICAL(obeyQname)[0],
+                                 LOGICAL(asMates)[0],
                                  qname_prefix, qname_suffix, (void *) sbd);
 
     int status = _do_scan_bam(bd, regions, _filter_and_parse1,
@@ -594,7 +594,7 @@ static int _prefilter1_mate(const bam_mates_t *mates, void *data)
 SEXP
 _prefilter_bam(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP tagFilter, SEXP mapqFilter, SEXP yieldSize, SEXP obeyQname,
-               SEXP asMates, 
+               SEXP asMates,
                SEXP qnamePrefixEnd, SEXP qnameSuffixStart)
 {
     SEXP ext_out = PROTECT(bambuffer(INTEGER(yieldSize)[0],
@@ -609,8 +609,8 @@ _prefilter_bam(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
         qname_suffix = CHAR(suffix_elt)[0];
     BAM_DATA bd = _init_BAM_DATA(ext, regions, keepFlags, isSimpleCigar,
                                  tagFilter, mapqFilter, 0, INTEGER(yieldSize)[0],
-                                 LOGICAL(obeyQname)[0], 
-                                 LOGICAL(asMates)[0], 
+                                 LOGICAL(obeyQname)[0],
+                                 LOGICAL(asMates)[0],
                                  qname_prefix, qname_suffix,
                                  BAMBUFFER(ext_out));
     int status =

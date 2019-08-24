@@ -28,7 +28,7 @@ class Template {
         } else {
             tmp.push_back(mate);
             tmp.push_back(bam);
-        } 
+        }
         complete.push(tmp);
     }
 
@@ -60,7 +60,7 @@ public:
         return test && trimmed_qname.compare(m_trimmed_qname) == 0;
     }
     // is_valid checks the following bit flags:
-    // 1. Bit 0x1 (multiple segments) is 1 
+    // 1. Bit 0x1 (multiple segments) is 1
     // 2. Bit 0x4 (segment unmapped) is 0
     // 3. Bit 0x8 (next segment unmapped) is 0
     // 4. 'mpos' != -1 (i.e. PNEXT = 0)
@@ -69,7 +69,7 @@ public:
         const bool seg_unmapped = bam->core.flag & BAM_FUNMAP;
         const bool mate_unmapped = bam->core.flag & BAM_FMUNMAP;
 
-        return  multi_seg && !seg_unmapped && 
+        return  multi_seg && !seg_unmapped &&
                 !mate_unmapped && (bam->core.mpos != -1);
     }
 
@@ -79,7 +79,7 @@ public:
     // 2. Bit 0x100: Both segments are secondary OR both not secondary
     // 3. Bit 0x10 and 0x20: Strand flag 0x20 of one mate must match strand
     //                       flag 0x10 of the other mate and vice versa
-    // 4. Bit 0x2: Both proper OR both not proper 
+    // 4. Bit 0x2: Both proper OR both not proper
     // 5. mpos match:
     //      bit 0x10 of rec1 == bit 0x20 of rec2 AND
     //      bit 0x10 or rec2 == bit 0x20 of rec1
@@ -108,7 +108,7 @@ public:
             ((bam_read1 ^ bam_read2) && (mate_read1 ^ mate_read2)) &&
             (bam_read1 != mate_read1) &&
             (bam_secondary == mate_secondary) &&
-            (((bam_rev != mate_mrev) && (bam_mrev != mate_rev)) || 
+            (((bam_rev != mate_mrev) && (bam_mrev != mate_rev)) ||
             ((bam_rev == mate_mrev) && (bam_mrev == mate_rev))) &&
             (bam_proper == mate_proper) &&
             (pos == mate_mpos) && (mpos == mate_pos) &&
@@ -120,7 +120,7 @@ public:
     bool empty() const {
         return inprogress.empty() && invalid.empty() && ambiguous.empty();
     }
- 
+
     void touched_true() {
         touched = true;
     }
@@ -222,7 +222,7 @@ public:
         }
     }
 
-    // move 'ambiguous' to ambiguous_queue 
+    // move 'ambiguous' to ambiguous_queue
     // move 'inprogress' and 'invalid' to 'invalid_queue'
     void cleanup(queue<Segments> &ambiguous_queue,
                  queue<Segments> &invalid_queue) {

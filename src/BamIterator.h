@@ -69,7 +69,7 @@ protected:
     virtual void finalize_inprogress(htsFile *bfile) {
         Templates::iterator it;
         // transfer Template::ambiguous to BamIterator::ambiguous
-        // transfer Template::inprogress and Template::invalid to 
+        // transfer Template::inprogress and Template::invalid to
         // BamIterator::unmated
         for (it = templates.begin(); it != templates.end(); ++it)
             it->second.cleanup(ambiguous, unmated);

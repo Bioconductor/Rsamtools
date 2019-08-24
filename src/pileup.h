@@ -16,10 +16,10 @@ extern "C" {
                   SEXP isSimpleCigar, SEXP tagFilter, SEXP mapqFilter,
                   SEXP reverseComplement,
                   SEXP yieldSize, SEXP obeyQname, SEXP asMates,
-                  SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
+                  SEXP qnamePrefixEnd, SEXP qnameSuffixStart,
                   SEXP schema, SEXP pileupParams);
 #ifdef __cplusplus
 }
 #endif
 
-#endif        
+#endif

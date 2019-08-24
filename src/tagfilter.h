@@ -11,7 +11,7 @@ typedef struct {
     int len;
     TagFilterType type;
     void* ptr;
-    
+
 } _TAGFILTER_ELT, *TAGFILTER_ELT;
 
 typedef struct {
