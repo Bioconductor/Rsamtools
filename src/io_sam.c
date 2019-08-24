@@ -126,8 +126,7 @@ SEXP scan_bam_template(SEXP rname, SEXP tag)
 
 SEXP _read_bam_header(SEXP ext, SEXP what)
 {
-    samfile_t *sfile = BAMFILE(ext)->file;
-    bam_header_t *header = sfile->header;
+    bam_header_t *header = BAMFILE(ext)->header;
 
     SEXP ans = PROTECT(NEW_LIST(2));
     SEXP nms = NEW_CHARACTER(2);
@@ -224,7 +223,7 @@ static int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
     char *last_qname = Calloc(bufsize, char);
     bam1_t *bam = bam_init1();
 
-    while (samread(bfile->file, bam) >= 0) {
+    while (sam_read1(bfile->file, bfile->header, bam) >= 0) {
         if (NA_INTEGER != yieldSize) {
             if (bd->obeyQname)
                 status = check_qname(last_qname, bufsize, bam, 
@@ -324,8 +323,8 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
         const char *spc = translateChar(STRING_ELT(space, irange));
         const int starti =
             start[irange] > 0 ? start[irange] - 1 : start[irange];
-        for (tid = 0; tid < sfile->header->n_targets; ++tid) {
-            if (strcmp(spc, sfile->header->target_name[tid]) == 0)
+        for (tid = 0; tid < bfile->header->n_targets; ++tid) {
+            if (strcmp(spc, bfile->header->target_name[tid]) == 0)
                 break;
         }
         if (tid == sfile->header->n_targets) {
@@ -431,7 +430,7 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP regions,
        range2: tmpl1, tmpl2...
        ...
     */
-    bam_header_t *header = bfile->file->header;
+    bam_header_t *header = bfile->header;
     SEXP rname = PROTECT(NEW_INTEGER(0));
     _as_factor(rname, (const char **) header->target_name, header->n_targets);
     

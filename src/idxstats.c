@@ -9,7 +9,6 @@ extern SEXP BAMFILE_TAG;
 SEXP idxstats_bamfile(SEXP ext)
 {
     BAM_FILE bfile;
-    bamFile fp;
     bam_header_t *header;
     bam_index_t *idx;
     int32_t n;
@@ -17,9 +16,8 @@ SEXP idxstats_bamfile(SEXP ext)
 
     _checkext(ext, BAMFILE_TAG, "idxstats");
     bfile = BAMFILE(ext);
-    fp = bfile->file->x.bam;
-    header = bam_header_read(fp);
     _hts_utilities_seek(bfile->file, 0, SEEK_SET);
+    header = bfile->header;
     idx = bfile->index;
     n = hts_idx_get_n(idx);
 

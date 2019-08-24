@@ -8,12 +8,12 @@
 
 class BamRangeIterator : public BamIterator {
 
-    bam_iter_t iter;
+    hts_itr_t *iter;
 
-    void iterate_inprogress(bamFile bfile) {
+    void iterate_inprogress(htsFile *bfile) {
 	if ((bam1_t *) NULL == bam) {	// first record 
 	    bam = bam_init1();
-	    if (bam_iter_read(bfile, iter, bam) < 0) {
+	    if (sam_itr_next(bfile, iter, bam) < 0) {
 		iter_done = true;
 		return;
 	    }

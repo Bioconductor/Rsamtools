@@ -143,7 +143,7 @@ extern "C" {
         if (!Rf_isVector(pileupParams))
             Rf_error("'pileupParams' must be list()");
         SEXP seqnamesLevels =
-            PROTECT(_bamheaderAsSeqnames(BAMFILE(ext)->file->header));
+            PROTECT(_bamheaderAsSeqnames(BAMFILE(ext)->header));
         // 'ranged' means user asked for specific genomic range(s) by
         // providing 'which' argument to 'ScanBamParam'
         bool isRanged = regions != R_NilValue;

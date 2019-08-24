@@ -439,7 +439,7 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
 
 void _finish1range_BAM_DATA(BAM_DATA  bd)
 {
-    bam_header_t *header = _bam_file_BAM_DATA(bd)->file->header;
+    bam_header_t *header = _bam_file_BAM_DATA(bd)->header;
     SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
     _finish1range_SCAN_BAM_DATA(sbd, header, bd->irange);
 }
