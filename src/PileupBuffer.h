@@ -7,7 +7,6 @@
 #include <utility>
 #include <algorithm>
 #include <cassert>
-#include <bam_plbuf.h>
 #include <samtools-1.7-compat.h>
 #include "ResultManager.h"
 #include "utilities.h"

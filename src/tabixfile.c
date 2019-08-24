@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <htslib/hfile.h>
+#include <htslib/hts.h>
 #include "tabixfile.h"
 #include "utilities.h"
 #include "hts_utilities.h"
@@ -11,17 +11,16 @@ static const int TBX_INIT_SIZE = 32767;
 /* Convenience wrappers around bgzf_getline() and tbx_itr_next(). */
 static const char *_tbx_read_line(htsFile *file, int *len)
 {
-    BGZF *fp;
     static kstring_t ksbuf = {0, 0, NULL};
 
     if (!file->is_bgzf)
         Rf_error("[internal] hmm.. this doesn't look like a tabix file, sorry");
-    fp = file->fp.bgzf;
-    if (bgzf_getline(fp, '\n', &ksbuf) < 0)
+    if (hts_getline(file, '\n', &ksbuf) < 0)
         return NULL;
     *len = ksbuf.l;
     return ksbuf.s;
 }
+
 static const char *_tbx_read_next_rec(htsFile *file, tbx_t *index,
                                       hts_itr_t *iter, int *len)
 {

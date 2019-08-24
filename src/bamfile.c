@@ -11,25 +11,27 @@ void _check_isbamfile(SEXP ext, const char *lbl)
     _checkext(ext, BAMFILE_TAG, lbl);
 }
 
-samfile_t *_bam_tryopen(const char *filename, const char *filemode, void *aux)
+htsFile *_bam_tryopen(const char *filename, const char *filemode, void *aux)
 {
-    samfile_t *sfile = samopen(filename, filemode, aux);
+    htsFile *sfile = sam_open_format(filename, filemode, aux);
     if (sfile == 0)
-        Rf_error("failed to open SAM/BAM file\n  file: '%s'", filename);
-    if (sfile->header == 0) {
-        samclose(sfile);
-        Rf_error("SAM/BAM header missing or empty\n  file: '%s'", filename);
-    }
+        Rf_error("failed to open SAM / BAM / CRAM file\n  file: '%s'",
+                 filename);
+
     return sfile;
 }
 
-static bam_index_t *_bam_tryindexload(const char *file, const char *indexname)
+static hts_idx_t *_bam_tryindexload(
+    htsFile *bfile, const char *filename, const char *indexname
+    )
 {
-    bam_index_t *index = bam_index_load(indexname);
-    if (index == 0)
-        index = hts_idx_load2(file, indexname);
-    if (index == 0)
-        Rf_error("failed to load BAM index\n  file: %s", indexname);
+    hts_idx_t *index = NULL;
+    htsFormat fmt = _hts_utilities_format(filename);
+    if (fmt.format == bam && indexname != NULL)
+        index = bam_index_load(indexname); /* check for '.bai' on indexname */
+    if (index == NULL) {
+        index = sam_index_load2(bfile, filename, indexname);
+    }
     return index;
 }
 
@@ -37,9 +39,9 @@ static void _bamfile_close(SEXP ext)
 {
     BAM_FILE bfile = BAMFILE(ext);
     if (NULL != bfile->file)
-        samclose(bfile->file);
+        sam_close(bfile->file);
     if (NULL != bfile->index)
-        bam_index_destroy(bfile->index);
+        hts_idx_destroy(bfile->index);
     if (NULL != bfile->header)
         bam_hdr_destroy(bfile->header);
     if (NULL != bfile->iter)
@@ -74,7 +76,7 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
     BAM_FILE bfile = (BAM_FILE) Calloc(1, _BAM_FILE);
 
     bfile->file = NULL;
-    const char *cfile;
+    const char *cfile, *mode;
     if (0 != Rf_length(filename)) {
         cfile = translateChar(STRING_ELT(filename, 0));
         mode = CHAR(STRING_ELT(filemode, 0));
@@ -95,19 +97,17 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
             Free(bfile);
             Rf_error("'filename' is not a BAM file\n  file: %s", cfile);
         }
-        bfile->pos0 = bam_tell(bfile->file->x.bam);
         bfile->irange0 = 0;
     }
 
     bfile->index = NULL;
-    if (0 != Rf_length(indexname)) {
-        const char *cindex = translateChar(STRING_ELT(indexname, 0));
-        bfile->index = _bam_tryindexload(cfile, cindex);
-        if (NULL == bfile->index) {
-            samclose(bfile->file);
-            Free(bfile);
-            Rf_error("failed to open BAM index\n  index: %s\n", cindex);
-        }
+    const char *cindex = Rf_length(indexname) == 0 ?
+        NULL : translateChar(STRING_ELT(indexname, 0));
+    bfile->index = _bam_tryindexload(bfile->file, cfile, cindex);
+    if (cindex != NULL && bfile->index == NULL) {
+        sam_close(bfile->file);
+        Free(bfile);
+        Rf_error("failed to open BAM index\n  index: %s\n", cindex);
     }
 
     bfile->iter = NULL;
@@ -287,4 +287,3 @@ SEXP filter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
         Rf_error("'filterBam' failed");
     return result;
 }
-

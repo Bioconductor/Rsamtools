@@ -259,7 +259,7 @@ static int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
     int yield = 0;
     bam_mates_t *bam_mates = bam_mates_new();
 
-    while (samread_mate(bfile->file->x.bam, bfile->index,
+    while (samread_mate(bfile->file, bfile->index,
                         &bfile->iter, bam_mates, bd) > 0) {
 
         if (NA_INTEGER != yieldSize && yield  >= yieldSize)
@@ -308,6 +308,18 @@ static int _scan_bam_all(BAM_DATA bd, bam_fetch_f parse1,
     return bd->iparsed;
 }
 
+int _samfetch(htsFile *fp, const bam_index_t *idx, int tid, int beg, int end,
+              void *data, bam_fetch_f func)
+{
+    bam1_t *b = bam_init1();
+    hts_itr_t *iter = sam_itr_queryi(idx, tid, beg, end);
+    int ret;
+    while ((ret = sam_itr_next(fp, iter, b)) >= 0) func(b, data);
+    hts_itr_destroy(iter);
+    bam_destroy1(b);
+    return (ret == -1)? 0 : ret;
+}
+
 /* read ranges */
 static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
                            bam_fetch_f parse1, bam_fetch_mate_f parse1_mate,
@@ -315,8 +327,8 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
 {
     int tid;
     BAM_FILE bfile = _bam_file_BAM_DATA(bd);
-    samfile_t *sfile = bfile->file;
-    bam_index_t *bindex = bfile->index;
+    htsFile *sfile = bfile->file;
+    hts_idx_t *bindex = bfile->index;
     const int initial = bd->iparsed;
 
     for (int irange = bfile->irange0; irange < LENGTH(space); ++irange) {
@@ -327,7 +339,7 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             if (strcmp(spc, bfile->header->target_name[tid]) == 0)
                 break;
         }
-        if (tid == sfile->header->n_targets) {
+        if (tid == bfile->header->n_targets) {
             Rf_warning("space '%s' not in BAM header", spc);
             bd->irange += 1;
             return -1;
@@ -336,8 +348,7 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             bam_fetch_mate(sfile->x.bam, bindex, tid, starti, end[irange],
                            bd, parse1_mate);
         } else {
-            bam_fetch(sfile->x.bam, bindex, tid, starti, end[irange],
-                      bd, parse1);
+            _samfetch(sfile, bindex, tid, starti, end[irange], bd, parse1);
         }
 
         if (NULL != finish1)
@@ -456,7 +467,7 @@ SEXP _scan_bam_result_init(SEXP template_list, SEXP names, SEXP regions,
     return result;
 }
 
-SEXP _scan_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP _scan_bam(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                SEXP tagFilter, SEXP mapqFilter,
                SEXP reverseComplement, SEXP yieldSize,
                SEXP template_list, SEXP obeyQname, SEXP asMates,
@@ -464,7 +475,7 @@ SEXP _scan_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
 {
     SEXP names = PROTECT(GET_ATTR(template_list, R_NamesSymbol));
     SEXP result = PROTECT(_scan_bam_result_init(template_list, names, regions,
-                                                BAMFILE(bfile)));
+                                                BAMFILE(ext)));
     SCAN_BAM_DATA sbd = _init_SCAN_BAM_DATA(result);
 
     char qname_prefix = '\0';
@@ -476,7 +487,7 @@ SEXP _scan_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
     if (suffix_elt != NA_STRING)
         qname_suffix = CHAR(suffix_elt)[0];
 
-    BAM_DATA bd = _init_BAM_DATA(bfile, regions, keepFlags, isSimpleCigar,
+    BAM_DATA bd = _init_BAM_DATA(ext, regions, keepFlags, isSimpleCigar,
                                  tagFilter, mapqFilter,
                                  LOGICAL(reverseComplement)[0],
                                  INTEGER(yieldSize)[0],
@@ -508,12 +519,12 @@ static int _count1(const bam1_t * bam, void *data)
     return _count1_BAM_DATA(bam, (BAM_DATA) data);
 }
 
-SEXP _count_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
+SEXP _count_bam(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
                 SEXP tagFilter, SEXP mapqFilter)
 {
     SEXP result = PROTECT(NEW_LIST(2));
     BAM_DATA bd =
-        _init_BAM_DATA(bfile, regions, keepFlags, isSimpleCigar, tagFilter,
+        _init_BAM_DATA(ext, regions, keepFlags, isSimpleCigar, tagFilter,
                        mapqFilter, 0, NA_INTEGER, 0, 0, '\0', '\0', result);
 
     SET_VECTOR_ELT(result, 0, NEW_INTEGER(bd->nrange));
