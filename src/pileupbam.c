@@ -317,7 +317,7 @@ static void _mplp_setup_bam(const PILEUP_PARAM_T * param,
 
     for (int j = 0; j < plp_iter->n_files; ++j) {
         /* set iterator, get pileup */
-        int32_t tid = bam_get_tid(mfile[j]->bfile->file->header, region->chr);
+        int32_t tid = bam_get_tid(mfile[j]->bfile->header, region->chr);
         if (tid < 0)
             Rf_error("'%s' not in bam file %d", region->chr, j + 1);
         mfile[j]->iter = bam_iter_query(mfile[j]->bfile->index, tid,

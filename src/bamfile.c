@@ -40,12 +40,15 @@ static void _bamfile_close(SEXP ext)
         samclose(bfile->file);
     if (NULL != bfile->index)
         bam_index_destroy(bfile->index);
+    if (NULL != bfile->header)
+        bam_hdr_destroy(bfile->header);
     if (NULL != bfile->iter)
         bam_mate_iter_destroy(bfile->iter);
     if (NULL != bfile->pbuffer)
         pileup_pbuffer_destroy(bfile->pbuffer);
     bfile->file = NULL;
     bfile->index = NULL;
+    bfile->header = NULL;
     bfile->iter = NULL;
     bfile->pbuffer = NULL;
 }
@@ -74,9 +77,21 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
     const char *cfile;
     if (0 != Rf_length(filename)) {
         cfile = translateChar(STRING_ELT(filename, 0));
-        bfile->file = _bam_tryopen(cfile, CHAR(STRING_ELT(filemode, 0)), 0);
-        if (hts_get_format(bfile->file->file)->format != bam) {
-            samclose(bfile->file);
+        mode = CHAR(STRING_ELT(filemode, 0));
+        bfile->file = _bam_tryopen(cfile, mode, NULL);
+        bfile->header = sam_hdr_read(bfile->file);
+        if (bfile->header == 0 || bfile->header->n_targets == 0) {
+            sam_close(bfile->file);
+            bam_hdr_destroy(bfile->header);
+            Free(bfile);
+            Rf_error("SAM/BAM header missing or empty\n  file: '%s'", filename);
+        }
+
+        bfile->pos0 = _hts_utilities_tell(bfile->file);
+        const enum htsExactFormat format = hts_get_format(bfile->file)->format;
+        if (format != sam && format != bam && format != cram) {
+            sam_close(bfile->file);
+            bam_hdr_destroy(bfile->header);
             Free(bfile);
             Rf_error("'filename' is not a BAM file\n  file: %s", cfile);
         }
@@ -102,18 +117,35 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
 
 static BAM_FILE _bamfile_open_w(SEXP file0, SEXP file1)
 {
-    samfile_t *infile, *outfile;
+    htsFile *fin, *fout;
+    bam_hdr_t *header;
     BAM_FILE bfile;
 
     if (0 == Rf_length(file1))
         Rf_error("'file1' must be a character(1) path to a valid bam file");
-    infile = _bam_tryopen(translateChar(STRING_ELT(file1, 0)), "rb", 0);
-    outfile = _bam_tryopen(translateChar(STRING_ELT(file0, 0)), "wb",
-                           infile->header);
-    samclose(infile);
+    const char
+        *cfile0 = translateChar(STRING_ELT(file0, 0)),
+        *cfile1 = translateChar(STRING_ELT(file1, 0));
+    fin = _bam_tryopen(cfile1, "r", NULL);
+    if (fin == NULL)
+        Rf_error("failed to open file '%s'", cfile1);
+    header = sam_hdr_read(fin);
+    sam_close(fin);
+    fout = _bam_tryopen(cfile0, "wb", NULL);
+    if (fout == NULL) {
+        bam_hdr_destroy(header);
+        Rf_error("failed to open file '%s'", cfile0);
+    }
+
+    if (sam_hdr_write(fout, header) < 0) {
+        bam_hdr_destroy(header);
+        sam_close(fout);
+        Rf_error("failed to write header to output file");
+    }
 
     bfile = (BAM_FILE) Calloc(1, _BAM_FILE);
-    bfile->file = outfile;
+    bfile->file = fout;
+    bfile->header = header;
     bfile->pos0 = _hts_utilities_tell(bfile->file);
     bfile->irange0 = 0;
 

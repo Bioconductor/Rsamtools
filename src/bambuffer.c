@@ -165,7 +165,7 @@ SEXP bambuffer_write(SEXP bufext, SEXP bamext, SEXP filter)
     n = buf->i;
     for (int i = 0; i < n; ++i)
         if (LOGICAL(filter)[i % filt_n]) {
-            status = samwrite(bfile->file, buf->buffer[i]);
+            status = sam_write1(bfile->file, bfile->header, buf->buffer[i]);
             if (status <= 0)
                 Rf_error("'bamBuffer' write failed, record %d", i);
         }
