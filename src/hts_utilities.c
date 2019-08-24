@@ -34,7 +34,7 @@ int _hts_utilities_seek(htsFile *fd, off_t offset, int whence)
 
     if (status < 0)
         Rf_error("[internal] _hts_utilities_seek failed");
-    
+
     return status;
 }
 

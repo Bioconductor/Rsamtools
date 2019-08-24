@@ -100,7 +100,7 @@ SEXP bambuffer_parse(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
     if (!(IS_LOGICAL(reverseComplement) && (1L == LENGTH(reverseComplement))))
         Rf_error("'reverseComplement' must be logical(1)");
     _bam_check_template_list(templateList);
-    
+
     SEXP names = GET_ATTR(templateList, R_NamesSymbol);
     SEXP result =
         PROTECT(_scan_bam_result_init(templateList, names, R_NilValue,

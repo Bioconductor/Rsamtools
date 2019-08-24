@@ -241,9 +241,9 @@ static int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
             continue;
 
         yield += status;
-        if (NA_INTEGER != yieldSize && yield == yieldSize) { 
+        if (NA_INTEGER != yieldSize && yield == yieldSize) {
             bfile->pos0 = _hts_utilities_tell(bfile->file);
-            if (!bd->obeyQname) 
+            if (!bd->obeyQname)
                 break;
         }
     }
@@ -273,7 +273,7 @@ static int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
             continue;
 
         yield += 1;
-        if (NA_INTEGER != yieldSize && yield == yieldSize) { 
+        if (NA_INTEGER != yieldSize && yield == yieldSize) {
             bfile->pos0 = _hts_utilities_tell(bfile->file);
             break;
         }
@@ -609,8 +609,8 @@ _prefilter_bam(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
         qname_suffix = CHAR(suffix_elt)[0];
     BAM_DATA bd = _init_BAM_DATA(ext, regions, keepFlags, isSimpleCigar,
                                  tagFilter, mapqFilter, 0, INTEGER(yieldSize)[0],
-                                 LOGICAL(obeyQname)[0], 
-                                 LOGICAL(asMates)[0], 
+                                 LOGICAL(obeyQname)[0],
+                                 LOGICAL(asMates)[0],
                                  qname_prefix, qname_suffix,
                                  BAMBUFFER(ext_out));
     int status =

@@ -297,7 +297,7 @@ static void _bamtags(const bam1_t * bam, BAM_DATA bd, SEXP tags)
 
 int _filter1_BAM_DATA(const bam1_t * bam, BAM_DATA bd)
 {
-    
+
     /* tagfilter */
     if (bd->tagfilter != NULL && !_tagfilter(bam, bd->tagfilter, bd->irec))
         return 0;
@@ -445,4 +445,3 @@ void _finish1range_BAM_DATA(BAM_DATA  bd)
     SCAN_BAM_DATA sbd = (SCAN_BAM_DATA) bd->extra;
     _finish1range_SCAN_BAM_DATA(sbd, header, bd->irange);
 }
-

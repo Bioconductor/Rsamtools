@@ -14,7 +14,7 @@ class BamFileIterator : public BamIterator {
     void iterate_inprogress(htsFile *bfile) {
         if (iter_done | file_done)
             return;
-        if ((bam1_t *) NULL == bam) {    // first record 
+        if ((bam1_t *) NULL == bam) {    // first record
             bam = bam_init1();
             if (sam_read1(bfile, header, bam) < 0) {
                 iter_done = true;
@@ -34,8 +34,8 @@ class BamFileIterator : public BamIterator {
                 if ((bam->core.tid != tid) || (bam->core.pos != pos)) {
                     mate_touched_templates();
                     done = !complete.empty();
-                } 
-            } 
+                }
+            }
         } while (!done);
     }
 
