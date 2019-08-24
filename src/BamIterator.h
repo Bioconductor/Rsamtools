@@ -64,9 +64,9 @@ protected:
             touched_templates.insert(trimmed_qname);
     }
 
-    virtual void iterate_inprogress(bamFile bfile) = 0;
+    virtual void iterate_inprogress(htsFile *bfile) = 0;
 
-    virtual void finalize_inprogress(bamFile bfile) {
+    virtual void finalize_inprogress(htsFile *bfile) {
         Templates::iterator it;
         // transfer Template::ambiguous to BamIterator::ambiguous
         // transfer Template::inprogress and Template::invalid to 
@@ -81,12 +81,12 @@ public:
     bool iter_done;
 
     // constructor / destructor
-    BamIterator(bamFile bfile, const bam_index_t *bindex) :
+    BamIterator(htsFile *bfile, const bam_index_t *bindex) :
         bam_data((BAM_DATA) NULL), bindex(bindex),
         bam((bam1_t *) NULL), iter_done(false)
     {
-        header = bam_header_read(bfile);
         _hts_utilities_seek(bfile, 0, SEEK_SET);
+        header = sam_hdr_read(bfile);
     }
 
     virtual ~BamIterator() {
@@ -100,7 +100,7 @@ public:
     }
 
     // yield
-    void yield(bamFile bfile, bam_mates_t *result) {
+    void yield(htsFile *bfile, bam_mates_t *result) {
         if (complete.empty() && !iter_done)
             iterate_inprogress(bfile);
         if (complete.empty() && !templates.empty())

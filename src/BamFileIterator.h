@@ -11,12 +11,12 @@ class BamFileIterator : public BamIterator {
 
     bool file_done;
 
-    void iterate_inprogress(bamFile bfile) {
+    void iterate_inprogress(htsFile *bfile) {
         if (iter_done | file_done)
             return;
         if ((bam1_t *) NULL == bam) {    // first record 
             bam = bam_init1();
-            if (bam_read1(bfile, bam) < 0) {
+            if (sam_read1(bfile, header, bam) < 0) {
                 iter_done = true;
                 return;
             }
@@ -27,7 +27,7 @@ class BamFileIterator : public BamIterator {
             process(bam);
             int tid = bam->core.tid;
             int pos = bam->core.pos;
-            if (bam_read1(bfile, bam) < 0) {
+            if (sam_read1(bfile, header, bam) < 0) {
                 mate_touched_templates();
                 iter_done = file_done = done = true;
             } else {
@@ -42,7 +42,7 @@ class BamFileIterator : public BamIterator {
 public:
 
     // constructor / destructor
-    BamFileIterator(bamFile bfile, const bam_index_t *bindex) :
+    BamFileIterator(htsFile *bfile, const bam_index_t *bindex) :
         BamIterator(bfile, bindex), file_done(false) {}
 
 };

@@ -53,14 +53,14 @@ void bam_mates_destroy(bam_mates_t *mates)
     Free(mates);
 }
 
-int bam_mate_read(bamFile fb, bam_mate_iter_t iter, bam_mates_t *mates)
+int bam_mate_read(htsFile *fb, bam_mate_iter_t iter, bam_mates_t *mates)
 {
     iter->b_iter->yield(fb, mates);
     return mates->n;
 }
 
 // BamRangeIterator methods
-bam_mate_iter_t bam_mate_range_iter_new(bamFile bfile,
+bam_mate_iter_t bam_mate_range_iter_new(htsFile *bfile,
                                         const bam_index_t *bindex, int tid,
                                         int beg, int end)
 {
@@ -69,7 +69,7 @@ bam_mate_iter_t bam_mate_range_iter_new(bamFile bfile,
     return iter;
 }
 
-int bam_fetch_mate(bamFile bf, const bam_index_t *idx, int tid, int beg, 
+int bam_fetch_mate(htsFile *bf, const bam_index_t *idx, int tid, int beg,
                    int end, void *data, bam_fetch_mate_f func)
 {
     BAM_DATA bd = (BAM_DATA) data;
@@ -85,7 +85,7 @@ int bam_fetch_mate(bamFile bf, const bam_index_t *idx, int tid, int beg,
 }
 
 // BamFileIterator methods
-bam_mate_iter_t bam_mate_file_iter_new(bamFile bfile,
+bam_mate_iter_t bam_mate_file_iter_new(htsFile *bfile,
                                        const bam_index_t *bindex)
 {
     bam_mate_iter_t iter = Calloc(1, struct _bam_mate_iter_t);
@@ -93,7 +93,7 @@ bam_mate_iter_t bam_mate_file_iter_new(bamFile bfile,
     return iter;
 }
 
-int samread_mate(bamFile bfile, const bam_index_t *bindex,
+int samread_mate(htsFile *bfile, const bam_index_t *bindex,
                  bam_mate_iter_t *iter_p, bam_mates_t *mates,
                  void *data)
 {

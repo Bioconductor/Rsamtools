@@ -21,7 +21,7 @@ class BamRangeIterator : public BamIterator {
 
 	do {
 	    process(bam);
-	    if (bam_iter_read(bfile, iter, bam) < 0)
+	    if (sam_itr_next(bfile, iter, bam) < 0)
 		iter_done = true;
 	} while (!iter_done);
         mate_touched_templates();
@@ -73,12 +73,12 @@ class BamRangeIterator : public BamIterator {
             int32_t
                 min_mpos = tmpl_v.front().first,
                 max_mpos = tmpl_v.back().first + 1;
-            bam_iter_t iter = bam_iter_query(bindex, mtid, min_mpos, max_mpos);
+            hts_itr_t *iter = sam_itr_queryi(bindex, mtid, min_mpos, max_mpos);
             pairs_it p_it = tmpl_v.begin();
             do {
                 /* find the next read / template pair */
                 int status = 0;
-                while ((status = bam_iter_read(bfile, iter, bam)) >= 0)
+                while ((status = sam_itr_next(bfile, iter, bam)) >= 0)
                     if (bam->core.pos >= p_it->first)
                         break;
                 if (status < 0)
@@ -126,7 +126,7 @@ class BamRangeIterator : public BamIterator {
                     }
                 }
             } while (p_it != tmpl_v.end());
-            bam_iter_destroy(iter);
+            sam_itr_destroy(iter);
         }
         bam_destroy1(bam);
 
@@ -141,15 +141,15 @@ class BamRangeIterator : public BamIterator {
 public:
 
     // constructor / destructor
-    BamRangeIterator(bamFile bfile, const bam_index_t *bindex,
+    BamRangeIterator(htsFile *bfile, const bam_index_t *bindex,
                      int32_t tid, int32_t beg, int32_t end) :
         BamIterator(bfile, bindex)
     {
-	iter = bam_iter_query(bindex, tid, beg, end);
+	iter = sam_itr_queryi(bindex, tid, beg, end);
     }
 
     ~BamRangeIterator() {
-	bam_iter_destroy(iter);
+	sam_itr_destroy(iter);
    }
 };
 

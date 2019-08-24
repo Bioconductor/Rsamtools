@@ -14,8 +14,8 @@ typedef enum {
 
 typedef struct {
     BAM_FILE bfile;
-    bamFile fp;
-    bam_iter_t iter;
+    htsFile *fp;
+    hts_itr_t *iter;
     /* read filter params */
     int min_map_quality;
     uint32_t keep_flag[2];
@@ -73,7 +73,7 @@ static PILEUP_ITER_T *_iter_init(SEXP files, PILEUP_PARAM_T * param)
     for (i = 0; i < iter->n_files; ++i) {
         iter->mfile[i] = iter->mfile[0] + i;
         iter->mfile[i]->bfile = BAMFILE(VECTOR_ELT(files, i));
-        iter->mfile[i]->fp = iter->mfile[i]->bfile->file->x.bam;
+        iter->mfile[i]->fp = iter->mfile[i]->bfile->file;
         iter->mfile[i]->min_map_quality = param->min_map_quality;
         iter->mfile[i]->keep_flag[0] = param->keep_flag[0];
         iter->mfile[i]->keep_flag[1] = param->keep_flag[1];
@@ -183,8 +183,7 @@ static int _mplp_read_bam(void *data, bam1_t * b)
     int skip, result;
 
     do {
-        result = mdata->iter ?
-            bam_iter_read(mdata->fp, mdata->iter, b) : bam_read1(mdata->fp, b);
+        result = sam_itr_next(mdata->fp, mdata->iter, b);
         if (0 >= result)
             break;
 
@@ -320,7 +319,7 @@ static void _mplp_setup_bam(const PILEUP_PARAM_T * param,
         int32_t tid = bam_get_tid(mfile[j]->bfile->header, region->chr);
         if (tid < 0)
             Rf_error("'%s' not in bam file %d", region->chr, j + 1);
-        mfile[j]->iter = bam_iter_query(mfile[j]->bfile->index, tid,
+        mfile[j]->iter = sam_itr_queryi(mfile[j]->bfile->index, tid,
                                         region->start - 1, region->end);
     }
     plp_iter->mplp_iter =
@@ -337,7 +336,7 @@ static void _mplp_teardown_bam(PILEUP_ITER_T * iter)
 
     bam_mplp_destroy(iter->mplp_iter);
     for (j = 0; j < iter->n_files; ++j)
-        bam_iter_destroy(iter->mfile[j]->iter);
+        sam_itr_destroy(iter->mfile[j]->iter);
 }
 
 static int _bam1(const PILEUP_PARAM_T * param, const REGION_T * region,

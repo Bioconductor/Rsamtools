@@ -4,6 +4,6 @@
 #include <htslib/hts.h>
 #include <htslib/vcf.h>
 
-bcf_hdr_t *COMPAT_bcf_hdr_read(htsFile *hfp);
+bcf_hdr_t *COMPAT_bcf_hdr_read(htsFile *fp);
 
 #endif                      /* _COMPAT_BCF_HDR_READ_H_ */

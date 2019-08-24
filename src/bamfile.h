@@ -12,10 +12,10 @@ extern "C" {
 #endif
 
 typedef struct {
-    samfile_t *file;
-    bam_index_t *index;
-    uint64_t pos0;
+    htsFile *file;
+    hts_idx_t *index;
     bam_hdr_t *header;
+    int64_t pos0;
     int irange0;
     bam_mate_iter_t iter;
     void *pbuffer; /* for buffered pileup */
@@ -47,7 +47,7 @@ SEXP filter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
                     SEXP ext_out);
 
 void _check_isbamfile(SEXP ext, const char *lbl);
-samfile_t *_bam_tryopen(const char *filename, const char *mode, void *aux);
+htsFile *_bam_tryopen(const char *filename, const char *mode, void *aux);
 
 #ifdef __cplusplus
 }
