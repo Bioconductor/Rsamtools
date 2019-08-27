@@ -13,13 +13,14 @@
 }
 
 .io_check_exists <-
-    function(file)
+    function(files)
 {
-    if (!length(file))
-        stop("'file' is length(0)")
-    idx <- !grepl("^(ftp|http|gs|s3)://", file) & !is.na(file)
-    if (!all(sapply(file[idx], file.exists))) {
-        msg <- paste(sprintf("'%s'", file[idx]), collapse="\n  ")
+    if (!length(files))
+        stop("'files' is length(0)")
+    idx <- !grepl("^(ftp|http|https|gs|s3)://", files) & !is.na(files)
+    test <- file.exists(files[idx])
+    if (!all(test)) {
+        msg <- paste0(sQuote(files[idx][!test]), collapse = "\n  ")
         stop("file(s) do not exist:\n  ", msg)
     }
 }
