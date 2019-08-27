@@ -51,6 +51,11 @@ setMethod(isIncomplete, "BamFile",
     index <- do_sub(index, files, ".bam$", ".bai")
     index <- do_sub(index, files, ".BAM$", ".BAI")
 
+    index <- do_append(index, files, ".crai")
+    index <- do_append(index, files, ".CRAI")
+    index <- do_sub(index, files, ".cram$", ".crai")
+    index <- do_sub(index, files, ".CRAM$", ".crai")
+
     index
 }
 
