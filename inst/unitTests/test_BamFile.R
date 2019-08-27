@@ -1,5 +1,29 @@
 fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
+test_BamFile_guessIndex <- function()
+{
+    .BamFile_guessIndex <- Rsamtools:::.BamFile_guessIndex
+
+    bam1 <- tempfile(fileext = ".bam")
+    idx1 <- paste0(bam1, ".bai")        # foo.bam.bai
+    file.create(idx1)
+
+    bam2 <- tempfile(fileext = ".bam")
+    idx2 <- sub(".bam$", ".bai", bam2)  # foo.bai
+    file.create(idx2)
+
+    bam3 <- tempfile(fileext = ".bam")  # no index
+
+    fls <- c(bam1, bam2, bam3)
+
+    target <- c(idx1, idx2, NA_character_)
+    current <- .BamFile_guessIndex(fls)
+    checkIdentical(target, current)
+
+    checkIdentical(character(), .BamFile_guessIndex(character()))
+    checkIdentical(character(), .BamFile_guessIndex())
+}
+
 test_BamFile_openclose <- function()
 {
     .normalizePath <- Rsamtools:::.normalizePath
@@ -142,7 +166,7 @@ test_BamFile_obeyQname <- function()
 
     ## yieldSize with 'while'
     bf <- open(BamFile(srt, character(0), yieldSize=500, obeyQname=TRUE))
-    it <- integer() 
+    it <- integer()
     while (length(res <- scanBam(bf)[[1]]$qname))
         it <- append(it, length(res))
     close(bf)
@@ -157,7 +181,7 @@ test_BamFile_asMates_all <- function()
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
-    matenames <- scnm$qname[scnm$mate_status == "mated"] 
+    matenames <- scnm$qname[scnm$mate_status == "mated"]
 
     ## non-mates off last
     max1 <- max(which(scnm$mate_status == "mated"))
@@ -165,7 +189,7 @@ test_BamFile_asMates_all <- function()
     checkTrue(max1 < min0)
 
     ## yieldSize - subset
-    flag <- scanBamFlag(isPaired=TRUE, 
+    flag <- scanBamFlag(isPaired=TRUE,
                         hasUnmappedMate=FALSE,
                         isUnmappedQuery=FALSE)
     param=ScanBamParam(flag=flag, what="qname")
@@ -176,7 +200,7 @@ test_BamFile_asMates_all <- function()
     checkTrue(length(scn$qname) == 5)
     checkTrue(length(scnm$qname) == 10)
 
-    ## yieldSize - all records 
+    ## yieldSize - all records
     scnm1 <- scanBam(BamFile(fl, asMates=TRUE))[[1]]
     scnm2 <- scanBam(BamFile(fl, asMates=TRUE, yieldSize=2000))[[1]]
     checkTrue(all(scnm1$qname %in% scnm2$qname))
@@ -210,7 +234,7 @@ test_BamFile_asMates_range <- function()
 
     ## qname
     checkTrue(all(scn$qname %in% scnm$qname))
-    matenames <- scnm$qname[scnm$mate_status == "mated"] 
+    matenames <- scnm$qname[scnm$mate_status == "mated"]
     checkTrue(length(scnm$qname) == length(scnm$groupid))
 
     ## non-mates off last
@@ -219,7 +243,7 @@ test_BamFile_asMates_range <- function()
     checkTrue(max1 < min0)
 
     ## range - subset
-    flag <- scanBamFlag(isPaired=TRUE, 
+    flag <- scanBamFlag(isPaired=TRUE,
                         hasUnmappedMate=FALSE,
                         isUnmappedQuery=FALSE)
     param=ScanBamParam(which=which, flag=flag, what=scanBamWhat())
@@ -234,14 +258,14 @@ test_BamFile_asMates_range <- function()
     ## range - all records
     which <- GRanges(c("seq1", "seq2"), IRanges(c(0, 0), c(3000, 3000)))
     param <- ScanBamParam(which=which, what=scanBamWhat())
-    scnm1 <- scanBam(bfm)[[1]]        ## all records no param 
-    scnm2<- scanBam(bfm, param=param) ## all records w/ param 
+    scnm1 <- scanBam(bfm)[[1]]        ## all records no param
+    scnm2<- scanBam(bfm, param=param) ## all records w/ param
     range2A <- scnm2[[1]]
     range2B <- scnm2[[2]]
 
     len_range <- length(range2A$qname) + length(range2B$qname)
     checkTrue(len_range == length(scnm1$qname))
-    mates_range <- sum(range2A$mate_status == "mated", 
+    mates_range <- sum(range2A$mate_status == "mated",
                        range2B$mate_status == "mated")
     checkTrue(mates_range == sum(scnm1$mate_status == "mated"))
     mates_partition <- length(range2A$.partition) + length(range2B$.partition)
@@ -251,9 +275,9 @@ test_BamFile_asMates_range <- function()
 test_BamFile_qname_prefix_suffix <- function()
 {
     fl <- system.file("extdata", "ex1.bam", package="Rsamtools")
-    checkException(BamFile(fl, qnamePrefixEnd="/:", asMates=TRUE), 
+    checkException(BamFile(fl, qnamePrefixEnd="/:", asMates=TRUE),
                    silent=TRUE)
-    checkException(BamFile(fl, qnameSuffixStart="/:", asMates=TRUE), 
+    checkException(BamFile(fl, qnameSuffixStart="/:", asMates=TRUE),
                    silent=TRUE)
 
     ## no-op
@@ -261,11 +285,11 @@ test_BamFile_qname_prefix_suffix <- function()
     bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="*")
     scn_noop_1 <- scanBam(bfm, param=ScanBamParam(what="qname"))
     qnames_noop_1 <- scn_noop_1[[1]]$qname[1:2]
-    checkIdentical(qnames_noop_1, target) 
+    checkIdentical(qnames_noop_1, target)
     bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart="*")
     scn_noop_2 <- scanBam(bfm, param=ScanBamParam(what="qname"))
     qnames_noop_2 <- scn_noop_2[[1]]$qname[1:2]
-    checkIdentical(qnames_noop_2, target) 
+    checkIdentical(qnames_noop_2, target)
     qnamePrefixEnd(bfm) <- "*"
     scn_noop_3 <- scanBam(bfm, param=ScanBamParam(what="qname"))
     qnames_noop_3 <- scn_noop_3[[1]]$qname[1:2]
@@ -284,7 +308,7 @@ test_BamFile_qname_prefix_suffix <- function()
     scn <- scanBam(bfm, param=ScanBamParam(what="qname"))
     qnames <- scn[[1]]$qname[1:2]
     target <- c("61:4:143:69:578", "61:4:143:69:578")
-    checkIdentical(qnames, target) 
+    checkIdentical(qnames, target)
 
     bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart=":")
     scn <- scanBam(bfm, param=ScanBamParam(what="qname"))
@@ -292,19 +316,19 @@ test_BamFile_qname_prefix_suffix <- function()
     target <- c("EAS54_61:4:143:69", "EAS54_61:4:143:69")
     checkIdentical(qnames, target)
 
-    ## ranges 
+    ## ranges
     bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="_")
     which <- GRanges("seq1", IRanges(100, 110))
     param <- ScanBamParam(which=which, what="qname")
     qnames <- scanBam(bfm, param=param)[[1]]$qname[1:4]
-    target <- c("1:2:29:1486:672", "1:2:29:1486:672", 
-                "1:2:90:986:1224", "1:2:90:986:1224") 
+    target <- c("1:2:29:1486:672", "1:2:29:1486:672",
+                "1:2:90:986:1224", "1:2:90:986:1224")
     checkIdentical(qnames, target)
 
     bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart="_")
     param <- ScanBamParam(which=which, what="qname")
     qnames <- scanBam(bfm, param=param)[[1]]$qname[1:4]
-    target <- c("EAS1", "EAS1", "EAS112", "EAS112") 
+    target <- c("EAS1", "EAS1", "EAS112", "EAS112")
     checkIdentical(qnames, target)
 
     bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart="*")

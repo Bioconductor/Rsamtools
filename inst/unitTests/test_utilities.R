@@ -1,3 +1,20 @@
+test_io_check_exists <- function()
+{
+    .io_check_exists <- Rsamtools:::.io_check_exists
+
+    fls <- c(
+        tempfile(), tempfile(),
+        "ftp://some.where/file",
+        "http://some.where/file",
+        "https://some.where/file",
+        NA
+    )
+    file.create(fls[1])
+    checkTrue(is.null(.io_check_exists(fls[1])))
+    checkException(.io_check_exists(fls[2]), silent = TRUE)
+    checkTrue(is.null(.io_check_exists(fls[3:6])))
+}
+
 test_catch_samtools <- function()
 {
     fl <- system.file("unitTests", "cases", "ex1_unsort.bam",

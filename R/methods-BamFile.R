@@ -27,19 +27,29 @@ setMethod(isIncomplete, "BamFile",
 .BamFile_guessIndex <-
     function(files)
 {
+    if (missing(files))
+        return(character())
+
+    do_append <- function(index, files, to) {
+        idx <- paste0(files, to)
+        exists <- is.na(index) & file.exists(idx)
+        index[exists] <- idx[exists]
+        index
+    }
+
+    do_sub <- function(index, files, from, to) {
+        idx <- sub(from, to, files)
+        exists <- is.na(index) & files != idx & file.exists(idx)
+        index[exists] <- idx[exists]
+        index
+    }
+
     index <- rep(NA_character_, length(files))
-    
-    idx <- sprintf("%s.bai", files)
-    exists <- file.exists(idx)
-    index[exists] <- idx[exists]
 
-    idx <- sub("bam$", "bai", files)
-    exists <- is.na(index) & files != idx & file.exists(idx)
-    index[exists] <- idx
-
-    idx <- sub("BAM$", "BAI", files)
-    exists <- is.na(index) & files != idx & file.exists(idx)
-    index[exists] <- idx
+    index <- do_append(index, files, ".bai")
+    index <- do_append(index, files, ".BAI")
+    index <- do_sub(index, files, ".bam$", ".bai")
+    index <- do_sub(index, files, ".BAM$", ".BAI")
 
     index
 }
