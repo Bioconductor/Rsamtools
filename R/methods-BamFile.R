@@ -261,7 +261,10 @@ setMethod(idxstatsBam, "BamFile",
         on.exit(close(file))
     }
     result <- .Call(.idxstats_bamfile, .extptr(file))
-    seqnames <- factor(result[[1]], levels=sortSeqlevels(unique(result[[1]])))
+    ## place '*' at end of seqlevels
+    levels0 <- sortSeqlevels(unique(result[[1]]))
+    levels <- c(setdiff(levels0, "*"), "*")
+    seqnames <- factor(result[[1]], levels = levels)
     o <- order(seqnames)
     data.frame(seqnames=seqnames[o], seqlength=result[[2]][o],
                mapped=result[[3]][o], unmapped=result[[4]][o])
