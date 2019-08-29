@@ -1,5 +1,6 @@
 #include <R_ext/Rdynload.h>
 #include "zip_compression.h"
+#include "file_format.h"
 #include "utilities.h"
 #include "bamfile.h"
 #include "as_bam.h"
@@ -18,6 +19,8 @@ static const R_CallMethodDef callMethods[] = {
     /* utilities.c */
     {".p_pairing", (DL_FUNC) & p_pairing, 12},
     {".find_mate_within_groups", (DL_FUNC) & find_mate_within_groups, 6},
+    /* file_format.c */
+    {".file_format", (DL_FUNC) & file_format, 1},
     /* bamfile.c */
     {".bamfile_init", (DL_FUNC) & bamfile_init, 0},
     {".bamfile_open", (DL_FUNC) & bamfile_open, 3},
