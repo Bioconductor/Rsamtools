@@ -47,7 +47,7 @@ test_idxstatsBam <- function()
         class = "data.frame",
         row.names = c(NA, -2L)
     )
-Bma    checkIdentical(target, idxstatsBam(fl, idx))
+    checkIdentical(target, idxstatsBam(fl, idx))
     checkIdentical(target, idxstatsBam(fl))
 
     ## idxstats changes data read from cram; does it reset correctly?
@@ -156,4 +156,30 @@ test_scanBam <- function() {
         isize = 864L, seq = 864L, qual = 864L
     )
     checkIdentical(target, lengths(res[[1]]))
+}
+
+test_pileup <- function() {
+
+    start <- 33049956L
+    end <- 33052045L
+    mid <- floor(start + (end - start) / 2)
+
+    res <- pileup(fl, idx)
+    checkIdentical(c(start, end), range(res$pos))
+    checkIdentical(68951L, sum(res$count))
+
+    param <- ScanBamParam(
+        which = GRanges(
+            "21",
+            IRanges(start, c(mid, end))
+        ),
+        what = scanBamWhat()
+    )
+
+    res1 <- pileup(fl, idx, scanBamParam=param)
+    checkIdentical(nrow(res), table(res1$which_label)[["21:33049956-33052045"]])
+    checkIdentical(
+        sum(res$count),
+        sum(res1$count[res1$which_label == "21:33049956-33052045"])
+    )
 }
