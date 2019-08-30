@@ -748,10 +748,14 @@ SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname, SEXP maxMemory)
 
     const char *fbam = translateChar(STRING_ELT(filename, 0));
     const char *fout = translateChar(STRING_ELT(destination, 0));
-    int sortMode = asInteger(isByQname);
 
+    htsFormat fmt = _hts_utilities_format(fbam);
+    if (fmt.format != bam && fmt.format != cram)
+        Rf_error("'file' to sort must be BAM or CRAM");
+
+    int sortMode = asInteger(isByQname);
     size_t maxMem = (size_t) INTEGER(maxMemory)[0] * 1024 * 1024;
-    _check_is_bam(fbam);
+
     bam_sort_core(sortMode, fbam, fout, maxMem);
 
     return destination;
@@ -765,12 +769,29 @@ SEXP index_bam(SEXP indexname)
         Rf_error("'indexname' must be character(1)");
     const char *fbam = translateChar(STRING_ELT(indexname, 0));
 
-    _check_is_bam(fbam);
-    int status = bam_index_build(fbam, 0);
+    htsFormat fmt = _hts_utilities_format(fbam);
+    if (fmt.format != bam && fmt.format != cram)
+        Rf_error("'file' to index must be BAM or CRAM");
+
+    int status = sam_index_build(fbam, 0);
 
     if (0 != status)
         Rf_error("failed to build index\n  file: %s", fbam);
-    char *fidx = (char *) R_alloc(strlen(fbam) + 5, sizeof(char));
-    sprintf(fidx, "%s.bai", fbam);
+
+    char *fidx;
+    switch(fmt.format) {
+    case bam:
+        fidx = (char *) R_alloc(strlen(fbam) + 5, sizeof(char));
+        sprintf(fidx, "%s.bai", fbam);
+        break;
+    case cram:
+        fidx = (char *) R_alloc(strlen(fbam) + 5, sizeof(char));
+        sprintf(fidx, "%s.crai", fbam);
+        break;
+    default:
+        Rf_error("'indexBam()' unknown input format");
+        break;
+    }
+
     return mkString(fidx);
 }
