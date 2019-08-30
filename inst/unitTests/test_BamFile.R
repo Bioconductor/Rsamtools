@@ -24,6 +24,18 @@ test_BamFile_guessIndex <- function()
     checkIdentical(character(), .BamFile_guessIndex())
 }
 
+test_BamFile_write_mode <- function()
+{
+    .BamFile_write_mode <- Rsamtools:::.BamFile_write_mode
+
+    checkIdentical(character(0), .BamFile_write_mode(character()))
+    checkIdentical("wb", .BamFile_write_mode("foo.bam"))
+    checkIdentical("wb", .BamFile_write_mode("foo.BAM"))
+    checkIdentical("wc", .BamFile_write_mode("foo.cram"))
+    checkIdentical("wc", .BamFile_write_mode("foo.CRAM"))
+    checkIdentical(c("wb", "wc"), .BamFile_write_mode(c("foo.bam", "foo.cram")))
+}
+
 test_BamFile_openclose <- function()
 {
     .normalizePath <- Rsamtools:::.normalizePath

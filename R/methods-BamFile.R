@@ -59,6 +59,12 @@ setMethod(isIncomplete, "BamFile",
     index
 }
 
+.BamFile_write_mode <-
+    function(x)
+{
+    sprintf("w%s", ifelse(endsWith(tolower(x), ".cram"), "c", "b"))
+}
+
 BamFile <-
     function(file, index=file, ..., yieldSize=NA_integer_, 
              obeyQname=FALSE, asMates=FALSE, 
@@ -353,7 +359,8 @@ setMethod(idxstatsBam, "BamFile",
         qnameSuffix <- ""
 
     dest <- lapply(destination, function(dest) {
-        .Call(.bamfile_open, dest, path(file), "wb")
+        mode <- .BamFile_write_mode(dest)
+        .Call(.bamfile_open, dest, path(file), mode)
     })
     on.exit(for (d in dest) .Call(.bamfile_close, d))
 
@@ -398,8 +405,9 @@ setMethod(filterBam, "BamFile",
     if (length(filter))
         .filterBam_FilterRules(file, param=param, destination, filter)
     else {
-        fout <- .Call(.bamfile_open, destination, path(file), "wb")
-        .io_bam(.filter_bamfile, file, param=param, fout, "wb")
+        mode <- .BamFile_write_mode(destination)
+        fout <- .Call(.bamfile_open, destination, path(file), mode)
+        .io_bam(.filter_bamfile, file, param=param, fout, mode)
         .Call(.bamfile_close, fout)
     }
 

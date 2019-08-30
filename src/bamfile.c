@@ -115,7 +115,7 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
     return bfile;
 }
 
-static BAM_FILE _bamfile_open_w(SEXP file0, SEXP file1)
+static BAM_FILE _bamfile_open_w(SEXP file0, SEXP file1, SEXP mode)
 {
     htsFile *fin, *fout;
     bam_hdr_t *header;
@@ -125,13 +125,14 @@ static BAM_FILE _bamfile_open_w(SEXP file0, SEXP file1)
         Rf_error("'file1' must be a character(1) path to a valid bam file");
     const char
         *cfile0 = translateChar(STRING_ELT(file0, 0)),
-        *cfile1 = translateChar(STRING_ELT(file1, 0));
+        *cfile1 = translateChar(STRING_ELT(file1, 0)),
+        *cmode = translateChar(STRING_ELT(mode, 0));
     fin = _bam_tryopen(cfile1, "r", NULL);
     if (fin == NULL)
         Rf_error("failed to open file '%s'", cfile1);
     header = sam_hdr_read(fin);
     sam_close(fin);
-    fout = _bam_tryopen(cfile0, "wb", NULL);
+    fout = _bam_tryopen(cfile0, cmode, NULL);
     if (fout == NULL) {
         bam_hdr_destroy(header);
         Rf_error("failed to open file '%s'", cfile0);
@@ -159,7 +160,7 @@ SEXP bamfile_open(SEXP file0, SEXP file1, SEXP mode)
     if (*CHAR(STRING_ELT(mode, 0)) == 'r')
         bfile = _bamfile_open_r(file0, file1, mode);
     else
-        bfile = _bamfile_open_w(file0, file1);
+        bfile = _bamfile_open_w(file0, file1, mode);
 
     SEXP ext = PROTECT(R_MakeExternalPtr(bfile, BAMFILE_TAG, file0));
     R_RegisterCFinalizerEx(ext, _bamfile_finalizer, TRUE);

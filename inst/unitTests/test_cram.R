@@ -183,3 +183,37 @@ test_pileup <- function() {
         sum(res1$count[res1$which_label == "21:33049956-33052045"])
     )
 }
+
+test_indexBam <- function() {
+    file.copy(fl, to <- tempfile(fileext = ".cram"))
+    idx <- indexBam(to)
+    identical(readBin(paste0(fl, ".crai"), raw()), readBin(idx, raw()))
+}
+
+test_filterBam <- function() {
+    destination <- filterBam(
+        BamFile(fl), tempfile(fileext = ".cram"), indexDestination = FALSE
+    )
+    fmt <- Rsamtools:::.fileFormat(destination)
+    checkTrue(startsWith(fmt, "CRAM"))
+    checkIdentical(countBam(fl)[-5], countBam(destination)[-5])
+
+    ## not paired-end, so not sorted
+    destination <- filterBam(
+        BamFile(fl), tempfile(fileext = ".cram"), indexDestination = TRUE
+    )
+    fmt <- Rsamtools:::.fileFormat(destination)
+    checkTrue(startsWith(fmt, "CRAM"))
+    checkIdentical(countBam(fl)[-5], countBam(destination)[-5])
+
+    ## filter...
+    param <- ScanBamParam(
+        flag=scanBamFlag(isUnmappedQuery=FALSE),
+        what="seq"
+    )
+    dest <- filterBam(BamFile(fl), tempfile(fileext = ".cram"), param=param)
+    fmt <- Rsamtools:::.fileFormat(destination)
+    checkTrue(startsWith(fmt, "CRAM"))
+    checkIdentical(countBam(fl)[-5], countBam(destination)[-5])
+    checkIdentical(countBam(fl, param = param)[-5], countBam(dest)[-5])
+}
