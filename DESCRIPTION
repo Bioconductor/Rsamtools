@@ -2,7 +2,7 @@ Package: Rsamtools
 Type: Package
 Title: Binary alignment (BAM), FASTA, variant call (BCF), and tabix
     file import
-Version: 2.1.4
+Version: 2.1.5
 Author: Martin Morgan, Herv\'e Pag\`es, Valerie Obenchain, Nathaniel
     Hayden
 Maintainer: Bioconductor Package Maintainer
@@ -23,6 +23,6 @@ Suggests: GenomicAlignments, ShortRead (>= 1.19.10), GenomicFeatures,
     TxDb.Dmelanogaster.UCSC.dm3.ensGene, KEGG.db,
     TxDb.Hsapiens.UCSC.hg18.knownGene, RNAseqData.HNRNPC.bam.chr14,
     BSgenome.Hsapiens.UCSC.hg19, RUnit, BiocStyle
-LinkingTo: Rhtslib (>= 1.15.3), S4Vectors, IRanges, XVector, Biostrings
+LinkingTo: Rhtslib (>= 1.17.6), S4Vectors, IRanges, XVector, Biostrings
 biocViews: DataImport,  Sequencing, Coverage, Alignment, QualityControl
 Video: https://www.youtube.com/watch?v=Rfon-DQYbWA&list=UUqaMSQd_h-2EDGsU6WDiX0Q
