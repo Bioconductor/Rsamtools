@@ -1,7 +1,6 @@
 ## This file uses GNU make syntax $(shell ...) so we need to
 ## have "SystemRequirements: GNU make" in the DESCRIPTION file.
-## See "Writing portable packages" in the "Writing R Extensions" manual:
-##   https://cran.r-project.org/doc/manuals/r-release/R-exts.html
+## See Rhtslib's vignette for details.
 
 RHTSLIB_LIBS=$(shell echo 'Rhtslib::pkgconfig("PKG_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave)
