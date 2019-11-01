@@ -15,7 +15,7 @@ samfile_t *_bam_tryopen(const char *filename, const char *filemode, void *aux)
     samfile_t *sfile = samopen(filename, filemode, aux);
     if (sfile == 0)
         Rf_error("failed to open SAM/BAM file\n  file: '%s'", filename);
-    if (sfile->header == 0 || sfile->header->n_targets == 0) {
+    if (sfile->header == 0) {
         samclose(sfile);
         Rf_error("SAM/BAM header missing or empty\n  file: '%s'", filename);
     }
