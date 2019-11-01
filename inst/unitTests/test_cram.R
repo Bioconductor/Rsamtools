@@ -190,6 +190,15 @@ test_indexBam <- function() {
     identical(readBin(paste0(fl, ".crai"), raw()), readBin(idx, raw()))
 }
 
+test_sortBam <- function() {
+    file.copy(fl, to <- tempfile(fileext = ".cram"))
+    srt <- sortBam(to, tempfile(fileext = ".cram"))
+
+    fmt <- Rsamtools:::.fileFormat(srt)
+    checkTrue(startsWith(fmt, "CRAM"))
+    checkIdentical(countBam(fl)[-5], countBam(srt)[-5])
+}
+
 test_filterBam <- function() {
     destination <- filterBam(
         BamFile(fl), tempfile(fileext = ".cram"), indexDestination = FALSE
@@ -211,9 +220,10 @@ test_filterBam <- function() {
         flag=scanBamFlag(isUnmappedQuery=FALSE),
         what="seq"
     )
-    dest <- filterBam(BamFile(fl), tempfile(fileext = ".cram"), param=param)
+    destination <- filterBam(
+        BamFile(fl), tempfile(fileext = ".cram"), param=param
+    )
     fmt <- Rsamtools:::.fileFormat(destination)
     checkTrue(startsWith(fmt, "CRAM"))
-    checkIdentical(countBam(fl)[-5], countBam(destination)[-5])
-    checkIdentical(countBam(fl, param = param)[-5], countBam(dest)[-5])
+    checkIdentical(countBam(fl, param = param)[-5], countBam(destination)[-5])
 }
