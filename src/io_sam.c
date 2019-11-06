@@ -552,9 +552,10 @@ SEXP _count_bam(SEXP bfile, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,
     return result;
 }
 
-void scan_bam_cleanup()
+SEXP scan_bam_cleanup()
 {
     /* placeholder */
+    return R_NilValue;
 }
 
 /* filterBam */
