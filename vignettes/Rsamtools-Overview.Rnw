@@ -4,6 +4,8 @@
 %\VignettePackage{Rsamtools}
 \documentclass{article}
 
+\usepackage[utf8]{inputenc}
+
 <<style, echo=FALSE, results=tex>>=
 BiocStyle::latex()
 @
