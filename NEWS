@@ -6,6 +6,8 @@ BUG FIXES
     o (v 2.2.2) Correctly handle '*' ('unknown') RNAME during paired-end
       processing. See https://github.com/Bioconductor/Rsamtools/issues/16.
 
+    o (v 2.2.3) Fix regression introduced by v 2.2.2.
+
 CHANGES IN VERSION 2.0
 ----------------------
 
