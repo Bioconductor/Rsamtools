@@ -99,15 +99,18 @@ public:
         const bool mate_rev = mate->core.flag & BAM_FREVERSE;
         const bool bam_mrev = bam->core.flag & BAM_FMREVERSE;
         const bool mate_mrev = mate->core.flag & BAM_FMREVERSE;
+
+        const bool mapped =
+            (bam->core.tid >= 0) && (bam->core.mtid >= 0) &&
+            (mate->core.tid >= 0) && (mate->core.mtid >= 0);
+        if (!mapped)
+            return false;
+
         const uint32_t
-            pos = bam->core.tid >= 0 && (
-                bam->core.pos % target_len[bam->core.tid]),
-            mpos = bam->core.mtid >= 0 && (
-                bam->core.mpos % target_len[bam->core.mtid]),
-            mate_pos = mate->core.tid >= 0 && (
-                mate->core.pos % target_len[mate->core.tid]),
-            mate_mpos = mate->core.mtid >= 0 && (
-                mate->core.mpos % target_len[mate->core.mtid]);
+            pos = bam->core.pos % target_len[bam->core.tid],
+            mpos = bam->core.mpos % target_len[bam->core.mtid],
+            mate_pos = mate->core.pos % target_len[mate->core.tid],
+            mate_mpos = mate->core.mpos % target_len[mate->core.mtid];
         return
             ((bam_read1 ^ bam_read2) && (mate_read1 ^ mate_read2)) &&
             (bam_read1 != mate_read1) &&
@@ -116,8 +119,6 @@ public:
             ((bam_rev == mate_mrev) && (bam_mrev == mate_rev))) &&
             (bam_proper == mate_proper) &&
             (pos == mate_mpos) && (mpos == mate_pos) &&
-            (bam->core.tid >= 0) && (bam->core.mtid >= 0) &&
-            (mate->core.tid >= 0) && (mate->core.mtid >= 0) &&
             (bam->core.mtid == mate->core.tid);
     }
 

@@ -7,6 +7,8 @@ BUG FIXES
       during paired-end processing. See
       https://github.com/Bioconductor/Rsamtools/issues/16.
 
+    o (v 2.3.5) Fix regression introduced by v 2.3.2
+
 NEW FEATURES
 
     o (v 2.3.1) Don't require BAM files to have @SQ lines; allows
