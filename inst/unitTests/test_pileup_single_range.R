@@ -55,16 +55,20 @@ bf <- BamFile(fl)
     target <- cbind(seqnames=factor(seqnames, levels=seqnames_levels), target)
     
     if(!is.null(strand))
-        target <- cbind(target, strand=factor(strand, levels=.s_levels()))
+        target <- cbind(target,
+                        strand=factor(strand, levels=.s_levels()),
+                        stringsAsFactors=TRUE)
     if(!is.null(nucleotide))
         target <- cbind(target,
-                        nucleotide=factor(nucleotide, levels=.n_levels()))
+                        nucleotide=factor(nucleotide, levels=.n_levels()),
+                        stringsAsFactors=TRUE)
     if(!is.null(left_bin))
         target <- cbind(target,
-                        left_bin=left_bin)
-    target <- cbind(target, count=as.integer(count))
+                        left_bin=left_bin,
+                        stringsAsFactors=TRUE)
+    target <- cbind(target, count=as.integer(count), stringsAsFactors=TRUE)
     if(!is.null(which_label))
-        target <- cbind(target, which_label=which_label)
+        target <- cbind(target, which_label=which_label, stringsAsFactors=TRUE)
     target
 }
 
