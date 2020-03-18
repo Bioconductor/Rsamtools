@@ -44,7 +44,7 @@ bf <- BamFile(fl)
                   use_ex1.bam_levels=FALSE) {
     if(is.null(pos) || is.null(count) || is.null(seqnames))
         stop("'pos', 'count', and 'seqnames' must not be 'NULL'")
-    target <- data.frame(pos=as.integer(pos), stringsAsFactors=FALSE)
+    target <- data.frame(pos=as.integer(pos))
     seqnames_levels <- .querybins.sam_seqlevels()
     target <- cbind(seqnames=factor(seqnames, levels=seqnames_levels), target)
 
@@ -58,7 +58,7 @@ bf <- BamFile(fl)
     else if(!is.null(query_bin))
         target <- cbind(target, query_bin=query_bin, stringsAsFactors=TRUE)
 
-    target <- cbind(target, count=as.integer(count), stringsAsFactors=TRUE)
+    target <- cbind(target, count=as.integer(count))
     if(!is.null(which_label))
         target <- cbind(target, which_label=which_label, stringsAsFactors=TRUE)
     target
