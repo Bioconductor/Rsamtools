@@ -17,7 +17,7 @@
 {
     if (!length(files))
         stop("'files' is length(0)")
-    idx <- !grepl("^(ftp|http|https)://", files) & !is.na(files)
+    idx <- !grepl("^(gs|aws|ftp|http|https)://", files) & !is.na(files)
     test <- file.exists(files[idx])
     if (!all(test)) {
         msg <- paste0(sQuote(files[idx][!test]), collapse = "\n  ")
