@@ -377,7 +377,8 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
                 NA_INTEGER : (bam1_strand(bam) + 1);
             break;
         case POS_IDX:
-            sbd->pos[idx] = bam->core.flag & BAM_FUNMAP ?
+            sbd->pos[idx] =
+                (bam->core.tid < 0 || (bam->core.flag & BAM_FUNMAP)) ?
                 NA_INTEGER : bam->core.pos + 1;
             break;
         case QWIDTH_IDX:
@@ -390,7 +391,7 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
             else sbd->mapq[idx] = bam->core.qual;
             break;
         case CIGAR_IDX:
-            if (bam->core.flag & BAM_FUNMAP)
+            if (bam->core.tid < 0 || (bam->core.flag & BAM_FUNMAP))
                 sbd->cigar[idx] = NULL;
             else {
                 while (_bamcigar(bam1_cigar(bam), bam->core.n_cigar,
@@ -404,7 +405,8 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
                 NA_INTEGER : bam->core.mtid + 1;
             break;
         case MPOS_IDX:
-            sbd->mpos[idx] = bam->core.flag & BAM_FMUNMAP ?
+            sbd->mpos[idx] =
+                (bam->core.mtid < 0 || (bam->core.flag & BAM_FMUNMAP)) ?
                 NA_INTEGER : bam->core.mpos + 1;
             break;
         case ISIZE_IDX:

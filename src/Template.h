@@ -99,6 +99,13 @@ public:
         const bool mate_rev = mate->core.flag & BAM_FREVERSE;
         const bool bam_mrev = bam->core.flag & BAM_FMREVERSE;
         const bool mate_mrev = mate->core.flag & BAM_FMREVERSE;
+
+        const bool mapped =
+            (bam->core.tid >= 0) && (bam->core.mtid >= 0) &&
+            (mate->core.tid >= 0) && (mate->core.mtid >= 0);
+        if (!mapped)
+            return false;
+
         const uint32_t
             pos = bam->core.pos % target_len[bam->core.tid],
             mpos = bam->core.mpos % target_len[bam->core.mtid],

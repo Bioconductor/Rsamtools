@@ -43,21 +43,23 @@ bf <- BamFile(fl)
                   use_ex1.bam_levels=FALSE) {
     if(is.null(pos) || is.null(count) || is.null(seqnames))
         stop("'pos', 'count', and 'seqnames' must not be 'NULL'")
-    target <- data.frame(pos=as.integer(pos), stringsAsFactors=FALSE)
+    target <- data.frame(pos=as.integer(pos))
     seqnames_levels <- .revbins.sam_seqlevels()
     target <- cbind(seqnames=factor(seqnames, levels=seqnames_levels), target)
 
     if(!is.null(strand))
-        target <- cbind(target, strand=factor(strand, levels=.s_levels()))
+        target <- cbind(target,
+                        strand=factor(strand, levels=.s_levels()))
     if(!is.null(nucleotide))
         target <- cbind(target,
                         nucleotide=factor(nucleotide, levels=.n_levels()))
     if(!is.null(left_bin))
         target <- cbind(target,
-                        left_bin=left_bin)
+                        left_bin=left_bin,
+                        stringsAsFactors=TRUE)
     target <- cbind(target, count=as.integer(count))
     if(!is.null(which_label))
-        target <- cbind(target, which_label=which_label)
+        target <- cbind(target, which_label=which_label, stringsAsFactors=TRUE)
     target
 }
 

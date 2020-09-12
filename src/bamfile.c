@@ -15,9 +15,11 @@ htsFile *_bam_tryopen(const char *filename, const char *filemode, void *aux)
 {
     htsFile *sfile = sam_open_format(filename, filemode, aux);
     if (sfile == 0)
-        Rf_error("failed to open SAM / BAM / CRAM file\n  file: '%s'",
-                 filename);
-
+        Rf_error("failed to open SAM / BAM / CRAM file\n  file: '%s'", filename);
+    if (sfile->header == 0) {
+        samclose(sfile);
+        Rf_error("SAM / BAM / CRAM header missing or empty\n  file: '%s'", filename);
+    }
     return sfile;
 }
 

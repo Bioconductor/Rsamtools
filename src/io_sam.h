@@ -15,7 +15,7 @@ SEXP merge_bam(SEXP fnames, SEXP destination, SEXP overwrite,
                SEXP hname, SEXP regionStr, SEXP isByQname,
                SEXP addRG, SEXP compressLevel1);
 SEXP index_bam(SEXP indexname);
-void scan_bam_cleanup();        /* error handling only */
+SEXP scan_bam_cleanup();        /* error handling only */
 
 void _bam_check_template_list(SEXP template_list);
 SEXP _read_bam_header(SEXP ext, SEXP what);

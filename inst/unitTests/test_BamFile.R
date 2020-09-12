@@ -329,19 +329,22 @@ test_BamFile_qname_prefix_suffix <- function()
     checkIdentical(qnames, target)
 
     ## ranges
-    bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="_")
+    bfm <- BamFile(fl, asMates=TRUE)
     which <- GRanges("seq1", IRanges(100, 110))
+    param <- ScanBamParam(which=which, what=scanBamWhat())
+    target0 <- scanBam(bfm, param=param)[[1]]$qname
+
+    bfm <- BamFile(fl, asMates=TRUE, qnamePrefixEnd="_")
     param <- ScanBamParam(which=which, what="qname")
-    qnames <- scanBam(bfm, param=param)[[1]]$qname[1:4]
-    target <- c("1:2:29:1486:672", "1:2:29:1486:672",
-                "1:2:90:986:1224", "1:2:90:986:1224")
-    checkIdentical(qnames, target)
+    qnames <- scanBam(bfm, param=param)[[1]]$qname
+    target <- sub(".*_(.*)", "\\1", target0)
+    checkTrue(setequal(qnames, target))
 
     bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart="_")
     param <- ScanBamParam(which=which, what="qname")
-    qnames <- scanBam(bfm, param=param)[[1]]$qname[1:4]
-    target <- c("EAS1", "EAS1", "EAS112", "EAS112")
-    checkIdentical(qnames, target)
+    qnames <- scanBam(bfm, param=param)[[1]]$qname
+    target <- sub("(.*)_.*", "\\1", target0)
+    checkTrue(setequal(qnames, target))
 
     bfm <- BamFile(fl, asMates=TRUE, qnameSuffixStart="*")
     param <- ScanBamParam(which=which, what="qname")
@@ -349,4 +352,28 @@ test_BamFile_qname_prefix_suffix <- function()
     bfm <- BamFile(fl, asMates=TRUE)
     qnames2 <- scanBam(bfm, param=param)[[1]]$qname
     checkIdentical(qnames1, qnames2)
+}
+
+test_BamFile_asMates_RNEXT <- function() {
+    ## see https://github.com/Bioconductor/Rsamtools/issues/16
+    fl <- system.file(package="Rsamtools", "unitTests", "cases", "RNEXT.bam")
+    res <- scanBam(BamFile(fl, asMates = TRUE))
+    df <- Rsamtools:::.as.data.frame_list_of_lists(res)
+    checkIdentical(df$qname, c("r1", "r1", "r2", "r3"))
+
+    ## RNAME == '*' -- don't trust rname, pos (hence strand, qwidth), cigar)
+    checkIdentical(df$rname, factor(c("chr4", "chr4", NA, "chr4")))
+    checkIdentical(
+        df$strand,
+        factor(c("+", "-", NA, "-"), levels = c("+", "-", "*"))
+    )
+    checkIdentical(df$pos, c(100L, 155L, NA, 155L))
+    checkIdentical(df$qwidth, c(5L, 5L, NA, 5L))
+    checkIdentical(df$mapq, c(99L, 99L, NA, 99L))
+    checkIdentical(df$cigar, c("5M", "5M", NA, "5M"))
+
+    ## RNEXT == '*' -- don't trust mrnm, mpos; don't  mate
+    checkIdentical(df$mrnm, factor(c("chr4", NA, "chr4", NA)))
+    checkIdentical(df$mpos, c(155L, NA, 200L, NA))
+    checkIdentical(as.character(df$mate_status), rep("unmated", 4))
 }
