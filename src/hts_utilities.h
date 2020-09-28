@@ -1,5 +1,5 @@
-#ifndef _IO_RSAMTOOLS_H_
-#define _IO_RSAMTOOLS_H_
+#ifndef HTS_UTILITIES_H
+#define HTS_UTILITIES_H
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -19,4 +19,4 @@ int64_t _hts_utilities_tell(htsFile *fd);
 }
 #endif
 
-#endif  /* _IO_RSAMTOOLS_H_ */
+#endif
