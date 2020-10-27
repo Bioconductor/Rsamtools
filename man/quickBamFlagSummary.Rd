@@ -46,7 +46,7 @@ quickBamFlagSummary(file, ..., param=ScanBamParam(), main.groups.only=FALSE)
   unless redirected by \code{\link{sink}}.
 }
 
-\author{H. Pages}
+\author{Hervé Pagès}
 
 \references{
   \url{http://samtools.sourceforge.net/}
