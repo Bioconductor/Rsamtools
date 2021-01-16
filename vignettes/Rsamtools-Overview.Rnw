@@ -25,7 +25,7 @@ BiocStyle::latex()
 options(width=60)
 @ 
 
-<<preliminaries>>=
+<<preliminaries, echo = FALSE>>=
 library(Rsamtools)
 @ 
 
@@ -260,12 +260,28 @@ with genes in a KEGG caffeine metabolism pathway. The `columns'
 represent individuals in the 1000 genomes project.  
 
 To create the `rows', we identify possible genes that KEGG associates
-with caffeine metabolism:
+with caffeine metabolism. Using the KEGGREST package, the steps are
+<<keggrest, eval = FALSE>>=
+## uses KEGGREST, dplyr, and tibble packages
+org <- "hsa"
+
+caffeine_pathway <-
+    KEGGREST::keggList("pathway", org) %>%
+    tibble::enframe(name = "pathway_id", value = "pathway") %>%
+    dplyr::filter(startsWith(.data$pathway, "Caffeine metabolism"))
+
+egid <-
+    KEGGREST::keggLink(org, "pathway") %>%
+    tibble::enframe(name = "pathway_id", value = "gene_id") %>%
+    dplyr::left_join(x = caffeine_pathway, by = "pathway_id") %>%
+    dplyr::mutate(gene_id = sub("hsa:", "", gene_id)) %>%
+    pull(gene_id)
+@
+%%
+At the time of writing, genes in the caffeine metabolism pathway are
 <<caffeine-kegg>>=
-library(KEGG.db)
-kid <- revmap(KEGGPATHID2NAME)[["Caffeine metabolism"]]
-egid <- KEGGPATHID2EXTID[[sprintf("hsa%s", kid)]]
-@ 
+egid <- c("10", "1544", "1548", "1549", "7498", "9")
+@
 %% 
 Then we use the appropriate \Rpackage{TxDb} package to
 translate Entrez identifiers to obtain ranges of interest (one could
@@ -283,16 +299,18 @@ seqlevels(bamRanges) <-                 # translate seqlevels
     sub("chr", "", seqlevels(bamRanges))
 lvls <- seqlevels(bamRanges)            # drop unused levels
 seqlevels(bamRanges) <- lvls[lvls %in% as.character(seqnames(bamRanges))]
+
+bamRanges
 @ 
 %% 
-Note that \Robject{bamRanges} `knows' the genome for which the
-ranges are defined
+The \Robject{bamRanges} `knows' the genome for which the ranges are
+defined
 <<bamRanges-genome>>=
 unique(genome(bamRanges))
 @ 
 
-The details of creating the `columns' of BAM files. Here we retrieve a
-vector of \bam{} file URLs (\Robject{slxMaq09}) from the package.
+Here we retrieve a vector of \bam{} file URLs (\Robject{slxMaq09})
+from the package.
 <<BamViews-parts>>=
 slxMaq09 <- local({
     fl <- system.file("extdata", "slxMaq09_urls.txt", 
@@ -316,6 +334,7 @@ bv <- BamViews(slxMaq09, bamRanges=bamRanges,
 metadata(bamSamples(bv)) <- 
     list(description="Solexa/MAQ samples, August 2009",
          created="Thu Mar 25 14:08:42 2010")
+bv
 @ 
 
 \subsection{Using \Rclass{BamViews} instances}
@@ -325,7 +344,7 @@ The \Rclass{BamViews} object can be queried for its component parts, e.g.,
 bamExperiment(bv)
 @ 
 %% 
-More usefully, Methods in \Biocpkg{Rsamtools} are designed to work
+More usefully, methods in \Biocpkg{Rsamtools} are designed to work
 with \Rclass{BamViews} objects, retrieving data from all files in the
 view. These operations can take substantial time and require reliable
 network access.
@@ -337,22 +356,26 @@ was created) downloads the index files associated with the
 bamIndexDir <- tempfile()
 indexFiles <- paste(bamPaths(bv), "bai", sep=".")
 dir.create(bamIndexDir)
-idxFiles <- mapply(download.file, indexFiles,
-                   file.path(bamIndexDir, basename(indexFiles)) ,
-                   MoreArgs=list(method="curl"))
+bv <- BamViews(
+    slxMaq09,
+    file.path(bamIndexDir, basename(indexFiles)), # index file location
+    bamRanges=bamRanges,
+    bamExperiment=bamExperiment
+)
+
+idxFiles <- mapply(
+    download.file, indexFiles,
+    bamIndicies(bv),
+    MoreArgs=list(method="curl")
+)
 @ 
 %% 
 and then queries the 1000 genomes project for reads overlapping our
-transcripts; by loading the \Rpackage{parallel} package, we tell
-\Biocpkg{Rsamtools} to use as many cores as are available on our machine (the
-\Rpackage{parallel} package does not provide parallel functionality on
- Windows computers)
+transcripts.
 <<readGAlignments, eval=FALSE>>=
 library(GenomicAlignments)
-library(parallel)
-options(srapply_fapply="parallel", mc.cores=detectCores())
 olaps <- readGAlignments(bv)
-@ 
+@
 %% 
 The resulting object is about 11 MB in size. To avoid having to
 download this data each time the vignette is run, we instead load it
