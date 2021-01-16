@@ -165,7 +165,7 @@ SEXP bamfile_isincomplete(SEXP ext)
             off_t offset = bgzf_tell(bfile->file->x.bam);
             char buf;
             ans = bgzf_read(bfile->file->x.bam, &buf, 1) > 0;
-            bgzf_seek(bfile->file->x.bam, offset, SEEK_SET);
+            (void) bgzf_seek(bfile->file->x.bam, offset, SEEK_SET);
         }
     }
     return ScalarLogical(ans);

@@ -84,7 +84,7 @@ public:
         bam_data((BAM_DATA) NULL), bindex(bindex),
         bam((bam1_t *) NULL), iter_done(false)
     {
-        bam_seek(bfile, 0, 0);
+        (void) bam_seek(bfile, 0, 0);
         header = bam_header_read(bfile);
     }
 

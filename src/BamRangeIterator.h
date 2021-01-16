@@ -135,7 +135,7 @@ class BamRangeIterator : public BamIterator {
             it->second.mate(complete, target_len);
             
         BamIterator::finalize_inprogress(bfile);
-        bam_seek(bfile, pos, SEEK_SET);
+        (void) bam_seek(bfile, pos, SEEK_SET);
     }
 
 public:

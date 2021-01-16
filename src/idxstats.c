@@ -17,7 +17,7 @@ SEXP idxstats_bamfile(SEXP ext)
     _checkext(ext, BAMFILE_TAG, "idxstats");
     bfile = BAMFILE(ext);
     fp = bfile->file->x.bam;
-    bam_seek(fp, 0, 0);
+    (void) bam_seek(fp, 0, 0);
     header = bam_header_read(fp);
     idx = bfile->index;
     n = hts_idx_get_n(idx);

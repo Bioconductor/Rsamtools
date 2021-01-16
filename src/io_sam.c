@@ -301,7 +301,7 @@ static int _scan_bam_all(BAM_DATA bd, bam_fetch_f parse1,
     const int yieldSize = bd->yieldSize;
     int yield = 0;
 
-    bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
+    (void) bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
     if (bd->asMates) {
         yield = _samread_mate(bfile, bd, yieldSize, parse1_mate);
     } else {
