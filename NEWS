@@ -1,3 +1,12 @@
+CHANGES IN VERSION 2.8
+----------------------
+
+NEW FEATURES
+
+    o (v 2.7.2) idxstatsBam works on remote (e.g., http://) files and reports
+      unmapped ('seqnames' equal to *) reads. See
+      https://support.bioconductor.org/p/9136222.
+
 CHANGES IN VERSION 2.4
 ----------------------
 
