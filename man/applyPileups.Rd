@@ -10,6 +10,8 @@
 
 }
 \description{
+  WARNING: Starting with Bioconductor 3.14, \code{applyPileups} is deprecated
+  in favor of \code{\link{pileup}}.
 
   \code{applyPileups} scans one or more BAM files, returning
   position-specific sequence and quality summaries.

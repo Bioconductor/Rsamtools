@@ -136,8 +136,12 @@ setGeneric("pileup",
 
 setGeneric(".asRegions", function(x) standardGeneric(".asRegions"))
 
-setGeneric("applyPileups", function(files, FUN, ..., param)
-           standardGeneric("applyPileups"),
+setGeneric("applyPileups",
+           function(files, FUN, ..., param)
+           {
+               .Deprecated("pileup")
+               standardGeneric("applyPileups")
+           },
            signature=c("files", "param"))
 
 ## RsamtoolsFile(s)
