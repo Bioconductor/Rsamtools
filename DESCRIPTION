@@ -10,7 +10,7 @@ biocViews: DataImport,  Sequencing, Coverage, Alignment, QualityControl
 URL: https://bioconductor.org/packages/Rsamtools
 Video: https://www.youtube.com/watch?v=Rfon-DQYbWA&list=UUqaMSQd_h-2EDGsU6WDiX0Q
 BugReports: https://github.com/Bioconductor/Rsamtools/issues
-Version: 2.10.0
+Version: 2.11.0
 License: Artistic-2.0 | file LICENSE
 Encoding: UTF-8
 Author: Martin Morgan, Hervé Pagès, Valerie Obenchain, Nathaniel
