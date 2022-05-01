@@ -2,7 +2,7 @@
 #define BAMFILE_H
 
 #include <Rdefines.h>
-#include <sam.h>
+#include <samtools-1.7-compat.h>
 #include "bambuffer.h"
 #include "bam_mate_iter.h"
 #include "pbuffer_wrapper.h"
