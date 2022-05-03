@@ -6,7 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <list>
-#include <sam.h>
+#include <samtools-1.7-compat.h>
 #include "scan_bam_data.h"
 
 using namespace std;

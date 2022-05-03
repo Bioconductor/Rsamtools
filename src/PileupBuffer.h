@@ -7,7 +7,8 @@
 #include <utility>
 #include <algorithm>
 #include <cassert>
-#include <sam.h>
+#include <bam_plbuf.h>
+#include <samtools-1.7-compat.h>
 #include "ResultManager.h"
 #include "utilities.h"
 #include <Rinternals.h>
@@ -182,7 +183,7 @@ public:
         int num_reads_to_process = theDepth < 2 ? 1 : theDepth + 1;
         bam_plp_set_maxcnt(plbuf->iter, num_reads_to_process);
     }
-    static int insert(uint32_t tid, uint32_t pos, int n,
+    static int insert(uint32_t tid, hts_pos_t pos, int n,
                       const bam_pileup1_t *pl, void *data);
     SEXP yield();
     void signalEOI();

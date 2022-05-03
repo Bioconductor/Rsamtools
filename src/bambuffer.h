@@ -2,7 +2,7 @@
 #define BAMBUFFER_H
 
 #include <Rinternals.h>
-#include <sam.h>
+#include <htslib/sam.h>
 
 typedef struct {
     bam1_t **buffer;

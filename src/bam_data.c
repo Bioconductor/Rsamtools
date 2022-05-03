@@ -1,5 +1,4 @@
 #include <htslib/khash.h>
-#include <sam.h>
 #include "bamfile.h"
 #include "bam_data.h"
 #include "scan_bam_data.h"
@@ -100,7 +99,7 @@ static char *_bamseq(const bam1_t * bam, BAM_DATA bd)
     char *s = Calloc(len + 1, char);
     for (uint32_t i = 0; i < len; ++i)
         s[i] = key[bam1_seqi(seq, i)];
-    if (bd->reverseComplement && (bam1_strand(bam) == 1))
+    if (bd->reverseComplement && bam1_strand(bam))
         _reverseComplement(s, len);
     s[len] = '\0';
     return s;
@@ -113,7 +112,7 @@ static char *_bamqual(const bam1_t * bam, BAM_DATA bd)
     char *s = Calloc(len + 1, char);
     for (uint32_t i = 0; i < len; ++i)
         s[i] = bamq[i] + 33;
-    if (bd->reverseComplement && (bam1_strand(bam) == 1))
+    if (bd->reverseComplement && bam1_strand(bam))
         _reverse(s, len);
     s[len] = '\0';
     return s;
@@ -374,7 +373,7 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
             break;
         case STRAND_IDX:
             sbd->strand[idx] = bam->core.flag & BAM_FUNMAP ?
-                NA_INTEGER : (bam1_strand(bam) + 1);
+                NA_INTEGER : (bam1_strand(bam) ? 2 : 1);
             break;
         case POS_IDX:
             sbd->pos[idx] =
@@ -383,7 +382,7 @@ int _parse1_BAM_DATA(const bam1_t *bam, BAM_DATA bd)
             break;
         case QWIDTH_IDX:
             sbd->qwidth[idx] = bam->core.flag & BAM_FUNMAP ?
-                NA_INTEGER : bam_cigar2qlen(&bam->core, bam1_cigar(bam));
+                NA_INTEGER : bam_cigar2qlen(bam->core.n_cigar, bam1_cigar(bam));
             break;
         case MAPQ_IDX:
             if ((bam->core.flag & BAM_FUNMAP))

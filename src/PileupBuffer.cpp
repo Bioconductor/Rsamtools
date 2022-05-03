@@ -4,10 +4,10 @@ void Pileup::signalEOI() {
     resultMgr->signalEOI();
 }
 
-int Pileup::insert(uint32_t tid, uint32_t pos, int n,
+int Pileup::insert(uint32_t tid, hts_pos_t pos, int n,
                         const bam_pileup1_t *pl, void *data)
 {
-    //Rprintf("pos: %d\n", pos);
+    //Rprintf("pos: %l\n", pos);
     Pileup *pileup = static_cast<Pileup*>(data);
     pos = pos + 1; // 1-based indexing for R
     int bamBufOffset = 0;
