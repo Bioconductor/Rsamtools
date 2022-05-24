@@ -5,7 +5,6 @@
 #include <htslib/vcf.h>
 #include <htslib/hfile.h>
 #include <htslib/bgzf.h>
-#include <hts_internal.h>
 #include "bcffile.h"
 #include "COMPAT_bcf_hdr_read.h"
 #include "utilities.h"
@@ -80,57 +79,6 @@ SEXP bcffile_init()
 }
 
 /* --- .Call ENTRY POINT --- */
-/*
-SEXP bcffile_open(SEXP filename, SEXP indexname, SEXP filemode)
-{
-    _checknames(filename, indexname, filemode);
-
-    _BCF_FILE *bfile = Calloc(1, _BCF_FILE);
-
-    bfile->file = NULL;
-    bfile->index = NULL;
-    if (LENGTH(filename) != 0) {
-        const char *fn = translateChar(STRING_ELT(filename, 0));
-        bfile->file = bcf_open(fn, CHAR(STRING_ELT(filemode, 0)));
-        if (bfile->file == NULL) {
-            Free(bfile);
-            Rf_error("'open' BCF failed\n  filename: %s", fn);
-        }
-
-        if (LENGTH(indexname) != 0) {
-            const char *fnidx = translateChar(STRING_ELT(indexname, 0));
-            bfile->index = bcf_index_load2(fn, fnidx);
-            if (bfile->index == NULL) {
-                _bcf_close(bfile->file, 0);
-                Free(bfile);
-                Rf_error("'load' BCF index failed\n  indexname: %s\n", fnidx);
-            }
-        }
-    }
-    SEXP ext = PROTECT(R_MakeExternalPtr(bfile, BCFFILE_TAG, filename));
-    R_RegisterCFinalizerEx(ext, _bcffile_finalizer, TRUE);
-    UNPROTECT(1);
-
-    return ext;
-}
-*/
-
-static const char *_find_index(const char *fn)
-{
-    static char fnidx2[999];
-
-    const char *fnidx = hts_idx_getfn(fn, ".csi");
-    if (fnidx == NULL) {
-        fnidx = hts_idx_getfn(fn, ".tbi");
-        if (fnidx == NULL)
-            return NULL;
-    }
-    int size = snprintf(fnidx2, sizeof(fnidx2), "%s", fnidx);
-    if (size >= sizeof(fnidx2))
-        Rf_error("[internal] fnidx2 string buffer too small");
-    return fnidx2;
-}
-
 SEXP bcffile_open(SEXP filename, SEXP indexname, SEXP filemode)
 {
     _checknames(filename, indexname, filemode);
@@ -149,18 +97,11 @@ SEXP bcffile_open(SEXP filename, SEXP indexname, SEXP filemode)
     // LENGTH(indexname) will be 0 when scanBcfHeader() is called on a
     // file path e.g. scanBcfHeader("chr22.vcf.gz")
     if (LENGTH(indexname) == 1) {
-        const char *cindex = translateChar(STRING_ELT(indexname, 0));
-        const char *fnidx = _find_index(cindex);
-        if (fnidx == NULL) {
-            _bcf_close(bfile->file, 0);
-            Free(bfile);
-            Rf_error("no VCF/BCF index found\n  filename: %s", fn);
-        }
-        bfile->index = bcf_index_load2(fn, fnidx);
+        bfile->index = bcf_index_load(fn);
         if (bfile->index == NULL) {
             _bcf_close(bfile->file, 0);
             Free(bfile);
-            Rf_error("'open' VCF/BCF index failed\n  index file: %s\n", fnidx);
+            Rf_error("no valid VCF/BCF index found\n  filename: %s", fn);
         }
     }
 
