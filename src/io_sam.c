@@ -345,7 +345,7 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             return -1;
         }
         if (bd->asMates) {
-            bam_fetch_mate(sfile->x.bam, bindex, tid, starti, end[irange],
+            bam_fetch_mate(sfile, bindex, tid, starti, end[irange],
                            bd, parse1_mate);
         } else {
             _samfetch(sfile, bindex, tid, starti, end[irange], bd, parse1);

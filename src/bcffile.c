@@ -4,7 +4,6 @@
 #include <htslib/kseq.h>
 #include <htslib/vcf.h>
 #include <htslib/hfile.h>
-#include <hts_internal.h>
 #include "bcffile.h"
 #include "COMPAT_bcf_hdr_read.h"
 #include "utilities.h"

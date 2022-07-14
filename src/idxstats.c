@@ -70,7 +70,6 @@ SEXP idxstats_bamfile(SEXP ext)
     _checkext(ext, BAMFILE_TAG, "idxstats");
     BAM_FILE bfile = BAMFILE(ext);
     bam_hdr_t *header = bfile->header;
-
     int32_t n = header->n_targets;
     uint64_t (*count0)[2] = calloc(n + 1, sizeof(*count0));
     uint64_t (*counts)[2] = count0 + 1;
@@ -104,7 +103,7 @@ SEXP idxstats_bamfile(SEXP ext)
     SET_STRING_ELT(name, n , mkChar("*"));
     INTEGER(len)[n] = 0;
     REAL(map)[n] = 0;
-    REAL(unmap)[n] = hts_idx_get_n_no_coor(idx);
+    REAL(unmap)[n] = hts_idx_get_n_no_coor(bfile->index);
 
     free(count0);
     UNPROTECT(1);

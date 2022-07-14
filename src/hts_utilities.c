@@ -39,7 +39,7 @@ int _hts_utilities_seek(htsFile *fd, off_t offset, int whence)
 }
 
 /*
- * from htslib-1.7/sam.c
+ * from htslib-1.15.1/sam.c
  *
  * cram_ptell is a pseudo-tell function, because it matches the
  *   position of the disk cursor only after a fresh seek
@@ -53,15 +53,17 @@ static int64_t cram_ptell(void *fp)
 {
     cram_fd *fd = (cram_fd *)fp;
     cram_container *c;
+    cram_slice *s;
     int64_t ret = -1L;
 
-    if (fd && fd->fp) {
-        ret = htell(fd->fp);
+    if (fd) {
         if ((c = fd->ctr) != NULL) {
-            ret -=
-                ((c->curr_slice != c->max_slice || c->curr_rec != c->max_rec) ?
-                c->offset + 1 : 0);
+            if ((s = c->slice) != NULL && s->max_rec) {
+                if ((c->curr_slice + s->curr_rec/s->max_rec) >= (c->max_slice + 1))
+                    fd->curr_position += c->offset + c->length;
+            }
         }
+        ret = fd->curr_position;
     }
 
     return ret;
