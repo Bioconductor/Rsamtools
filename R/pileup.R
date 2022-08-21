@@ -2,7 +2,7 @@
 
 .PileupParam <- setClass("PileupParam",
     representation(
-        ## behavior-only policies (do not affect result schema)
+        ## behavior-only policies
         max_depth = "integer", #pileupParams elt 0 (in C code)
         min_base_quality = "integer", # 1
         min_mapq = "integer", # 2
@@ -98,14 +98,13 @@ PileupParam <-
                 " be ignored")
         bamReverseComplement(scanBamParam) <- FALSE
     }
-    schema <- .schemaBuilder(pileupParam)
     result <- .io_bam(.c_Pileup, file,
             ## space, keepFlags, isSimpleCigar extracted from 'scanBamParam'
             ## in .io_bam;
             ## remainder (...) passed to C
             bamReverseComplement(scanBamParam),
             yieldSize(file), obeyQname(file), asMates(file),
-            qnamePrefixEnd(file), qnameSuffixStart(file), schema, 
+            qnamePrefixEnd(file), qnameSuffixStart(file),
             .as.list_PileupParam(pileupParam), param=scanBamParam)
     ##browser()
 
@@ -230,39 +229,4 @@ setMethod("pileup", "BamFile", .pileup)
       if (pileupParam@distinguish_nucleotides) "nucleotide" else NULL,
       "count")
     setNames(result, result)
-}
-
-## schema
-.strandHelper <- function(scanBamP) {
-    flagVec <- bamFlag(scanBamP)['isMinusStrand']
-    if (is.na(flagVec)) {
-        "*"
-    } else if (flagVec) {
-        "-"
-    } else {
-        "+"
-    }
-}
-
-.schemaBuilder <- function(pileupParam) {
-    if(!inherits(pileupParam, "PileupParam")) {
-        stop("'pileupParam' must inherit from 'PileupParam', got '%s'",
-             class(pileupParam))
-    }
-    schemaDimNames <- c("strand", "nucleotide")
-
-    strand <- ""
-    if(pileupParam@distinguish_strands)
-        strand <- c("+", "-")
-
-    nucleotide <- ""
-    if(pileupParam@distinguish_nucleotides) {
-        nucleotide <- c("A", "C", "G", "T")
-        if(!pileupParam@ignore_query_Ns)
-            nucleotide <- c(nucleotide, "N")
-        if(pileupParam@include_deletions)
-            nucleotide <- c(nucleotide, "-")
-    }
-
-    list(schemaDimNames, list(strand, nucleotide))
 }

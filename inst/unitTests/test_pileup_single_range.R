@@ -1251,23 +1251,6 @@ test_schema_distinguish_nothing <- function() {
     checkIdentical(sapply(expected, class), sapply(xx, class))
 }
 
-test_schemabuilder_default_params <- function() {
-    pileupParam <- PileupParam()
-    schema <- Rsamtools:::.schemaBuilder(pileupParam)
-    expected <- list(c("strand", "nucleotide"),
-                     list(c("+", "-"), c("A", "C", "G", "T", "-")))
-    checkIdentical(expected, schema)
-}
-
-test_schemabuilder_distinguish_nothing <- function() {
-    pileupParam <- PileupParam(distinguish_nucleotides=FALSE, # non-default
-                              distinguish_strands=FALSE) # non-default
-    schema <- Rsamtools:::.schemaBuilder(pileupParam)
-    expected <- list(c("strand", "nucleotide"),
-                     list("", ""))
-    checkIdentical(expected, schema)
-}
-
 ## REVERSE COMPLEMENT
 
 test_reverseComplement_warning <- function() {

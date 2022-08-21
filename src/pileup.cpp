@@ -136,10 +136,8 @@ extern "C" {
                   SEXP reverseComplement, SEXP yieldSize,
                   SEXP obeyQname, SEXP asMates,
                   SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
-                  SEXP schema, SEXP pileupParams)
+                  SEXP pileupParams)
     {
-        if (!Rf_isVector(schema))
-            Rf_error("'schema' must be list()");
         if (!Rf_isVector(pileupParams))
             Rf_error("'pileupParams' must be list()");
         SEXP seqnamesLevels =
@@ -156,7 +154,7 @@ extern "C" {
         bool isBuffered = !isRanged && INTEGER(yieldSize)[0] != NA_INTEGER;
 
         Pileup buffer =
-            Pileup(isRanged, isBuffered, schema, pileupParams, seqnamesLevels,
+            Pileup(isRanged, isBuffered, pileupParams, seqnamesLevels,
                    (PosCacheColl**)&(BAMFILE(ext)->pbuffer));
         SEXP res = PROTECT(_pileup_bam(ext, regions, keepFlags,
             reverseComplement, isSimpleCigar, tagFilter, mapqFilter,

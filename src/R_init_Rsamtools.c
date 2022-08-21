@@ -77,7 +77,7 @@ static const R_CallMethodDef callMethods[] = {
     {".bambuffer_write", (DL_FUNC) & bambuffer_write, 3},
     {".bambuffer_reset", (DL_FUNC) & bambuffer_reset, 1},
     /* pileup.cpp */
-    {".c_Pileup", (DL_FUNC) & c_Pileup, 14},
+    {".c_Pileup", (DL_FUNC) & c_Pileup, 13},
     {NULL, NULL, 0}
 };
 

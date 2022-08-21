@@ -54,7 +54,7 @@ private:
     const bool isRanged, isBuffered;
     bool isQueryBin;
     int binsLength;
-    const SEXP schema, pileupParams, seqnamesLevels;
+    const SEXP pileupParams, seqnamesLevels;
     ResultMgrInterface *resultMgr;
     std::vector<int32_t> binPoints;
     int max_depth() const {
@@ -137,11 +137,10 @@ public:
     // void *posCacheColl is dumbly passed through to ResultMgr to
     // give ResultMgr pointer to the struct _BAM_FILE pbuffer member;
     // PileupBuffer doesn't know anything about PosCacheColl
-    Pileup(bool isRanged_, bool isBuffered_, SEXP schema_, SEXP pileupParams_,
+    Pileup(bool isRanged_, bool isBuffered_, SEXP pileupParams_,
            SEXP seqnamesLevels_, PosCacheColl** posCacheColl_)
         : isRanged(isRanged_), isBuffered(isBuffered_), isQueryBin(false),
           binsLength(0),
-          schema(schema_),
           pileupParams(pileupParams_), seqnamesLevels(seqnamesLevels_),
           resultMgr((ResultMgrInterface *) NULL), binPoints()
         {

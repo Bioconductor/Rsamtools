@@ -17,7 +17,7 @@ extern "C" {
                   SEXP reverseComplement,
                   SEXP yieldSize, SEXP obeyQname, SEXP asMates,
                   SEXP qnamePrefixEnd, SEXP qnameSuffixStart, 
-                  SEXP schema, SEXP pileupParams);
+                  SEXP pileupParams);
 #ifdef __cplusplus
 }
 #endif
