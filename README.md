@@ -1,3 +1,5 @@
+[![R build status](https://github.com/Bioconductor/Rsamtools/workflows/rworkflows/badge.svg)](https://github.com/Bioconductor/Rsamtools/actions)
+
 [<img src="https://www.bioconductor.org/images/logo/jpg/bioconductor_logo_rgb.jpg" width="200" align="right"/>](https://bioconductor.org/)
 
 **Rsamtools** is an R/Bioconductor package that provides an interface to the `samtools`, `bcftools`, and `tabix` utilities for manipulating SAM (Sequence Alignment / Map), FASTA, binary variant call (BCF) and compressed indexed tab-delimited (tabix) files.
