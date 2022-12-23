@@ -33,7 +33,7 @@ jobs:
     steps:
     - uses: neurogenomics/rworkflows@master
       with:
-        run_bioccheck: ${{ false }}
+        run_bioccheck: ${{ true }}
         run_rcmdcheck: ${{ true }}
         as_cran: ${{ true }}
         run_vignettes: ${{ true }}
@@ -43,9 +43,6 @@ jobs:
         has_runit: ${{ false }}
         has_latex: ${{ true }}
         GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
-        run_docker: ${{ true }}
-        docker_user: bschilder
-        docker_org: neurogenomicslab
-        DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        run_docker: ${{ false }}
         runner_os: ${{ runner.os }}
         cache_version: cache-master
