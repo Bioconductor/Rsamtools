@@ -410,10 +410,12 @@ setMethod(indexBam, "BamFile", function(files, ...) {
 })
 
 setMethod(sortBam, "BamFile",
-    function(file, destination, ..., byQname=FALSE, maxMemory=512)
+    function(file, destination, ..., byQname=FALSE, maxMemory=512,
+             byTag=NULL, nThreads=1L)
 {
     sortBam(path(file), destination, ...,
-                byQname=byQname, maxMemory=maxMemory)
+            byQname=byQname, maxMemory=maxMemory,
+            byTag=byTag, nThreads=nThreads)
 })
 
 

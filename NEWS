@@ -1,3 +1,12 @@
+CHANGES IN VERSION 2.16
+-----------------------
+
+NEW FEATURES
+
+    o (v 2.15.1) sortBam() gains support for sorting by tag (byTag) and using
+      multiple threads (nThreads). (See
+      https://github.com/Bioconductor/Rsamtools/issues/46. ; kriemo)
+
 CHANGES IN VERSION 2.10
 -----------------------
 
