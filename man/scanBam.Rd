@@ -59,7 +59,8 @@ filterBam(file, destination, index=file, ...)
     param=ScanBamParam(what=scanBamWhat()))
     
 sortBam(file, destination, ...)
-\S4method{sortBam}{character}(file, destination, ..., byQname=FALSE, maxMemory=512)
+\S4method{sortBam}{character}(file, destination, ..., byQname=FALSE,
+    maxMemory=512, byTag=NULL, nThreads=1L)
 
 indexBam(files, ...)
 \S4method{indexBam}{character}(files, ...)
@@ -117,6 +118,12 @@ mergeBam(files, destination, ...)
  
   \item{maxMemory}{A numerical(1) indicating the maximal amount of
     memory (in MB) that the function is allowed to use.}
+
+  \item{byTag}{A character(1) indicating whether the BAM file should be
+    sorted by the supplied tag value.}
+
+  \item{nThreads}{An integer(1) indicating the number of threads the function
+    should use.}
 
   \item{param}{An instance of \code{\linkS4class{ScanBamParam}}. This
     influences what fields and which records are imported.}
