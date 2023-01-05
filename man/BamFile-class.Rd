@@ -103,7 +103,7 @@ qnameSuffixStart(object, ...) <- value
     filter=FilterRules(), indexDestination=TRUE,
     param=ScanBamParam(what=scanBamWhat()))
 \S4method{indexBam}{BamFile}(files, ...)
-\S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512)
+\S4method{sortBam}{BamFile}(file, destination, ..., byQname=FALSE, maxMemory=512, byTag=NULL, nThreads=1L)
 \S4method{mergeBam}{BamFileList}(files, destination, ...)
 
 ## reading
@@ -188,7 +188,7 @@ qnameSuffixStart(object, ...) <- value
     \item{indexDestination}{logical(1) indicating whether the destination
       file should also be indexed.}
 
-    \item{byQname, maxMemory}{See \code{\link{sortBam}}.}
+    \item{byQname, maxMemory, byTag, nThreads}{See \code{\link{sortBam}}.}
 
     \item{param}{An optional \code{\linkS4class{ScanBamParam}} instance to
        further influence scanning, counting, or filtering.}
