@@ -12,8 +12,11 @@
 #include "bam_mate_iter.h"
 
 /* from samtoools/bam_sort.c */
-void bam_sort_core(int is_by_qname, const char *fn, const char *prefix,
-                   size_t max_mem);
+int bam_sort_core_ext(int is_by_qname, char* sort_by_tag, const char *fn,
+                      const char *prefix,const char *fnout, const char *modeout,
+                      size_t _max_mem, int by_minimiser, int n_threads,
+                      const htsFormat *in_fmt, const htsFormat *out_fmt,
+                      char *arg_list, int no_pg, int write_index);
 
 #define SEQUENCE_BUFFER_ALLOCATION_ERROR 1
 
@@ -736,7 +739,8 @@ SEXP merge_bam(SEXP fnames, SEXP destination, SEXP overwrite,
 
 /* sort_bam */
 
-SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname, SEXP maxMemory)
+SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname,
+              SEXP maxMemory, SEXP byTag, SEXP nThreads)
 {
     if (!IS_CHARACTER(filename) || 1 != LENGTH(filename))
         Rf_error("'filename' must be character(1)");
@@ -747,15 +751,38 @@ SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname, SEXP maxMemory)
     if (!IS_INTEGER(maxMemory) || LENGTH(maxMemory) != 1 ||
         INTEGER(maxMemory)[0] < 1)
         Rf_error("'maxMemory' must be a positive integer(1)");
+    if (byTag != R_NilValue)
+      if (!IS_CHARACTER(byTag) || 1 != LENGTH(byTag))
+        Rf_error("'byTag' must be character(1)");
+    if (!IS_INTEGER(nThreads) || LENGTH(nThreads) != 1 ||
+        INTEGER(nThreads)[0] < 1)
+        Rf_error("'nThreads' must be a positive integer(1)");
 
     const char *fbam = translateChar(STRING_ELT(filename, 0));
     const char *fout = translateChar(STRING_ELT(destination, 0));
     int sortMode = asInteger(isByQname);
-
+    int threadCount = INTEGER(nThreads)[0];
     size_t maxMem = (size_t) INTEGER(maxMemory)[0] * 1024 * 1024;
-    _check_is_bam(fbam);
-    bam_sort_core(sortMode, fbam, fout, maxMem);
+    char* tagVal;
+    if (byTag != R_NilValue)
+        tagVal = (char *) translateChar(STRING_ELT(byTag, 0));
+    else
+        tagVal = NULL;
 
+    _check_is_bam(fbam);
+
+    char *fnout = Calloc(strlen(fout) + 4 + 1, char);
+    if (!fnout)
+        Rf_error("Error generating output\n file: %s", fout);
+    sprintf(fnout, "%s.bam", fout);
+
+    int ret = bam_sort_core_ext(sortMode, tagVal, fbam, fout, fnout,
+                                "wb", maxMem, 0, threadCount,
+                                NULL, NULL, NULL, 1, 0);
+    if(ret < 0)
+        Rf_error("Error during sorting\n  file: %s", fbam);
+
+    Free(fnout);
     return destination;
 }
 

@@ -10,7 +10,7 @@ extern "C" {
 
 SEXP scan_bam_template(SEXP rname, SEXP tags);
 SEXP sort_bam(SEXP fname, SEXP destinationPrefix, SEXP isByQname,
-              SEXP maxMemory);
+              SEXP maxMemory, SEXP byTag, SEXP nThreads);
 SEXP merge_bam(SEXP fnames, SEXP destination, SEXP overwrite,
                SEXP hname, SEXP regionStr, SEXP isByQname,
                SEXP addRG, SEXP compressLevel1);
