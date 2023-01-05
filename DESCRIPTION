@@ -13,10 +13,24 @@ BugReports: https://github.com/Bioconductor/Rsamtools/issues
 Version: 2.16.1
 License: Artistic-2.0 | file LICENSE
 Encoding: UTF-8
-Author: Martin Morgan, Hervé Pagès, Valerie Obenchain, Nathaniel
-    Hayden
-Maintainer: Bioconductor Package Maintainer
-    <maintainer@bioconductor.org>
+Authors@R:
+    c(person(given = "",
+             family = "Bioconductor Package Maintainer",
+             role = c("cre"),  
+             email = "maintainer@bioconductor.org"),
+      person(given = "Martin",
+             family = "Morgan",
+             role = c("aut")),
+      person(given = "Hervé",
+             family = "Pagès",
+             role = c("aut")),
+      person(given = "Valerie",
+             family = "Obenchain",
+             role = c("aut")),
+      person(given = "Nathaniel",
+             family = "Hayden",
+             role = c("aut"))
+     )  
 Depends: methods, GenomeInfoDb (>= 1.1.3), GenomicRanges (>= 1.31.8),
     Biostrings (>= 2.47.6), R (>= 3.5.0)
 Imports: utils, BiocGenerics (>= 0.25.1), S4Vectors (>= 0.17.25),

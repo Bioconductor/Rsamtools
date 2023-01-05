@@ -540,7 +540,7 @@ slxMaq09 <- sub(".bai$", "", slxMaq09.bai) #$
 As a final step to prepare for using a \Rclass{BamViews} file, we
 create local copies of the \emph{index} files. The index files are
 relatively small (about 190 Mb total).
-<<bamIndicies,eval=FALSE>>=
+<<bamIndicies2,eval=FALSE>>=
 bamIndexDir <- tempfile()
 dir.create(bamIndexDir)
 idxFiles <- mapply(
