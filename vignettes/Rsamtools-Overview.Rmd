@@ -20,19 +20,20 @@ output:
     toc_depth: 4
 ---
 
-```{r, include=FALSE}
+```{r, echo=FALSE, include=FALSE}
 library("Rsamtools")
 ```
 
 # Introduction
 
-Many users will find that the `r Biocpkg("GenomicAlignments")` package provides a more useful
-representation of `BAM` files in *R*; the `r Biocpkg("GenomicFiles")` package is also useful for
-iterating through `BAM` files.
+Many users will find that the `r Biocpkg("GenomicAlignments")` package provides
+a more useful representation of `BAM` files in *R*; the `r
+Biocpkg("GenomicFiles")` package is also useful for iterating through `BAM`
+files.
 
-The `r Biocpkg("Rsamtools")` package provides an interface to `BAM` files. `BAM` files are
-produced by *samtools* and other software, and represent a flexible format for
-storing 'short' reads aligned to reference genomes. `BAM` files
+The `r Biocpkg("Rsamtools")` package provides an interface to `BAM` files. `BAM`
+files are produced by *samtools* and other software, and represent a flexible
+format for storing 'short' reads aligned to reference genomes. `BAM` files
 typically contain sequence and base qualities, and alignment coordinates
 and quality measures. `BAM` files are appealing for several reasons. The
 format is flexible enough to represent reads generated and aligned using
@@ -45,31 +46,32 @@ accessed without retrieving the entire (large!) file. A full description
 is available in the `BAM` format specification
 (<http://samtools.sourceforge.net/SAM1.pdf>)
 
-The main purpose of the `r Biocpkg("Rsamtools")` is to import `BAM` files into *R*.`r Biocpkg("Rsamtools")` also
-provides some facility for file access such as record counting, index
-file creation, and filtering to create new files containing subsets of
-the original. An important use case for `r Biocpkg("Rsamtools")` is as a starting point for
-creating objects suitable for a diversity of work flows, e.g., objects
-in the package (for quality assessment and read manipulation), or
-objects in package (for RNA-seq and other applications). Those desiring
-more functionality are encouraged to explore and related software
-efforts.
+The main purpose of the `r Biocpkg("Rsamtools")` is to import `BAM` files into
+*R*.`r Biocpkg("Rsamtools")` also provides some facility for file access such as
+record counting, index file creation, and filtering to create new files
+containing subsets of the original. An important use case for `r
+Biocpkg("Rsamtools")` is as a starting point for creating objects suitable for a
+diversity of work flows, e.g., *AlignedRead* objects in the *ShortRead* package
+(for quality assessment and read manipulation), or *GAlignments* objects in
+*GenomicAlignments* package (for RNA-seq and other applications). Those desiring
+more functionality are encouraged to explore and related software efforts.
 
 # Input
 
 ## RfunctionscanBam and `ScanBamParam`
 
-The essential capability provided by `r Biocpkg("Rsamtools")` is `BAM` input. This is
-accomplished with the `scanBam` function. `scanBam` takes as input the name of the `BAM`
-file to be parsed. In addition, the `param` argument determines which genomic
-coordinates of the `BAM` file, and what components of each record, will
-be input. *R*param is an instance of the *ScanBamParam* class. To create a *param* object, call `ScanBamParam`. Here
-we create a `param` object to extract reads aligned to three distinct ranges
-(one on `seq1`, two on `seq2`). From each of read in those ranges, we specify that
-we would like to extract the reference name (`rname`, e.g., `seq1` ), strand,
-alignment position, query (i.e., read) width, and query sequence:
+The essential capability provided by `r Biocpkg("Rsamtools")` is `BAM` input.
+This is accomplished with the `scanBam` function. `scanBam` takes as input the
+name of the `BAM` file to be parsed. In addition, the `param` argument
+determines which genomic coordinates of the `BAM` file, and what components of
+each record, will be input. *R*param is an instance of the *ScanBamParam* class.
+To create a *param* object, call `ScanBamParam`. Here we create a `param` object
+to extract reads aligned to three distinct ranges (one on `seq1`, two on
+`seq2`). From each of read in those ranges, we specify that we would like to
+extract the reference name (`rname`, e.g., `seq1` ), strand, alignment position,
+query (i.e., read) width, and query sequence:
 
-```{r}
+```{r ScanBamParam}
 which <- GRanges(c(
     "seq1:1000-2000",
     "seq2:100-1000",
@@ -87,19 +89,18 @@ what <- c("rname", "strand", "pos", "qwidth", "seq")
 param <- ScanBamParam(which=which, what=what)
 ```
 
-Additional information can be
-found on the help page for `ScanBamParam`. Reading the relevant records from the `BAM`
-file is accomplished with
+Additional information can be found on the help page for `ScanBamParam`. Reading
+the relevant records from the `BAM` file is accomplished with
 
-```{r}
+```{r scanBam, keep.source=TRUE}
 bamFile <- system.file("extdata", "ex1.bam", package="Rsamtools")
 bam <- scanBam(bamFile, param=param)
 ```
 
-Like `scan`, `scanBam` returns a `list` of values. Each element of the list corresponds to a
-range specified by the `which` argument to `ScanBamParam`.
+Like `scan`, `scanBam` returns a `list` of values. Each element of the list
+corresponds to a range specified by the `which` argument to `ScanBamParam`.
 
-```{r}
+```{r  scanBam-elts-1}
 class(bam)
 names(bam)
 ```
@@ -107,20 +108,20 @@ names(bam)
 Each element is itself a list, containing the elements
 specified by the `what` and `tag` arguments to `ScanBamParam`.
 
-```{r}
+```{r scanBam-elts-2}
 class(bam[[1]])
 names(bam[[1]])
 ```
 
 The elements are either basic *R* or *IRanges* data types
 
-```{r}
+```{r scanBam-elts-class}
 sapply(bam[[1]], class)
 ```
 
 A paradigm for collapsing the list-of-lists into a single list is
 
-```{r}
+```{r scanBam-to-IRanges}
 .unlist <- function (x)
 {
     ## do.call(c, ...) coerces factor to integer, which is undesired
@@ -137,30 +138,40 @@ lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
 ```
 
 This might be further transformed, e.g., to a *DataFrame*, with
-```{r}
+
+```{r lst-to-DataFrame}
 head(do.call("DataFrame", lst))
 ```
 
-Often, an alternative is to use a *ScanBamParam* object with desired fields specified in `what` as an argument to `GenomicAlignments::readGAlignments`; the specified fields are added as columns to the returned *GAlignments*
-.
+Often, an alternative is to use a *ScanBamParam* object with desired fields
+specified in `what` as an argument to `GenomicAlignments::readGAlignments`; the
+specified fields are added as columns to the returned *GAlignments* .
 
 ## Using `BAM` index files
 
 The `BAM` file in the previous example includes an index, represented by
 a separate file with extension `.bai`: 
 
-```{r}
+```{r indexed-file}
 list.files(dirname(bamFile), pattern="ex1.bam(.bai)?")
 ```
 
-Indexing provides two significant benefits. First, an index allows a `BAM` file to be efficiently accessed by range. A corollary is that providing a `which` argument to `scanBamPram` requires an index. Second, coordinates for extracting
-information from a `BAM` file can be derived from the index, so a
-portion of a remote `BAM` file can be retrieved with local access only to the index. For instance, provided an index file exists on the local computer, it is possible to retrieve a small portion of a `BAM` file residing on the 1000 genomes HTTP server. The url
+Indexing provides two significant benefits. First, an index allows a `BAM` file
+to be efficiently accessed by range. A corollary is that providing a `which`
+argument to `scanBamPram` requires an index. Second, coordinates for extracting
+information from a `BAM` file can be derived from the index, so a portion of a
+remote `BAM` file can be retrieved with local access only to the index. For
+instance, provided an index file exists on the local computer, it is possible to
+retrieve a small portion of a `BAM` file residing on the 1000 genomes HTTP
+server. The url
 <ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/data/NA19240/alignment/NA19240.chrom6.SLX.maq.SRP000032.2009_07.bam>
-points to the `BAM` file corresponding to individual NA19240
-chromosome 6 Solexa (Illumina) sequences aligned using MAQ. The remote file is very large (about 10 GB), but the corresponding index file is small (about 500 KB). With `na19240url` set to the above address, the following retrieves just those reads in the specified range
+points to the `BAM` file corresponding to individual NA19240 chromosome 6 Solexa
+(Illumina) sequences aligned using MAQ. The remote file is very large (about 10
+GB), but the corresponding index file is small (about 500 KB). With `na19240url`
+set to the above address, the following retrieves just those reads in the
+specified range
 
-```{r, eval=FALSE}
+```{r bam-remote, eval=FALSE}
 which <- GRanges("6:100000-110000")
 param <- ScanBamParam(which=which, what=scanBamWhat())
 na19240bam <- scanBam(na19240url, param=param)
@@ -191,7 +202,7 @@ to the current analysis, e.g., specifying `what=c('rname', 'qname', 'pos')` when
 
 When selective input of `BAM` files is still too memory-intensive, the file can be processed in chunks, with each chunk distilled to the derived information of interest. Chromosomes will often be the natural chunk to process. For instance, here we write a summary function that takes a single sequence name (chromosome) as input, reads in specific information from the `BAM` file, and calculates coverage over that sequence.
 
-```{r}
+```{r summaryFunction}
 summaryFunction <-
     function(seqname, bamFile, ...)
 {
@@ -207,7 +218,8 @@ summaryFunction <-
 
 This might be used as follows; it is an
 ideal candidate for evaluation in parallel, e.g., using the *parallel* package and `srapply` function in *ShortRead*. 
-```{r}
+
+```{r summaryByChromosome}
 seqnames <- paste("seq", 1:2, sep="")
 cvg <- lapply(seqnames, summaryFunction, bamFile)
 names(cvg) <- seqnames
@@ -235,7 +247,7 @@ To illustrate, suppose we have an interest in caffeine metabolism in humans. The
 To create the 'rows', we identify possible genes that KEGG associates
 with caffeine metabolism. Using the KEGGREST package, the steps are
 
-```{r,eval=FALSE}
+```{r keggrest, eval = FALSE}
 ## uses KEGGREST, dplyr, and tibble packages
 org <- "hsa"
 caffeine_pathway <-
@@ -253,7 +265,7 @@ egid <-
 
 At the time of writing, genes in the caffeine metabolism pathway are
 
-```{r}
+```{r caffeine-kegg}
 egid <- c("10", "1544", "1548", "1549", "7498", "9")
 ```
 
@@ -265,11 +277,9 @@ used for chromosomes in the alignments differ from those used at
 Ensembl, so `seqlevels<-` is used to map between naming schemes
 and to drop unused levels.
 
-```{r, message=FALSE}
-library(TxDb.Hsapiens.UCSC.hg18.knownGene)
-```
 
-```{r}
+```{r txdb-transcripts, message=FALSE}
+library(TxDb.Hsapiens.UCSC.hg18.knownGene)
 bamRanges <- transcripts(
     TxDb.Hsapiens.UCSC.hg18.knownGene,
     filter=list(gene_id=egid)
@@ -284,14 +294,15 @@ bamRanges
 
 The `bamRanges` 'knows' the genome for which the ranges are
 defined
-```{r}
+
+```{r bamRanges-genome}
 unique(genome(bamRanges))
 ```
 
 Here we retrieve a vector of `BAM` file URLs (`slxMaq09`)
 from the package.
 
-```{r}
+```{r BamViews-parts}
 slxMaq09 <- local({
     fl <- system.file("extdata", "slxMaq09_urls.txt", package="Rsamtools")
     readLines(fl)
@@ -305,7 +316,7 @@ instance with each row corresponding to a `BAM` file) and the
 instance as a whole (with `bamExperiment`, a simple named
 *list* containing information structured as the user sees fit).
 
-```{r}
+```{r BamViews-construct, keep.source=TRUE}
 bamExperiment <-
     list(description="Caffeine metabolism views on 1000 genomes samples",
          created=date())
@@ -318,12 +329,11 @@ metadata(bamSamples(bv)) <-
 bv
 ```
 
-
 ## Using *BamViews* instances
 
 The *BamViews* object can be queried for its component parts, e.g.,
 
-```{r}
+```{r BamViews-query}
 bamExperiment(bv)
 ```
 
@@ -332,7 +342,7 @@ with *BamViews* objects, retrieving data from all files in the
 view. These operations can take substantial time and require reliable network access.
 
 To illustrate, the following code (not evaluated when this vignette was created) downloads the index files associated with the `bv` object
-```{r,eval=FALSE}
+```{r bamIndicies,eval=FALSE}
 bamIndexDir <- tempfile()
 indexFiles <- paste(bamPaths(bv), "bai", sep=".")
 dir.create(bamIndexDir)
@@ -351,7 +361,8 @@ idxFiles <- mapply(
 ```
 
 and then queries the 1000 genomes project for reads overlapping our transcripts.
-```{r, eval=FALSE}
+
+```{r readGAlignments, eval=FALSE}
 library(GenomicAlignments)
 olaps <- readGAlignments(bv)
 ```
@@ -360,11 +371,8 @@ The resulting object is about 11 MB in size. To avoid having to
 download this data each time the vignette is run, we instead load it
 from disk
 
-```{r, include=FALSE}
+```{r olaps, message=FALSE}
 library(GenomicAlignments)
-```
-
-```{r}
 load(system.file("extdata", "olaps.Rda", package="Rsamtools"))
 olaps
 head(olaps[[1]])
@@ -375,7 +383,7 @@ There are `r length(olaps[[1]])` reads in
 transcripts. It is easy to explore this object, for instance
 discovering the range of read widths in each individual.
 
-```{r}
+```{r read-lengths}
 head(t(sapply(olaps, function(elt) range(qwidth(elt)))))
 ```
 
@@ -390,7 +398,7 @@ strand of our range of interest to `*`. We use the
 returns an object of the same class (in this case,
 `r as.vector(class(olaps))`) as its first argument.
 
-```{r}
+```{r focal}
 rng <- bamRanges(bv)[1]
 strand(rng) <- "*"
 olap1 <- endoapply(olaps, subsetByOverlaps, rng)
@@ -401,7 +409,7 @@ head(olap1[[24]])
 To carry the example a little further, we calculate coverage of each
 sample:
 
-```{r}
+```{r olap-cvg, keep.source=TRUE}
 minw <- min(sapply(olap1, function(elt) min(start(elt))))
 maxw <- max(sapply(olap1, function(elt) max(end(elt))))
 cvg <- endoapply(
@@ -417,12 +425,11 @@ samples, we can easily create a coverage matrix with rows representing
 nucleotide and columns sample and, e.g., document variability between
 samples and nucleotides
 
-```{r}
+```{r olap-cvg-as-m}
 m <- matrix(unlist(lapply(cvg, lapply, as.vector)), ncol=length(cvg))
 summary(rowSums(m))
 summary(colSums(m))
 ```
-
 
 # Directions
 
@@ -436,7 +443,7 @@ to the UCSC genome browser. Users might also find the interface to the
 integrative genome browser (IGV) in *SRAdb* useful for
 visualizing `BAM` files.
 
-```{r}
+```{r sessionInfo}
 packageDescription("Rsamtools")
 sessionInfo()
 ```
@@ -459,6 +466,7 @@ that might make for an interesting comparison.  First, let's visit the
 1000 genomes FTP site and discover available files. We'll use the
 *RCurl* package to retrieve the names of all files in an
 appropriate directory
+
 ```{r, eval=FALSE}
 library(RCurl)
 ftpBase <-
@@ -485,6 +493,7 @@ fls <- fls1[sapply(strsplit(fls1, "\\."), length)==7]
 After a little exploration, we focus on those files
 obtained form Solexa sequencing, aligned using `MAQ`, and archived in
 August, 2009; we remove the `.bai` extension, so that the URL refers to the underlying file rather than index. There are 24 files.
+
 ```{r, eval=FALSE}
 urls1 <- Filter(
     function(x) length(x) != 0,
@@ -494,7 +503,6 @@ slxMaq09.bai <-
    mapply(paste, names(urls1), urls1, sep="", USE.NAMES=FALSE)
 slxMaq09 <- sub(".bai$", "", slxMaq09.bai)
 ```
-
 
 As a final step to prepare for using a file, we create local copies of
 the *index* files. The index files are relatively small (about 190 Mb
@@ -509,4 +517,3 @@ idxFiles <- mapply(
     MoreArgs=list(method="curl")
 )
 ```
-
