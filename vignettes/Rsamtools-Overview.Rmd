@@ -299,7 +299,6 @@ for non-model organisms, perhaps making a `TxDb` object as outlined in the
 the alignments differ from those used at Ensembl, so `seqlevels<-` is used to
 map between naming schemes and to drop unused levels.
 
-
 ```{r txdb-transcripts, message=FALSE}
 library(TxDb.Hsapiens.UCSC.hg18.knownGene)
 bamRanges <- transcripts(
