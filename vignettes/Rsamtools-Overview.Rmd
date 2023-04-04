@@ -293,7 +293,7 @@ egid <- c("10", "1544", "1548", "1549", "7498", "9")
 
 Then we use the appropriate `r Biocpkg("TxDb")` package to translate Entrez
 identifiers to obtain ranges of interest (one could also use
-`r Biocpkg("biomaRt")`to retrieve coordinates for non-model organisms, perhaps
+`r Biocpkg("biomaRt")` to retrieve coordinates for non-model organisms, perhaps
 making a `TxDb` object  as outlined in the
 `r Biocpkg("GenomicFeatures")` vignette). We'll find that  the names used for
 chromosomes in the alignments differ from those used at 
@@ -463,9 +463,9 @@ representing and manipulating gapped alignments), `r Biocpkg("ShortRead")` for
 I/O and quality assessment of ungapped short read alignments, 
 `r Biocpkg("Biostrings")` and `r Biocpkg("BSgenome")` for DNA sequence and
 whole-genome manipulation, `r Biocpkg("IRanges")` for range-based manipulation,
-and *rtracklayer* for I/O related to the UCSC genome browser. Users might also
-find the interface to the integrative genome browser (IGV) in `r
-Biocpkg("SRAdb")` useful for visualizing `BAM` files.
+and `r Biocpkg("rtracklayer")` for I/O related to the UCSC genome browser. Users
+might also find the interface to the integrative genome browser (IGV) in
+`r Biocpkg("SRAdb")` useful for visualizing `BAM` files.
 
 ```{r sessionInfo}
 packageDescription("Rsamtools")
