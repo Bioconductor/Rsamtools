@@ -38,7 +38,8 @@ scanTabix(file, ..., param)
 \value{
 
   \code{scanTabix} returns a list, with one element per region. Each element
-  of the list is a character vector representing records in the region.
+  of the list is a character vector representing records in the region. If
+  \code{param} is empty then all records will be returned.
 
 }
 

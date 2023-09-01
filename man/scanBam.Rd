@@ -136,7 +136,8 @@ mergeBam(files, destination, ...)
   arguments \code{what} to control the fields that are parsed.
 
   \code{countBam} returns a count of records consistent with
-  \code{param}.
+  \code{param}. If \code{param} is empty then entire file would be
+  counted.
 
   \code{idxstatsBam} visit the index in \code{index(file)}, and quickly
   returns the number of mapped and unmapped reads on each seqname.
