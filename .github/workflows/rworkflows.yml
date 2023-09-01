@@ -39,10 +39,10 @@ jobs:
         run_rcmdcheck: ${{ false }}
         as_cran: ${{ false }}
         run_vignettes: ${{ true }}
-        has_testthat: ${{ true }}
+        has_testthat: ${{ false }}
         run_covr: ${{ true }}
         run_pkgdown: ${{ true }}
-        has_runit: ${{ false }}
+        has_runit: ${{ true }}
         has_latex: ${{ true }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run_docker: ${{ false }}
