@@ -759,10 +759,12 @@ SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname,
     int threadCount = INTEGER(nThreads)[0];
     size_t maxMem = (size_t) INTEGER(maxMemory)[0] * 1024 * 1024;
     char* tagVal;
-    if (byTag != R_NilValue)
+    if (byTag != R_NilValue) {
         tagVal = (char *) translateChar(STRING_ELT(byTag, 0));
-    else
+        sam_order = asInteger(isByQname) ? TagQueryName : TagCoordinate;
+    } else {
         tagVal = NULL;
+    }
 
     _check_is_bam(fbam);
 
