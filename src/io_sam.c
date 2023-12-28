@@ -1,4 +1,5 @@
 #include <htslib/khash.h>
+#include <bam_sort.h>
 #include <samtools-1.7-compat.h>
 #include "bam_data.h"
 #include "scan_bam_data.h"
@@ -11,12 +12,6 @@
 #include "Biostrings_interface.h"
 #include "bam_mate_iter.h"
 
-/* from samtoools/bam_sort.c */
-int bam_sort_core_ext(int is_by_qname, char* sort_by_tag, const char *fn,
-                      const char *prefix,const char *fnout, const char *modeout,
-                      size_t _max_mem, int by_minimiser, int n_threads,
-                      const htsFormat *in_fmt, const htsFormat *out_fmt,
-                      char *arg_list, int no_pg, int write_index);
 
 #define SEQUENCE_BUFFER_ALLOCATION_ERROR 1
 
@@ -760,14 +755,16 @@ SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname,
 
     const char *fbam = translateChar(STRING_ELT(filename, 0));
     const char *fout = translateChar(STRING_ELT(destination, 0));
-    int sortMode = asInteger(isByQname);
+    SamOrder sam_order = asInteger(isByQname) ? QueryName : Coordinate;
     int threadCount = INTEGER(nThreads)[0];
     size_t maxMem = (size_t) INTEGER(maxMemory)[0] * 1024 * 1024;
     char* tagVal;
-    if (byTag != R_NilValue)
+    if (byTag != R_NilValue) {
         tagVal = (char *) translateChar(STRING_ELT(byTag, 0));
-    else
+        sam_order = asInteger(isByQname) ? TagQueryName : TagCoordinate;
+    } else {
         tagVal = NULL;
+    }
 
     _check_is_bam(fbam);
 
@@ -776,8 +773,10 @@ SEXP sort_bam(SEXP filename, SEXP destination, SEXP isByQname,
         Rf_error("Error generating output\n file: %s", fout);
     sprintf(fnout, "%s.bam", fout);
 
-    int ret = bam_sort_core_ext(sortMode, tagVal, fbam, fout, fnout,
-                                "wb", maxMem, 0, threadCount,
+    int ret = bam_sort_core_ext(sam_order, tagVal, 0,
+                                false, true, fbam,
+                                fout, fnout,
+                                "wb", maxMem, threadCount,
                                 NULL, NULL, NULL, 1, 0);
     if(ret < 0)
         Rf_error("Error during sorting\n  file: %s", fbam);
