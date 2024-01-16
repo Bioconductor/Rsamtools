@@ -9,7 +9,7 @@ void _zip_error(const char *txt, const char *err, int infd, int outfd)
 {
     close(infd);
     close(outfd);
-    err ? Rf_error(txt, err) : Rf_error(txt);
+    err ? Rf_error("%s", txt, err) : Rf_error("%s", txt);
 }
 
 void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
