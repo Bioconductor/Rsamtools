@@ -5,14 +5,14 @@
 #include <htslib/bgzf.h>
 #include "zip_compression.h"
 
-void _zip_error(const char *txt, const char *err, int infd, int outfd)
+static void _zip_error(const char *txt, const char *err, int infd, int outfd)
 {
     close(infd);
     close(outfd);
-    err ? Rf_error(txt, err) : Rf_error(txt);
+    err ? Rf_error(txt, err) : Rf_error("%s", txt);
 }
 
-void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
+static void _zip_open(SEXP file, SEXP dest, int *infd, int *outfd)
 {
     int iflag = O_RDONLY, oflag = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef _WIN32
