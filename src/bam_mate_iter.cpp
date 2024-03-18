@@ -1,7 +1,8 @@
-#include <Rdefines.h>
 #include "BamRangeIterator.h"
 #include "BamFileIterator.h"
 #include "bam_mate_iter.h"
+
+#include <Rdefines.h>
 
 #ifdef __cplusplus
 extern "C" {
