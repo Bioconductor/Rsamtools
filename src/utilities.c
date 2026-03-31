@@ -5,6 +5,12 @@
 #include "XVector_interface.h"
 #include <htslib/khash.h>
 
+#include <Rversion.h>
+
+#if R_VERSION < R_Version(4, 6, 0)
+# define R_getVar(x,y,z) findVar(x,y)
+#endif
+
 void *_Rs_Realloc_impl(void *p, size_t n, size_t t)
 {
     /* R_Realloc(p, 0, *) fails inappropriately */
