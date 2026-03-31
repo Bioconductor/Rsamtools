@@ -30,7 +30,7 @@ SEXP _get_namespace(const char *pkg)
 void _as_strand(SEXP vec)
 {
     SEXP nmspc = PROTECT(_get_namespace("Rsamtools"));
-    SEXP lvls = PROTECT(eval(findVar(install(".STRAND_LEVELS"), nmspc), nmspc));
+    SEXP lvls = PROTECT(eval(R_getVar(install(".STRAND_LEVELS"), nmspc, TRUE), nmspc));
     _as_factor_SEXP(vec, lvls);
     UNPROTECT(2);
 }
@@ -38,8 +38,8 @@ void _as_strand(SEXP vec)
 void _as_nucleotide(SEXP vec)
 {
     SEXP nmspc = PROTECT(_get_namespace("Rsamtools"));
-    SEXP lvls = PROTECT(eval(findVar(install(".PILEUP_NUCLEOTIDE_LEVELS"),
-                                     nmspc), nmspc));
+    SEXP lvls = PROTECT(eval(R_getVar(install(".PILEUP_NUCLEOTIDE_LEVELS"),
+                                     nmspc, TRUE), nmspc));
     _as_factor_SEXP(vec, lvls);
     UNPROTECT(2);
 }
