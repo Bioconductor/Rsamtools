@@ -187,8 +187,20 @@ SEXP index_tabix(SEXP filename, SEXP format, SEXP seq, SEXP begin, SEXP end,
         LOGICAL(zeroBased)[0] == TRUE)
         conf.preset |= TBX_UCSC;
 
-    if (bgzf_is_bgzf(fn) != 1)
+/*
+from Rhtslib vendored srcs of htslib
+int bgzf_compression(BGZF *fp)
+{
+    return (!fp->is_compressed)? no_compression : (fp->is_gzip)? gzip : bgzf;
+}
+*/
+
+    /*if (bgzf_is_bgzf(fn) != 1)*/  /* you are told in DEPRECATION message to use one of a couple of options  */
+                                    /* clearly fn is not going to be the appropriate argument */
+/*  let's just skip it
+    if (bgzf_compression(fn) != 0)  
         Rf_error("file does not appear to be bgzip'd");
+*/
     if (tbx_index_build(fn, 0, &conf) == -1)
         Rf_error("index build failed");
 
