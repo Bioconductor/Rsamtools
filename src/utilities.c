@@ -5,6 +5,12 @@
 #include "XVector_interface.h"
 #include <htslib/khash.h>
 
+#include <Rversion.h>
+
+#if R_VERSION < R_Version(4, 6, 0)
+# define R_getVar(x,y,z) findVar(x,y)
+#endif
+
 void *_Rs_Realloc_impl(void *p, size_t n, size_t t)
 {
     /* R_Realloc(p, 0, *) fails inappropriately */
@@ -30,7 +36,7 @@ SEXP _get_namespace(const char *pkg)
 void _as_strand(SEXP vec)
 {
     SEXP nmspc = PROTECT(_get_namespace("Rsamtools"));
-    SEXP lvls = PROTECT(eval(findVar(install(".STRAND_LEVELS"), nmspc), nmspc));
+    SEXP lvls = PROTECT(eval(R_getVar(install(".STRAND_LEVELS"), nmspc, TRUE), nmspc));
     _as_factor_SEXP(vec, lvls);
     UNPROTECT(2);
 }
@@ -38,8 +44,8 @@ void _as_strand(SEXP vec)
 void _as_nucleotide(SEXP vec)
 {
     SEXP nmspc = PROTECT(_get_namespace("Rsamtools"));
-    SEXP lvls = PROTECT(eval(findVar(install(".PILEUP_NUCLEOTIDE_LEVELS"),
-                                     nmspc), nmspc));
+    SEXP lvls = PROTECT(eval(R_getVar(install(".PILEUP_NUCLEOTIDE_LEVELS"),
+                                     nmspc, TRUE), nmspc));
     _as_factor_SEXP(vec, lvls);
     UNPROTECT(2);
 }
