@@ -22,13 +22,19 @@ samfile_t *_bam_tryopen(const char *filename, const char *filemode, void *aux)
     return sfile;
 }
 
-static bam_index_t *_bam_tryindexload(const char *file, const char *indexname)
+static bam_index_t *_bam_tryindexload(const char *file, const char *indexname,
+                                       samfile_t *sf)
 {
-    bam_index_t *index = bam_index_load(indexname);
+    bam_index_t *index;
+    if (sf->file->is_cram) {
+        index = sam_index_load2(sf->file, file, indexname);
+    } else {
+        index = bam_index_load(indexname);
+        if (index == 0)
+            index = hts_idx_load2(file, indexname);
+    }
     if (index == 0)
-        index = hts_idx_load2(file, indexname);
-    if (index == 0)
-        Rf_error("failed to load BAM index\n  file: %s", indexname);
+        Rf_error("failed to load BAM/CRAM index\n  file: %s", indexname);
     return index;
 }
 
@@ -74,19 +80,21 @@ static BAM_FILE _bamfile_open_r(SEXP filename, SEXP indexname, SEXP filemode)
     if (0 != Rf_length(filename)) {
         cfile = translateChar(STRING_ELT(filename, 0));
         bfile->file = _bam_tryopen(cfile, CHAR(STRING_ELT(filemode, 0)), 0);
-        if (hts_get_format(bfile->file->file)->format != bam) {
+        enum htsExactFormat fmt = hts_get_format(bfile->file->file)->format;
+        if (fmt != bam && fmt != cram) {
             samclose(bfile->file);
             R_Free(bfile);
-            Rf_error("'filename' is not a BAM file\n  file: %s", cfile);
+            Rf_error("'filename' is not a BAM or CRAM file\n  file: %s", cfile);
         }
-        bfile->pos0 = bam_tell(bfile->file->x.bam);
+        bfile->pos0 = bfile->file->file->is_bgzf ?
+            bam_tell(bfile->file->x.bam) : 0;
         bfile->irange0 = 0;
     }
 
     bfile->index = NULL;
     if (0 != Rf_length(indexname)) {
         const char *cindex = translateChar(STRING_ELT(indexname, 0));
-        bfile->index = _bam_tryindexload(cfile, cindex);
+        bfile->index = _bam_tryindexload(cfile, cindex, bfile->file);
         if (NULL == bfile->index) {
             samclose(bfile->file);
             R_Free(bfile);
@@ -159,9 +167,10 @@ SEXP bamfile_isincomplete(SEXP ext)
     if (NULL != BAMFILE(ext)) {
         _checkext(ext, BAMFILE_TAG, "isIncomplete");
         bfile = BAMFILE(ext);
-        if (NULL != bfile && NULL != bfile->file) {
+        if (NULL != bfile && NULL != bfile->file &&
+                bfile->file->file->is_bgzf) {
             /* heuristic: can we read a record? bgzf_seek does not
-             * support SEEK_END */
+             * support SEEK_END. Not applicable for CRAM (is_bgzf == 0). */
             off_t offset = bgzf_tell(bfile->file->x.bam);
             char buf;
             ans = bgzf_read(bfile->file->x.bam, &buf, 1) > 0;
@@ -238,6 +247,20 @@ SEXP prefilter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,
     if (R_NilValue == result)
         Rf_error("'filterBam' failed during pre-filtering");
     return result;
+}
+
+SEXP bamfile_set_ref(SEXP ext, SEXP refname)
+{
+    _checkext(ext, BAMFILE_TAG, "referenceFile<-");
+    BAM_FILE bfile = BAMFILE(ext);
+    if (NULL == bfile || NULL == bfile->file)
+        Rf_error("'BamFile' is not open");
+    if (!IS_CHARACTER(refname) || 1 != LENGTH(refname))
+        Rf_error("'refname' must be character(1)");
+    const char *cref = translateChar(STRING_ELT(refname, 0));
+    if (hts_set_fai_filename(bfile->file->file, cref) != 0)
+        Rf_error("failed to set reference file\n  ref: %s", cref);
+    return ext;
 }
 
 SEXP filter_bamfile(SEXP ext, SEXP regions, SEXP keepFlags, SEXP isSimpleCigar,

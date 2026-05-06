@@ -22,6 +22,21 @@ test_BamFile_guessIndex <- function()
 
     checkIdentical(character(), .BamFile_guessIndex(character()))
     checkIdentical(character(), .BamFile_guessIndex())
+
+    ## CRAM index guessing (.crai)
+    cram1 <- tempfile(fileext = ".cram")
+    crai1 <- paste0(cram1, ".crai")     # foo.cram.crai
+    file.create(crai1)
+
+    cram2 <- tempfile(fileext = ".cram")
+    crai2 <- sub("\\.cram$", ".crai", cram2)  # foo.crai
+    file.create(crai2)
+
+    cram3 <- tempfile(fileext = ".cram")  # no index
+
+    cram_fls    <- c(cram1, cram2, cram3)
+    cram_target <- c(crai1, crai2, NA_character_)
+    checkIdentical(cram_target, .BamFile_guessIndex(cram_fls))
 }
 
 test_BamFile_openclose <- function()

@@ -27,6 +27,7 @@ SEXP bamfile_open(SEXP file0, SEXP file1, SEXP mode);
 SEXP bamfile_close(SEXP ext);
 SEXP bamfile_isopen(SEXP ext);
 SEXP bamfile_isincomplete(SEXP ext);
+SEXP bamfile_set_ref(SEXP ext, SEXP refname);
 
 SEXP read_bamfile_header(SEXP ext, SEXP what);
 SEXP scan_bamfile(SEXP ext, SEXP regions, SEXP keepFlags,

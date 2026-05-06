@@ -249,7 +249,8 @@ static int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
 
         yield += status;
         if (NA_INTEGER != yieldSize && yield == yieldSize) {
-            bfile->pos0 = bam_tell(bfile->file->x.bam);
+            if (bfile->file->file->is_bgzf)
+                bfile->pos0 = bam_tell(bfile->file->x.bam);
             if (!bd->obeyQname)
                 break;
         }
@@ -263,6 +264,8 @@ static int _samread(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
 static int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
                          bam_fetch_mate_f parse1_mate)
 {
+    if (!bfile->file->file->is_bgzf)
+        Rf_error("'asMates' is not supported for CRAM files");
     int yield = 0;
     bam_mates_t *bam_mates = bam_mates_new();
 
@@ -281,7 +284,8 @@ static int _samread_mate(BAM_FILE bfile, BAM_DATA bd, const int yieldSize,
 
         yield += 1;
         if (NA_INTEGER != yieldSize && yield == yieldSize) {
-            bfile->pos0 = bam_tell(bfile->file->x.bam);
+            if (bfile->file->file->is_bgzf)
+                bfile->pos0 = bam_tell(bfile->file->x.bam);
             break;
         }
 
@@ -299,7 +303,8 @@ static int _scan_bam_all(BAM_DATA bd, bam_fetch_f parse1,
     const int yieldSize = bd->yieldSize;
     int yield = 0;
 
-    (void) bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
+    if (bfile->file->file->is_bgzf)
+        (void) bam_seek(bfile->file->x.bam, bfile->pos0, SEEK_SET);
     if (bd->asMates) {
         yield = _samread_mate(bfile, bd, yieldSize, parse1_mate);
     } else {
@@ -308,11 +313,27 @@ static int _scan_bam_all(BAM_DATA bd, bam_fetch_f parse1,
 
     /* end-of-file */
     if ((NA_INTEGER == yieldSize) || (yield < yieldSize))
-        bfile->pos0 = bam_tell(bfile->file->x.bam);
+        if (bfile->file->file->is_bgzf)
+            bfile->pos0 = bam_tell(bfile->file->x.bam);
     if ((NULL != finish1) && (bd->iparsed >= 0))
         (*finish1) (bd);
 
     return bd->iparsed;
+}
+
+/* fetch records in a genomic range; works for both BAM (BGZF) and CRAM */
+static int _hts_fetch(htsFile *htsfp, const hts_idx_t *idx, int tid,
+                      int beg, int end, void *data, bam_fetch_f func)
+{
+    int ret;
+    hts_itr_t *iter;
+    bam1_t *b;
+    b = bam_init1();
+    iter = sam_itr_queryi(idx, tid, beg, end);
+    while ((ret = sam_itr_next(htsfp, iter, b)) >= 0) func(b, data);
+    hts_itr_destroy(iter);
+    bam_destroy1(b);
+    return (ret == -1) ? 0 : ret;
 }
 
 /* read ranges */
@@ -340,11 +361,13 @@ static int _scan_bam_fetch(BAM_DATA bd, SEXP space, int *start, int *end,
             return -1;
         }
         if (bd->asMates) {
+            if (!sfile->file->is_bgzf)
+                Rf_error("'asMates' is not supported for CRAM files");
             bam_fetch_mate(sfile->x.bam, bindex, tid, starti, end[irange],
                            bd, parse1_mate);
         } else {
-            bam_fetch(sfile->x.bam, bindex, tid, starti, end[irange],
-                      bd, parse1);
+            _hts_fetch(sfile->file, bindex, tid, starti, end[irange],
+                       bd, parse1);
         }
 
         if (NULL != finish1)

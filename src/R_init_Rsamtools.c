@@ -24,6 +24,7 @@ static const R_CallMethodDef callMethods[] = {
     {".bamfile_close", (DL_FUNC) & bamfile_close, 1},
     {".bamfile_isopen", (DL_FUNC) & bamfile_isopen, 1},
     {".bamfile_isincomplete", (DL_FUNC) & bamfile_isincomplete, 1},
+    {".bamfile_set_ref", (DL_FUNC) & bamfile_set_ref, 2},
     {".read_bamfile_header", (DL_FUNC) & read_bamfile_header, 2},
     {".scan_bamfile", (DL_FUNC) & scan_bamfile, 13},
     {".count_bamfile", (DL_FUNC) & count_bamfile, 6},

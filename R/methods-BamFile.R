@@ -50,14 +50,19 @@ setMethod(isIncomplete, "BamFile",
     index <- do_append(index, files, ".BAI")
     index <- do_sub(index, files, ".bam$", ".bai")
     index <- do_sub(index, files, ".BAM$", ".BAI")
+    index <- do_append(index, files, ".crai")
+    index <- do_append(index, files, ".CRAI")
+    index <- do_sub(index, files, "\\.cram$", ".crai")
+    index <- do_sub(index, files, "\\.CRAM$", ".CRAI")
 
     index
 }
 
 BamFile <-
-    function(file, index=file, ..., yieldSize=NA_integer_, 
-             obeyQname=FALSE, asMates=FALSE, 
-             qnamePrefixEnd=NA, qnameSuffixStart=NA)
+    function(file, index=file, ..., yieldSize=NA_integer_,
+             obeyQname=FALSE, asMates=FALSE,
+             qnamePrefixEnd=NA, qnameSuffixStart=NA,
+             reference=character())
 {
     if (missing(file) || !isSingleString(file))
         stop("'file' must be character(1) and not NA")
@@ -78,12 +83,17 @@ BamFile <-
         stop(paste(strwrap(txt), collapse="\n  "))
     }
     index <- .normalizePath(index)
+    if (length(reference) && nzchar(reference[[1L]]))
+        reference <- .normalizePath(reference[[1L]])
+    else
+        reference <- character()
     qnamePrefixEnd <- .check_qname_arg(qnamePrefixEnd, "qnamePrefixEnd")
     qnameSuffixStart <- .check_qname_arg(qnameSuffixStart, "qnameSuffixStart")
     .RsamtoolsFile(.BamFile, path=file, index=index, yieldSize=yieldSize,
-                   obeyQname=obeyQname, asMates=asMates, 
-                   qnamePrefixEnd=qnamePrefixEnd, 
-                   qnameSuffixStart=qnameSuffixStart, ...)
+                   obeyQname=obeyQname, asMates=asMates,
+                   qnamePrefixEnd=qnamePrefixEnd,
+                   qnameSuffixStart=qnameSuffixStart,
+                   reference=reference, ...)
 }
 
 open.BamFile <-
@@ -91,8 +101,17 @@ open.BamFile <-
 {
     tryCatch({
         .io_check_exists(path(con))
-        index <- sub("\\.bai$", "", index(con, asNA=FALSE))
-        con$.extptr <- .Call(.bamfile_open, path(con), index, "rb")
+        fpath <- path(con)
+        index <- index(con, asNA=FALSE)
+        ## For BAM files, strip .bai so the C code can probe for the index.
+        ## For CRAM files, pass the full .crai path; sam_index_load2 opens it
+        ## directly and handles both file.cram.crai and file.crai conventions.
+        if (!grepl("\\.cram$", fpath, ignore.case=TRUE))
+            index <- sub("\\.bai$", "", index)
+        con$.extptr <- .Call(.bamfile_open, fpath, index, "rb")
+        ref <- con$reference
+        if (length(ref) && nzchar(ref))
+            .Call(.bamfile_set_ref, con$.extptr, ref)
     }, error=function(err) {
         stop("failed to open BamFile: ", conditionMessage(err))
     })
@@ -126,6 +145,13 @@ setMethod(seqinfo, "BamFile",
     h <- scanBamHeader(x, what="targets")[["targets"]]
     h <- h[!(duplicated(h) & duplicated(names(h)))]
     Seqinfo(names(h), unname(h))
+})
+
+setMethod(referenceFile, "BamFile",
+    function(object, ...)
+{
+    ref <- object$reference
+    if (length(ref) && nzchar(ref)) ref else NA_character_
 })
 
 setMethod(obeyQname, "BamFile",
@@ -451,4 +477,5 @@ setMethod(show, "BamFile", function(object) {
     cat("asMates:", asMates(object), "\n")
     cat("qnamePrefixEnd:", qnamePrefixEnd(object), "\n")
     cat("qnameSuffixStart:", qnameSuffixStart(object), "\n")
+    cat("reference:", referenceFile(object), "\n")
 })

@@ -58,7 +58,8 @@ setClass("ApplyPileupsParam",
 
 .BamFile <- setRefClass("BamFile", contains="RsamtoolsFile",
     fields=list(obeyQname="logical", asMates="logical",
-                qnamePrefixEnd="character", qnameSuffixStart="character"))
+                qnamePrefixEnd="character", qnameSuffixStart="character",
+                reference="character"))
 
 .BcfFile <- setRefClass("BcfFile", contains="RsamtoolsFile",
     fields=list(mode="character"))

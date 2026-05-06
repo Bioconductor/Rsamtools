@@ -168,6 +168,9 @@ setGeneric("yieldSize",
 setGeneric("yieldSize<-",
            function(object, ..., value) standardGeneric("yieldSize<-"))
 
+setGeneric("referenceFile",
+           function(object, ...) standardGeneric("referenceFile"))
+
 setGeneric("obeyQname",
            function(object, ...) standardGeneric("obeyQname"))
 

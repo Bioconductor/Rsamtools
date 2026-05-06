@@ -58,8 +58,8 @@
 
 \description{
 
-  Use \code{BamFile()} to create a reference to a BAM file (and
-  optionally its index). The reference remains open across calls to
+  Use \code{BamFile()} to create a connection to a BAM/CRAM file (and
+  optionally its index). The connection remains open across calls to
   methods, avoiding costly index re-loading.
 
   \code{BamFileList()} provides a convenient way of managing a list of
@@ -72,7 +72,7 @@
 ## Constructors
 
 BamFile(file, index=file, ..., yieldSize=NA_integer_, obeyQname=FALSE,
-        asMates=FALSE, qnamePrefixEnd=NA, qnameSuffixStart=NA)
+        asMates=FALSE, qnamePrefixEnd=NA, qnameSuffixStart=NA, reference=NA)
 BamFileList(..., yieldSize=NA_integer_, obeyQname=FALSE, asMates=FALSE,
             qnamePrefixEnd=NA, qnameSuffixStart=NA)
 
@@ -133,7 +133,7 @@ qnameSuffixStart(object, ...) <- value
 
     \item{con}{An instance of \code{BamFile}.}
 
-    \item{x, object, file, files}{A character vector of BAM file paths
+    \item{x, object, file, files}{A character vector of BAM/CRAM file paths
       (for \code{BamFile}) or a \code{BamFile} instance (for other
       methods).}
 
@@ -145,26 +145,30 @@ qnameSuffixStart(object, ...) <- value
       section for details.}
 
     \item{asMates}{Logical indicating if records should be paired
-      as mates. See \sQuote{Fields} section for details.}
+      as mates. See \sQuote{Fields} section for details. Not currently
+      supported for CRAM input}
 
-    \item{qnamePrefixEnd}{Single character (or NA) marking the 
-      end of the qname prefix. When specified, all characters prior to 
+    \item{qnamePrefixEnd}{Single character (or NA) marking the
+      end of the qname prefix. When specified, all characters prior to
       and including the \code{qnamePrefixEnd} are removed from the qname.
       If the prefix is not found in the qname the qname is not trimmed.
       Currently only implemented for mate-pairing (i.e., when
       \code{asMates=TRUE} in a BamFile.}
 
-    \item{qnameSuffixStart}{Single character (or NA) marking the 
+    \item{qnameSuffixStart}{Single character (or NA) marking the
       start of the qname suffix. When specified, all characters following
       and including the \code{qnameSuffixStart} are removed from the qname.
       If the suffix is not found in the qname the qname is not trimmmed.
       Currently only implemented for mate-pairing (i.e., when
       \code{asMates=TRUE} in a BamFile.}
 
+    \item{reference}{Only needed for CRAM input: path to a reference fasta file
+      (optionally bgzip compressed) required to open the \code(BamFile).}
+
     \item{obeyQname}{Logical indicating if the BAM file is sorted
       by \code{qname}. In Bioconductor > 2.12 paired-end files do
       not need to be sorted by \code{qname}. Instead use
-      \code{asMates=TRUE} for reading paired-end data. See 
+      \code{asMates=TRUE} for reading paired-end data. See
       \sQuote{Fields} section for details.}
 
     \item{value}{Logical value for setting \code{asMates} and
@@ -243,8 +247,8 @@ qnameSuffixStart(object, ...) <- value
       Flags, tags and ranges may be specified in the \code{ScanBamParam}
       for fine tuning of results.}
 
-      \item{obeyQname: }{A logical(0) indicating if the file was sorted by 
-        qname. In Bioconductor > 2.12 paired-end files do not need to be 
+      \item{obeyQname: }{A logical(0) indicating if the file was sorted by
+        qname. In Bioconductor > 2.12 paired-end files do not need to be
         sorted by \code{qname}. Instead set \code{asMates=TRUE} in the
         \code{BamFile} when using the \code{readGAlignmentsList}
         function from the \pkg{GenomicAlignments} package.
@@ -276,7 +280,7 @@ qnameSuffixStart(object, ...) <- value
 
   }
 
-  Accessors: 
+  Accessors:
   \describe{
 
     \item{path}{Returns a character(1) vector of BAM path names.}
@@ -375,16 +379,16 @@ asMates(bf) <- TRUE
 
 ## When 'yieldSize' is set, scanBam() will iterate
 ## through the file in chunks.
-yieldSize(bf) <- 500 
+yieldSize(bf) <- 500
 
-## Some applications append a filename (e.g., NCBI Sequence Read 
+## Some applications append a filename (e.g., NCBI Sequence Read
 ## Archive (SRA) toolkit) or allele identifier to the sequence qname.
 ## This may result in a unique qname for each record which presents a
 ## problem when mating paired-end reads (identical qnames is one
-## criteria for paired-end mating). 'qnamePrefixEnd' and 
+## criteria for paired-end mating). 'qnamePrefixEnd' and
 ## 'qnameSuffixStart' can be used to trim an unwanted prefix or suffix.
 qnamePrefixEnd(bf) <- "/"
-qnameSuffixStart(bf) <- "." 
+qnameSuffixStart(bf) <- "."
 
 ##
 ## Reading Bam files.
@@ -414,12 +418,12 @@ identical(scanBam(bf), scanBam(fl))
 close(bf)
 
 ## Use 'yieldSize' to iterate through a file in chunks.
-bf <- open(BamFile(fl, yieldSize=1000)) 
+bf <- open(BamFile(fl, yieldSize=1000))
 while (nrec <- length(scanBam(bf)[[1]][[1]]))
     cat("records:", nrec, "\n")
 close(bf)
 
-## Repeatedly visit multiple ranges in the BamFile. 
+## Repeatedly visit multiple ranges in the BamFile.
 rng <- GRanges(c("seq1", "seq2"), IRanges(1, c(1575, 1584)))
 bf <- open(BamFile(fl))
 sapply(seq_len(length(rng)), function(i, bamFile, rng) {
