@@ -37,6 +37,39 @@ setMethod(isOpen, "BcfFile",
 
 ## scanBcfHeader
 
+## Parse the comma-separated key=value fields that appear inside a VCF/BCF
+## structured header value (the content between '<' and '>').  Values may be
+## quoted strings that contain commas or equals signs, e.g.
+##   Description="a=1,b=2"
+## The parser walks the string character-by-character so that commas and
+## equals signs inside double-quoted strings are never treated as delimiters.
+## Each field is then split on the FIRST '=' only (key names are never
+## allowed to contain '=').  Returns a list of character(2) vectors c(key,
+## value) for each field.
+.splitKeyVals <- function(s) {
+    n <- nchar(s)
+    if (n == 0L) return(list())
+    chars <- strsplit(s, "", fixed=TRUE)[[1L]]
+    in_quote <- FALSE
+    starts <- 1L
+    fields <- character(0L)
+    for (i in seq_along(chars)) {
+        ch <- chars[[i]]
+        if (ch == '"') {
+            in_quote <- !in_quote
+        } else if (ch == ',' && !in_quote) {
+            fields <- c(fields, paste(chars[starts:(i - 1L)], collapse=""))
+            starts <- i + 1L
+        }
+    }
+    fields <- c(fields, paste(chars[starts:n], collapse=""))
+    lapply(fields, function(fld) {
+        eq <- regexpr("=", fld, fixed=TRUE)
+        if (eq == -1L) c(fld, NA_character_)
+        else c(substring(fld, 1L, eq - 1L), substring(fld, eq + 1L))
+    })
+}
+
 .bcfHeaderAsSimpleList <-
     function(header)
 {
@@ -75,19 +108,10 @@ setMethod(isOpen, "BcfFile",
     tags <- sub(rex, "\\1", lines)
 
     keyval0 <- sub(rex, "\\2", lines)
-    ## Handle INFO, FORMAT, FILTER, ALT, SAMPLE
-    keyval1 <- rep(NA_character_, length(keyval0))
-    keyval <- list()
-    idx <- tags %in% c("INFO", "FORMAT", "FILTER", "ALT")
-    keyval1[idx] <- strsplit(keyval0[idx], 
-            ",(?=(ID|Number|Type)=[[:alnum:]]*)|,(?=Description=\".*?\")", 
-            perl=TRUE)
-    keyval[idx] <- lapply(which(idx), 
-        function(i, keyval1) strsplit(keyval1[[i]],
-            "(?<=[ID|Number|Type|Description])=", perl=TRUE), keyval1)
-    keyval1[!idx] <- strsplit(keyval0[!idx], ",(?=[[:alnum:]]+=)", perl=TRUE)
-    keyval[!idx] <- lapply(which(!idx), function(i, keyval1) {
-        strsplit(keyval1[[i]], "(?<=[[:alnum:]])=", perl=TRUE)}, keyval1)
+    ## Handle INFO, FORMAT, FILTER, ALT, and other structured tags.
+    ## Use .splitKeyVals (defined at package scope) which correctly handles
+    ## quoted values containing commas or '=' signs.
+    keyval <- lapply(keyval0, .splitKeyVals)
 
     tbls <- tapply(keyval, tags, 
         function(elt) {

@@ -122,3 +122,34 @@ test_BcfFile_scan_index <- function()
     checkEquals(1, length(res[["GENO"]]))
     checkEquals(30L, length(res[["GENO"]][["PL"]]))
 }
+
+## Tests for quoted-string-aware VCF header key=value parsing
+## (GitHub issues VariantAnnotation#89 and VariantAnnotation#80)
+test_bcfHeaderAsSimpleList_quoted_equals <- function()
+{
+    .splitKeyVals <- Rsamtools:::.splitKeyVals
+
+    ## issue #89: '=' inside Description's bracket expression
+    s1 <- paste0('ID=VRS_Allele_IDs,Number=R,Type=String,',
+                 'Description="IDs [VRS version=2.0.1;VRS-Python version=2.1.1]"')
+    kv1 <- .splitKeyVals(s1)
+    checkEquals(4L, length(kv1))
+    checkEquals("ID", kv1[[1]][1])
+    checkEquals("Description", kv1[[4]][1])
+    checkTrue(grepl("version=2.0.1", kv1[[4]][2]))
+
+    ## issue #80: '=' inside CommandLineOptions quoted value
+    s2 <- paste0('ID=SelectVariants,Version=3.4,',
+                 'CommandLineOptions="analysis_type=SelectVariants input_file=[]"')
+    kv2 <- .splitKeyVals(s2)
+    checkEquals(3L, length(kv2))
+    checkEquals("CommandLineOptions", kv2[[3]][1])
+    checkTrue(grepl("analysis_type=SelectVariants", kv2[[3]][2]))
+
+    ## commas inside quoted Description must not split the field
+    s3 <- 'ID=foo,Number=1,Type=String,Description="a, b, c=d"'
+    kv3 <- .splitKeyVals(s3)
+    checkEquals(4L, length(kv3))
+    checkEquals("Description", kv3[[4]][1])
+    checkEquals('"a, b, c=d"', kv3[[4]][2])
+}

@@ -1,3 +1,17 @@
+CHANGES IN VERSION 2.18
+-----------------------
+
+BUG FIXES
+
+    o .bcfHeaderAsSimpleList() now correctly parses VCF/BCF structured header
+      fields whose quoted Description (or other) values contain commas or
+      equals signs, e.g. Description="IDs [VRS version=2.0.1]". The previous
+      regex-based split produced incorrect results or extra fields in these
+      cases. The new .splitKeyVals() helper uses a character-by-character
+      quote-aware scan and splits each field on the first '=' only.
+      (See https://github.com/Bioconductor/VariantAnnotation/issues/89 and
+      https://github.com/Bioconductor/VariantAnnotation/issues/80)
+
 CHANGES IN VERSION 2.16
 -----------------------
 
